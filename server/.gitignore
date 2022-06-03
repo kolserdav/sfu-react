@@ -1,0 +1,12 @@
+node_modules
+
+dist
+
+tmp
+yarn-error.log
+videos/*
+
+.env
+
+cloud/*
+!cloud/.gitkeep
