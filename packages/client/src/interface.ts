@@ -1,0 +1,1 @@
+/home/kol/Projects/group-call/packages/server/src/interface.ts
