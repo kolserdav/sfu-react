@@ -1,28 +1,33 @@
 /* eslint-disable max-classes-per-file */
 /* eslint-disable no-unused-vars */
 export enum MessageType {
+  /**
+   * User get yourself id
+   */
   USER_ID = 'USER_ID',
+  /**
+   * Server send userId
+   */
   USER_KEY = 'USER_KEY',
   OFFER = 'OFFER',
   CANDIDATE = 'CANDIDATE',
 }
 
-interface MessageAll {
-  key: string;
+export interface MessageAll {
+  id: number;
 }
 
 interface Message {
-  id: number;
   sdp: string;
 }
 
-type UserId = Pick<Message, 'id'>;
+type UserId = { id: 0 };
 
 type UserKey = MessageAll;
 
-type Offer = Pick<Message, 'sdp' | 'id'>;
+type Offer = Pick<Message, 'sdp'>;
 
-type Candidate = Pick<Message, 'sdp' | 'id'>;
+type Candidate = Pick<Message, 'sdp'>;
 
 export type MessageSubset<T> = T extends MessageType.OFFER
   ? Offer
@@ -30,13 +35,13 @@ export type MessageSubset<T> = T extends MessageType.OFFER
   ? Candidate
   : T extends MessageType.USER_ID
   ? UserId
-  : T extends MessageType.USER_KEY
+  : T extends MessageType.USER_ID
   ? UserKey
-  : unknown;
+  : Record<string, any>;
 
 export type MessageFull<T> = {
   type: T;
-  data: MessageAll & MessageSubset<T>;
+  data: MessageSubset<T>;
 };
 
 export abstract class WSInterface {
@@ -44,7 +49,7 @@ export abstract class WSInterface {
 
   public abstract createConnection(args: any): any;
 
-  public abstract parseMessage(text: string): MessageSubset<any>;
+  public abstract parseMessage(text: string): MessageFull<any> | null;
 
   public abstract getMessage<T extends keyof typeof MessageType>(
     message: MessageSubset<any>

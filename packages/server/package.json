@@ -5,7 +5,8 @@
   "license": "MIT",
   "scripts": {
     "watch": "tsc -p . -w",
-    "dev": "nodemon dist/index.js"
+    "dev": "concurrently \"npm run watch\" \"nodemon dist/index.js\"",
+    "build": "tsc -p ."
   },
   "devDependencies": {
     "@types/ws": "^8.5.3"

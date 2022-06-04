@@ -6,9 +6,14 @@
   "author": "kolserdav <serega12101983@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "copy-interfaces": "node scripts/create-interfaces-symlink.js"
+    "copy-interfaces": "node scripts/create-interfaces-symlink.js",
+    "preinstall": "npm run copy-interfaces",
+    "dev:install": "npm install && cd packages/client && npm install && cd ../server && npm install",
+    "dev:server": "cd packages/server && npm run dev",
+    "dev:client": "cd packages/client && npm start"
   },
   "dependencies": {
+    "concurrently": "^7.2.1",
     "typescript": "^4.7.2",
     "uuid": "^8.3.2"
   },
