@@ -1,12 +1,12 @@
-import React, { createContext } from 'react';
+import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
-import Router from './components/Router/Router';
+import Main from './package/Main';
 import './App.scss';
 
 function App() {
   return (
     <BrowserRouter>
-      <Router />
+      <Main test="mest" />
     </BrowserRouter>
   );
 }
