@@ -14,7 +14,6 @@ function Router() {
 
   useEffect(() => {
     ws.onOpen = (ev) => {
-      console.log(12);
       log('info', 'onOpen', ev);
       ws.sendMessage({
         type: MessageType.USER_ID,
@@ -25,8 +24,12 @@ function Router() {
     };
     ws.onMessage = (ev) => {
       log('info', 'onMessage', ev);
-      console.log(ev);
+      const { data } = ev;
+      console.log(data);
       const rawMessage = ws.parseMessage(ev.data);
+      if (!rawMessage) {
+        return;
+      }
       const { type } = rawMessage;
       switch (type) {
         case MessageType.USER_KEY:
