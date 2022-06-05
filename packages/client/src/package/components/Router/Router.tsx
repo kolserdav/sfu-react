@@ -17,7 +17,9 @@ function Router() {
       log('info', 'onOpen', ev);
       ws.sendMessage({
         type: MessageType.GET_USER_ID,
-        id,
+        data: {
+          id,
+        },
       });
     };
     ws.onMessage = (ev) => {

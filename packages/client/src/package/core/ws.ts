@@ -1,15 +1,8 @@
-import { MessageSubset, WSInterface, MessageType, DBInterface } from '../types/interfaces';
-import { Prisma, User, PrismaPromise } from '../types/prisma';
+import { MessageSubset, WSInterface, MessageType } from '../types/interfaces';
 import { log } from '../utils/lib';
 
-class WS implements WSInterface, DBInterface {
+class WS implements WSInterface {
   public connection: WebSocket;
-
-  // eslint-disable-next-line class-methods-use-this
-  public userFindFirst: DBInterface['userFindFirst'] = (args) => {
-    const d: any = '';
-    return d;
-  };
 
   // eslint-disable-next-line class-methods-use-this
   public onOpen: (ev: Event) => void = () => {
@@ -64,15 +57,24 @@ class WS implements WSInterface, DBInterface {
     message: MessageSubset<any>
   ): MessageSubset<T> => message as any;
 
-  public createConnection() {
+  protected newConnection({ local = false }: { local?: boolean }): WebSocket | null {
+    let connection = null;
     if (typeof window !== 'undefined') {
-      this.connection = new WebSocket(
+      connection = new WebSocket(
         `${window.location.protocol === 'https' ? 'wss' : 'ws'}://${process.env.REACT_APP_SERVER}:${
           process.env.REACT_APP_PORT
         }`,
         'json'
       );
     }
+    if (!local && connection !== null) {
+      this.connection = connection;
+    }
+    return connection;
+  }
+
+  public createConnection() {
+    this.newConnection({});
     this.connection.onopen = (ev: Event) => {
       this.onOpen(ev);
     };

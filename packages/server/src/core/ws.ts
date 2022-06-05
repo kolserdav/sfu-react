@@ -20,9 +20,7 @@ class WS implements WSInterface {
     return this.connection;
   };
 
-  public parseMessage: WSInterface['parseMessage'] = (
-    message: string
-  ): MessageSubset<any> | null => {
+  public parseMessage: WSInterface['parseMessage'] = (message) => {
     let data: any;
     try {
       data = JSON.parse(message);
@@ -50,7 +48,9 @@ class WS implements WSInterface {
           log('error', 'sendMessage', e);
           resolve(1);
         }
-        const { id } = args;
+        const {
+          data: { id },
+        } = args;
         this.sockets[id].send(res);
         resolve(0);
       }, 0);

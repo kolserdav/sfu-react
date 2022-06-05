@@ -16,7 +16,7 @@ fs.copyFile(srcPath, destPath, fs.constants.COPYFILE_FICLONE_FORCE, (err) => {
   if (fs.existsSync(destSymlink)) {
     console.warn('Symlink created', destSymlink);
   } else {
-    fs.symlink(srcPath, srcPath, 'file', (err) => {
+    fs.symlink(srcPath, destSymlink, 'file', (err) => {
       if (err) {
         console.error('Error create symlink', err);
         return;

@@ -26,8 +26,10 @@ wss.connection.on('connection', function connection(ws) {
         const id = _id || getUserId();
         wss.setSocket({ id, ws });
         wss.sendMessage({
-          id,
           type: MessageType.SET_USER_ID,
+          data: {
+            id,
+          },
         });
         break;
       default:
