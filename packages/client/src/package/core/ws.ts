@@ -1,7 +1,7 @@
-import { MessageSubset, WSInterface, MessageType } from '../types/interfaces';
+import * as Types from '../types/interfaces';
 import { log } from '../utils/lib';
 
-class WS implements WSInterface {
+class WS implements Types.WSInterface {
   public connection: WebSocket;
 
   // eslint-disable-next-line class-methods-use-this
@@ -24,7 +24,7 @@ class WS implements WSInterface {
     /** */
   };
 
-  public sendMessage: WSInterface['sendMessage'] = (args) =>
+  public sendMessage: Types.WSInterface['sendMessage'] = (args) =>
     new Promise((resolve) => {
       setTimeout(() => {
         let res = '';
@@ -40,7 +40,7 @@ class WS implements WSInterface {
     });
 
   // eslint-disable-next-line class-methods-use-this
-  public parseMessage: WSInterface['parseMessage'] = (message: string) => {
+  public parseMessage: Types.WSInterface['parseMessage'] = (message: string) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let data: any;
     try {
@@ -53,11 +53,11 @@ class WS implements WSInterface {
   };
 
   // eslint-disable-next-line class-methods-use-this
-  public getMessage = <T extends keyof typeof MessageType>(
-    message: MessageSubset<any>
-  ): MessageSubset<T> => message as any;
+  public getMessage = <T extends keyof typeof Types.MessageType>(
+    message: Types.ArgsSubset<T>
+  ): Types.ArgsSubset<T> => message as any;
 
-  protected newConnection({ local = false }: { local?: boolean }): WebSocket {
+  public newConnection({ local = false }: { local?: boolean }): WebSocket {
     let connection: any;
     if (typeof window !== 'undefined') {
       connection = new WebSocket(

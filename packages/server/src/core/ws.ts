@@ -1,5 +1,5 @@
 import { WebSocketServer, Server, WebSocket, ServerOptions } from 'ws';
-import { MessageSubset, WSInterface, MessageType } from '../types/interfaces';
+import { WSInterface } from '../types/interfaces';
 import { log } from '../utils/lib';
 
 class WS implements WSInterface {
@@ -31,9 +31,7 @@ class WS implements WSInterface {
     return data;
   };
 
-  public getMessage: WSInterface['getMessage'] = <T extends keyof typeof MessageType>(
-    message: MessageSubset<any>
-  ): MessageSubset<T> => {
+  public getMessage: WSInterface['getMessage'] = (message) => {
     const res: any = message;
     return res;
   };
@@ -50,7 +48,7 @@ class WS implements WSInterface {
         }
         const {
           data: { id },
-        } = args;
+        }: any = args;
         this.sockets[id].send(res);
         resolve(0);
       }, 0);

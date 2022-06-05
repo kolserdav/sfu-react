@@ -41,6 +41,21 @@ function Router() {
     };
   }, []);
 
+  useEffect(() => {
+    if (id) {
+      const user = db.userFindFirst({
+        where: {
+          id,
+        },
+        select: { id: true },
+      });
+      user.then((u) => {
+        console.log(u);
+        setId(u.id);
+      });
+    }
+  }, [id]);
+
   /**
    * Save id
    */
