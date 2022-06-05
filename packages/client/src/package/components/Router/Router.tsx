@@ -2,12 +2,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import WS from '../../core/ws';
+import DB from '../../core/db';
 import { log, setLoginCookie } from '../../utils/lib';
-import { MessageType, Awaited, DBInterface } from '../../types/interfaces';
+import { MessageType } from '../../types/interfaces';
 
 function Router() {
   const location = useLocation();
   const ws = useMemo(() => new WS(), []);
+  const db = useMemo(() => new DB(), []);
   const { pathname, search } = location;
 
   const [id, setId] = useState<number>(0);

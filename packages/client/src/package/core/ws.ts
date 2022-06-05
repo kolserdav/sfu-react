@@ -57,8 +57,8 @@ class WS implements WSInterface {
     message: MessageSubset<any>
   ): MessageSubset<T> => message as any;
 
-  protected newConnection({ local = false }: { local?: boolean }): WebSocket | null {
-    let connection = null;
+  protected newConnection({ local = false }: { local?: boolean }): WebSocket {
+    let connection: any;
     if (typeof window !== 'undefined') {
       connection = new WebSocket(
         `${window.location.protocol === 'https' ? 'wss' : 'ws'}://${process.env.REACT_APP_SERVER}:${
