@@ -22,7 +22,7 @@
     "sourceType": "module"
   },
   "plugins": ["@typescript-eslint", "react", "prettier", "eslint-plugin-prettier"],
-  "ignorePatterns": ["src/dist/*"],
+  "ignorePatterns": ["src/package/types/prisma.d.ts"],
   "rules": {
     "react/react-in-jsx-scope": 2,
     "prettier/prettier": 1,

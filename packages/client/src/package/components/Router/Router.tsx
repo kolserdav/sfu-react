@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import WS from '../../core/ws';
 import { log, setLoginCookie } from '../../utils/lib';
-import { MessageType } from '../../interfaces';
+import { MessageType, Awaited, DBInterface } from '../../types/interfaces';
 
 function Router() {
   const location = useLocation();
@@ -16,8 +16,8 @@ function Router() {
     ws.onOpen = (ev) => {
       log('info', 'onOpen', ev);
       ws.sendMessage({
-        type: MessageType.USER_ID,
-        id: 0,
+        type: MessageType.GET_USER_ID,
+        id,
       });
     };
     ws.onMessage = (ev) => {
@@ -28,10 +28,9 @@ function Router() {
         return;
       }
       const { type } = rawMessage;
-      console.log(ws.getMessage<MessageType.USER_KEY>(rawMessage).id, type);
       switch (type) {
-        case MessageType.USER_KEY:
-          setId(ws.getMessage<MessageType.USER_KEY>(rawMessage).id);
+        case MessageType.SET_USER_ID:
+          setId(ws.getMessage<MessageType.SET_USER_ID>(rawMessage).id);
           break;
         default:
       }

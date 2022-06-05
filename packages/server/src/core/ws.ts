@@ -1,5 +1,5 @@
 import { WebSocketServer, Server, WebSocket, ServerOptions } from 'ws';
-import { MessageSubset, WSInterface, MessageType } from '../interfaces';
+import { MessageSubset, WSInterface, MessageType } from '../types/interfaces';
 import { log } from '../utils/lib';
 
 class WS implements WSInterface {
@@ -41,16 +41,20 @@ class WS implements WSInterface {
   };
 
   public sendMessage: WSInterface['sendMessage'] = (args) => {
-    let res = '';
-    try {
-      res = JSON.stringify(args);
-    } catch (e) {
-      log('error', 'sendMessage', e);
-      return 1;
-    }
-    const { id } = args;
-    this.sockets[id].send(res);
-    return 0;
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        let res = '';
+        try {
+          res = JSON.stringify(args);
+        } catch (e) {
+          log('error', 'sendMessage', e);
+          resolve(1);
+        }
+        const { id } = args;
+        this.sockets[id].send(res);
+        resolve(0);
+      }, 0);
+    });
   };
 }
 

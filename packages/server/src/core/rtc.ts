@@ -1,5 +1,5 @@
 import wrtc, { RTCPeerConnection } from 'wrtc';
-import { RTCInterface } from '../interfaces';
+import { RTCInterface } from '../types/interfaces';
 
 class RTC implements RTCInterface {
   public roomId = '';

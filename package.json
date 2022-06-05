@@ -7,7 +7,8 @@
   "license": "MIT",
   "scripts": {
     "copy-interfaces": "node scripts/create-interfaces-symlink.js",
-    "preinstall": "npm run copy-interfaces",
+    "copy-prisma": "node scripts/copy-prisma-types.js",
+    "preinstall": "npm run copy-prisma && npm run copy-interfaces",
     "dev:install": "npm install && cd packages/client && npm install && cd ../server && npm install",
     "dev:server": "cd packages/server && npm run dev",
     "dev:client": "cd packages/client && npm start"

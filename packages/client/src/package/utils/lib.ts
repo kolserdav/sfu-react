@@ -37,4 +37,8 @@ export const setLoginCookie = ({ userId }: { userId: number }) => {
   });
 };
 
-export const getLoginCookie = () => cookies.get(COOKIE_USER_ID);
+export const getLoginCookie = (): number => {
+  const str = cookies.get(COOKIE_USER_ID);
+  const num = parseInt(str, 10);
+  return Number.isNaN(num) ? 0 : num;
+};

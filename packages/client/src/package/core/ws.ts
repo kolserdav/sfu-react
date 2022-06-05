@@ -1,8 +1,15 @@
-import { MessageSubset, WSInterface, MessageType } from '../interfaces';
+import { MessageSubset, WSInterface, MessageType, DBInterface } from '../types/interfaces';
+import { Prisma, User, PrismaPromise } from '../types/prisma';
 import { log } from '../utils/lib';
 
-class WS implements WSInterface {
+class WS implements WSInterface, DBInterface {
   public connection: WebSocket;
+
+  // eslint-disable-next-line class-methods-use-this
+  public userFindFirst: DBInterface['userFindFirst'] = (args) => {
+    const d: any = '';
+    return d;
+  };
 
   // eslint-disable-next-line class-methods-use-this
   public onOpen: (ev: Event) => void = () => {
@@ -24,17 +31,20 @@ class WS implements WSInterface {
     /** */
   };
 
-  public sendMessage: WSInterface['sendMessage'] = (data) => {
-    let res = '';
-    try {
-      res = JSON.stringify(data);
-    } catch (e) {
-      log('error', 'sendMessage', e);
-      return 1;
-    }
-    this.connection.send(res);
-    return 0;
-  };
+  public sendMessage: WSInterface['sendMessage'] = (args) =>
+    new Promise((resolve) => {
+      setTimeout(() => {
+        let res = '';
+        try {
+          res = JSON.stringify(args);
+        } catch (e) {
+          log('error', 'sendMessage', e);
+          resolve(1);
+        }
+        this.connection.send(res);
+        resolve(0);
+      }, 0);
+    });
 
   // eslint-disable-next-line class-methods-use-this
   public parseMessage: WSInterface['parseMessage'] = (message: string) => {

@@ -2,8 +2,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const destPath = path.resolve(__dirname, '../packages/server/src/interfaces.ts');
-const srcPath = path.resolve(__dirname, '../packages/client/src/package/interfaces.ts');
+const destPath = path.resolve(__dirname, '../packages/server/src/types/interfaces.ts');
+const srcPath = path.resolve(__dirname, '../packages/client/src/package/types/interfaces.ts');
 
 if (fs.existsSync(destPath)) {
   console.warn('Symlink created', destPath);
