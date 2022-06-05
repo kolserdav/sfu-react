@@ -1,5 +1,17 @@
-export const { SERVER_PORT } = process.env as {
+export const {
+  SERVER_PORT: _SERVER_PORT,
+  WEBTOKEN_KEY,
+  SMTP_EMAIL,
+  SMTP_PORT,
+  SMTP_HOST,
+  SMTP_PASS,
+} = process.env as {
   SERVER_PORT: string;
+  WEBTOKEN_KEY: string;
+  SMTP_EMAIL: string;
+  SMTP_PASS: string;
+  SMTP_PORT: string;
+  SMTP_HOST: string;
 };
 
-export const port = parseInt(SERVER_PORT, 10);
+export const SERVER_PORT = parseInt(_SERVER_PORT, 10);

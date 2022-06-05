@@ -2,11 +2,12 @@
 import dotenv from 'dotenv';
 import wrtc from 'wrtc';
 dotenv.config();
-import { getUserId, port, log } from './utils';
+import { getUserId } from './utils/lib';
+import { SERVER_PORT } from './utils/constants';
 import WS from './core/ws';
 import { MessageType } from './interfaces';
 
-const wss = new WS({ port });
+const wss = new WS({ port: SERVER_PORT });
 
 wss.connection.on('connection', function connection(ws) {
   ws.on('message', function message(data) {
@@ -19,16 +20,13 @@ wss.connection.on('connection', function connection(ws) {
       return;
     }
     const { type } = rawMessage;
-    console.log(type);
     switch (type) {
       case MessageType.USER_ID:
         const id = getUserId();
-        wss.sockets[id] = ws;
+        wss.setSocket({ id, ws });
         wss.sendMessage({
+          id,
           type: MessageType.USER_KEY,
-          data: {
-            id,
-          },
         });
         break;
       default:

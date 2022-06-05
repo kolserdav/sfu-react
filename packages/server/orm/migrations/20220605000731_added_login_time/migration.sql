@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE `User` ADD COLUMN `LoginTime` DATETIME(3) NULL,
+    ADD COLUMN `lastLogin` DATETIME(3) NULL;

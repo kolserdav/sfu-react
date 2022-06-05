@@ -1,5 +1,5 @@
 import { MessageSubset, WSInterface, MessageType } from '../interfaces';
-import { log } from '../utils';
+import { log } from '../utils/lib';
 
 class WS implements WSInterface {
   public connection: WebSocket;

@@ -1,6 +1,6 @@
 import { WebSocketServer, Server, WebSocket, ServerOptions } from 'ws';
-import { MessageSubset, WSInterface, MessageType, MessageFull } from '../interfaces';
-import { log } from '../utils';
+import { MessageSubset, WSInterface, MessageType } from '../interfaces';
+import { log } from '../utils/lib';
 
 class WS implements WSInterface {
   public connection: Server<WebSocket>;
@@ -11,12 +11,18 @@ class WS implements WSInterface {
     this.connection = this.createConnection(connectionArgs);
   }
 
+  public setSocket({ id, ws }: { id: number; ws: WebSocket }) {
+    this.sockets[id] = ws;
+  }
+
   public createConnection: WSInterface['createConnection'] = (args: ServerOptions | undefined) => {
     this.connection = new WebSocketServer(args);
     return this.connection;
   };
 
-  public parseMessage: WSInterface['parseMessage'] = (message: string): MessageFull<any> | null => {
+  public parseMessage: WSInterface['parseMessage'] = (
+    message: string
+  ): MessageSubset<any> | null => {
     let data: any;
     try {
       data = JSON.parse(message);
@@ -34,16 +40,15 @@ class WS implements WSInterface {
     return res;
   };
 
-  public sendMessage: WSInterface['sendMessage'] = (ev) => {
-    const { data } = ev;
-    const { id } = data;
+  public sendMessage: WSInterface['sendMessage'] = (args) => {
     let res = '';
     try {
-      res = JSON.stringify(data);
+      res = JSON.stringify(args);
     } catch (e) {
       log('error', 'sendMessage', e);
       return 1;
     }
+    const { id } = args;
     this.sockets[id].send(res);
     return 0;
   };

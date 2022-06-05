@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import WS from '../../core/ws';
-import { log } from '../../utils';
+import { log, setLoginCookie } from '../../utils/lib';
 import { MessageType } from '../../interfaces';
 
 function Router() {
@@ -17,20 +17,18 @@ function Router() {
       log('info', 'onOpen', ev);
       ws.sendMessage({
         type: MessageType.USER_ID,
-        data: {
-          id: 0,
-        },
+        id: 0,
       });
     };
     ws.onMessage = (ev) => {
       log('info', 'onMessage', ev);
       const { data } = ev;
-      console.log(data);
-      const rawMessage = ws.parseMessage(ev.data);
+      const rawMessage = ws.parseMessage(data);
       if (!rawMessage) {
         return;
       }
       const { type } = rawMessage;
+      console.log(ws.getMessage<MessageType.USER_KEY>(rawMessage).id, type);
       switch (type) {
         case MessageType.USER_KEY:
           setId(ws.getMessage<MessageType.USER_KEY>(rawMessage).id);
@@ -39,7 +37,16 @@ function Router() {
       }
     };
   }, []);
-  console.log(id);
+
+  /**
+   * Save id
+   */
+  useEffect(() => {
+    if (id) {
+      setLoginCookie({ userId: id });
+    }
+  }, [id]);
+
   return <div>ds</div>;
 }
 

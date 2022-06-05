@@ -3,16 +3,36 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "license": "MIT",
+  "prisma": {
+    "schema": "orm/schema.prisma"
+  },
   "scripts": {
     "watch": "tsc -p . -w",
     "dev": "concurrently \"npm run watch\" \"nodemon dist/index.js\"",
-    "build": "tsc -p ."
+    "build": "tsc -p .",
+    "dev:migrate": "npm run format && npm run generate && prisma migrate dev --preview-feature",
+    "migrate": "prisma migrate deploy --preview-feature && npm run generate",
+    "migrate:reset": "prisma migrate reset --preview-feature",
+    "migrate:status": "prisma migrate status --preview-feature",
+    "studio": "prisma studio",
+    "generate": "prisma generate",
+    "format": "prisma format"
   },
   "devDependencies": {
-    "@types/ws": "^8.5.3"
+    "@types/html-to-text": "^8.1.0",
+    "@types/jsonwebtoken": "^8.5.8",
+    "@types/nodemailer": "^6.4.4",
+    "@types/uuid": "^8.3.4",
+    "@types/ws": "^8.5.3",
+    "prisma": "^3.14.0"
   },
   "dependencies": {
+    "@prisma/client": "^3.14.0",
     "dotenv": "^16.0.1",
+    "html-to-text": "^8.2.0",
+    "jsonwebtoken": "^8.5.1",
+    "nodemailer": "^6.7.5",
+    "uuid": "^8.3.2",
     "wrtc": "^0.4.7",
     "ws": "^8.7.0"
   }
