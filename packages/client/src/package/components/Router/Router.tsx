@@ -9,19 +9,18 @@ import { MessageType } from '../../types/interfaces';
 function Router() {
   const location = useLocation();
   const ws = useMemo(() => new WS(), []);
-  const db = useMemo(() => new DB(), []);
   const { pathname, search } = location;
 
   const [id, setId] = useState<number>(0);
-
+  const db = useMemo(() => new DB({ userId: id }), [id]);
   useEffect(() => {
     ws.onOpen = (ev) => {
       log('info', 'onOpen', ev);
       ws.sendMessage({
         type: MessageType.GET_USER_ID,
-        data: {
-          id,
-        },
+        id,
+        token: '',
+        data: undefined,
       });
     };
     ws.onMessage = (ev) => {
@@ -36,6 +35,9 @@ function Router() {
         case MessageType.SET_USER_ID:
           setId(ws.getMessage(MessageType.SET_USER_ID, rawMessage).id);
           break;
+        case MessageType.SET_USER_FIND_FIRST:
+          console.log(rawMessage, 33);
+          break;
         default:
       }
     };
@@ -43,19 +45,17 @@ function Router() {
 
   useEffect(() => {
     if (id) {
-      const user = db.userFindFirst({
-        where: {
-          id,
+      db.userFindFirst(
+        {
+          where: {
+            id: 1,
+          },
+          select: { id: true },
         },
-        select: { id: true },
-      });
-      user.then((u) => {
-        console.log(u);
-        setId(u.id);
-      });
+        ws.connection
+      );
     }
-  }, [id]);
-
+  }, [id, db]);
   /**
    * Save id
    */

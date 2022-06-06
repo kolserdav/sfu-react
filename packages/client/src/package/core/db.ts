@@ -1,68 +1,72 @@
 import * as Types from '../types/interfaces';
 import WS from './ws';
 import { WS_TTL } from '../utils/constants';
+import { log } from '../utils/lib';
 
 const ws = new WS();
 
-class DB implements Types.DBInterface {
+class DB {
+  userId: number;
+
   token = 'null';
 
-  public userCreate: Types.DBInterface['userCreate'] = (args) => {
-    const res: any = this.request({
-      type: Types.MessageType.GET_USER_CREATE,
-      result: Types.MessageType.SET_USER_CREATE,
-      args: {
-        token: this.token,
+  constructor({ userId }: { userId: number }) {
+    this.userId = userId;
+  }
+
+  public userCreate: Types.DBInterface['userCreate'] = (args, _connection) => {
+    if (_connection) {
+      const res: any = this.request({
+        type: Types.MessageType.GET_USER_CREATE,
+        result: Types.MessageType.SET_USER_CREATE,
         args,
-      },
-    });
-    return res;
+        _connection,
+      });
+      return res;
+    }
+    return null;
+    log('warn', 'userFindFirst _connection is', _connection);
   };
 
-  public userFindFirst: Types.DBInterface['userFindFirst'] = (args) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const res: any = this.request({
-      type: Types.MessageType.GET_USER_FINDFIRST,
-      result: Types.MessageType.SET_USER_FIND_FIRST,
-      args: {
-        token: this.token,
+  public userFindFirst: Types.DBInterface['userFindFirst'] = (args, _connection) => {
+    if (_connection) {
+      const res: any = this.request({
+        type: Types.MessageType.GET_USER_FINDFIRST,
+        result: Types.MessageType.SET_USER_FIND_FIRST,
         args,
-      },
-    });
-    return res;
+        _connection,
+      });
+      return res;
+    }
+    log('warn', 'userFindFirst _connection is', _connection);
+    return null;
   };
 
+  // eslint-disable-next-line class-methods-use-this
   private request<
     T extends keyof typeof Types.MessageType,
     U extends keyof typeof Types.MessageType
   >({
     args,
     type,
+    _connection,
   }: {
     type: T;
     result: U;
-    args: Types.ArgsSubset<T>;
+    args: any;
+    _connection: WebSocket;
   }): Promise<Types.ArgsSubset<U>> {
-    const connection = ws.newConnection({ local: true });
+    const connection = _connection;
     const prom = new Promise<Types.ArgsSubset<U>>((resolve) => {
-      connection.onopen = () => {
-        setTimeout(() => {
-          const error: any = null;
-          resolve(error);
-        }, WS_TTL);
-        connection.onmessage = (ev) => {
-          const { data }: { data: Types.ArgsSubset<U> } = ev as any;
-          resolve(data);
-        };
-        ws.sendMessage({
+      ws.sendMessage(
+        {
+          id: this.userId,
+          token: this.token,
           type,
-          data: {
-            token: this.token,
-            args,
-          } as any,
-          connection,
-        });
-      };
+          data: args,
+        },
+        connection
+      );
     });
     return prom;
   }

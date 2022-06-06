@@ -34,6 +34,7 @@ class WS implements Types.WSInterface {
           log('error', 'sendMessage', e);
           resolve(1);
         }
+        log('info', 'sendMessage', res);
         this.connection.send(res);
         resolve(0);
       }, 0);
@@ -53,7 +54,7 @@ class WS implements Types.WSInterface {
   };
 
   // eslint-disable-next-line class-methods-use-this
-  public getMessage: Types.WSInterface['getMessage'] = (message) => message as any;
+  public getMessage: Types.WSInterface['getMessage'] = (type, data) => data as any;
 
   public newConnection({ local = false }: { local?: boolean }): WebSocket {
     let connection: any;

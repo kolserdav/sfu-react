@@ -18,27 +18,23 @@ export enum MessageType {
   SET_USER_CREATE = 'SET_USER_CREATE',
 }
 
-interface MessageAll {
-  type: keyof typeof MessageType;
+type GetUserId = undefined;
+type SetUserId = undefined;
+type Offer = any;
+type Candidate = any;
+type Answer = any;
+interface GetUserFindFirst {
+  args: Prisma.UserFindFirstArgs;
 }
-
-interface MessageData<T> {
-  id: number;
-  sdp: string;
-  candidate: any;
-  token: string;
-  args: T;
+interface SetUserFindFirst {
+  argv: User | null;
 }
-
-type GetUserId = Pick<MessageData<void>, 'id'>;
-type SetUserId = Pick<MessageData<void>, 'id'>;
-type Offer = Pick<MessageData<void>, 'sdp'>;
-type Candidate = Pick<MessageData<void>, 'candidate'>;
-type Answer = Pick<MessageData<void>, 'sdp'>;
-type GetUserFindFirst = Pick<MessageData<Prisma.UserFindFirstArgs>, 'token' | 'args'>;
-type SetUserFindFirst = Pick<MessageData<User | null>, 'args'>;
-type GetUserCreate = Pick<MessageData<Prisma.UserCreateArgs>, 'args' | 'token'>;
-type SetUserCreate = Pick<MessageData<User | null>, 'args'>;
+interface GetUserCreate {
+  args: Prisma.UserCreateArgs;
+}
+interface SetUserCreate {
+  argv: User | null;
+}
 
 export type ArgsSubset<T> = T extends MessageType.OFFER
   ? Offer
@@ -64,7 +60,7 @@ export type ArgsSubset<T> = T extends MessageType.OFFER
   ? SetUserFindFirst
   : T extends MessageType.GET_USER_CREATE
   ? SetUserCreate
-  : never;
+  : unknown;
 
 export abstract class RTCInterface {
   public abstract roomId: string;
@@ -76,31 +72,39 @@ export abstract class RTCInterface {
   public abstract createRTC(args: { id: number }): RTCPeerConnection;
 }
 
+interface SendMessageArgs<T> {
+  type: T;
+  id: number;
+  token: string;
+  data: ArgsSubset<T>;
+}
+
 export abstract class WSInterface {
   public abstract connection: any;
 
   public abstract createConnection(args: any): any;
 
-  public abstract parseMessage(text: string): (ArgsSubset<any> & MessageAll) | null;
+  public abstract parseMessage(text: string): SendMessageArgs<any> | null;
 
   public abstract getMessage<T extends keyof typeof MessageType>(
     type: T,
-    message: ArgsSubset<any>
-  ): ArgsSubset<T>;
+    message: SendMessageArgs<any>
+  ): SendMessageArgs<T>;
 
-  public abstract sendMessage: <T extends keyof typeof MessageType>(args: {
-    type: T;
-    data: ArgsSubset<T>;
-    connection?: any;
-  }) => Promise<1 | 0>;
+  public abstract sendMessage: <T extends keyof typeof MessageType>(
+    args: SendMessageArgs<T>,
+    connection?: any
+  ) => Promise<1 | 0>;
 }
 
 export abstract class DBInterface {
   public abstract userCreate<T extends Prisma.UserCreateArgs>(
-    args: Prisma.SelectSubset<T, Prisma.UserCreateArgs>
-  ): Promise<Prisma.CheckSelect<T, User | null, Prisma.UserGetPayload<T>>>;
+    args: Prisma.SelectSubset<T, Prisma.UserCreateArgs>,
+    _connection?: WebSocket
+  ): Promise<Prisma.CheckSelect<T, User, Prisma.UserGetPayload<T>> | null>;
 
   public abstract userFindFirst<T extends Prisma.UserFindFirstArgs>(
-    args: Prisma.SelectSubset<T, Prisma.UserFindFirstArgs>
-  ): Promise<Prisma.CheckSelect<T, User | null, Prisma.UserGetPayload<T>>>;
+    args: Prisma.SelectSubset<T, Prisma.UserFindFirstArgs>,
+    _connection?: WebSocket
+  ): Promise<Prisma.CheckSelect<T, User, Prisma.UserGetPayload<T>> | null>;
 }

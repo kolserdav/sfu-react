@@ -21,43 +21,36 @@ wss.connection.on('connection', function connection(ws) {
     if (!rawMessage) {
       return;
     }
-    const { type } = rawMessage;
+    const { type, id, token } = rawMessage;
     switch (type) {
       case Types.MessageType.GET_USER_ID:
-        const { id: _id } = wss.getMessage(Types.MessageType.GET_USER_ID, rawMessage);
-        const id = _id || getUserId();
-        wss.setSocket({ id, ws });
+        const _id = id || getUserId();
+        wss.setSocket({ id: _id, ws });
         wss.sendMessage({
           type: Types.MessageType.SET_USER_ID,
-          data: {
-            id,
-          },
+          id: _id,
+          token,
+          data: undefined,
         });
         break;
       case Types.MessageType.GET_USER_FINDFIRST:
-        console.log(
-          3323,
-          rawMessage,
-          wss.getMessage(Types.MessageType.GET_USER_FINDFIRST, rawMessage)
-        );
         wss.sendMessage({
           type: Types.MessageType.SET_USER_FIND_FIRST,
-          data: {
-            argv: await db.userFindFirst(
-              wss.getMessage(Types.MessageType.GET_USER_FINDFIRST, rawMessage.data).args
-            ),
-          },
+          id,
+          token,
+          data: await db.userFindFirst(
+            wss.getMessage(Types.MessageType.GET_USER_FINDFIRST, rawMessage).data.args
+          ),
         });
         break;
       case Types.MessageType.GET_USER_CREATE:
-        console.log(32, rawMessage);
         wss.sendMessage({
           type: Types.MessageType.SET_USER_CREATE,
-          data: {
-            argv: await db.userCreate(
-              wss.getMessage(Types.MessageType.GET_USER_CREATE, rawMessage).args
-            ),
-          },
+          id,
+          token,
+          data: await db.userCreate(
+            wss.getMessage(Types.MessageType.GET_USER_CREATE, rawMessage).data.args
+          ),
         });
         break;
       default:

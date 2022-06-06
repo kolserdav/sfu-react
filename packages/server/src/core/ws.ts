@@ -46,9 +46,7 @@ class WS implements WSInterface {
           log('error', 'sendMessage', e);
           resolve(1);
         }
-        const {
-          data: { id },
-        }: any = args;
+        const { id } = args;
         this.sockets[id].send(res);
         resolve(0);
       }, 0);
