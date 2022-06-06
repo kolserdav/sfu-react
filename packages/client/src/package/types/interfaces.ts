@@ -104,6 +104,7 @@ interface SendMessageArgs<T> {
   type: T;
   id: number;
   token: string;
+  isAuth?: boolean;
   data: ArgsSubset<T>;
 }
 

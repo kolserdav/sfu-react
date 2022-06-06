@@ -17,8 +17,6 @@ function Router() {
   const location = useLocation();
   const navigate = useNavigate();
   const { pathname, search } = location;
-  const qS = parseQueryString(search);
-  const token = qS?.token || getTokenCookie()?.token || '';
   const [id, setId] = useState<number>(getLoginCookie());
   const [auth, setAuth] = useState<boolean>(false);
   const [loggedAs, setLoggedAs] = useState<string>('');
@@ -26,6 +24,8 @@ function Router() {
   const ws = useMemo(() => new WS(), [restart]);
   const db = useMemo(() => new DB(), [restart]);
   useEffect(() => {
+    const qS = parseQueryString(search);
+    const token = qS?.token || getTokenCookie()?.token || '';
     ws.onOpen = (ev) => {
       log('info', 'onOpen', ev);
       ws.sendMessage({
@@ -67,17 +67,23 @@ function Router() {
             setTokenCookie(_token);
             setAuth(true);
             db.token = _token;
+            let isAuth = false;
             if (qS?.token) {
+              isAuth = true;
               navigate(pathname);
             }
             ws.sendMessage({
               id: ws.userId,
               token,
+              isAuth,
               type: MessageType.GET_GUEST_FIND_FIRST,
               data: {
                 args,
               },
             });
+          } else {
+            setAuth(false);
+            setLoggedAs('');
           }
           setId(__id);
           break;
@@ -97,12 +103,22 @@ function Router() {
         default:
       }
     };
+    return () => {
+      ws.onOpen = () => {
+        /** */
+      };
+      ws.onMessage = () => {
+        /** */
+      };
+    };
   }, [restart]);
 
+  /**
+   * onFocus page
+   */
   useEffect(() => {
     window.onfocus = () => {
       setRestart(!restart);
-      console.log(1);
     };
     return () => {
       window.onfocus = () => {
@@ -110,6 +126,7 @@ function Router() {
       };
     };
   }, [id, db]);
+
   /**
    * Save id
    */
@@ -148,6 +165,7 @@ function Router() {
             setTokenCookie('null');
             setAuth(false);
             setLoggedAs('');
+            setRestart(!restart);
           }}
         >
           Logout

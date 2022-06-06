@@ -40,7 +40,7 @@ wss.connection.on('connection', function connection(ws) {
     if (!rawMessage) {
       return;
     }
-    const { type, id, token } = rawMessage;
+    const { type, id, token, isAuth } = rawMessage;
     let authRes: string | null = null;
     let args;
     // TODO auth
@@ -60,6 +60,7 @@ wss.connection.on('connection', function connection(ws) {
         authRes = await auth({
           args,
           token,
+          isAuth,
         });
         if (authRes !== null) {
           wss.sendMessage({
@@ -83,16 +84,33 @@ wss.connection.on('connection', function connection(ws) {
         break;
       case Types.MessageType.GET_AUTH:
         const { email } = wss.getMessage(Types.MessageType.GET_AUTH, rawMessage).data;
-        const __token = createToken({
-          id,
-          email,
+        const date = new Date();
+        const user = await db.guestUpdate({
+          where: {
+            id,
+          },
+          data: {
+            lastLogin: date,
+          },
+          select: {
+            lastLogin: true,
+            lastVisit: true,
+          },
         });
-        await sendEmail({
-          email,
-          type: 'login',
-          lang: 'en',
-          link: `${APP_URL}?token=${__token}`,
-        });
+        if (user && user.lastLogin) {
+          const __token = createToken({
+            id,
+            email,
+            lastLogin: user.lastLogin.toISOString(),
+            lastVisit: user.lastVisit.toISOString(),
+          });
+          await sendEmail({
+            email,
+            type: 'login',
+            lang: 'en',
+            link: `${APP_URL}?token=${__token}`,
+          });
+        }
         wss.sendMessage({
           type: Types.MessageType.SET_AUTH,
           id,

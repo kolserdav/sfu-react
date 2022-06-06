@@ -4,6 +4,8 @@ declare global {
   interface JWT {
     id: number;
     email: string;
+    lastLogin: string;
+    lastVisit: string;
   }
 
   interface JWTFull extends JWT {

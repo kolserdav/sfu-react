@@ -37,6 +37,7 @@ interface CheckRoleParams<
 > {
   token: string;
   args: any;
+  isAuth?: boolean;
   onlyAdmin?: boolean;
   selfUsage?: {
     model: Model;
@@ -56,6 +57,7 @@ export const auth = async <Model extends keyof typeof Prisma.ModelName>({
   selfUsage,
   token,
   args,
+  isAuth,
 }: CheckRoleParams<
   keyof typeof Prisma.ModelName,
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -67,7 +69,7 @@ Promise<string | null> => {
   if (parsedToken === null) {
     return 'Parse token error';
   }
-  const { id } = parsedToken;
+  const { id, lastLogin, lastVisit } = parsedToken;
   let user;
   try {
     user = await prisma.guest.findUnique({
@@ -85,6 +87,23 @@ Promise<string | null> => {
   }
   if (user === null) {
     return `User not found ${JSON.stringify(parsedToken.id)}`;
+  }
+  if (isAuth) {
+    if (new Date(lastVisit).getTime() !== user?.lastVisit?.getTime()) {
+      return 'Link expired';
+    }
+  } else {
+    await prisma.guest.update({
+      where: {
+        id,
+      },
+      data: {
+        lastVisit: new Date(),
+      },
+    });
+  }
+  if (new Date(lastLogin).getTime() !== user?.lastLogin?.getTime()) {
+    return 'Token expired';
   }
   const _admin = user.User[0].role === 'admin';
   if (onlyAdmin && !_admin) {

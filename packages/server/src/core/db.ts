@@ -1,6 +1,5 @@
 import { PrismaClient } from '@prisma/client';
 import { DBInterface } from '../types/interfaces';
-import { Prisma, Guest } from '../types/prisma';
 import { log, parseToken } from '../utils/lib';
 
 const prisma = new PrismaClient({ log: ['warn'] });
@@ -69,6 +68,7 @@ class DB implements DBInterface {
                   email: _token.email,
                 },
               },
+              lastVisit: new Date(),
             },
           });
         }
