@@ -31,8 +31,8 @@ class WS implements WSInterface {
     return data;
   };
 
-  public getMessage: WSInterface['getMessage'] = (message) => {
-    const res: any = message;
+  public getMessage: WSInterface['getMessage'] = (type, data) => {
+    const res: any = data;
     return res;
   };
 

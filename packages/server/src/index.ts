@@ -35,11 +35,29 @@ wss.connection.on('connection', function connection(ws) {
         });
         break;
       case Types.MessageType.GET_USER_FINDFIRST:
+        console.log(
+          3323,
+          rawMessage,
+          wss.getMessage(Types.MessageType.GET_USER_FINDFIRST, rawMessage)
+        );
         wss.sendMessage({
           type: Types.MessageType.SET_USER_FIND_FIRST,
-          data: await db.userFindFirst(
-            wss.getMessage(Types.MessageType.GET_USER_FINDFIRST, rawMessage).args
-          ),
+          data: {
+            argv: await db.userFindFirst(
+              wss.getMessage(Types.MessageType.GET_USER_FINDFIRST, rawMessage.data).args
+            ),
+          },
+        });
+        break;
+      case Types.MessageType.GET_USER_CREATE:
+        console.log(32, rawMessage);
+        wss.sendMessage({
+          type: Types.MessageType.SET_USER_CREATE,
+          data: {
+            argv: await db.userCreate(
+              wss.getMessage(Types.MessageType.GET_USER_CREATE, rawMessage).args
+            ),
+          },
         });
         break;
       default:

@@ -8,7 +8,8 @@
   },
   "scripts": {
     "watch": "tsc -p . -w",
-    "dev": "concurrently \"npm run watch\" \"nodemon dist/index.js\"",
+    "dev:start": "nodemon dist/index.js",
+    "dev": "concurrently \"npm run watch\" \"npm run dev:start\"",
     "build": "tsc -p .",
     "dev:migrate": "npm run format && npm run generate && prisma migrate dev --preview-feature",
     "migrate": "prisma migrate deploy --preview-feature && npm run generate",
