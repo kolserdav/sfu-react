@@ -12,7 +12,7 @@ function Router() {
   const { pathname, search } = location;
 
   const [id, setId] = useState<number>(0);
-  const db = useMemo(() => new DB({ userId: id }), [id]);
+  const db = useMemo(() => new DB(), []);
   useEffect(() => {
     ws.onOpen = (ev) => {
       log('info', 'onOpen', ev);
@@ -30,13 +30,33 @@ function Router() {
       if (!rawMessage) {
         return;
       }
-      const { type } = rawMessage;
+      const { type, id: _id } = rawMessage;
+      let res;
+      if (type === MessageType.SET_USER_ID) {
+        ws.userId = _id;
+        const args = {
+          where: {
+            id: 1,
+          },
+          select: { id: true, created: true },
+        };
+        res = db.userFindFirst(args);
+        ws.sendMessage({
+          id: ws.userId,
+          token: db.token,
+          type: MessageType.GET_USER_FIND_FIRST,
+          data: {
+            args,
+          },
+        });
+      }
       switch (type) {
         case MessageType.SET_USER_ID:
           setId(ws.getMessage(MessageType.SET_USER_ID, rawMessage).id);
           break;
         case MessageType.SET_USER_FIND_FIRST:
-          console.log(rawMessage, 33);
+          const r: Awaited<typeof res> = rawMessage.data.argv;
+          console.log(r?.id, 1);
           break;
         default:
       }
@@ -44,17 +64,7 @@ function Router() {
   }, []);
 
   useEffect(() => {
-    if (id) {
-      db.userFindFirst(
-        {
-          where: {
-            id: 1,
-          },
-          select: { id: true },
-        },
-        ws.connection
-      );
-    }
+    /** */
   }, [id, db]);
   /**
    * Save id

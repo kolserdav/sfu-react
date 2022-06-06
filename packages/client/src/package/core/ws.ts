@@ -4,6 +4,8 @@ import { log } from '../utils/lib';
 class WS implements Types.WSInterface {
   public connection: WebSocket;
 
+  userId = 0;
+
   // eslint-disable-next-line class-methods-use-this
   public onOpen: (ev: Event) => void = () => {
     /** */

@@ -22,6 +22,7 @@ wss.connection.on('connection', function connection(ws) {
       return;
     }
     const { type, id, token } = rawMessage;
+    // TODO auth
     switch (type) {
       case Types.MessageType.GET_USER_ID:
         const _id = id || getUserId();
@@ -33,14 +34,16 @@ wss.connection.on('connection', function connection(ws) {
           data: undefined,
         });
         break;
-      case Types.MessageType.GET_USER_FINDFIRST:
+      case Types.MessageType.GET_USER_FIND_FIRST:
         wss.sendMessage({
           type: Types.MessageType.SET_USER_FIND_FIRST,
           id,
           token,
-          data: await db.userFindFirst(
-            wss.getMessage(Types.MessageType.GET_USER_FINDFIRST, rawMessage).data.args
-          ),
+          data: {
+            argv: await db.userFindFirst(
+              wss.getMessage(Types.MessageType.GET_USER_FIND_FIRST, rawMessage).data.args
+            ),
+          },
         });
         break;
       case Types.MessageType.GET_USER_CREATE:
@@ -48,9 +51,11 @@ wss.connection.on('connection', function connection(ws) {
           type: Types.MessageType.SET_USER_CREATE,
           id,
           token,
-          data: await db.userCreate(
-            wss.getMessage(Types.MessageType.GET_USER_CREATE, rawMessage).data.args
-          ),
+          data: {
+            argv: await db.userCreate(
+              wss.getMessage(Types.MessageType.GET_USER_CREATE, rawMessage).data.args
+            ),
+          },
         });
         break;
       default:

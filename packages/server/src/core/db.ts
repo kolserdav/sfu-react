@@ -2,11 +2,10 @@ import { PrismaClient } from '@prisma/client';
 import { DBInterface } from '../types/interfaces';
 import { log } from '../utils/lib';
 
-const prisma = new PrismaClient({ log: ['query'] });
+const prisma = new PrismaClient({ log: ['warn'] });
 
 class DB implements DBInterface {
   public userCreate: DBInterface['userCreate'] = async (args) => {
-    console.log(11, args);
     let user: any;
     try {
       user = await prisma.user.create(args);

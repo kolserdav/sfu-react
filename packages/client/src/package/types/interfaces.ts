@@ -12,7 +12,7 @@ export enum MessageType {
   OFFER = 'OFFER',
   CANDIDATE = 'CANDIDATE',
   ANSWER = 'ANSWER',
-  GET_USER_FINDFIRST = 'GET_USER_FINDFIRST',
+  GET_USER_FIND_FIRST = 'GET_USER_FIND_FIRST',
   SET_USER_FIND_FIRST = 'SET_USER_FIND_FIRST',
   GET_USER_CREATE = 'GET_USER_CREATE',
   SET_USER_CREATE = 'SET_USER_CREATE',
@@ -46,7 +46,7 @@ export type ArgsSubset<T> = T extends MessageType.OFFER
   ? GetUserId
   : T extends MessageType.SET_USER_ID
   ? SetUserId
-  : T extends MessageType.GET_USER_FINDFIRST
+  : T extends MessageType.GET_USER_FIND_FIRST
   ? GetUserFindFirst
   : T extends MessageType.SET_USER_FIND_FIRST
   ? SetUserFindFirst
@@ -54,8 +54,6 @@ export type ArgsSubset<T> = T extends MessageType.OFFER
   ? GetUserCreate
   : T extends MessageType.SET_USER_CREATE
   ? SetUserCreate
-  : T extends MessageType.GET_USER_FINDFIRST
-  ? GetUserFindFirst
   : T extends MessageType.SET_USER_FIND_FIRST
   ? SetUserFindFirst
   : T extends MessageType.GET_USER_CREATE
@@ -92,8 +90,7 @@ export abstract class WSInterface {
   ): SendMessageArgs<T>;
 
   public abstract sendMessage: <T extends keyof typeof MessageType>(
-    args: SendMessageArgs<T>,
-    connection?: any
+    args: SendMessageArgs<T>
   ) => Promise<1 | 0>;
 }
 

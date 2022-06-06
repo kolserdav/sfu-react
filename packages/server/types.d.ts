@@ -2,8 +2,7 @@ declare global {
   type LogLevel = 'info' | 'warn' | 'error';
 
   interface JWT {
-    id: string;
-    loginTime: string;
+    id: number;
   }
 
   interface JWTFull extends JWT {
