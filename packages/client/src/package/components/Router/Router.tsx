@@ -34,7 +34,7 @@ function Router() {
       const { type } = rawMessage;
       switch (type) {
         case MessageType.SET_USER_ID:
-          setId(ws.getMessage<MessageType.SET_USER_ID>(rawMessage).id);
+          setId(ws.getMessage(MessageType.SET_USER_ID, rawMessage).id);
           break;
         default:
       }

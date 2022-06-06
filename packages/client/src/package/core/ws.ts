@@ -53,9 +53,7 @@ class WS implements Types.WSInterface {
   };
 
   // eslint-disable-next-line class-methods-use-this
-  public getMessage = <T extends keyof typeof Types.MessageType>(
-    message: Types.ArgsSubset<T>
-  ): Types.ArgsSubset<T> => message as any;
+  public getMessage: Types.WSInterface['getMessage'] = (message) => message as any;
 
   public newConnection({ local = false }: { local?: boolean }): WebSocket {
     let connection: any;

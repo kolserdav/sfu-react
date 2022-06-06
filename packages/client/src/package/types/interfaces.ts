@@ -12,13 +12,14 @@ export enum MessageType {
   OFFER = 'OFFER',
   CANDIDATE = 'CANDIDATE',
   ANSWER = 'ANSWER',
-}
-
-export enum RequestType {
   GET_USER_FINDFIRST = 'GET_USER_FINDFIRST',
   SET_USER_FIND_FIRST = 'SET_USER_FIND_FIRST',
   GET_USER_CREATE = 'GET_USER_CREATE',
   SET_USER_CREATE = 'SET_USER_CREATE',
+}
+
+interface MessageAll {
+  type: keyof typeof MessageType;
 }
 
 interface MessageData {
@@ -31,6 +32,7 @@ interface MessageData {
 }
 
 type GetUserId = Pick<MessageData, 'id'>;
+type SetUserId = Pick<MessageData, 'id'>;
 type Offer = Pick<MessageData, 'sdp'>;
 type Candidate = Pick<MessageData, 'candidate'>;
 type Answer = Pick<MessageData, 'sdp'>;
@@ -39,12 +41,7 @@ type SetUserFindFirst = Pick<MessageData, 'argv'>;
 type GetUserCreate = Pick<MessageData, 'args' | 'token'>;
 type SetUserCreate = Pick<MessageData, 'argv'>;
 
-export type OriginType = keyof typeof MessageType | keyof typeof RequestType;
-interface MessageAll {
-  type: OriginType;
-}
-
-export type ArgsSubset<T extends keyof typeof MessageType> = T extends MessageType.OFFER
+export type ArgsSubset<T> = T extends MessageType.OFFER
   ? Offer
   : T extends MessageType.ANSWER
   ? Answer
@@ -52,31 +49,23 @@ export type ArgsSubset<T extends keyof typeof MessageType> = T extends MessageTy
   ? Candidate
   : T extends MessageType.GET_USER_ID
   ? GetUserId
-  : T extends RequestType.GET_USER_FINDFIRST
+  : T extends MessageType.SET_USER_ID
+  ? SetUserId
+  : T extends MessageType.GET_USER_FINDFIRST
   ? GetUserFindFirst
-  : T extends RequestType.SET_USER_FIND_FIRST
+  : T extends MessageType.SET_USER_FIND_FIRST
   ? SetUserFindFirst
-  : T extends RequestType.GET_USER_CREATE
+  : T extends MessageType.GET_USER_CREATE
   ? GetUserCreate
-  : T extends RequestType.SET_USER_CREATE
+  : T extends MessageType.SET_USER_CREATE
   ? SetUserCreate
-  : never;
-export type ArgvSubset<T extends keyof typeof RequestType> =
-  T extends RequestType.GET_USER_FINDFIRST
-    ? Prisma.UserFindFirstArgs
-    : T extends RequestType.SET_USER_FIND_FIRST
-    ? User | null
-    : T extends RequestType.GET_USER_CREATE
-    ? Prisma.UserCreateArgs
-    : T extends RequestType.SET_USER_CREATE
-    ? User | null
-    : never;
-
-export type Options<T extends OriginType> = T extends keyof typeof MessageType
-  ? ArgsSubset<T>
-  : T extends keyof typeof RequestType
-  ? ArgvSubset<T>
-  : never;
+  : T extends MessageType.GET_USER_FINDFIRST
+  ? Prisma.UserFindFirstArgs
+  : T extends MessageType.SET_USER_FIND_FIRST
+  ? User
+  : T extends MessageType.GET_USER_CREATE
+  ? Prisma.UserCreateArgs
+  : User;
 
 export abstract class RTCInterface {
   public abstract roomId: string;
@@ -93,13 +82,16 @@ export abstract class WSInterface {
 
   public abstract createConnection(args: any): any;
 
-  public abstract parseMessage(text: string): (ArgsSubset<any> & OriginType & MessageAll) | null;
+  public abstract parseMessage(text: string): (ArgsSubset<any> & MessageAll) | null;
 
-  public abstract getMessage<T extends OriginType>(type: T, message: ArgsSubset<any>): Options<T>;
+  public abstract getMessage<T extends keyof typeof MessageType>(
+    type: T,
+    message: ArgsSubset<any>
+  ): ArgsSubset<T>;
 
-  public abstract sendMessage: <T extends OriginType>(args: {
+  public abstract sendMessage: <T extends keyof typeof MessageType>(args: {
     type: T;
-    data: Options<T>;
+    data: ArgsSubset<T>;
     connection?: any;
   }) => Promise<1 | 0>;
 }
@@ -110,6 +102,6 @@ export abstract class DBInterface {
   ): Promise<Prisma.CheckSelect<T, User | null, Prisma.UserGetPayload<T>>>;
 
   public abstract userFindFirst<T extends Prisma.UserFindFirstArgs>(
-    args: Prisma.SelectSubset<T, Prisma.UserFindFirstArgs> | unknown
+    args: Prisma.SelectSubset<T, Prisma.UserFindFirstArgs>
   ): Promise<Prisma.CheckSelect<T, User | null, Prisma.UserGetPayload<T>>>;
 }

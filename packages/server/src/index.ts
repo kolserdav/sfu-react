@@ -34,12 +34,12 @@ wss.connection.on('connection', function connection(ws) {
           },
         });
         break;
-      case Types.RequestType.GET_USER_FINDFIRST:
+      case Types.MessageType.GET_USER_FINDFIRST:
         wss.sendMessage({
-          type: Types.RequestType.SET_USER_FIND_FIRST,
+          type: Types.MessageType.SET_USER_FIND_FIRST,
           data: {
             argv: await db.userFindFirst(
-              wss.getMessage(Types.RequestType.SET_USER_FIND_FIRST, rawMessage).argv
+              wss.getMessage(Types.MessageType.SET_USER_FIND_FIRST, rawMessage).argv
             ),
           },
         });
