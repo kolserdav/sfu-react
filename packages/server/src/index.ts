@@ -37,11 +37,9 @@ wss.connection.on('connection', function connection(ws) {
       case Types.MessageType.GET_USER_FINDFIRST:
         wss.sendMessage({
           type: Types.MessageType.SET_USER_FIND_FIRST,
-          data: {
-            argv: await db.userFindFirst(
-              wss.getMessage(Types.MessageType.SET_USER_FIND_FIRST, rawMessage).argv
-            ),
-          },
+          data: await db.userFindFirst(
+            wss.getMessage(Types.MessageType.GET_USER_FINDFIRST, rawMessage).args
+          ),
         });
         break;
       default:

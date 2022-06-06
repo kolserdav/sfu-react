@@ -22,24 +22,23 @@ interface MessageAll {
   type: keyof typeof MessageType;
 }
 
-interface MessageData {
+interface MessageData<T> {
   id: number;
   sdp: string;
   candidate: any;
   token: string;
-  args: any;
-  argv: any;
+  args: T;
 }
 
-type GetUserId = Pick<MessageData, 'id'>;
-type SetUserId = Pick<MessageData, 'id'>;
-type Offer = Pick<MessageData, 'sdp'>;
-type Candidate = Pick<MessageData, 'candidate'>;
-type Answer = Pick<MessageData, 'sdp'>;
-type GetUserFindFirst = Pick<MessageData, 'token' | 'args'>;
-type SetUserFindFirst = Pick<MessageData, 'argv'>;
-type GetUserCreate = Pick<MessageData, 'args' | 'token'>;
-type SetUserCreate = Pick<MessageData, 'argv'>;
+type GetUserId = Pick<MessageData<void>, 'id'>;
+type SetUserId = Pick<MessageData<void>, 'id'>;
+type Offer = Pick<MessageData<void>, 'sdp'>;
+type Candidate = Pick<MessageData<void>, 'candidate'>;
+type Answer = Pick<MessageData<void>, 'sdp'>;
+type GetUserFindFirst = Pick<MessageData<Prisma.UserFindFirstArgs>, 'token' | 'args'>;
+type SetUserFindFirst = Pick<MessageData<User | null>, 'args'>;
+type GetUserCreate = Pick<MessageData<Prisma.UserCreateArgs>, 'args' | 'token'>;
+type SetUserCreate = Pick<MessageData<User | null>, 'args'>;
 
 export type ArgsSubset<T> = T extends MessageType.OFFER
   ? Offer
@@ -60,12 +59,12 @@ export type ArgsSubset<T> = T extends MessageType.OFFER
   : T extends MessageType.SET_USER_CREATE
   ? SetUserCreate
   : T extends MessageType.GET_USER_FINDFIRST
-  ? Prisma.UserFindFirstArgs
+  ? GetUserFindFirst
   : T extends MessageType.SET_USER_FIND_FIRST
-  ? User
+  ? SetUserFindFirst
   : T extends MessageType.GET_USER_CREATE
-  ? Prisma.UserCreateArgs
-  : User;
+  ? SetUserCreate
+  : never;
 
 export abstract class RTCInterface {
   public abstract roomId: string;
