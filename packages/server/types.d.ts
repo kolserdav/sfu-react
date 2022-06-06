@@ -3,6 +3,7 @@ declare global {
 
   interface JWT {
     id: number;
+    email: string;
   }
 
   interface JWTFull extends JWT {

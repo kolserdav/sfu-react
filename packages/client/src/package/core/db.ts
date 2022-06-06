@@ -3,19 +3,23 @@ import WS from './ws';
 import { WS_TTL } from '../utils/constants';
 import { log } from '../utils/lib';
 
-const ws = new WS();
-
-class DB {
+class DB implements Types.DBInterface {
   token = 'null';
 
   // eslint-disable-next-line class-methods-use-this
-  public userCreate: Types.DBInterface['userCreate'] = (args) => {
+  public guestCreate: Types.DBInterface['guestCreate'] = (args) => {
     const res: any = null;
     return res;
   };
 
   // eslint-disable-next-line class-methods-use-this
-  public userFindFirst: Types.DBInterface['userFindFirst'] = (args) => {
+  public guestUpdate: Types.DBInterface['guestUpdate'] = (args) => {
+    const res: any = null;
+    return res;
+  };
+
+  // eslint-disable-next-line class-methods-use-this
+  public guestFindFirst: Types.DBInterface['guestFindFirst'] = (args) => {
     const res: any = null;
     return res;
   };

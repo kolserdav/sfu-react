@@ -1,5 +1,5 @@
 import { Cookies } from 'react-cookie';
-import { COOKIE_USER_ID } from './constants';
+import { COOKIE_USER_ID, COOKIE_TOKEN } from './constants';
 
 const cookies = new Cookies();
 
@@ -41,4 +41,41 @@ export const getLoginCookie = (): number => {
   const str = cookies.get(COOKIE_USER_ID);
   const num = parseInt(str, 10);
   return Number.isNaN(num) ? 0 : num;
+};
+
+export const setTokenCookie = (token: string) => {
+  const expires = new Date();
+  expires.setMonth(expires.getMonth() + 1);
+  cookies.set(COOKIE_TOKEN, token, {
+    sameSite: true,
+    expires,
+    secure: true,
+  });
+};
+
+export const getTokenCookie = (): { token: string } | null => {
+  const str = cookies.get(COOKIE_TOKEN);
+  return str
+    ? {
+        token: str,
+      }
+    : null;
+};
+
+export const parseQueryString = (query: string): Record<string, string> | null => {
+  const arr = query.replace(/\??/, '').split('&');
+  let res: Record<string, string> | null = null;
+  arr.forEach((item) => {
+    if (item === '') {
+      return;
+    }
+    if (res === null) {
+      res = {};
+    }
+    const propReg = /^\w+=/;
+    const prop = item.match(propReg);
+    const propStr = prop ? prop[0].replace('=', '') : '';
+    res[propStr] = item.replace(propReg, '');
+  });
+  return res;
 };

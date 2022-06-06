@@ -7,12 +7,15 @@ class WS implements WSInterface {
 
   public sockets: Record<string, WebSocket> = {};
 
+  public users: Record<number, string> = {};
+
   constructor(connectionArgs: ServerOptions | undefined) {
     this.connection = this.createConnection(connectionArgs);
   }
 
-  public setSocket({ id, ws }: { id: number; ws: WebSocket }) {
-    this.sockets[id] = ws;
+  public setSocket({ id, ws, connId }: { id: number; ws: WebSocket; connId: string }) {
+    this.sockets[connId] = ws;
+    this.users[id] = connId;
   }
 
   public createConnection: WSInterface['createConnection'] = (args: ServerOptions | undefined) => {
@@ -47,9 +50,9 @@ class WS implements WSInterface {
           resolve(1);
         }
         const { id } = args;
-        this.sockets[id].send(res);
+        this.sockets[this.users[id]].send(res);
         resolve(0);
-      }, 0);
+      }, 100);
     });
   };
 }

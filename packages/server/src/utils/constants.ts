@@ -5,6 +5,7 @@ export const {
   SMTP_PORT,
   SMTP_HOST,
   SMTP_PASS,
+  APP_URL,
 } = process.env as {
   SERVER_PORT: string;
   WEBTOKEN_KEY: string;
@@ -12,6 +13,7 @@ export const {
   SMTP_PASS: string;
   SMTP_PORT: string;
   SMTP_HOST: string;
+  APP_URL: string;
 };
 
 export const SERVER_PORT = parseInt(_SERVER_PORT, 10);

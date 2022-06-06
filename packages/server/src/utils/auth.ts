@@ -37,43 +37,16 @@ interface CheckRoleParams<
 > {
   token: string;
   args: any;
-  /**
-   * Открыть только для админа
-   */
   onlyAdmin?: boolean;
-  /**
-   * Закрыть узел для доступа того кому не пренадлежить модель
-   */
   selfUsage?: {
-    /**
-     * Название модели см. `src/orm/prisma.schema`
-     */
     model: Model;
-    /**
-     * Поле которое должно соответствовать id пользователя делающего запрос
-     */
     field: Field;
-    /**
-     * Если `true`, то запрос открыт и для админа
-     */
     andAdmin?: boolean;
-    /**
-     * Список полей которые пользователь не может менять.
-     * Если andAdmin=true то не действует на админа
-     */
     closedSelf?: (Field | keyof typeof Prisma.ModelName)[];
-    /**
-     * Список полей которые администратор не может менять если даже andAdmin=tue.
-     */
     closedAdmin?: (Field | keyof typeof Prisma.ModelName)[];
   };
 }
 
-/**
- * служебная функция делает строчным первый символ строки
- * @param string
- * @returns
- */
 function capitalizeFirstLetter(string: string): string {
   return string.charAt(0).toLowerCase() + string.slice(1);
 }
@@ -97,14 +70,23 @@ Promise<string | null> => {
   const { id } = parsedToken;
   let user;
   try {
-    user = await prisma.user.findUnique({ where: { id } });
+    user = await prisma.guest.findUnique({
+      where: { id },
+      include: {
+        User: {
+          select: {
+            role: true,
+          },
+        },
+      },
+    });
   } catch (e) {
     return 'Error get user by id in auth middleware';
   }
   if (user === null) {
-    return `User not found ${JSON.stringify(parsedToken)}`;
+    return `User not found ${JSON.stringify(parsedToken.id)}`;
   }
-  const _admin = user.role === 'admin';
+  const _admin = user.User[0].role === 'admin';
   if (onlyAdmin && !_admin) {
     return 'Only for admin';
   }

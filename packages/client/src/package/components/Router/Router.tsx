@@ -1,30 +1,42 @@
 /* eslint-disable no-case-declarations */
 import React, { useEffect, useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import WS from '../../core/ws';
 import DB from '../../core/db';
-import { log, setLoginCookie } from '../../utils/lib';
+import {
+  log,
+  setLoginCookie,
+  getLoginCookie,
+  parseQueryString,
+  setTokenCookie,
+  getTokenCookie,
+} from '../../utils/lib';
 import { MessageType } from '../../types/interfaces';
 
 function Router() {
   const location = useLocation();
-  const ws = useMemo(() => new WS(), []);
+  const navigate = useNavigate();
   const { pathname, search } = location;
-
-  const [id, setId] = useState<number>(0);
-  const db = useMemo(() => new DB(), []);
+  const qS = parseQueryString(search);
+  const token = qS?.token || getTokenCookie()?.token || '';
+  const [id, setId] = useState<number>(getLoginCookie());
+  const [auth, setAuth] = useState<boolean>(false);
+  const [loggedAs, setLoggedAs] = useState<string>('');
+  const [restart, setRestart] = useState<boolean>(false);
+  const ws = useMemo(() => new WS(), [restart]);
+  const db = useMemo(() => new DB(), [restart]);
   useEffect(() => {
     ws.onOpen = (ev) => {
       log('info', 'onOpen', ev);
       ws.sendMessage({
         type: MessageType.GET_USER_ID,
         id,
-        token: '',
+        token,
         data: undefined,
       });
     };
     ws.onMessage = (ev) => {
-      log('info', 'onMessage', ev);
+      log('info', 'onMessage', ev.data);
       const { data } = ev;
       const rawMessage = ws.parseMessage(data);
       if (!rawMessage) {
@@ -32,39 +44,71 @@ function Router() {
       }
       const { type, id: _id } = rawMessage;
       let res;
+      const args = {
+        where: {
+          id,
+        },
+        include: {
+          User: {
+            select: {
+              email: true,
+            },
+          },
+        },
+      };
       if (type === MessageType.SET_USER_ID) {
         ws.userId = _id;
-        const args = {
-          where: {
-            id: 1,
-          },
-          select: { id: true, created: true },
-        };
-        res = db.userFindFirst(args);
-        ws.sendMessage({
-          id: ws.userId,
-          token: db.token,
-          type: MessageType.GET_USER_FIND_FIRST,
-          data: {
-            args,
-          },
-        });
+        res = db.guestFindFirst(args);
       }
       switch (type) {
         case MessageType.SET_USER_ID:
-          setId(ws.getMessage(MessageType.SET_USER_ID, rawMessage).id);
+          const { id: __id, token: _token } = ws.getMessage(MessageType.SET_USER_ID, rawMessage);
+          if (_token && _token !== 'null') {
+            setTokenCookie(_token);
+            setAuth(true);
+            db.token = _token;
+            if (qS?.token) {
+              navigate(pathname);
+            }
+            ws.sendMessage({
+              id: ws.userId,
+              token,
+              type: MessageType.GET_GUEST_FIND_FIRST,
+              data: {
+                args,
+              },
+            });
+          }
+          setId(__id);
           break;
-        case MessageType.SET_USER_FIND_FIRST:
+        case MessageType.SET_GUEST_FIND_FIRST:
           const r: Awaited<typeof res> = rawMessage.data.argv;
-          console.log(r?.id, 1);
+          setLoggedAs(r?.User[0].email || '');
+          break;
+        case MessageType.SET_AUTH:
+          console.log(ws.getMessage(MessageType.SET_AUTH, rawMessage).data.message);
+          break;
+        case MessageType.SET_ERROR:
+          const {
+            data: { message },
+          } = ws.getMessage(MessageType.SET_ERROR, rawMessage);
+          log('warn', 'error', message);
           break;
         default:
       }
     };
-  }, []);
+  }, [restart]);
 
   useEffect(() => {
-    /** */
+    window.onfocus = () => {
+      setRestart(!restart);
+      console.log(1);
+    };
+    return () => {
+      window.onfocus = () => {
+        /** */
+      };
+    };
   }, [id, db]);
   /**
    * Save id
@@ -75,7 +119,42 @@ function Router() {
     }
   }, [id]);
 
-  return <div>ds</div>;
+  return (
+    <div>
+      {loggedAs && <div>Logged as {loggedAs}</div>}
+      {!auth ? (
+        <button
+          type="button"
+          onClick={() => {
+            const email = prompt('Set email');
+            if (email) {
+              ws.sendMessage({
+                type: MessageType.GET_AUTH,
+                id,
+                token: '',
+                data: {
+                  email,
+                },
+              });
+            }
+          }}
+        >
+          Login
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => {
+            setTokenCookie('null');
+            setAuth(false);
+            setLoggedAs('');
+          }}
+        >
+          Logout
+        </button>
+      )}
+    </div>
+  );
 }
 
 export default Router;

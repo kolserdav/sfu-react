@@ -13,13 +13,23 @@ enum UserRole {
   admin
 }
 
+model Guest {
+  id        Int      @id @default(autoincrement())
+  lastVisit DateTime @default(now())
+  created   DateTime @default(now())
+  User      User[]
+}
+
 model User {
   id        Int       @id @default(autoincrement())
+  email     String    @unique
   role      UserRole  @default(guest)
   userAgent String?   @db.VarChar(100)
   ip        String?   @db.VarChar(50)
   LoginTime DateTime?
   lastLogin DateTime?
+  guestId   Int
+  Guest     Guest     @relation(fields: [guestId], references: [id])
   updated   DateTime  @default(now())
   created   DateTime  @default(now())
 }
