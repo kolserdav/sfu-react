@@ -34,9 +34,18 @@ interface GetAuth {
 interface SetAuth {
   message: string;
 }
-type Offer = any;
-type Candidate = any;
-type Answer = any;
+type Offer = {
+  sdp: any;
+  userId: number;
+};
+type Candidate = {
+  candidate: any;
+  userId: number;
+};
+type Answer = {
+  sdp: any;
+  userId: number;
+};
 interface GetGuestFindFirst {
   args: Prisma.GuestFindFirstArgs;
 }
@@ -91,16 +100,12 @@ export type ArgsSubset<T> = T extends MessageType.OFFER
   : unknown;
 
 export abstract class RTCInterface {
-  public abstract roomId: string;
-
-  public abstract userId: number;
-
-  public abstract rtc: RTCPeerConnection;
+  public abstract peerConnection: RTCPeerConnection;
 
   public abstract createRTC(args: { id: number }): RTCPeerConnection;
 }
 
-interface SendMessageArgs<T> {
+export interface SendMessageArgs<T> {
   type: T;
   id: number;
   token: string;

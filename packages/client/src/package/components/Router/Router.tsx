@@ -1,3 +1,5 @@
+/* eslint-disable jsx-a11y/control-has-associated-label */
+/* eslint-disable jsx-a11y/anchor-has-content */
 /* eslint-disable no-case-declarations */
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -12,6 +14,7 @@ import {
   getTokenCookie,
 } from '../../utils/lib';
 import { MessageType } from '../../types/interfaces';
+import RTC from '../../core/rtc';
 
 function Router() {
   const location = useLocation();
@@ -24,10 +27,20 @@ function Router() {
   const ws = useMemo(() => new WS(), [restart]);
   const db = useMemo(() => new DB(), [restart]);
   useEffect(() => {
+    const roomId = parseInt(pathname.replace('/', ''), 10);
+    let rtc: RTC | null = null;
+    const roomOpen = Number.isInteger(roomId) && id;
+    if (roomOpen) {
+      ws.userId = id;
+      rtc = new RTC({ roomId, ws });
+    }
     const qS = parseQueryString(search);
     const token = qS?.token || getTokenCookie()?.token || '';
     ws.onOpen = (ev) => {
       log('info', 'onOpen', ev);
+      if (roomOpen && id) {
+        rtc?.invite({ targetUserId: roomId });
+      }
       ws.sendMessage({
         type: MessageType.GET_USER_ID,
         id,
@@ -88,11 +101,33 @@ function Router() {
           setId(__id);
           break;
         case MessageType.SET_GUEST_FIND_FIRST:
-          const r: Awaited<typeof res> = rawMessage.data.argv;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const r: Awaited<typeof res> = (rawMessage.data as any).argv;
           setLoggedAs(r?.User[0].email || '');
           break;
         case MessageType.SET_AUTH:
           console.log(ws.getMessage(MessageType.SET_AUTH, rawMessage).data.message);
+          break;
+        case MessageType.OFFER:
+          if (rtc) {
+            rtc.handleOfferMessage(rawMessage, (e) => {
+              console.log(11, e);
+            });
+          }
+          break;
+        case MessageType.CANDIDATE:
+          if (rtc) {
+            rtc.handleCandidateMessage(rawMessage, (e) => {
+              console.log(12, e);
+            });
+          }
+          break;
+        case MessageType.ANSWER:
+          if (rtc) {
+            rtc.handleVideoAnswerMsg(rawMessage, (e) => {
+              console.log(13, e);
+            });
+          }
           break;
         case MessageType.SET_ERROR:
           const {
@@ -111,7 +146,7 @@ function Router() {
         /** */
       };
     };
-  }, [restart]);
+  }, [restart, pathname]);
 
   /**
    * onFocus page
@@ -171,6 +206,17 @@ function Router() {
           Logout
         </button>
       )}
+      <button
+        type="button"
+        onClick={() => {
+          navigate(`/${new Date().getTime()}`);
+        }}
+      >
+        Create room
+      </button>
+      <a href={window.location.href.replace(/\?.*/, '')}>
+        {window.location.href.replace(/\?.*/, '')}
+      </a>
     </div>
   );
 }

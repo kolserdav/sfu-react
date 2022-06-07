@@ -1,6 +1,6 @@
-import wrtc from 'wrtc';
 import { RTCInterface, MessageType, SendMessageArgs } from '../types/interfaces';
 import { log } from '../utils/lib';
+import { MEDIA_CONSTRAINTS } from '../utils/constants';
 import WS from './ws';
 
 class RTC implements RTCInterface {
@@ -14,7 +14,7 @@ class RTC implements RTCInterface {
   }
 
   public createRTC(args: { id: number }): RTCPeerConnection {
-    this.peerConnection = new wrtc.RTCPeerConnection({
+    this.peerConnection = new RTCPeerConnection({
       iceServers: [
         {
           urls: ['stun:stun.l.google.com:19302'],
@@ -24,7 +24,7 @@ class RTC implements RTCInterface {
     return this.peerConnection;
   }
 
-  public handleIceCandidate({ targetUserId, userId }: { targetUserId: number; userId: number }) {
+  public handleIceCandidate({ targetUserId }: { targetUserId: number }) {
     if (!this.peerConnection) {
       log('warn', 'Failed handle ice candidate because peerConnection is', this.peerConnection);
       return;
@@ -42,7 +42,7 @@ class RTC implements RTCInterface {
           token: '',
           data: {
             candidate: event.candidate,
-            userId,
+            userId: core.ws.userId,
           },
         });
       }
@@ -126,7 +126,7 @@ class RTC implements RTCInterface {
                   token: '',
                   data: {
                     sdp: localDescription,
-                    userId,
+                    userId: core.ws.userId,
                   },
                 });
                 // cb(localDescription);
@@ -145,8 +145,23 @@ class RTC implements RTCInterface {
     };
   }
 
-  public invite({ targetUserId, userId }: { targetUserId: number; userId: number }) {
-    this.handleIceCandidate({ targetUserId, userId });
+  public invite({ targetUserId }: { targetUserId: number }) {
+    this.handleIceCandidate({ targetUserId });
+    navigator.mediaDevices
+      .getUserMedia(MEDIA_CONSTRAINTS)
+      .then((localStream) => {
+        log('info', '-- Adding tracks to the RTCPeerConnection');
+        localStream.getTracks().forEach((track) => {
+          if (!this.peerConnection) {
+            log('warn', 'failed to add offer video track');
+          } else {
+            this.peerConnection.addTrack(track, localStream);
+          }
+        });
+      })
+      .catch((err) => {
+        log('error', 'Error get self user media', err);
+      });
   }
 
   /**
@@ -196,14 +211,17 @@ class RTC implements RTCInterface {
       return;
     }
     this.handleIceCandidate({
-      targetUserId: userId,
-      userId,
+      targetUserId: this.ws.userId,
     });
     const desc = new RTCSessionDescription(sdp);
     this.peerConnection
       .setRemoteDescription(desc)
       .then(() => {
-        const localStream = null;
+        log('info', 'Setting up the local media stream...');
+        return navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS);
+      })
+      .then((stream) => {
+        const localStream = stream;
         log('info', '-- Local video stream obtained');
         localStream.getTracks().forEach((track) => {
           if (!this.peerConnection) {
@@ -245,7 +263,7 @@ class RTC implements RTCInterface {
                     token: '',
                     data: {
                       sdp: localDescription,
-                      userId,
+                      userId: this.ws.userId,
                     },
                   });
                   cb(localDescription);

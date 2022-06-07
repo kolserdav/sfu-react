@@ -10,6 +10,7 @@ import DB from './core/db';
 import * as Types from './types/interfaces';
 import { createToken, log } from './utils/lib';
 import { auth } from './utils/auth';
+import RTC from './core/rtc';
 
 process.on('uncaughtException', (err: Error) => {
   log('error', 'uncaughtException', err);
@@ -43,6 +44,7 @@ wss.connection.on('connection', function connection(ws) {
     const { type, id, token, isAuth } = rawMessage;
     let authRes: string | null = null;
     let args;
+    let userId = 0;
     // TODO auth
     switch (type) {
       case Types.MessageType.GET_USER_ID:
@@ -148,6 +150,31 @@ wss.connection.on('connection', function connection(ws) {
           token,
           data: {
             argv: await db.guestUpdate(args),
+          },
+        });
+        break;
+      case Types.MessageType.OFFER:
+        console.log('offer');
+        userId = wss.getMessage(Types.MessageType.OFFER, rawMessage).data.userId;
+
+        console.log(userId);
+        const rtc = new RTC({ roomId: id, ws: wss });
+        rtc.invite({ targetUserId: userId, userId: id });
+        break;
+      case Types.MessageType.ANSWER:
+        console.log('answer');
+        break;
+      case Types.MessageType.CANDIDATE:
+        console.log('candidate', id);
+        userId = wss.getMessage(Types.MessageType.CANDIDATE, rawMessage).data.userId;
+        const candidate = wss.getMessage(Types.MessageType.CANDIDATE, rawMessage).data.candidate;
+        wss.sendMessage({
+          type: Types.MessageType.CANDIDATE,
+          id: userId,
+          token: '',
+          data: {
+            candidate,
+            userId,
           },
         });
         break;

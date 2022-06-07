@@ -1,4 +1,4 @@
-export const MediaConstraints = {
+export const MEDIA_CONSTRAINTS = {
   audio: true,
   video: true,
 };
