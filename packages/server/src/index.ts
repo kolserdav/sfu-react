@@ -167,6 +167,9 @@ wss.connection.on('connection', function connection(ws) {
         break;
       case Types.MessageType.CANDIDATE:
         // console.log('candidate');
+        rtc.handleCandidateMessage(rawMessage, () => {
+          console.log('ice');
+        });
         break;
       default:
     }

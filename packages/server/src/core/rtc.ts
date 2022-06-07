@@ -145,6 +145,32 @@ class RTC implements RTCInterface {
     };
   }
 
+  public handleCandidateMessage(
+    msg: SendMessageArgs<MessageType.CANDIDATE>,
+    cb: (cand: RTCIceCandidate | null) => any
+  ) {
+    const { data } = msg;
+    if (!this.peerConnection) {
+      log('warn', 'Failed create ice candidate because peerConnection is', this.peerConnection);
+      cb(null);
+      return;
+    }
+    if (data && data.candidate) {
+      console.log(data.candidate);
+      const cand = new wrtc.RTCIceCandidate(data);
+      this.peerConnection
+        .addIceCandidate(cand)
+        .then(() => {
+          log('info', `Adding received ICE candidate: ${JSON.stringify(cand)}`);
+          cb(cand);
+        })
+        .catch((e) => {
+          log('error', 'Set candidate error', e);
+          cb(null);
+        });
+    }
+  }
+
   public invite({ targetUserId, userId }: { targetUserId: number; userId: number }) {
     this.handleIceCandidate({ targetUserId, userId });
   }

@@ -1,3 +1,9 @@
 declare module 'wrtc' {
-  export { RTCPeerConnection, RTCSessionDescription, MediaStream, MediaStreamTrack };
+  export {
+    RTCPeerConnection,
+    RTCSessionDescription,
+    MediaStream,
+    MediaStreamTrack,
+    RTCIceCandidate,
+  };
 }
