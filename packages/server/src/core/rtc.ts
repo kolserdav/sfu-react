@@ -149,36 +149,9 @@ class RTC implements RTCInterface {
     this.handleIceCandidate({ targetUserId, userId });
   }
 
-  /**
-   * handleNewICECandidateMsg
-   */
-  public handleCandidateMessage(
-    msg: SendMessageArgs<MessageType.CANDIDATE>,
-    cb: (cand: RTCIceCandidate | null) => any
-  ) {
-    const {
-      data: { candidate },
-    } = msg;
-    if (!this.peerConnection) {
-      log('warn', 'Failed create ice candidate because peerConnection is', this.peerConnection);
-      cb(null);
-      return;
-    }
-    const cand = new RTCIceCandidate(candidate);
-    this.peerConnection
-      .addIceCandidate(cand)
-      .then(() => {
-        log('info', `Adding received ICE candidate: ${JSON.stringify(cand)}`);
-        cb(cand);
-      })
-      .catch((e) => {
-        log('error', 'Set candidate error', e);
-        cb(null);
-      });
-  }
-
   public handleOfferMessage(
     msg: SendMessageArgs<MessageType.OFFER>,
+    userId: number,
     cb: (desc: RTCSessionDescription | null) => any
   ) {
     const {
@@ -199,17 +172,17 @@ class RTC implements RTCInterface {
       targetUserId: userId,
       userId,
     });
-    const desc = new RTCSessionDescription(sdp);
+    const desc = new wrtc.RTCSessionDescription(sdp);
     this.peerConnection
       .setRemoteDescription(desc)
       .then(() => {
-        const localStream = null;
         log('info', '-- Local video stream obtained');
-        localStream.getTracks().forEach((track) => {
+        const stream = new wrtc.MediaStream();
+        stream.getTracks().forEach((track) => {
           if (!this.peerConnection) {
             log('warn', 'failed to add candidate video track');
           } else {
-            this.peerConnection.addTrack(track, localStream);
+            this.peerConnection.addTrack(track, new wrtc.MediaStream());
           }
         });
       })
@@ -240,7 +213,7 @@ class RTC implements RTCInterface {
                 if (localDescription) {
                   log('info', 'Sending answer packet back to other peer');
                   this.ws.sendMessage({
-                    id,
+                    id: userId,
                     type: MessageType.ANSWER,
                     token: '',
                     data: {

@@ -45,6 +45,7 @@ wss.connection.on('connection', function connection(ws) {
     let authRes: string | null = null;
     let args;
     let userId = 0;
+    const rtc: RTC | null = new RTC({ roomId: id, ws: wss });
     // TODO auth
     switch (type) {
       case Types.MessageType.GET_USER_ID:
@@ -156,27 +157,16 @@ wss.connection.on('connection', function connection(ws) {
       case Types.MessageType.OFFER:
         console.log('offer');
         userId = wss.getMessage(Types.MessageType.OFFER, rawMessage).data.userId;
-
-        console.log(userId);
-        const rtc = new RTC({ roomId: id, ws: wss });
         rtc.invite({ targetUserId: userId, userId: id });
+        rtc.handleOfferMessage(rawMessage, userId, () => {
+          console.log('cn');
+        });
         break;
       case Types.MessageType.ANSWER:
         console.log('answer');
         break;
       case Types.MessageType.CANDIDATE:
-        console.log('candidate', id);
-        userId = wss.getMessage(Types.MessageType.CANDIDATE, rawMessage).data.userId;
-        const candidate = wss.getMessage(Types.MessageType.CANDIDATE, rawMessage).data.candidate;
-        wss.sendMessage({
-          type: Types.MessageType.CANDIDATE,
-          id: userId,
-          token: '',
-          data: {
-            candidate,
-            userId,
-          },
-        });
+        // console.log('candidate');
         break;
       default:
     }
