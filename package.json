@@ -5,6 +5,9 @@
   "repository": "git@github.com:kolserdav/group-call.git",
   "author": "kolserdav <serega12101983@gmail.com>",
   "license": "MIT",
+  "os": [
+    "linux"
+  ],
   "scripts": {
     "copy-interfaces": "node scripts/create-interfaces-symlink.js",
     "copy-prisma": "node scripts/copy-prisma-types.js",
