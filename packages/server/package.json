@@ -8,7 +8,7 @@
   },
   "scripts": {
     "watch": "tsc -p . -w",
-    "dev:start": "nodemon dist/index.js",
+    "dev:start": "nodemon dist/src/index.js",
     "dev": "concurrently \"npm run watch\" \"npm run dev:start\"",
     "build": "tsc -p .",
     "dev:migrate": "npm run format && npm run generate && prisma migrate dev --preview-feature",
@@ -18,6 +18,11 @@
     "studio": "prisma studio",
     "generate": "prisma generate",
     "format": "prisma format"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "node-webrtc"
+    ]
   },
   "devDependencies": {
     "@types/html-to-text": "^8.1.0",

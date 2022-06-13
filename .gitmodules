@@ -1,0 +1,3 @@
+[submodule "packages/server/node-webrtc"]
+	path = packages/server/node-webrtc
+	url = git@github.com:kolserdav/node-webrtc.git

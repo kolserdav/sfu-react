@@ -1,4 +1,4 @@
-declare module 'wrtc' {
+declare module '../../node-webrtc/lib/binding' {
   export {
     RTCPeerConnection,
     RTCSessionDescription,

@@ -143,6 +143,9 @@ class RTC implements RTCInterface {
         log('warn', 'Offer can not created that peerConnection is', core.peerConnection);
       }
     };
+    this.peerConnection.ontrack = (e) => {
+      this.onAddTrack(e);
+    };
   }
 
   public invite({ targetUserId }: { targetUserId: number }) {
@@ -162,6 +165,11 @@ class RTC implements RTCInterface {
       .catch((err) => {
         log('error', 'Error get self user media', err);
       });
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  public onAddTrack(e: RTCTrackEvent): void {
+    /** */
   }
 
   /**

@@ -15,7 +15,7 @@
     "ecmaVersion": 12,
     "sourceType": "module"
   },
-  "ignorePatterns": ["node_modules", "dist", "src/types/prisma.d.ts"],
+  "ignorePatterns": ["node_modules", "dist", "src/types/prisma.d.ts", "node-webrtc"],
   "rules": {
     "no-unused-vars": 1,
     "prettier/prettier": 1

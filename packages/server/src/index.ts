@@ -1,6 +1,5 @@
 /* eslint-disable no-case-declarations */
 import dotenv from 'dotenv';
-import wrtc from 'wrtc';
 import { v4 } from 'uuid';
 dotenv.config();
 import { SERVER_PORT, APP_URL } from './utils/constants';
@@ -163,10 +162,11 @@ wss.connection.on('connection', function connection(ws) {
         });
         break;
       case Types.MessageType.ANSWER:
-        console.log('answer');
+        rtc.handleVideoAnswerMsg(rawMessage, (e) => {
+          console.log('answer', e);
+        });
         break;
       case Types.MessageType.CANDIDATE:
-        // console.log('candidate');
         rtc.handleCandidateMessage(rawMessage, () => {
           console.log('ice');
         });

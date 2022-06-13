@@ -1,4 +1,4 @@
-import wrtc from 'wrtc';
+import wrtc from '../../node-webrtc/lib/index';
 import { RTCInterface, MessageType, SendMessageArgs } from '../types/interfaces';
 import { log } from '../utils/lib';
 import WS from './ws';
@@ -155,8 +155,7 @@ class RTC implements RTCInterface {
       cb(null);
       return;
     }
-    if (data && data.candidate) {
-      console.log(data.candidate);
+    if (data && data.candidate && data.candidate?.candidate) {
       const cand = new wrtc.RTCIceCandidate(data);
       this.peerConnection
         .addIceCandidate(cand)
@@ -165,7 +164,8 @@ class RTC implements RTCInterface {
           cb(cand);
         })
         .catch((e) => {
-          log('error', 'Set candidate error', e);
+          console.log(data.candidate);
+          log('error', 'Set candidate error', e.message);
           cb(null);
         });
     }
@@ -203,7 +203,7 @@ class RTC implements RTCInterface {
       .setRemoteDescription(desc)
       .then(() => {
         log('info', '-- Local video stream obtained');
-        const stream = new wrtc.MediaStream();
+        const stream: MediaStream = new wrtc.MediaStream();
         stream.getTracks().forEach((track) => {
           if (!this.peerConnection) {
             log('warn', 'failed to add candidate video track');
