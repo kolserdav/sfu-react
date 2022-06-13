@@ -47,7 +47,7 @@ function Router() {
       ws.userId = id;
       rtc = new RTC({ roomId, ws });
       rtc.onAddTrack = (e) => {
-        console.log(111, e);
+        console.log(11111111111111, e);
       };
     }
     const qS = parseQueryString(search);
@@ -134,15 +134,15 @@ function Router() {
           break;
         case MessageType.CANDIDATE:
           if (rtc) {
-            rtc.handleCandidateMessage(rawMessage, (e) => {
-              console.log(12, e);
-            });
+            rtc.handleCandidateMessage(rawMessage);
           }
           break;
         case MessageType.ANSWER:
           if (rtc) {
             rtc.handleVideoAnswerMsg(rawMessage, (e) => {
-              console.log(13, e);
+              if (e) {
+                log('warn', 'onHandleVideoAnswerMsg', e);
+              }
             });
           }
           break;
@@ -170,7 +170,9 @@ function Router() {
    */
   useEffect(() => {
     window.onfocus = () => {
-      setRestart(!restart);
+      if (process.env.NODE_ENV === 'production') {
+        setRestart(!restart);
+      }
     };
     return () => {
       window.onfocus = () => {

@@ -3,7 +3,7 @@ import { COOKIE_USER_ID, COOKIE_TOKEN } from './constants';
 
 const cookies = new Cookies();
 
-export const log = (type: 'info' | 'warn' | 'error', text: string, data?: any) => {
+export const log = (type: 'info' | 'warn' | 'error' | 'log', text: string, data?: any) => {
   // eslint-disable-next-line no-console
   console[type](type, text, data);
 };

@@ -28,22 +28,20 @@ class WS implements Types.WSInterface {
 
   public sendMessage: Types.WSInterface['sendMessage'] = (args) =>
     new Promise((resolve) => {
-      setTimeout(() => {
-        let res = '';
-        try {
-          res = JSON.stringify(args);
-        } catch (e) {
-          log('error', 'sendMessage', e);
-          resolve(1);
-        }
-        log('info', 'sendMessage', res);
-        this.connection.send(res);
-        resolve(0);
-      }, 0);
+      let res = '';
+      try {
+        res = JSON.stringify(args);
+      } catch (e) {
+        log('error', 'sendMessage', e);
+        resolve(1);
+      }
+      log('info', 'sendMessage', res);
+      this.connection.send(res);
+      resolve(0);
     });
 
   // eslint-disable-next-line class-methods-use-this
-  public parseMessage: Types.WSInterface['parseMessage'] = (message: string) => {
+  public parseMessage: Types.WSInterface['parseMessage'] = (message) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let data: any;
     try {
@@ -58,7 +56,7 @@ class WS implements Types.WSInterface {
   // eslint-disable-next-line class-methods-use-this
   public getMessage: Types.WSInterface['getMessage'] = (type, data) => data as any;
 
-  public newConnection({ local = false }: { local?: boolean }): WebSocket {
+  private newConnection({ local = false }: { local?: boolean }): WebSocket {
     let connection: any;
     if (typeof window !== 'undefined') {
       connection = new WebSocket(

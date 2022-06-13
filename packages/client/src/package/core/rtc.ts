@@ -15,11 +15,14 @@ class RTC implements RTCInterface {
 
   public createRTC(args: { id: number }): RTCPeerConnection {
     this.peerConnection = new RTCPeerConnection({
-      iceServers: [
-        {
-          urls: ['stun:stun.l.google.com:19302'],
-        },
-      ],
+      iceServers:
+        process.env.NODE_ENV === 'production'
+          ? [
+              {
+                urls: ['stun:stun.l.google.com:19302'],
+              },
+            ]
+          : [],
     });
     return this.peerConnection;
   }
@@ -34,8 +37,9 @@ class RTC implements RTCInterface {
     this.peerConnection.onicecandidate = function handleICECandidateEvent(
       event: RTCPeerConnectionIceEvent
     ) {
+      // TODO fixed wrong address
       if (event.candidate) {
-        log('info', `Outgoing ICE candidate: ${event.candidate.candidate}`);
+        log('info', '!!!!!!!! Outgoing ICE candidate:', event.candidate);
         core.ws.sendMessage({
           type: MessageType.CANDIDATE,
           id: targetUserId,
@@ -177,14 +181,16 @@ class RTC implements RTCInterface {
    */
   public handleCandidateMessage(
     msg: SendMessageArgs<MessageType.CANDIDATE>,
-    cb: (cand: RTCIceCandidate | null) => any
+    cb?: (cand: RTCIceCandidate | null) => any
   ) {
     const {
       data: { candidate },
     } = msg;
     if (!this.peerConnection) {
       log('warn', 'Failed create ice candidate because peerConnection is', this.peerConnection);
-      cb(null);
+      if (cb) {
+        cb(null);
+      }
       return;
     }
     const cand = new RTCIceCandidate(candidate);
@@ -192,11 +198,15 @@ class RTC implements RTCInterface {
       .addIceCandidate(cand)
       .then(() => {
         log('info', `Adding received ICE candidate: ${JSON.stringify(cand)}`);
-        cb(cand);
+        if (cb) {
+          cb(cand);
+        }
       })
       .catch((e) => {
         log('error', 'Set candidate error', e);
-        cb(null);
+        if (cb) {
+          cb(null);
+        }
       });
   }
 
@@ -209,12 +219,12 @@ class RTC implements RTCInterface {
       data: { sdp },
     } = msg;
     if (!sdp) {
-      log('warn', 'Message offer error because sdp is', sdp);
+      log('warn', 'Message offer error because sdp is:', sdp);
       cb(null);
       return;
     }
     if (!this.peerConnection) {
-      log('warn', 'Failed create answer', { peerConnection: this.peerConnection });
+      log('warn', 'Failed create answer:', { peerConnection: this.peerConnection });
       cb(null);
       return;
     }

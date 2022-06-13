@@ -15,11 +15,14 @@ class RTC implements RTCInterface {
 
   public createRTC(args: { id: number }): RTCPeerConnection {
     this.peerConnection = new wrtc.RTCPeerConnection({
-      iceServers: [
-        {
-          urls: ['stun:stun.l.google.com:19302'],
-        },
-      ],
+      iceServers:
+        process.env.NODE_ENV === 'production'
+          ? [
+              {
+                urls: ['stun:stun.l.google.com:19302'],
+              },
+            ]
+          : [],
     });
     return this.peerConnection;
   }
@@ -143,32 +146,41 @@ class RTC implements RTCInterface {
         log('warn', 'Offer can not created that peerConnection is', core.peerConnection);
       }
     };
+    this.peerConnection.ontrack = (e) => {
+      log('info', 'onTrack', e);
+    };
   }
 
   public handleCandidateMessage(
     msg: SendMessageArgs<MessageType.CANDIDATE>,
     cb: (cand: RTCIceCandidate | null) => any
   ) {
-    const { data } = msg;
+    const {
+      data: { candidate },
+    } = msg;
     if (!this.peerConnection) {
       log('warn', 'Failed create ice candidate because peerConnection is', this.peerConnection);
-      cb(null);
+      if (cb) {
+        cb(null);
+      }
       return;
     }
-    if (data && data.candidate && data.candidate?.candidate) {
-      const cand = new wrtc.RTCIceCandidate(data);
-      this.peerConnection
-        .addIceCandidate(cand)
-        .then(() => {
-          log('info', `Adding received ICE candidate: ${JSON.stringify(cand)}`);
+    const cand = new wrtc.RTCIceCandidate(candidate);
+    this.peerConnection
+      .addIceCandidate(cand)
+      .then(() => {
+        log('info', `Adding received ICE candidate: ${JSON.stringify(cand)}`);
+        if (cb) {
           cb(cand);
-        })
-        .catch((e) => {
-          console.log(data.candidate);
-          log('error', 'Set candidate error', e.message);
+        }
+      })
+      .catch((e) => {
+        console.log(11, cand);
+        log('error', 'Set candidate error:', e.message);
+        if (cb) {
           cb(null);
-        });
-    }
+        }
+      });
   }
 
   public invite({ targetUserId, userId }: { targetUserId: number; userId: number }) {
@@ -177,7 +189,6 @@ class RTC implements RTCInterface {
 
   public handleOfferMessage(
     msg: SendMessageArgs<MessageType.OFFER>,
-    userId: number,
     cb: (desc: RTCSessionDescription | null) => any
   ) {
     const {
@@ -185,30 +196,33 @@ class RTC implements RTCInterface {
       data: { sdp },
     } = msg;
     if (!sdp) {
-      log('warn', 'Message offer error because sdp is', sdp);
+      log('warn', 'Message offer error because sdp is:', sdp);
       cb(null);
       return;
     }
     if (!this.peerConnection) {
-      log('warn', 'Failed create answer', { peerConnection: this.peerConnection });
+      log('warn', 'Failed create answer:', { peerConnection: this.peerConnection });
       cb(null);
       return;
     }
     this.handleIceCandidate({
-      targetUserId: userId,
-      userId,
+      targetUserId: this.ws.userId,
     });
-    const desc = new wrtc.RTCSessionDescription(sdp);
+    const desc = new RTCSessionDescription(sdp);
     this.peerConnection
       .setRemoteDescription(desc)
       .then(() => {
+        log('info', 'Setting up the local media stream...');
+        return navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS);
+      })
+      .then((stream) => {
+        const localStream = stream;
         log('info', '-- Local video stream obtained');
-        const stream: MediaStream = new wrtc.MediaStream();
-        stream.getTracks().forEach((track) => {
+        localStream.getTracks().forEach((track) => {
           if (!this.peerConnection) {
             log('warn', 'failed to add candidate video track');
           } else {
-            this.peerConnection.addTrack(track, new wrtc.MediaStream());
+            this.peerConnection.addTrack(track, localStream);
           }
         });
       })
@@ -239,12 +253,12 @@ class RTC implements RTCInterface {
                 if (localDescription) {
                   log('info', 'Sending answer packet back to other peer');
                   this.ws.sendMessage({
-                    id: userId,
+                    id,
                     type: MessageType.ANSWER,
                     token: '',
                     data: {
                       sdp: localDescription,
-                      userId,
+                      userId: this.rooms[1],
                     },
                   });
                   cb(localDescription);
