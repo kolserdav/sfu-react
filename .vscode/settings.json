@@ -6,6 +6,7 @@
     "source.fixAll.eslint": true,
     "source.fixAll.stylelint": true
   },
+  "cmake.copyCompileCommands": "${workspaceFolder}/packages/server/node-webrtc/compile_commands.json",
   "editor.formatOnSave": true,
   "stylelint.enable": true,
   "stylelint.validate": ["css", "scss"],
