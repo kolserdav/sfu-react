@@ -47,9 +47,9 @@ function Router() {
     if (roomOpen) {
       ws.userId = id;
       rtc = new RTC({ roomId, ws });
-      console.log(roomIsSaved, 44, roomOpen);
       rtc.onAddTrack = (e) => {
-        console.log(11111111111111, e);
+        // TODO create media stream
+        log('info', 'onAddTrack', e);
       };
     }
     const qS = parseQueryString(search);
@@ -169,7 +169,7 @@ function Router() {
         /** */
       };
     };
-  }, [restart, pathname]);
+  }, [restart, pathname, roomIsSaved]);
 
   /**
    * onFocus page

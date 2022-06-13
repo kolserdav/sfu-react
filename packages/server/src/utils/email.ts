@@ -47,12 +47,12 @@ export async function sendEmail(params: NotificationParams): Promise<1 | 0> {
   let html = '';
   try {
     html = fs
-      .readFileSync(path.resolve(__dirname, `../../notifications/${lang}/${type}.html`))
+      .readFileSync(path.resolve(__dirname, `../../../notifications/${lang}/${type}.html`))
       .toString();
   } catch (e) {
     // Если шаблон не найден, то получает тот который в localhost (по умолчанию)
     html = fs
-      .readFileSync(path.resolve(__dirname, `../../notifications/en/${type}.html`))
+      .readFileSync(path.resolve(__dirname, `../../../notifications/en/${type}.html`))
       .toString();
   }
   if (html === '') {

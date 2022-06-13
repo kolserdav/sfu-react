@@ -148,7 +148,8 @@ class RTC implements RTCInterface {
       }
     };
     this.peerConnection.ontrack = (e) => {
-      log('info', 'onTrack', e);
+      // TODO save user track
+      log('info', 'onTrack', e.streams);
     };
   }
 
@@ -207,7 +208,6 @@ class RTC implements RTCInterface {
       cb(null);
       return;
     }
-    console.log(userId, this.rooms, 444444444444444);
     this.handleIceCandidate({
       targetUserId: userId,
       userId: this.rooms[0],
