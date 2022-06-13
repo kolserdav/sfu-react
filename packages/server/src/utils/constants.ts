@@ -16,4 +16,9 @@ export const {
   APP_URL: string;
 };
 
+export const MEDIA_CONSTRAINTS = {
+  audio: true,
+  video: true,
+};
+
 export const SERVER_PORT = parseInt(_SERVER_PORT, 10);

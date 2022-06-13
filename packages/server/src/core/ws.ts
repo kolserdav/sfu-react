@@ -18,7 +18,7 @@ class WS implements WSInterface {
     this.users[id] = connId;
   }
 
-  public createConnection: WSInterface['createConnection'] = (args: ServerOptions | undefined) => {
+  public createConnection = (args: ServerOptions | undefined) => {
     this.connection = new WebSocketServer(args);
     return this.connection;
   };
@@ -50,7 +50,9 @@ class WS implements WSInterface {
           resolve(1);
         }
         const { id } = args;
-        this.sockets[this.users[id]].send(res);
+        if (this.sockets[id]) {
+          this.sockets[id].send(res);
+        }
         resolve(0);
       }, 100);
     });

@@ -8,6 +8,8 @@ class RTC implements RTCInterface {
 
   private ws: WS;
 
+  public room: number | null = null;
+
   constructor({ roomId, ws }: { roomId: number; ws: WS }) {
     this.peerConnection = this.createRTC({ id: roomId });
     this.ws = ws;
@@ -39,7 +41,7 @@ class RTC implements RTCInterface {
     ) {
       // TODO fixed wrong address
       if (event.candidate) {
-        log('info', '!!!!!!!! Outgoing ICE candidate:', event.candidate);
+        log('info', `Outgoing ICE candidate: ${event.candidate.candidate}`);
         core.ws.sendMessage({
           type: MessageType.CANDIDATE,
           id: targetUserId,
@@ -203,11 +205,19 @@ class RTC implements RTCInterface {
         }
       })
       .catch((e) => {
-        log('error', 'Set candidate error', e);
+        log('error', 'Set candidate error', {
+          error: e,
+          cand,
+        });
         if (cb) {
           cb(null);
         }
       });
+  }
+
+  private getRoom() {
+    this.room = parseInt(window.location.pathname.replace('/', '').replace(/\?.*$/, ''), 10);
+    return this.room;
   }
 
   public handleOfferMessage(
@@ -228,8 +238,9 @@ class RTC implements RTCInterface {
       cb(null);
       return;
     }
+    this.room = this.getRoom();
     this.handleIceCandidate({
-      targetUserId: this.ws.userId,
+      targetUserId: this.room,
     });
     const desc = new RTCSessionDescription(sdp);
     this.peerConnection

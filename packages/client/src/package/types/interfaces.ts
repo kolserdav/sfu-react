@@ -20,11 +20,15 @@ export enum MessageType {
   SET_GUEST_CREATE = 'SET_GUEST_CREATE',
   GET_GUEST_UPDATE = 'GET_GUEST_UPDATE',
   SET_GUEST_UPDATE = 'SET_GUEST_UPDATE',
+  GET_ROOM = 'GET_ROOM',
+  SET_ROOM = 'SET_ROOM',
   SET_ERROR = 'SET_ERROR',
 }
 
 type GetGuestId = undefined;
 type SetGuestId = undefined;
+type GetRoom = undefined;
+type SetRoom = undefined;
 type SetError = {
   message: string;
 };
@@ -75,6 +79,10 @@ export type ArgsSubset<T> = T extends MessageType.OFFER
   ? GetGuestId
   : T extends MessageType.SET_USER_ID
   ? SetGuestId
+  : T extends MessageType.GET_ROOM
+  ? GetRoom
+  : T extends MessageType.SET_ROOM
+  ? SetRoom
   : T extends MessageType.GET_AUTH
   ? GetAuth
   : T extends MessageType.SET_AUTH

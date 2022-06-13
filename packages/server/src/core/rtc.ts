@@ -1,11 +1,12 @@
 import wrtc from '../../node-webrtc/lib/index';
 import { RTCInterface, MessageType, SendMessageArgs } from '../types/interfaces';
 import { log } from '../utils/lib';
+import { MEDIA_CONSTRAINTS } from '../utils/constants';
 import WS from './ws';
 
 class RTC implements RTCInterface {
   public peerConnection: RTCPeerConnection;
-
+  public rooms: number[] = [];
   private ws: WS;
 
   constructor({ roomId, ws }: { roomId: number; ws: WS }) {
@@ -151,9 +152,12 @@ class RTC implements RTCInterface {
     };
   }
 
+  public invite({ targetUserId, userId }: { targetUserId: number; userId: number }) {
+    this.handleIceCandidate({ targetUserId, userId });
+  }
   public handleCandidateMessage(
     msg: SendMessageArgs<MessageType.CANDIDATE>,
-    cb: (cand: RTCIceCandidate | null) => any
+    cb?: (cand: RTCIceCandidate | null) => any
   ) {
     const {
       data: { candidate },
@@ -175,16 +179,14 @@ class RTC implements RTCInterface {
         }
       })
       .catch((e) => {
-        console.log(11, cand);
-        log('error', 'Set candidate error:', e.message);
+        log('error', 'Set candidate error', {
+          error: e,
+          cand,
+        });
         if (cb) {
           cb(null);
         }
       });
-  }
-
-  public invite({ targetUserId, userId }: { targetUserId: number; userId: number }) {
-    this.handleIceCandidate({ targetUserId, userId });
   }
 
   public handleOfferMessage(
@@ -193,7 +195,7 @@ class RTC implements RTCInterface {
   ) {
     const {
       id,
-      data: { sdp },
+      data: { sdp, userId },
     } = msg;
     if (!sdp) {
       log('warn', 'Message offer error because sdp is:', sdp);
@@ -205,18 +207,20 @@ class RTC implements RTCInterface {
       cb(null);
       return;
     }
+    console.log(userId, this.rooms, 444444444444444);
     this.handleIceCandidate({
-      targetUserId: this.ws.userId,
+      targetUserId: userId,
+      userId: this.rooms[0],
     });
-    const desc = new RTCSessionDescription(sdp);
+    const desc = new wrtc.RTCSessionDescription(sdp);
     this.peerConnection
       .setRemoteDescription(desc)
       .then(() => {
         log('info', 'Setting up the local media stream...');
-        return navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS);
+        return wrtc.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS);
       })
       .then((stream) => {
-        const localStream = stream;
+        const localStream: MediaStream = stream;
         log('info', '-- Local video stream obtained');
         localStream.getTracks().forEach((track) => {
           if (!this.peerConnection) {

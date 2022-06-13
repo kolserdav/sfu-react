@@ -37,15 +37,17 @@ function Router() {
   const [loggedAs, setLoggedAs] = useState<string>('');
   const [restart, setRestart] = useState<boolean>(false);
   const [streams, setStreams] = useState<MediaStream[]>([]);
+  const [roomIsSaved, setRoomIsSaved] = useState<boolean>(false);
   const ws = useMemo(() => new WS(), [restart]);
   const db = useMemo(() => new DB(), [restart]);
   useEffect(() => {
     const roomId = parseInt(pathname.replace('/', ''), 10);
     let rtc: RTC | null = null;
-    const roomOpen = Number.isInteger(roomId) && id;
+    const roomOpen = Number.isInteger(roomId);
     if (roomOpen) {
       ws.userId = id;
       rtc = new RTC({ roomId, ws });
+      console.log(roomIsSaved, 44, roomOpen);
       rtc.onAddTrack = (e) => {
         console.log(11111111111111, e);
       };
@@ -57,10 +59,11 @@ function Router() {
       if (roomOpen && id) {
         rtc?.invite({ targetUserId: roomId });
       }
+      db.setToken();
       ws.sendMessage({
-        type: MessageType.GET_USER_ID,
-        id,
-        token,
+        type: MessageType.GET_ROOM,
+        id: roomId,
+        token: db.token,
         data: undefined,
       });
     };
@@ -145,6 +148,9 @@ function Router() {
               }
             });
           }
+          break;
+        case MessageType.SET_ROOM:
+          setRoomIsSaved(true);
           break;
         case MessageType.SET_ERROR:
           const {

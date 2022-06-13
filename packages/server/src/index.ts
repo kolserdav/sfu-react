@@ -153,11 +153,24 @@ wss.connection.on('connection', function connection(ws) {
           },
         });
         break;
+      case Types.MessageType.GET_ROOM:
+        if (!rtc.rooms[id]) {
+          wss.sockets[id] = ws;
+          rtc.rooms.push(id);
+          wss.users[id] = connId;
+        }
+        wss.sendMessage({
+          type: Types.MessageType.SET_ROOM,
+          id: 0,
+          token: '',
+          data: undefined,
+        });
+        break;
       case Types.MessageType.OFFER:
         console.log('offer');
         userId = wss.getMessage(Types.MessageType.OFFER, rawMessage).data.userId;
         rtc.invite({ targetUserId: userId, userId: id });
-        rtc.handleOfferMessage(rawMessage, userId, () => {
+        rtc.handleOfferMessage(rawMessage, () => {
           console.log('cn');
         });
         break;
@@ -167,10 +180,11 @@ wss.connection.on('connection', function connection(ws) {
         });
         break;
       case Types.MessageType.CANDIDATE:
-        console.log(rawMessage, 2);
+        /*  
         rtc.handleCandidateMessage(rawMessage, () => {
-          console.log('ice');
-        });
+            console.log('ice');
+          });
+        */
         break;
       default:
     }
