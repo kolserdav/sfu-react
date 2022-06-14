@@ -112,7 +112,6 @@ class RTC implements RTCInterface {
                   userId: core.ws.userId,
                 },
               });
-              // cb(localDescription);
             }
           });
       };
@@ -258,7 +257,7 @@ class RTC implements RTCInterface {
         cb(0);
       })
       .catch((e) => {
-        log('error', 'Error set description for answer', e);
+        log('error', 'Error set description for answer:', e);
         cb(1);
       });
   };

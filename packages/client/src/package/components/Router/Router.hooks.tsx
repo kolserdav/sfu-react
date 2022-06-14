@@ -27,27 +27,12 @@ export const useHandleMessages = ({ ws, db, restart }: { ws: WS; db: DB; restart
     const roomId = parseInt(pathname.replace('/', ''), 10);
     let rtc: RTC | null = null;
     const roomOpen = Number.isInteger(roomId);
-    if (roomOpen) {
-      ws.setUserId(id);
-      rtc = new RTC({ ws });
-      rtc.createRTC({ id: roomId });
-      rtc.onAddTrack = (e) => {
-        // TODO create media stream
-        log('info', 'onAddTrack', e);
-        const _streams = streams.map((item) => item);
-        _streams.push(e.streams[0]);
-        setStreams(_streams);
-      };
-    }
     const qS = parseQueryString(search);
     const qSUserId = qS?.userId;
     const token = qS?.token || getTokenCookie()?.token || '';
     db.setToken(token);
     ws.onOpen = (ev) => {
       log('info', 'onOpen', ev);
-      if (roomOpen && id) {
-        rtc?.invite({ targetUserId: roomId, userId: id });
-      }
       ws.sendMessage({
         type: MessageType.GET_USER_ID,
         id: !qSUserId ? id : 0,
@@ -106,6 +91,17 @@ export const useHandleMessages = ({ ws, db, restart }: { ws: WS; db: DB; restart
             setLoggedAs('');
           }
           if (roomOpen) {
+            rtc = new RTC({ ws });
+            ws.setUserId(_id);
+            rtc.createRTC({ id: roomId });
+            rtc.onAddTrack = (e) => {
+              // TODO create media stream
+              log('info', 'onAddTrack', e);
+              const _streams = streams.map((item) => item);
+              _streams.push(e.streams[0]);
+              setStreams(_streams);
+            };
+            rtc.invite({ targetUserId: roomId, userId: _id });
             ws.sendMessage({
               type: MessageType.GET_ROOM,
               id: roomId,

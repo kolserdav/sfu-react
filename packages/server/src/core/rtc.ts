@@ -1,5 +1,5 @@
 import wrtc from '../../node-webrtc/lib/index';
-import { RTCInterface, MessageType, SendMessageArgs } from '../types/interfaces';
+import { RTCInterface, MessageType } from '../types/interfaces';
 import { log } from '../utils/lib';
 import WS from './ws';
 
@@ -102,12 +102,10 @@ class RTC implements RTCInterface {
                   userId,
                 },
               });
-              // cb(localDescription);
             }
           });
       };
     this.peerConnections[targetUserId].ontrack = (e) => {
-      console.log(1);
       this.streams[targetUserId] = e.streams[0];
       log('info', 'onTrack', e.streams);
     };
