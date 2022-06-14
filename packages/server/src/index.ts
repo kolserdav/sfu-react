@@ -197,22 +197,15 @@ wss.connection.on('connection', function connection(ws) {
               const { type } = msg;
               switch (type) {
                 case Types.MessageType.OFFER:
-                  console.log('offer');
                   const userId = wss.getMessage(Types.MessageType.OFFER, msg).data.userId;
                   rtc.invite({ targetUserId: userId, userId: id });
-                  rtc.handleOfferMessage(msg, () => {
-                    console.log('cn');
-                  });
+                  rtc.handleOfferMessage(msg);
                   break;
                 case Types.MessageType.ANSWER:
-                  rtc.handleVideoAnswerMsg(msg, (e) => {
-                    console.log('answer', e);
-                  });
+                  rtc.handleVideoAnswerMsg(msg);
                   break;
                 case Types.MessageType.CANDIDATE:
-                  rtc.handleCandidateMessage(msg, () => {
-                    console.log('ice');
-                  });
+                  rtc.handleCandidateMessage(msg);
                   break;
               }
             }

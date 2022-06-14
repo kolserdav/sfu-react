@@ -49,10 +49,12 @@ interface SetAuth {
 type Offer = {
   sdp: RTCSessionDescriptionInit;
   userId: number;
+  item?: number;
 };
 type Candidate = {
   candidate: any;
   userId: number;
+  item?: number;
 };
 type Answer = {
   sdp: RTCSessionDescriptionInit;
@@ -125,16 +127,18 @@ export abstract class RTCInterface {
   public abstract handleIceCandidate({
     targetUserId,
     userId,
+    item,
   }: {
     targetUserId: number;
     userId: number;
+    item?: number;
   }): void;
 
   public abstract closeVideoCall({ targetUserId }: { targetUserId: number }): void;
 
   public abstract handleOfferMessage(
     msg: SendMessageArgs<MessageType.OFFER>,
-    cb: (desc: RTCSessionDescription | null) => any
+    cb?: (desc: RTCSessionDescription | null) => any
   ): void;
 
   public abstract handleCandidateMessage(
@@ -144,7 +148,7 @@ export abstract class RTCInterface {
 
   public abstract handleVideoAnswerMsg(
     msg: SendMessageArgs<MessageType.ANSWER>,
-    cb: (res: 1 | 0) => any
+    cb?: (res: 1 | 0) => any
   ): void;
 }
 

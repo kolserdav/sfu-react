@@ -150,11 +150,13 @@ class RTC implements RTCInterface {
   public handleOfferMessage: RTCInterface['handleOfferMessage'] = (msg, cb) => {
     const {
       id,
-      data: { sdp, userId },
+      data: { sdp, userId, item },
     } = msg;
     if (!sdp) {
       log('warn', 'Message offer error because sdp is:', sdp);
-      cb(null);
+      if (cb) {
+        cb(null);
+      }
       return;
     }
     this.handleIceCandidate({
@@ -166,8 +168,8 @@ class RTC implements RTCInterface {
       .setRemoteDescription(desc)
       .then(() => {
         log('info', '-- Local video stream obtained');
-        this.streams[userId].getTracks().forEach((track) => {
-          this.peerConnections[userId].addTrack(track, this.streams[userId]);
+        this.streams[item || userId].getTracks().forEach((track) => {
+          this.peerConnections[item || userId].addTrack(track, this.streams[item || userId]);
         });
       })
       .then(() => {
@@ -177,7 +179,9 @@ class RTC implements RTCInterface {
             log('error', 'Failed set local description for answer.', {
               answ,
             });
-            cb(null);
+            if (cb) {
+              cb(null);
+            }
             return;
           }
           log('info', '------> Setting local description after creating answer');
@@ -199,7 +203,9 @@ class RTC implements RTCInterface {
                     userId: id,
                   },
                 });
-                cb(localDescription);
+                if (cb) {
+                  cb(localDescription);
+                }
               } else {
                 log('warn', 'Failed send answer because localDescription is', localDescription);
               }
@@ -208,7 +214,9 @@ class RTC implements RTCInterface {
       })
       .catch((e) => {
         log('error', 'Failed get user media', e);
-        cb(null);
+        if (cb) {
+          cb(null);
+        }
       });
   };
 
@@ -221,11 +229,15 @@ class RTC implements RTCInterface {
     this.peerConnections[userId]
       .setRemoteDescription(desc)
       .then(() => {
-        cb(0);
+        if (cb) {
+          cb(0);
+        }
       })
       .catch((e) => {
         log('error', 'Error set description for answer', e);
-        cb(1);
+        if (cb) {
+          cb(1);
+        }
       });
   };
 

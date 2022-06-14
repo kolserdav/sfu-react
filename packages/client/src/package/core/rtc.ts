@@ -28,7 +28,11 @@ class RTC implements RTCInterface {
     return this.peerConnections;
   };
 
-  public handleIceCandidate: RTCInterface['handleIceCandidate'] = ({ targetUserId, userId }) => {
+  public handleIceCandidate: RTCInterface['handleIceCandidate'] = ({
+    targetUserId,
+    userId,
+    item,
+  }) => {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const core = this;
     this.peerConnections[targetUserId].onicecandidate = function handleICECandidateEvent(
@@ -43,6 +47,7 @@ class RTC implements RTCInterface {
           data: {
             candidate: event.candidate,
             userId: core.ws.userId,
+            item,
           },
         });
       }
@@ -110,6 +115,7 @@ class RTC implements RTCInterface {
                 data: {
                   sdp: localDescription,
                   userId: core.ws.userId,
+                  item,
                 },
               });
             }
@@ -120,8 +126,16 @@ class RTC implements RTCInterface {
     };
   };
 
-  public invite({ targetUserId, userId }: { targetUserId: number; userId: number }) {
-    this.handleIceCandidate({ targetUserId, userId });
+  public invite({
+    targetUserId,
+    userId,
+    item,
+  }: {
+    targetUserId: number;
+    userId: number;
+    item?: number;
+  }) {
+    this.handleIceCandidate({ targetUserId, userId, item });
     navigator.mediaDevices
       .getUserMedia(MEDIA_CONSTRAINTS)
       .then((localStream) => {
@@ -180,7 +194,9 @@ class RTC implements RTCInterface {
     } = msg;
     if (!sdp) {
       log('warn', 'Message offer error because sdp is:', sdp);
-      cb(null);
+      if (cb) {
+        cb(null);
+      }
       return;
     }
     this.room = this.getRoom();
@@ -210,7 +226,9 @@ class RTC implements RTCInterface {
               answ,
               peerConnection: this.peerConnections[id],
             });
-            cb(null);
+            if (cb) {
+              cb(null);
+            }
             return;
           }
           log('info', '------> Setting local description after creating answer');
@@ -232,7 +250,9 @@ class RTC implements RTCInterface {
                     userId: this.ws.userId,
                   },
                 });
-                cb(localDescription);
+                if (cb) {
+                  cb(localDescription);
+                }
               } else {
                 log('warn', 'Failed send answer because localDescription is', localDescription);
               }
@@ -241,7 +261,9 @@ class RTC implements RTCInterface {
       })
       .catch((e) => {
         log('error', 'Failed get user media', e);
-        cb(null);
+        if (cb) {
+          cb(null);
+        }
       });
   };
 
@@ -254,11 +276,15 @@ class RTC implements RTCInterface {
     this.peerConnections[userId]
       .setRemoteDescription(desc)
       .then(() => {
-        cb(0);
+        if (cb) {
+          cb(0);
+        }
       })
       .catch((e) => {
         log('error', 'Error set description for answer:', e);
-        cb(1);
+        if (cb) {
+          cb(1);
+        }
       });
   };
 
