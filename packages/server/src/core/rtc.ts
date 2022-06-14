@@ -8,7 +8,7 @@ class RTC implements RTCInterface {
   public peerConnection: RTCPeerConnection;
   public rooms: number[] = [];
   private ws: WS;
-
+  private streams: Record<number, MediaStream> = {};
   constructor({ roomId, ws }: { roomId: number; ws: WS }) {
     this.peerConnection = this.createRTC({ id: roomId });
     this.ws = ws;
@@ -109,7 +109,7 @@ class RTC implements RTCInterface {
         });
     };
     this.peerConnection.ontrack = (e) => {
-      // TODO save user track
+      this.streams[targetUserId] = e.streams[0];
       log('info', 'onTrack', e.streams);
     };
   }
@@ -167,18 +167,9 @@ class RTC implements RTCInterface {
     this.peerConnection
       .setRemoteDescription(desc)
       .then(() => {
-        log('info', 'Setting up the local media stream...');
-        return wrtc.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS);
-      })
-      .then((stream) => {
-        const localStream: MediaStream = stream;
         log('info', '-- Local video stream obtained');
-        localStream.getTracks().forEach((track) => {
-          if (!this.peerConnection) {
-            log('warn', 'failed to add candidate video track');
-          } else {
-            this.peerConnection.addTrack(track, localStream);
-          }
+        this.streams[userId].getTracks().forEach((track) => {
+          this.peerConnection.addTrack(track, this.streams[userId]);
         });
       })
       .then(() => {
