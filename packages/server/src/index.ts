@@ -157,53 +157,53 @@ wss.connection.on('connection', function connection(ws) {
         });
         break;
       case Types.MessageType.GET_ROOM:
-        const conn = new wss.websocket(`ws://localhost:${SERVER_PORT}`);
         const { userId: uid } = wss.getMessage(Types.MessageType.GET_ROOM, rawMessage).data;
         if (!rtc.rooms[id]) {
+          const conn = new wss.websocket(`ws://localhost:${SERVER_PORT}`);
           rtc.rooms[id] = [uid];
+          conn.onopen = () => {
+            conn.send(
+              JSON.stringify({
+                type: Types.MessageType.GET_USER_ID,
+                id,
+                data: {
+                  isRoom: true,
+                },
+              })
+            );
+            conn.onmessage = (mess) => {
+              const msg = wss.parseMessage(mess.data as string);
+              if (msg) {
+                const { type } = msg;
+                switch (type) {
+                  case Types.MessageType.OFFER:
+                    console.log('offer');
+                    const userId = wss.getMessage(Types.MessageType.OFFER, msg).data.userId;
+                    rtc.invite({ targetUserId: userId, userId: id });
+                    rtc.handleOfferMessage(msg, () => {
+                      console.log('cn');
+                    });
+                    break;
+                  case Types.MessageType.ANSWER:
+                    rtc.handleVideoAnswerMsg(msg, (e) => {
+                      console.log('answer', e);
+                    });
+                    break;
+                  case Types.MessageType.CANDIDATE:
+                    rtc.handleCandidateMessage(msg, () => {
+                      console.log('ice');
+                    });
+                    break;
+                }
+              }
+            };
+          };
         } else {
           rtc.addUserToRoom({
             roomId: id,
             userId: uid,
           });
         }
-        conn.onopen = () => {
-          conn.send(
-            JSON.stringify({
-              type: Types.MessageType.GET_USER_ID,
-              id,
-              data: {
-                isRoom: true,
-              },
-            })
-          );
-          conn.onmessage = (mess) => {
-            const msg = wss.parseMessage(mess.data as string);
-            if (msg) {
-              const { type } = msg;
-              switch (type) {
-                case Types.MessageType.OFFER:
-                  console.log('offer');
-                  const userId = wss.getMessage(Types.MessageType.OFFER, msg).data.userId;
-                  rtc.invite({ targetUserId: userId, userId: id });
-                  rtc.handleOfferMessage(msg, () => {
-                    console.log('cn');
-                  });
-                  break;
-                case Types.MessageType.ANSWER:
-                  rtc.handleVideoAnswerMsg(msg, (e) => {
-                    console.log('answer', e);
-                  });
-                  break;
-                case Types.MessageType.CANDIDATE:
-                  rtc.handleCandidateMessage(msg, () => {
-                    console.log('ice');
-                  });
-                  break;
-              }
-            }
-          };
-        };
         wss.sendMessage({
           type: Types.MessageType.SET_ROOM,
           id,

@@ -76,6 +76,9 @@ function Router() {
   }, [id]);
 
   const _streams = useMemo(() => createStreams(streams), [streams]);
+  const roomLink = `${window.location.href.replace(/\?.*/, '')}${
+    process.env.NODE_ENV === 'development' ? '?userId=0' : ''
+  }`;
   return (
     <div>
       {loggedAs && <div>Logged as {loggedAs}</div>}
@@ -91,9 +94,7 @@ function Router() {
       <button type="button" onClick={createRoom}>
         Create room
       </button>
-      <a href={window.location.href.replace(/\?.*/, '')}>
-        {window.location.href.replace(/\?.*/, '')}
-      </a>
+      <a href={roomLink}>{roomLink}</a>
       <div className={s.container}>
         {_streams.map((item, index) => (
           <div key={item.stream.id} className={s.video}>

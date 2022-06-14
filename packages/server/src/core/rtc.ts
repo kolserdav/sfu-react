@@ -164,10 +164,10 @@ class RTC implements RTCInterface {
       cb(null);
       return;
     }
+    console.log(this.rooms);
     this.handleIceCandidate({
       targetUserId: userId,
-      // TODO right userId
-      userId: this.rooms[id][0],
+      userId: id,
     });
     const desc = new wrtc.RTCSessionDescription(sdp);
     this.peerConnection

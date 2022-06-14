@@ -39,6 +39,7 @@ export const useHandleMessages = ({ ws, db, restart }: { ws: WS; db: DB; restart
       };
     }
     const qS = parseQueryString(search);
+    const qSUserId = qS?.userId;
     const token = qS?.token || getTokenCookie()?.token || '';
     db.setToken(token);
     ws.onOpen = (ev) => {
@@ -48,8 +49,8 @@ export const useHandleMessages = ({ ws, db, restart }: { ws: WS; db: DB; restart
       }
       ws.sendMessage({
         type: MessageType.GET_USER_ID,
-        id,
-        token: db.token,
+        id: !qSUserId ? id : 0,
+        token: !qSUserId ? db.token : 'null',
         data: {},
       });
     };
@@ -65,7 +66,7 @@ export const useHandleMessages = ({ ws, db, restart }: { ws: WS; db: DB; restart
       let res;
       const args = {
         where: {
-          id,
+          id: _id,
         },
         include: {
           User: {
@@ -76,7 +77,7 @@ export const useHandleMessages = ({ ws, db, restart }: { ws: WS; db: DB; restart
         },
       };
       if (type === MessageType.SET_USER_ID) {
-        ws.setUserId(id);
+        ws.setUserId(_id);
         res = db.guestFindFirst(args);
       }
       switch (type) {
