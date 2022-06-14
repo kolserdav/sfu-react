@@ -52,7 +52,10 @@ wss.connection.on('connection', function connection(ws) {
         const { id: _id, token: _token } = isRoom
           ? { id, token: 'null' }
           : await db.getUserId(id, token);
-        wss.setSocket({ id: _id, ws, connId });
+        if (isRoom) {
+          rtc.roomCons[connId] = id;
+        }
+        wss.setSocket({ id: _id, ws, connId, isRoom });
         rtc.createRTC({ id: _id });
         wss.sendMessage({
           type: Types.MessageType.SET_USER_ID,
@@ -222,14 +225,27 @@ wss.connection.on('connection', function connection(ws) {
     }
   });
   ws.onclose = () => {
+    let userId = 0;
+    // Close user connection
     const keys = Object.keys(wss.users);
     keys.forEach((item) => {
       const id = parseInt(item, 10);
       const connId = wss.users[id];
       if (wss.sockets[connId]) {
+        userId = id;
         delete wss.sockets[connId];
         delete wss.users[id];
       }
     });
+    // Remove user from room
+    if (userId) {
+      const roomKeys = Object.keys(rtc.rooms);
+      roomKeys.forEach((item) => {
+        const index = rtc.rooms[item].indexOf(userId);
+        if (index !== -1) {
+          rtc.rooms[item].splice(index, 1);
+        }
+      });
+    }
   };
 });

@@ -8,6 +8,7 @@ class WS implements WSInterface {
   public sockets: Record<string, WebSocket> = {};
 
   public users: Record<number, string> = {};
+  public rooms: Record<number, string> = {};
 
   public websocket = WebSocket;
 
@@ -15,9 +16,23 @@ class WS implements WSInterface {
     this.connection = this.createConnection(connectionArgs);
   }
 
-  public setSocket({ id, ws, connId }: { id: number; ws: WebSocket; connId: string }) {
+  public setSocket({
+    id,
+    ws,
+    connId,
+    isRoom,
+  }: {
+    id: number;
+    ws: WebSocket;
+    connId: string;
+    isRoom?: boolean;
+  }) {
     this.sockets[connId] = ws;
-    this.users[id] = connId;
+    if (!isRoom) {
+      this.users[id] = connId;
+    } else {
+      this.rooms[id] = connId;
+    }
   }
 
   public createConnection = (args: ServerOptions | undefined) => {
@@ -54,6 +69,8 @@ class WS implements WSInterface {
         const { id } = args;
         if (this.users[id]) {
           this.sockets[this.users[id]].send(res);
+        } else if (this.rooms[id]) {
+          this.sockets[this.rooms[id]].send(res);
         }
         resolve(0);
       }, 100);

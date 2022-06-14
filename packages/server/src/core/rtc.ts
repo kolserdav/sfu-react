@@ -5,7 +5,8 @@ import WS from './ws';
 
 class RTC implements RTCInterface {
   public peerConnections: Record<number, RTCPeerConnection> = {};
-  public rooms: Record<number, number[]> = {};
+  public rooms: Record<string, number[]> = {};
+  public roomCons: Record<string, number> = {};
   private ws: WS;
   private streams: Record<number, MediaStream> = {};
   constructor({ ws }: { ws: WS }) {
