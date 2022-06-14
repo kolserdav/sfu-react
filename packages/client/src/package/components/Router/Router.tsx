@@ -1,21 +1,11 @@
-/* eslint-disable jsx-a11y/control-has-associated-label */
-/* eslint-disable jsx-a11y/anchor-has-content */
-/* eslint-disable no-case-declarations */
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import WS from '../../core/ws';
 import DB from '../../core/db';
-import {
-  log,
-  setLoginCookie,
-  getLoginCookie,
-  parseQueryString,
-  setTokenCookie,
-  getTokenCookie,
-} from '../../utils/lib';
+import { setLoginCookie, setTokenCookie } from '../../utils/lib';
 import { MessageType } from '../../types/interfaces';
-import RTC from '../../core/rtc';
 import s from './Router.module.scss';
+import { useHandleMessages } from './Router.hooks';
 
 const createStreams = (
   _str: MediaStream[]
@@ -31,156 +21,34 @@ const createStreams = (
 function Router() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { pathname, search } = location;
-  const [id, setId] = useState<number>(getLoginCookie());
-  const [auth, setAuth] = useState<boolean>(false);
-  const [loggedAs, setLoggedAs] = useState<string>('');
+  const { pathname } = location;
   const [restart, setRestart] = useState<boolean>(false);
-  const [streams, setStreams] = useState<MediaStream[]>([]);
-  const [roomIsSaved, setRoomIsSaved] = useState<boolean>(false);
-  const ws = useMemo(() => new WS(), [restart]);
-  const db = useMemo(() => new DB(), [restart]);
-  useEffect(() => {
-    const roomId = parseInt(pathname.replace('/', ''), 10);
-    let rtc: RTC | null = null;
-    const roomOpen = Number.isInteger(roomId);
-    if (roomOpen) {
-      ws.userId = id;
-      rtc = new RTC({ roomId, ws });
-      rtc.onAddTrack = (e) => {
-        // TODO create media stream
-        log('info', 'onAddTrack', e);
-        const _streams = streams.map((item) => item);
-        _streams.push(e.streams[0]);
-        setStreams(_streams);
-      };
-    }
-    const qS = parseQueryString(search);
-    const token = qS?.token || getTokenCookie()?.token || '';
-    ws.onOpen = (ev) => {
-      log('info', 'onOpen', ev);
-      if (roomOpen && id) {
-        rtc?.invite({ targetUserId: roomId });
-      }
-      db.setToken();
-      ws.sendMessage({
-        type: MessageType.GET_USER_ID,
-        id,
-        token: db.token,
-        data: {},
-      });
-    };
+  const ws = useMemo(() => new WS(), [restart, pathname]);
+  const db = useMemo(() => new DB(), [restart, pathname]);
+  const { auth, loggedAs, streams, id } = useHandleMessages({ ws, db, restart });
 
-    ws.onMessage = (ev) => {
-      log('info', 'onMessage', ev.data);
-      const { data } = ev;
-      const rawMessage = ws.parseMessage(data);
-      if (!rawMessage) {
-        return;
-      }
-      const { type, id: _id } = rawMessage;
-      let res;
-      const args = {
-        where: {
-          id,
+  const login = () => {
+    const email = prompt('Set email');
+    if (email) {
+      ws.sendMessage({
+        type: MessageType.GET_AUTH,
+        id,
+        token: '',
+        data: {
+          email,
         },
-        include: {
-          User: {
-            select: {
-              email: true,
-            },
-          },
-        },
-      };
-      if (type === MessageType.SET_USER_ID) {
-        ws.userId = _id;
-        res = db.guestFindFirst(args);
-      }
-      switch (type) {
-        case MessageType.SET_USER_ID:
-          const { id: __id, token: _token } = ws.getMessage(MessageType.SET_USER_ID, rawMessage);
-          if (_token && _token !== 'null') {
-            setTokenCookie(_token);
-            setAuth(true);
-            db.token = _token;
-            let isAuth = false;
-            if (qS?.token) {
-              isAuth = true;
-              navigate(pathname);
-            }
-            ws.sendMessage({
-              id: ws.userId,
-              token,
-              isAuth,
-              type: MessageType.GET_GUEST_FIND_FIRST,
-              data: {
-                args,
-              },
-            });
-          } else {
-            setAuth(false);
-            setLoggedAs('');
-          }
-          if (roomOpen) {
-            ws.sendMessage({
-              type: MessageType.GET_ROOM,
-              id: roomId,
-              token: db.token,
-              data: undefined,
-            });
-          }
-          setId(__id);
-          break;
-        case MessageType.SET_GUEST_FIND_FIRST:
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const r: Awaited<typeof res> = (rawMessage.data as any).argv;
-          setLoggedAs(r?.User[0].email || '');
-          break;
-        case MessageType.SET_AUTH:
-          console.log(ws.getMessage(MessageType.SET_AUTH, rawMessage).data.message);
-          break;
-        case MessageType.OFFER:
-          if (rtc) {
-            rtc.handleOfferMessage(rawMessage, (e) => {
-              console.log(11, e);
-            });
-          }
-          break;
-        case MessageType.CANDIDATE:
-          if (rtc) {
-            rtc.handleCandidateMessage(rawMessage);
-          }
-          break;
-        case MessageType.ANSWER:
-          if (rtc) {
-            rtc.handleVideoAnswerMsg(rawMessage, (e) => {
-              if (e) {
-                log('warn', 'onHandleVideoAnswerMsg', e);
-              }
-            });
-          }
-          break;
-        case MessageType.SET_ROOM:
-          setRoomIsSaved(true);
-          break;
-        case MessageType.SET_ERROR:
-          const {
-            data: { message },
-          } = ws.getMessage(MessageType.SET_ERROR, rawMessage);
-          log('warn', 'error', message);
-          break;
-        default:
-      }
-    };
-    return () => {
-      ws.onOpen = () => {
-        /** */
-      };
-      ws.onMessage = () => {
-        /** */
-      };
-    };
-  }, [restart, pathname, roomIsSaved]);
+      });
+    }
+  };
+
+  const logout = () => {
+    setTokenCookie('null');
+    setRestart(!restart);
+  };
+
+  const createRoom = () => {
+    navigate(`/${new Date().getTime()}`);
+  };
 
   /**
    * onFocus page
@@ -212,43 +80,15 @@ function Router() {
     <div>
       {loggedAs && <div>Logged as {loggedAs}</div>}
       {!auth ? (
-        <button
-          type="button"
-          onClick={() => {
-            const email = prompt('Set email');
-            if (email) {
-              ws.sendMessage({
-                type: MessageType.GET_AUTH,
-                id,
-                token: '',
-                data: {
-                  email,
-                },
-              });
-            }
-          }}
-        >
+        <button type="button" onClick={login}>
           Login
         </button>
       ) : (
-        <button
-          type="button"
-          onClick={() => {
-            setTokenCookie('null');
-            setAuth(false);
-            setLoggedAs('');
-            setRestart(!restart);
-          }}
-        >
+        <button type="button" onClick={logout}>
           Logout
         </button>
       )}
-      <button
-        type="button"
-        onClick={() => {
-          navigate(`/${new Date().getTime()}`);
-        }}
-      >
+      <button type="button" onClick={createRoom}>
         Create room
       </button>
       <a href={window.location.href.replace(/\?.*/, '')}>

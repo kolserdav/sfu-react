@@ -1,15 +1,18 @@
 import * as Types from '../types/interfaces';
 import WS from './ws';
 import { WS_TTL } from '../utils/constants';
-import { log, getTokenCookie } from '../utils/lib';
+import { log, getTokenCookie, setTokenCookie } from '../utils/lib';
 
 class DB implements Types.DBInterface {
   token = 'null';
 
-  public setToken() {
-    const token = getTokenCookie();
+  public setToken(token?: string) {
+    const _token = token || getTokenCookie()?.token;
+    if (_token) {
+      this.token = _token;
+    }
     if (token) {
-      this.token = token.token;
+      setTokenCookie(token);
     }
   }
 

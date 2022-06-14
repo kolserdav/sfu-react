@@ -1,7 +1,6 @@
 import wrtc from '../../node-webrtc/lib/index';
 import { RTCInterface, MessageType, SendMessageArgs } from '../types/interfaces';
 import { log } from '../utils/lib';
-import { MEDIA_CONSTRAINTS } from '../utils/constants';
 import WS from './ws';
 
 class RTC implements RTCInterface {
