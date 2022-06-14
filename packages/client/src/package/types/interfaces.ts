@@ -123,6 +123,23 @@ export abstract class RTCInterface {
     targetUserId: number;
     userId: number;
   }): void;
+
+  public abstract closeVideoCall({ targetUserId }: { targetUserId: number }): void;
+
+  public abstract handleOfferMessage(
+    msg: SendMessageArgs<MessageType.OFFER>,
+    cb: (desc: RTCSessionDescription | null) => any
+  ): void;
+
+  public abstract handleCandidateMessage(
+    msg: SendMessageArgs<MessageType.CANDIDATE>,
+    cb?: (cand: RTCIceCandidate | null) => any
+  ): void;
+
+  public abstract handleVideoAnswerMsg(
+    msg: SendMessageArgs<MessageType.ANSWER>,
+    cb: (res: 1 | 0) => any
+  ): void;
 }
 
 export interface SendMessageArgs<T> {

@@ -19,6 +19,11 @@
     "generate": "prisma generate",
     "format": "prisma format"
   },
+  "nodemonConfig": {
+    "ignore": [
+      "node-webrtc/build/external/libwebrtc/download/"
+    ]
+  },
   "devDependencies": {
     "@types/html-to-text": "^8.1.0",
     "@types/jsonwebtoken": "^8.5.8",

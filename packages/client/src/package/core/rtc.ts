@@ -1,4 +1,4 @@
-import { RTCInterface, MessageType, SendMessageArgs } from '../types/interfaces';
+import { RTCInterface, MessageType } from '../types/interfaces';
 import { log } from '../utils/lib';
 import { MEDIA_CONSTRAINTS } from '../utils/constants';
 import WS from './ws';
@@ -34,9 +34,8 @@ class RTC implements RTCInterface {
     this.peerConnections[targetUserId].onicecandidate = function handleICECandidateEvent(
       event: RTCPeerConnectionIceEvent
     ) {
-      // TODO fixed wrong address
       if (event.candidate) {
-        log('info', `Outgoing ICE candidate: ${event.candidate.candidate}`);
+        log('info', 'Outgoing ICE candidate:', event.candidate.usernameFragment);
         core.ws.sendMessage({
           type: MessageType.CANDIDATE,
           id: targetUserId,
@@ -145,10 +144,7 @@ class RTC implements RTCInterface {
   /**
    * handleNewICECandidateMsg
    */
-  public handleCandidateMessage(
-    msg: SendMessageArgs<MessageType.CANDIDATE>,
-    cb?: (cand: RTCIceCandidate | null) => any
-  ) {
+  public handleCandidateMessage: RTCInterface['handleCandidateMessage'] = (msg, cb) => {
     const {
       id,
       data: { candidate },
@@ -171,17 +167,14 @@ class RTC implements RTCInterface {
           cb(null);
         }
       });
-  }
+  };
 
   private getRoom() {
     this.room = parseInt(window.location.pathname.replace('/', '').replace(/\?.*$/, ''), 10);
     return this.room;
   }
 
-  public handleOfferMessage(
-    msg: SendMessageArgs<MessageType.OFFER>,
-    cb: (desc: RTCSessionDescription | null) => any
-  ) {
+  public handleOfferMessage: RTCInterface['handleOfferMessage'] = (msg, cb) => {
     const {
       id,
       data: { sdp, userId },
@@ -251,11 +244,10 @@ class RTC implements RTCInterface {
         log('error', 'Failed get user media', e);
         cb(null);
       });
-  }
+  };
 
-  public handleVideoAnswerMsg(msg: SendMessageArgs<MessageType.ANSWER>, cb: (res: 1 | 0) => any) {
+  public handleVideoAnswerMsg: RTCInterface['handleVideoAnswerMsg'] = (msg, cb) => {
     const {
-      id,
       data: { sdp, userId },
     } = msg;
     log('info', 'Call recipient has accepted our call');
@@ -269,9 +261,9 @@ class RTC implements RTCInterface {
         log('error', 'Error set description for answer', e);
         cb(1);
       });
-  }
+  };
 
-  private closeVideoCall({ targetUserId }: { targetUserId: number }) {
+  public closeVideoCall: RTCInterface['closeVideoCall'] = ({ targetUserId }) => {
     log('info', 'Closing the call');
     this.peerConnections[targetUserId].onicecandidate = null;
     this.peerConnections[targetUserId].oniceconnectionstatechange = null;
@@ -280,7 +272,7 @@ class RTC implements RTCInterface {
     this.peerConnections[targetUserId].onnegotiationneeded = null;
     this.peerConnections[targetUserId].ontrack = null;
     this.peerConnections[targetUserId].close();
-  }
+  };
 }
 
 export default RTC;
