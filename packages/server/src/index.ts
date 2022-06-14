@@ -198,7 +198,8 @@ wss.connection.on('connection', function connection(ws) {
               switch (type) {
                 case Types.MessageType.OFFER:
                   const userId = wss.getMessage(Types.MessageType.OFFER, msg).data.userId;
-                  rtc.invite({ targetUserId: userId, userId: id });
+                  const item = wss.getMessage(Types.MessageType.OFFER, msg).data.item;
+                  rtc.invite({ targetUserId: userId, userId: id, item });
                   rtc.handleOfferMessage(msg);
                   break;
                 case Types.MessageType.ANSWER:
@@ -214,14 +215,14 @@ wss.connection.on('connection', function connection(ws) {
         wss.sendMessage({
           type: Types.MessageType.SET_ROOM,
           id,
-          token: '',
+          token: 'null',
           data: undefined,
         });
         break;
       default:
         wss.sendMessage({
           type,
-          token: '',
+          token: 'null',
           data: rawMessage.data,
           id,
         });

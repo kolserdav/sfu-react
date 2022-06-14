@@ -14,7 +14,8 @@ class RTC implements RTCInterface {
     this.ws = ws;
   }
 
-  public createRTC: RTCInterface['createRTC'] = ({ id }) => {
+  public createRTC: RTCInterface['createRTC'] = ({ id, item }) => {
+    // TODO new connection with item
     this.peerConnections[id] = new RTCPeerConnection({
       iceServers:
         process.env.NODE_ENV === 'production'
@@ -190,7 +191,7 @@ class RTC implements RTCInterface {
   public handleOfferMessage: RTCInterface['handleOfferMessage'] = (msg, cb) => {
     const {
       id,
-      data: { sdp, userId },
+      data: { sdp, userId, item },
     } = msg;
     if (!sdp) {
       log('warn', 'Message offer error because sdp is:', sdp);
@@ -203,6 +204,7 @@ class RTC implements RTCInterface {
     this.handleIceCandidate({
       targetUserId: id,
       userId,
+      item,
     });
     const desc = new RTCSessionDescription(sdp);
     this.peerConnections[id]
@@ -248,6 +250,7 @@ class RTC implements RTCInterface {
                   data: {
                     sdp: localDescription,
                     userId: this.ws.userId,
+                    item,
                   },
                 });
                 if (cb) {
@@ -269,7 +272,7 @@ class RTC implements RTCInterface {
 
   public handleVideoAnswerMsg: RTCInterface['handleVideoAnswerMsg'] = (msg, cb) => {
     const {
-      data: { sdp, userId },
+      data: { sdp, userId, item },
     } = msg;
     log('info', 'Call recipient has accepted our call');
     const desc = new RTCSessionDescription(sdp);

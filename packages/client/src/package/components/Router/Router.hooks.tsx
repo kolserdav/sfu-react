@@ -25,7 +25,7 @@ export const useHandleMessages = ({ ws, db, restart }: { ws: WS; db: DB; restart
   const [roomIsSaved, setRoomIsSaved] = useState<boolean>(false);
   useEffect(() => {
     const roomId = parseInt(pathname.replace('/', ''), 10);
-    let rtc: RTC | null = null;
+    const rtc = new RTC({ ws });
     const roomOpen = Number.isInteger(roomId);
     const qS = parseQueryString(search);
     const qSUserId = qS?.userId;
@@ -91,11 +91,9 @@ export const useHandleMessages = ({ ws, db, restart }: { ws: WS; db: DB; restart
             setLoggedAs('');
           }
           if (roomOpen) {
-            rtc = new RTC({ ws });
             ws.setUserId(_id);
             rtc.createRTC({ id: roomId });
             rtc.onAddTrack = (e) => {
-              // TODO create media stream
               log('info', 'onAddTrack', e);
               const _streams = streams.map((item) => item);
               _streams.push(e.streams[0]);
@@ -136,9 +134,15 @@ export const useHandleMessages = ({ ws, db, restart }: { ws: WS; db: DB; restart
         case MessageType.SET_CHANGE_ROOM_GUESTS:
           const { roomUsers } = ws.getMessage(MessageType.SET_CHANGE_ROOM_GUESTS, rawMessage).data;
           roomUsers.forEach((item) => {
-            if (item !== ws.userId) {
-              rtc?.createRTC({ id: roomId });
-              rtc?.invite({ targetUserId: roomId, userId: ws.userId, item });
+            if (item !== ws.userId && rtc) {
+              rtc.createRTC({ id: roomId, item });
+              rtc.invite({ targetUserId: roomId, userId: ws.userId, item });
+              rtc.onAddTrack = (e) => {
+                log('warn', 'onAddTrack', e);
+                const _streams = streams.map((_item) => _item);
+                _streams.push(e.streams[0]);
+                setStreams(_streams);
+              };
             }
           });
           break;
@@ -171,6 +175,6 @@ export const useHandleMessages = ({ ws, db, restart }: { ws: WS; db: DB; restart
         /** */
       };
     };
-  }, [restart, pathname, roomIsSaved]);
+  }, [restart, pathname, roomIsSaved, streams]);
   return { auth, loggedAs, streams, id };
 };

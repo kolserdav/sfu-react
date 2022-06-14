@@ -59,6 +59,7 @@ type Candidate = {
 type Answer = {
   sdp: RTCSessionDescriptionInit;
   userId: number;
+  item?: number;
 };
 interface GetGuestFindFirst {
   args: Prisma.GuestFindFirstArgs;
@@ -122,7 +123,7 @@ export type ArgsSubset<T> = T extends MessageType.OFFER
 export abstract class RTCInterface {
   public abstract peerConnections: Record<number, RTCPeerConnection>;
 
-  public abstract createRTC(args: { id: number }): Record<number, RTCPeerConnection>;
+  public abstract createRTC(args: { id: number; item?: number }): Record<number, RTCPeerConnection>;
 
   public abstract handleIceCandidate({
     targetUserId,

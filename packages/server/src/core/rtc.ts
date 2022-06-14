@@ -27,7 +27,11 @@ class RTC implements RTCInterface {
     return this.peerConnections;
   };
 
-  public handleIceCandidate: RTCInterface['handleIceCandidate'] = ({ targetUserId, userId }) => {
+  public handleIceCandidate: RTCInterface['handleIceCandidate'] = ({
+    targetUserId,
+    userId,
+    item,
+  }) => {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const core = this;
     this.peerConnections[targetUserId].onicecandidate = function handleICECandidateEvent(
@@ -106,14 +110,22 @@ class RTC implements RTCInterface {
             }
           });
       };
-    this.peerConnections[targetUserId].ontrack = (e) => {
-      this.streams[targetUserId] = e.streams[0];
+    this.peerConnections[item || targetUserId].ontrack = (e) => {
+      this.streams[item || targetUserId] = e.streams[0];
       log('info', 'onTrack', e.streams);
     };
   };
 
-  public invite({ targetUserId, userId }: { targetUserId: number; userId: number }) {
-    this.handleIceCandidate({ targetUserId, userId });
+  public invite({
+    targetUserId,
+    userId,
+    item,
+  }: {
+    targetUserId: number;
+    userId: number;
+    item?: number;
+  }) {
+    this.handleIceCandidate({ targetUserId, userId, item });
   }
   public handleCandidateMessage: RTCInterface['handleCandidateMessage'] = (msg, cb) => {
     const {
@@ -162,15 +174,25 @@ class RTC implements RTCInterface {
     this.handleIceCandidate({
       targetUserId: userId,
       userId: id,
+      item,
     });
     const desc = new wrtc.RTCSessionDescription(sdp);
     this.peerConnections[userId]
       .setRemoteDescription(desc)
       .then(() => {
-        log('info', '-- Local video stream obtained');
-        this.streams[item || userId].getTracks().forEach((track) => {
-          this.peerConnections[item || userId].addTrack(track, this.streams[item || userId]);
-        });
+        log('info', '-- Local video stream obtained', item);
+        log('warn', 'item', item);
+        log('warn', 'userId', userId);
+        console.log(this.streams[item || userId].id, item, userId);
+        if (item) {
+          this.streams[item].getTracks().forEach((track) => {
+            this.peerConnections[item].addTrack(track, this.streams[item]);
+          });
+        } else {
+          this.streams[userId].getTracks().forEach((track) => {
+            this.peerConnections[userId].addTrack(track, this.streams[userId]);
+          });
+        }
       })
       .then(() => {
         log('info', '------> Creating answer');
@@ -201,6 +223,7 @@ class RTC implements RTCInterface {
                   data: {
                     sdp: localDescription,
                     userId: id,
+                    item,
                   },
                 });
                 if (cb) {
