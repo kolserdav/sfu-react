@@ -162,7 +162,6 @@ wss.connection.on('connection', function connection(ws) {
         break;
       case Types.MessageType.GET_ROOM:
         const { userId: uid } = wss.getMessage(Types.MessageType.GET_ROOM, rawMessage).data;
-        console.log(rtc.rooms, uid);
         if (!rtc.rooms[id]) {
           rtc.rooms[id] = [];
         }
@@ -170,6 +169,17 @@ wss.connection.on('connection', function connection(ws) {
         rtc.addUserToRoom({
           roomId: id,
           userId: uid,
+        });
+        // Send user list of room
+        rtc.rooms[id].forEach((item) => {
+          wss.sendMessage({
+            type: Types.MessageType.SET_CHANGE_ROOM_GUESTS,
+            id: item,
+            token: '',
+            data: {
+              roomUsers: rtc.rooms[id],
+            },
+          });
         });
         conn.onopen = () => {
           conn.send(
@@ -225,16 +235,14 @@ wss.connection.on('connection', function connection(ws) {
     }
   });
   ws.onclose = () => {
+    // Get deleted userId
     let userId = 0;
-    // Close user connection
     const keys = Object.keys(wss.users);
     keys.forEach((item) => {
       const id = parseInt(item, 10);
-      const connId = wss.users[id];
-      if (wss.sockets[connId]) {
+      const _connId = wss.users[id];
+      if (wss.sockets[connId] && _connId === connId) {
         userId = id;
-        delete wss.sockets[connId];
-        delete wss.users[id];
       }
     });
     // Remove user from room
@@ -242,9 +250,22 @@ wss.connection.on('connection', function connection(ws) {
       const roomKeys = Object.keys(rtc.rooms);
       roomKeys.forEach((item) => {
         const index = rtc.rooms[item].indexOf(userId);
-        if (index !== -1) {
+        if (index !== -1 && connId === wss.users[userId]) {
           rtc.rooms[item].splice(index, 1);
+          // Send user list of room
+          rtc.rooms[item].forEach((_item) => {
+            wss.sendMessage({
+              type: Types.MessageType.SET_CHANGE_ROOM_GUESTS,
+              id: _item,
+              token: '',
+              data: {
+                roomUsers: rtc.rooms[item],
+              },
+            });
+          });
         }
+        delete wss.sockets[connId];
+        delete wss.users[userId];
       });
     }
   };

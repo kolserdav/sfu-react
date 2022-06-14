@@ -19,6 +19,7 @@ type UnwrapTuple<Tuple extends readonly unknown[]> = {
 export type Guest = {
   id: number
   lastVisit: Date
+  lastLogin: Date | null
   created: Date
 }
 
@@ -32,8 +33,6 @@ export type User = {
   role: UserRole
   userAgent: string | null
   ip: string | null
-  LoginTime: Date | null
-  lastLogin: Date | null
   guestId: number
   updated: Date
   created: Date
@@ -865,18 +864,21 @@ export namespace Prisma {
   export type GuestMinAggregateOutputType = {
     id: number | null
     lastVisit: Date | null
+    lastLogin: Date | null
     created: Date | null
   }
 
   export type GuestMaxAggregateOutputType = {
     id: number | null
     lastVisit: Date | null
+    lastLogin: Date | null
     created: Date | null
   }
 
   export type GuestCountAggregateOutputType = {
     id: number
     lastVisit: number
+    lastLogin: number
     created: number
     _all: number
   }
@@ -893,18 +895,21 @@ export namespace Prisma {
   export type GuestMinAggregateInputType = {
     id?: true
     lastVisit?: true
+    lastLogin?: true
     created?: true
   }
 
   export type GuestMaxAggregateInputType = {
     id?: true
     lastVisit?: true
+    lastLogin?: true
     created?: true
   }
 
   export type GuestCountAggregateInputType = {
     id?: true
     lastVisit?: true
+    lastLogin?: true
     created?: true
     _all?: true
   }
@@ -1004,6 +1009,7 @@ export namespace Prisma {
   export type GuestGroupByOutputType = {
     id: number
     lastVisit: Date
+    lastLogin: Date | null
     created: Date
     _count: GuestCountAggregateOutputType | null
     _avg: GuestAvgAggregateOutputType | null
@@ -1029,6 +1035,7 @@ export namespace Prisma {
   export type GuestSelect = {
     id?: boolean
     lastVisit?: boolean
+    lastLogin?: boolean
     created?: boolean
     User?: boolean | UserFindManyArgs
     _count?: boolean | GuestCountOutputTypeArgs
@@ -1756,8 +1763,6 @@ export namespace Prisma {
     role: UserRole | null
     userAgent: string | null
     ip: string | null
-    LoginTime: Date | null
-    lastLogin: Date | null
     guestId: number | null
     updated: Date | null
     created: Date | null
@@ -1769,8 +1774,6 @@ export namespace Prisma {
     role: UserRole | null
     userAgent: string | null
     ip: string | null
-    LoginTime: Date | null
-    lastLogin: Date | null
     guestId: number | null
     updated: Date | null
     created: Date | null
@@ -1782,8 +1785,6 @@ export namespace Prisma {
     role: number
     userAgent: number
     ip: number
-    LoginTime: number
-    lastLogin: number
     guestId: number
     updated: number
     created: number
@@ -1807,8 +1808,6 @@ export namespace Prisma {
     role?: true
     userAgent?: true
     ip?: true
-    LoginTime?: true
-    lastLogin?: true
     guestId?: true
     updated?: true
     created?: true
@@ -1820,8 +1819,6 @@ export namespace Prisma {
     role?: true
     userAgent?: true
     ip?: true
-    LoginTime?: true
-    lastLogin?: true
     guestId?: true
     updated?: true
     created?: true
@@ -1833,8 +1830,6 @@ export namespace Prisma {
     role?: true
     userAgent?: true
     ip?: true
-    LoginTime?: true
-    lastLogin?: true
     guestId?: true
     updated?: true
     created?: true
@@ -1939,8 +1934,6 @@ export namespace Prisma {
     role: UserRole
     userAgent: string | null
     ip: string | null
-    LoginTime: Date | null
-    lastLogin: Date | null
     guestId: number
     updated: Date
     created: Date
@@ -1971,8 +1964,6 @@ export namespace Prisma {
     role?: boolean
     userAgent?: boolean
     ip?: boolean
-    LoginTime?: boolean
-    lastLogin?: boolean
     guestId?: boolean
     Guest?: boolean | GuestArgs
     updated?: boolean
@@ -2679,6 +2670,7 @@ export namespace Prisma {
   export const GuestScalarFieldEnum: {
     id: 'id',
     lastVisit: 'lastVisit',
+    lastLogin: 'lastLogin',
     created: 'created'
   };
 
@@ -2691,8 +2683,6 @@ export namespace Prisma {
     role: 'role',
     userAgent: 'userAgent',
     ip: 'ip',
-    LoginTime: 'LoginTime',
-    lastLogin: 'lastLogin',
     guestId: 'guestId',
     updated: 'updated',
     created: 'created'
@@ -2720,6 +2710,7 @@ export namespace Prisma {
     NOT?: Enumerable<GuestWhereInput>
     id?: IntFilter | number
     lastVisit?: DateTimeFilter | Date | string
+    lastLogin?: DateTimeNullableFilter | Date | string | null
     created?: DateTimeFilter | Date | string
     User?: UserListRelationFilter
   }
@@ -2727,6 +2718,7 @@ export namespace Prisma {
   export type GuestOrderByWithRelationInput = {
     id?: SortOrder
     lastVisit?: SortOrder
+    lastLogin?: SortOrder
     created?: SortOrder
     User?: UserOrderByRelationAggregateInput
   }
@@ -2738,6 +2730,7 @@ export namespace Prisma {
   export type GuestOrderByWithAggregationInput = {
     id?: SortOrder
     lastVisit?: SortOrder
+    lastLogin?: SortOrder
     created?: SortOrder
     _count?: GuestCountOrderByAggregateInput
     _avg?: GuestAvgOrderByAggregateInput
@@ -2752,6 +2745,7 @@ export namespace Prisma {
     NOT?: Enumerable<GuestScalarWhereWithAggregatesInput>
     id?: IntWithAggregatesFilter | number
     lastVisit?: DateTimeWithAggregatesFilter | Date | string
+    lastLogin?: DateTimeNullableWithAggregatesFilter | Date | string | null
     created?: DateTimeWithAggregatesFilter | Date | string
   }
 
@@ -2764,8 +2758,6 @@ export namespace Prisma {
     role?: EnumUserRoleFilter | UserRole
     userAgent?: StringNullableFilter | string | null
     ip?: StringNullableFilter | string | null
-    LoginTime?: DateTimeNullableFilter | Date | string | null
-    lastLogin?: DateTimeNullableFilter | Date | string | null
     guestId?: IntFilter | number
     Guest?: XOR<GuestRelationFilter, GuestWhereInput>
     updated?: DateTimeFilter | Date | string
@@ -2778,8 +2770,6 @@ export namespace Prisma {
     role?: SortOrder
     userAgent?: SortOrder
     ip?: SortOrder
-    LoginTime?: SortOrder
-    lastLogin?: SortOrder
     guestId?: SortOrder
     Guest?: GuestOrderByWithRelationInput
     updated?: SortOrder
@@ -2788,6 +2778,7 @@ export namespace Prisma {
 
   export type UserWhereUniqueInput = {
     id?: number
+    email?: string
   }
 
   export type UserOrderByWithAggregationInput = {
@@ -2796,8 +2787,6 @@ export namespace Prisma {
     role?: SortOrder
     userAgent?: SortOrder
     ip?: SortOrder
-    LoginTime?: SortOrder
-    lastLogin?: SortOrder
     guestId?: SortOrder
     updated?: SortOrder
     created?: SortOrder
@@ -2817,8 +2806,6 @@ export namespace Prisma {
     role?: EnumUserRoleWithAggregatesFilter | UserRole
     userAgent?: StringNullableWithAggregatesFilter | string | null
     ip?: StringNullableWithAggregatesFilter | string | null
-    LoginTime?: DateTimeNullableWithAggregatesFilter | Date | string | null
-    lastLogin?: DateTimeNullableWithAggregatesFilter | Date | string | null
     guestId?: IntWithAggregatesFilter | number
     updated?: DateTimeWithAggregatesFilter | Date | string
     created?: DateTimeWithAggregatesFilter | Date | string
@@ -2826,6 +2813,7 @@ export namespace Prisma {
 
   export type GuestCreateInput = {
     lastVisit?: Date | string
+    lastLogin?: Date | string | null
     created?: Date | string
     User?: UserCreateNestedManyWithoutGuestInput
   }
@@ -2833,12 +2821,14 @@ export namespace Prisma {
   export type GuestUncheckedCreateInput = {
     id?: number
     lastVisit?: Date | string
+    lastLogin?: Date | string | null
     created?: Date | string
     User?: UserUncheckedCreateNestedManyWithoutGuestInput
   }
 
   export type GuestUpdateInput = {
     lastVisit?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created?: DateTimeFieldUpdateOperationsInput | Date | string
     User?: UserUpdateManyWithoutGuestInput
   }
@@ -2846,6 +2836,7 @@ export namespace Prisma {
   export type GuestUncheckedUpdateInput = {
     id?: IntFieldUpdateOperationsInput | number
     lastVisit?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created?: DateTimeFieldUpdateOperationsInput | Date | string
     User?: UserUncheckedUpdateManyWithoutGuestInput
   }
@@ -2853,17 +2844,20 @@ export namespace Prisma {
   export type GuestCreateManyInput = {
     id?: number
     lastVisit?: Date | string
+    lastLogin?: Date | string | null
     created?: Date | string
   }
 
   export type GuestUpdateManyMutationInput = {
     lastVisit?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type GuestUncheckedUpdateManyInput = {
     id?: IntFieldUpdateOperationsInput | number
     lastVisit?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -2872,8 +2866,6 @@ export namespace Prisma {
     role?: UserRole
     userAgent?: string | null
     ip?: string | null
-    LoginTime?: Date | string | null
-    lastLogin?: Date | string | null
     Guest: GuestCreateNestedOneWithoutUserInput
     updated?: Date | string
     created?: Date | string
@@ -2885,8 +2877,6 @@ export namespace Prisma {
     role?: UserRole
     userAgent?: string | null
     ip?: string | null
-    LoginTime?: Date | string | null
-    lastLogin?: Date | string | null
     guestId: number
     updated?: Date | string
     created?: Date | string
@@ -2897,8 +2887,6 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | UserRole
     userAgent?: NullableStringFieldUpdateOperationsInput | string | null
     ip?: NullableStringFieldUpdateOperationsInput | string | null
-    LoginTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Guest?: GuestUpdateOneRequiredWithoutUserInput
     updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -2910,8 +2898,6 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | UserRole
     userAgent?: NullableStringFieldUpdateOperationsInput | string | null
     ip?: NullableStringFieldUpdateOperationsInput | string | null
-    LoginTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     guestId?: IntFieldUpdateOperationsInput | number
     updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -2923,8 +2909,6 @@ export namespace Prisma {
     role?: UserRole
     userAgent?: string | null
     ip?: string | null
-    LoginTime?: Date | string | null
-    lastLogin?: Date | string | null
     guestId: number
     updated?: Date | string
     created?: Date | string
@@ -2935,8 +2919,6 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | UserRole
     userAgent?: NullableStringFieldUpdateOperationsInput | string | null
     ip?: NullableStringFieldUpdateOperationsInput | string | null
-    LoginTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -2947,8 +2929,6 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | UserRole
     userAgent?: NullableStringFieldUpdateOperationsInput | string | null
     ip?: NullableStringFieldUpdateOperationsInput | string | null
-    LoginTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     guestId?: IntFieldUpdateOperationsInput | number
     updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -2976,6 +2956,17 @@ export namespace Prisma {
     not?: NestedDateTimeFilter | Date | string
   }
 
+  export type DateTimeNullableFilter = {
+    equals?: Date | string | null
+    in?: Enumerable<Date> | Enumerable<string> | null
+    notIn?: Enumerable<Date> | Enumerable<string> | null
+    lt?: Date | string
+    lte?: Date | string
+    gt?: Date | string
+    gte?: Date | string
+    not?: NestedDateTimeNullableFilter | Date | string | null
+  }
+
   export type UserListRelationFilter = {
     every?: UserWhereInput
     some?: UserWhereInput
@@ -2989,6 +2980,7 @@ export namespace Prisma {
   export type GuestCountOrderByAggregateInput = {
     id?: SortOrder
     lastVisit?: SortOrder
+    lastLogin?: SortOrder
     created?: SortOrder
   }
 
@@ -2999,12 +2991,14 @@ export namespace Prisma {
   export type GuestMaxOrderByAggregateInput = {
     id?: SortOrder
     lastVisit?: SortOrder
+    lastLogin?: SortOrder
     created?: SortOrder
   }
 
   export type GuestMinOrderByAggregateInput = {
     id?: SortOrder
     lastVisit?: SortOrder
+    lastLogin?: SortOrder
     created?: SortOrder
   }
 
@@ -3042,6 +3036,20 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter
   }
 
+  export type DateTimeNullableWithAggregatesFilter = {
+    equals?: Date | string | null
+    in?: Enumerable<Date> | Enumerable<string> | null
+    notIn?: Enumerable<Date> | Enumerable<string> | null
+    lt?: Date | string
+    lte?: Date | string
+    gt?: Date | string
+    gte?: Date | string
+    not?: NestedDateTimeNullableWithAggregatesFilter | Date | string | null
+    _count?: NestedIntNullableFilter
+    _min?: NestedDateTimeNullableFilter
+    _max?: NestedDateTimeNullableFilter
+  }
+
   export type StringFilter = {
     equals?: string
     in?: Enumerable<string>
@@ -3077,17 +3085,6 @@ export namespace Prisma {
     not?: NestedStringNullableFilter | string | null
   }
 
-  export type DateTimeNullableFilter = {
-    equals?: Date | string | null
-    in?: Enumerable<Date> | Enumerable<string> | null
-    notIn?: Enumerable<Date> | Enumerable<string> | null
-    lt?: Date | string
-    lte?: Date | string
-    gt?: Date | string
-    gte?: Date | string
-    not?: NestedDateTimeNullableFilter | Date | string | null
-  }
-
   export type GuestRelationFilter = {
     is?: GuestWhereInput
     isNot?: GuestWhereInput
@@ -3099,8 +3096,6 @@ export namespace Prisma {
     role?: SortOrder
     userAgent?: SortOrder
     ip?: SortOrder
-    LoginTime?: SortOrder
-    lastLogin?: SortOrder
     guestId?: SortOrder
     updated?: SortOrder
     created?: SortOrder
@@ -3117,8 +3112,6 @@ export namespace Prisma {
     role?: SortOrder
     userAgent?: SortOrder
     ip?: SortOrder
-    LoginTime?: SortOrder
-    lastLogin?: SortOrder
     guestId?: SortOrder
     updated?: SortOrder
     created?: SortOrder
@@ -3130,8 +3123,6 @@ export namespace Prisma {
     role?: SortOrder
     userAgent?: SortOrder
     ip?: SortOrder
-    LoginTime?: SortOrder
-    lastLogin?: SortOrder
     guestId?: SortOrder
     updated?: SortOrder
     created?: SortOrder
@@ -3186,20 +3177,6 @@ export namespace Prisma {
     _max?: NestedStringNullableFilter
   }
 
-  export type DateTimeNullableWithAggregatesFilter = {
-    equals?: Date | string | null
-    in?: Enumerable<Date> | Enumerable<string> | null
-    notIn?: Enumerable<Date> | Enumerable<string> | null
-    lt?: Date | string
-    lte?: Date | string
-    gt?: Date | string
-    gte?: Date | string
-    not?: NestedDateTimeNullableWithAggregatesFilter | Date | string | null
-    _count?: NestedIntNullableFilter
-    _min?: NestedDateTimeNullableFilter
-    _max?: NestedDateTimeNullableFilter
-  }
-
   export type UserCreateNestedManyWithoutGuestInput = {
     create?: XOR<Enumerable<UserCreateWithoutGuestInput>, Enumerable<UserUncheckedCreateWithoutGuestInput>>
     connectOrCreate?: Enumerable<UserCreateOrConnectWithoutGuestInput>
@@ -3216,6 +3193,10 @@ export namespace Prisma {
 
   export type DateTimeFieldUpdateOperationsInput = {
     set?: Date | string
+  }
+
+  export type NullableDateTimeFieldUpdateOperationsInput = {
+    set?: Date | string | null
   }
 
   export type UserUpdateManyWithoutGuestInput = {
@@ -3272,10 +3253,6 @@ export namespace Prisma {
     set?: string | null
   }
 
-  export type NullableDateTimeFieldUpdateOperationsInput = {
-    set?: Date | string | null
-  }
-
   export type GuestUpdateOneRequiredWithoutUserInput = {
     create?: XOR<GuestCreateWithoutUserInput, GuestUncheckedCreateWithoutUserInput>
     connectOrCreate?: GuestCreateOrConnectWithoutUserInput
@@ -3304,6 +3281,17 @@ export namespace Prisma {
     gt?: Date | string
     gte?: Date | string
     not?: NestedDateTimeFilter | Date | string
+  }
+
+  export type NestedDateTimeNullableFilter = {
+    equals?: Date | string | null
+    in?: Enumerable<Date> | Enumerable<string> | null
+    notIn?: Enumerable<Date> | Enumerable<string> | null
+    lt?: Date | string
+    lte?: Date | string
+    gt?: Date | string
+    gte?: Date | string
+    not?: NestedDateTimeNullableFilter | Date | string | null
   }
 
   export type NestedIntWithAggregatesFilter = {
@@ -3347,6 +3335,31 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter
   }
 
+  export type NestedDateTimeNullableWithAggregatesFilter = {
+    equals?: Date | string | null
+    in?: Enumerable<Date> | Enumerable<string> | null
+    notIn?: Enumerable<Date> | Enumerable<string> | null
+    lt?: Date | string
+    lte?: Date | string
+    gt?: Date | string
+    gte?: Date | string
+    not?: NestedDateTimeNullableWithAggregatesFilter | Date | string | null
+    _count?: NestedIntNullableFilter
+    _min?: NestedDateTimeNullableFilter
+    _max?: NestedDateTimeNullableFilter
+  }
+
+  export type NestedIntNullableFilter = {
+    equals?: number | null
+    in?: Enumerable<number> | null
+    notIn?: Enumerable<number> | null
+    lt?: number
+    lte?: number
+    gt?: number
+    gte?: number
+    not?: NestedIntNullableFilter | number | null
+  }
+
   export type NestedStringFilter = {
     equals?: string
     in?: Enumerable<string>
@@ -3380,17 +3393,6 @@ export namespace Prisma {
     startsWith?: string
     endsWith?: string
     not?: NestedStringNullableFilter | string | null
-  }
-
-  export type NestedDateTimeNullableFilter = {
-    equals?: Date | string | null
-    in?: Enumerable<Date> | Enumerable<string> | null
-    notIn?: Enumerable<Date> | Enumerable<string> | null
-    lt?: Date | string
-    lte?: Date | string
-    gt?: Date | string
-    gte?: Date | string
-    not?: NestedDateTimeNullableFilter | Date | string | null
   }
 
   export type NestedStringWithAggregatesFilter = {
@@ -3437,38 +3439,11 @@ export namespace Prisma {
     _max?: NestedStringNullableFilter
   }
 
-  export type NestedIntNullableFilter = {
-    equals?: number | null
-    in?: Enumerable<number> | null
-    notIn?: Enumerable<number> | null
-    lt?: number
-    lte?: number
-    gt?: number
-    gte?: number
-    not?: NestedIntNullableFilter | number | null
-  }
-
-  export type NestedDateTimeNullableWithAggregatesFilter = {
-    equals?: Date | string | null
-    in?: Enumerable<Date> | Enumerable<string> | null
-    notIn?: Enumerable<Date> | Enumerable<string> | null
-    lt?: Date | string
-    lte?: Date | string
-    gt?: Date | string
-    gte?: Date | string
-    not?: NestedDateTimeNullableWithAggregatesFilter | Date | string | null
-    _count?: NestedIntNullableFilter
-    _min?: NestedDateTimeNullableFilter
-    _max?: NestedDateTimeNullableFilter
-  }
-
   export type UserCreateWithoutGuestInput = {
     email: string
     role?: UserRole
     userAgent?: string | null
     ip?: string | null
-    LoginTime?: Date | string | null
-    lastLogin?: Date | string | null
     updated?: Date | string
     created?: Date | string
   }
@@ -3479,8 +3454,6 @@ export namespace Prisma {
     role?: UserRole
     userAgent?: string | null
     ip?: string | null
-    LoginTime?: Date | string | null
-    lastLogin?: Date | string | null
     updated?: Date | string
     created?: Date | string
   }
@@ -3520,8 +3493,6 @@ export namespace Prisma {
     role?: EnumUserRoleFilter | UserRole
     userAgent?: StringNullableFilter | string | null
     ip?: StringNullableFilter | string | null
-    LoginTime?: DateTimeNullableFilter | Date | string | null
-    lastLogin?: DateTimeNullableFilter | Date | string | null
     guestId?: IntFilter | number
     updated?: DateTimeFilter | Date | string
     created?: DateTimeFilter | Date | string
@@ -3529,12 +3500,14 @@ export namespace Prisma {
 
   export type GuestCreateWithoutUserInput = {
     lastVisit?: Date | string
+    lastLogin?: Date | string | null
     created?: Date | string
   }
 
   export type GuestUncheckedCreateWithoutUserInput = {
     id?: number
     lastVisit?: Date | string
+    lastLogin?: Date | string | null
     created?: Date | string
   }
 
@@ -3550,12 +3523,14 @@ export namespace Prisma {
 
   export type GuestUpdateWithoutUserInput = {
     lastVisit?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type GuestUncheckedUpdateWithoutUserInput = {
     id?: IntFieldUpdateOperationsInput | number
     lastVisit?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -3565,8 +3540,6 @@ export namespace Prisma {
     role?: UserRole
     userAgent?: string | null
     ip?: string | null
-    LoginTime?: Date | string | null
-    lastLogin?: Date | string | null
     updated?: Date | string
     created?: Date | string
   }
@@ -3576,8 +3549,6 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | UserRole
     userAgent?: NullableStringFieldUpdateOperationsInput | string | null
     ip?: NullableStringFieldUpdateOperationsInput | string | null
-    LoginTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -3588,8 +3559,6 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | UserRole
     userAgent?: NullableStringFieldUpdateOperationsInput | string | null
     ip?: NullableStringFieldUpdateOperationsInput | string | null
-    LoginTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -3600,8 +3569,6 @@ export namespace Prisma {
     role?: EnumUserRoleFieldUpdateOperationsInput | UserRole
     userAgent?: NullableStringFieldUpdateOperationsInput | string | null
     ip?: NullableStringFieldUpdateOperationsInput | string | null
-    LoginTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
   }

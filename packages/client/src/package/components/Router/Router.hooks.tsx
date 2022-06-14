@@ -133,6 +133,9 @@ export const useHandleMessages = ({ ws, db, restart }: { ws: WS; db: DB; restart
             rtc.handleCandidateMessage(rawMessage);
           }
           break;
+        case MessageType.SET_CHANGE_ROOM_GUESTS:
+          console.log(rawMessage, ws.userId);
+          break;
         case MessageType.ANSWER:
           if (rtc) {
             rtc.handleVideoAnswerMsg(rawMessage, (e) => {

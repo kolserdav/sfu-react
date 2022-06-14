@@ -3,7 +3,7 @@ import { WEBTOKEN_KEY } from './constants';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const log = (type: 'info' | 'warn' | 'error', text: string, data?: any) => {
-  console[type](type, text, data);
+  console[type](new Date(), type, text, data);
 };
 
 export function createToken(parsedToken: JWT): string | null {
