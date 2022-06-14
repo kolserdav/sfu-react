@@ -25,7 +25,9 @@ export enum MessageType {
   SET_ERROR = 'SET_ERROR',
 }
 
-type GetGuestId = undefined;
+type GetGuestId = {
+  isRoom?: boolean;
+};
 type SetGuestId = undefined;
 type GetRoom = undefined;
 type SetRoom = undefined;
@@ -39,7 +41,7 @@ interface SetAuth {
   message: string;
 }
 type Offer = {
-  sdp: any;
+  sdp: RTCSessionDescriptionInit;
   userId: number;
 };
 type Candidate = {
@@ -47,7 +49,7 @@ type Candidate = {
   userId: number;
 };
 type Answer = {
-  sdp: any;
+  sdp: RTCSessionDescriptionInit;
   userId: number;
 };
 interface GetGuestFindFirst {

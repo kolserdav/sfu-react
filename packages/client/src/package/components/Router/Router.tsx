@@ -61,10 +61,10 @@ function Router() {
       }
       db.setToken();
       ws.sendMessage({
-        type: MessageType.GET_ROOM,
-        id: roomId,
+        type: MessageType.GET_USER_ID,
+        id,
         token: db.token,
-        data: undefined,
+        data: {},
       });
     };
 
@@ -117,6 +117,14 @@ function Router() {
           } else {
             setAuth(false);
             setLoggedAs('');
+          }
+          if (roomOpen) {
+            ws.sendMessage({
+              type: MessageType.GET_ROOM,
+              id: roomId,
+              token: db.token,
+              data: undefined,
+            });
           }
           setId(__id);
           break;

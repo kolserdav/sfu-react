@@ -171,23 +171,25 @@ class RTC implements RTCInterface {
       return;
     }
     const cand = new wrtc.RTCIceCandidate(candidate);
-    this.peerConnection
-      .addIceCandidate(cand)
-      .then(() => {
-        log('info', `Adding received ICE candidate: ${JSON.stringify(cand)}`);
-        if (cb) {
-          cb(cand);
-        }
-      })
-      .catch((e) => {
-        log('error', 'Set candidate error', {
-          error: e,
-          cand,
+    if (cand.candidate) {
+      this.peerConnection
+        .addIceCandidate(cand)
+        .then(() => {
+          log('info', 'Adding received ICE candidate:', cand.usernameFragment);
+          if (cb) {
+            cb(cand);
+          }
+        })
+        .catch((e) => {
+          log('error', 'Set candidate error', {
+            error: e,
+            cand,
+          });
+          if (cb) {
+            cb(null);
+          }
         });
-        if (cb) {
-          cb(null);
-        }
-      });
+    }
   }
 
   public handleOfferMessage(
@@ -285,7 +287,7 @@ class RTC implements RTCInterface {
     } = msg;
     if (this.peerConnection) {
       log('info', 'Call recipient has accepted our call');
-      const desc = new RTCSessionDescription(sdp);
+      const desc = new wrtc.RTCSessionDescription(sdp);
       this.peerConnection
         .setRemoteDescription(desc)
         .then(() => {

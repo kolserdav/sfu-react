@@ -9,6 +9,8 @@ class WS implements WSInterface {
 
   public users: Record<number, string> = {};
 
+  public websocket = WebSocket;
+
   constructor(connectionArgs: ServerOptions | undefined) {
     this.connection = this.createConnection(connectionArgs);
   }
@@ -50,8 +52,8 @@ class WS implements WSInterface {
           resolve(1);
         }
         const { id } = args;
-        if (this.sockets[id]) {
-          this.sockets[id].send(res);
+        if (this.users[id]) {
+          this.sockets[this.users[id]].send(res);
         }
         resolve(0);
       }, 100);

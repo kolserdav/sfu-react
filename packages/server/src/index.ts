@@ -31,10 +31,10 @@ const getConnectionId = (): string => {
 
 wss.connection.on('connection', function connection(ws) {
   const connId = getConnectionId();
-  ws.on('message', async function message(data) {
+  ws.on('message', async function message(message) {
     let _data = '';
-    if (typeof data !== 'string') {
-      _data = data.toString('utf8');
+    if (typeof message !== 'string') {
+      _data = message.toString('utf8');
     }
     const rawMessage = wss.parseMessage(_data);
     if (!rawMessage) {
@@ -48,7 +48,11 @@ wss.connection.on('connection', function connection(ws) {
     // TODO auth
     switch (type) {
       case Types.MessageType.GET_USER_ID:
-        const { id: _id, token: _token } = await db.getUserId(id, token);
+        const { isRoom } = wss.getMessage(Types.MessageType.GET_USER_ID, rawMessage).data;
+        // TODO fixed isRoom problem
+        const { id: _id, token: _token } = isRoom
+          ? { id, token: '' }
+          : await db.getUserId(id, token);
         wss.setSocket({ id: _id, ws, connId });
         wss.sendMessage({
           type: Types.MessageType.SET_USER_ID,
@@ -154,39 +158,58 @@ wss.connection.on('connection', function connection(ws) {
         });
         break;
       case Types.MessageType.GET_ROOM:
-        if (!rtc.rooms[id]) {
-          wss.sockets[id] = ws;
-          rtc.rooms.push(id);
-          wss.users[id] = connId;
-        }
+        const conn = new wss.websocket(`ws://localhost:${SERVER_PORT}`);
+        conn.onopen = () => {
+          conn.send(
+            JSON.stringify({
+              type: Types.MessageType.GET_USER_ID,
+              id,
+              data: {
+                isRoom: true,
+              },
+            })
+          );
+          conn.onmessage = (mess) => {
+            const msg = wss.parseMessage(mess.data as string);
+            if (msg) {
+              const { type } = msg;
+              switch (type) {
+                case Types.MessageType.OFFER:
+                  console.log('offer');
+                  userId = wss.getMessage(Types.MessageType.OFFER, msg).data.userId;
+                  rtc.invite({ targetUserId: userId, userId: id });
+                  rtc.handleOfferMessage(msg, () => {
+                    console.log('cn');
+                  });
+                  break;
+                case Types.MessageType.ANSWER:
+                  rtc.handleVideoAnswerMsg(msg, (e) => {
+                    console.log('answer', e);
+                  });
+                  break;
+                case Types.MessageType.CANDIDATE:
+                  rtc.handleCandidateMessage(msg, () => {
+                    console.log('ice');
+                  });
+                  break;
+              }
+            }
+          };
+        };
         wss.sendMessage({
           type: Types.MessageType.SET_ROOM,
-          id: 0,
+          id,
           token: '',
           data: undefined,
         });
         break;
-      case Types.MessageType.OFFER:
-        console.log('offer');
-        userId = wss.getMessage(Types.MessageType.OFFER, rawMessage).data.userId;
-        rtc.invite({ targetUserId: userId, userId: id });
-        rtc.handleOfferMessage(rawMessage, () => {
-          console.log('cn');
-        });
-        break;
-      case Types.MessageType.ANSWER:
-        rtc.handleVideoAnswerMsg(rawMessage, (e) => {
-          console.log('answer', e);
-        });
-        break;
-      case Types.MessageType.CANDIDATE:
-        /*  
-        rtc.handleCandidateMessage(rawMessage, () => {
-            console.log('ice');
-          });
-        */
-        break;
       default:
+        wss.sendMessage({
+          type,
+          token: '',
+          data: rawMessage.data,
+          id,
+        });
     }
   });
   ws.onclose = () => {
