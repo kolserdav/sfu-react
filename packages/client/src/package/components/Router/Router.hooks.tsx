@@ -30,7 +30,7 @@ export const useHandleMessages = ({ ws, db, restart }: { ws: WS; db: DB; restart
     if (roomOpen) {
       ws.setUserId(id);
       rtc = new RTC({ ws });
-      rtc.createRTC({ id });
+      rtc.createRTC({ id: roomId });
       rtc.onAddTrack = (e) => {
         // TODO create media stream
         log('info', 'onAddTrack', e);
