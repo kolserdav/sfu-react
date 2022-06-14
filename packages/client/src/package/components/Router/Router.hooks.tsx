@@ -29,7 +29,8 @@ export const useHandleMessages = ({ ws, db, restart }: { ws: WS; db: DB; restart
     const roomOpen = Number.isInteger(roomId);
     if (roomOpen) {
       ws.setUserId(id);
-      rtc = new RTC({ roomId, ws });
+      rtc = new RTC({ ws });
+      rtc.createRTC({ id });
       rtc.onAddTrack = (e) => {
         // TODO create media stream
         log('info', 'onAddTrack', e);
@@ -45,7 +46,7 @@ export const useHandleMessages = ({ ws, db, restart }: { ws: WS; db: DB; restart
     ws.onOpen = (ev) => {
       log('info', 'onOpen', ev);
       if (roomOpen && id) {
-        rtc?.invite({ targetUserId: roomId });
+        rtc?.invite({ targetUserId: roomId, userId: id });
       }
       ws.sendMessage({
         type: MessageType.GET_USER_ID,

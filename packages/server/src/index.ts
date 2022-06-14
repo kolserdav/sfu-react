@@ -29,6 +29,7 @@ const getConnectionId = (): string => {
   return connId;
 };
 
+const rtc: RTC | null = new RTC({ ws: wss });
 wss.connection.on('connection', function connection(ws) {
   const connId = getConnectionId();
   ws.on('message', async function message(message) {
@@ -43,7 +44,6 @@ wss.connection.on('connection', function connection(ws) {
     const { type, id, token, isAuth } = rawMessage;
     let authRes: string | null = null;
     let args;
-    const rtc: RTC | null = new RTC({ roomId: id, ws: wss });
     // TODO auth
     switch (type) {
       case Types.MessageType.GET_USER_ID:
@@ -53,6 +53,7 @@ wss.connection.on('connection', function connection(ws) {
           ? { id, token: '' }
           : await db.getUserId(id, token);
         wss.setSocket({ id: _id, ws, connId });
+        rtc.createRTC({ id: _id });
         wss.sendMessage({
           type: Types.MessageType.SET_USER_ID,
           id: _id,

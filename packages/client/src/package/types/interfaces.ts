@@ -112,9 +112,17 @@ export type ArgsSubset<T> = T extends MessageType.OFFER
   : unknown;
 
 export abstract class RTCInterface {
-  public abstract peerConnection: RTCPeerConnection;
+  public abstract peerConnections: Record<number, RTCPeerConnection>;
 
-  public abstract createRTC(args: { id: number }): RTCPeerConnection;
+  public abstract createRTC(args: { id: number }): Record<number, RTCPeerConnection>;
+
+  public abstract handleIceCandidate({
+    targetUserId,
+    userId,
+  }: {
+    targetUserId: number;
+    userId: number;
+  }): void;
 }
 
 export interface SendMessageArgs<T> {

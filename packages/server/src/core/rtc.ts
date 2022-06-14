@@ -4,17 +4,16 @@ import { log } from '../utils/lib';
 import WS from './ws';
 
 class RTC implements RTCInterface {
-  public peerConnection: RTCPeerConnection;
+  public peerConnections: Record<number, RTCPeerConnection> = {};
   public rooms: Record<number, number[]> = {};
   private ws: WS;
   private streams: Record<number, MediaStream> = {};
-  constructor({ roomId, ws }: { roomId: number; ws: WS }) {
-    this.peerConnection = this.createRTC({ id: roomId });
+  constructor({ ws }: { ws: WS }) {
     this.ws = ws;
   }
 
-  public createRTC(args: { id: number }): RTCPeerConnection {
-    this.peerConnection = new wrtc.RTCPeerConnection({
+  public createRTC({ id }: { id: number }) {
+    this.peerConnections[id] = new wrtc.RTCPeerConnection({
       iceServers:
         process.env.NODE_ENV === 'production'
           ? [
@@ -24,13 +23,13 @@ class RTC implements RTCInterface {
             ]
           : [],
     });
-    return this.peerConnection;
+    return this.peerConnections;
   }
 
-  public handleIceCandidate({ targetUserId, userId }: { targetUserId: number; userId: number }) {
+  public handleIceCandidate: RTCInterface['handleIceCandidate'] = ({ targetUserId, userId }) => {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const core = this;
-    this.peerConnection.onicecandidate = function handleICECandidateEvent(
+    this.peerConnections[userId].onicecandidate = function handleICECandidateEvent(
       event: RTCPeerConnectionIceEvent
     ) {
       if (event.candidate) {
@@ -46,52 +45,52 @@ class RTC implements RTCInterface {
         });
       }
     };
-    this.peerConnection.oniceconnectionstatechange = function handleICEConnectionStateChangeEvent(
-      event: Event
+    this.peerConnections[userId].oniceconnectionstatechange =
+      function handleICEConnectionStateChangeEvent(event: Event) {
+        log(
+          'info',
+          'ICE connection state changed to:',
+          core.peerConnections[userId].iceConnectionState
+        );
+        switch (core.peerConnections[userId].iceConnectionState) {
+          case 'closed':
+          case 'failed':
+          case 'disconnected':
+            core.closeVideoCall({ userId });
+            break;
+        }
+      };
+    this.peerConnections[userId].onicegatheringstatechange =
+      function handleICEGatheringStateChangeEvent(ev: Event) {
+        log(
+          'info',
+          `*** ICE gathering state changed to: ${core.peerConnections[userId].iceGatheringState}`
+        );
+      };
+    this.peerConnections[userId].onsignalingstatechange = function handleSignalingStateChangeEvent(
+      ev: Event
     ) {
-      log('info', 'ICE connection state changed to:', core.peerConnection.iceConnectionState);
-      switch (core.peerConnection.iceConnectionState) {
+      log(
+        'info',
+        `WebRTC signaling state changed to: ${core.peerConnections[userId].signalingState}`
+      );
+      switch (core.peerConnections[userId].signalingState) {
         case 'closed':
-        case 'failed':
-        case 'disconnected':
-          core.closeVideoCall();
+          core.closeVideoCall({ userId });
           break;
       }
     };
-    this.peerConnection.onicegatheringstatechange = function handleICEGatheringStateChangeEvent(
-      ev: Event
-    ) {
-      log('info', `*** ICE gathering state changed to: ${core.peerConnection.iceGatheringState}`);
-    };
-    this.peerConnection.onsignalingstatechange = function handleSignalingStateChangeEvent(
-      ev: Event
-    ) {
-      log('info', `WebRTC signaling state changed to: ${core.peerConnection.signalingState}`);
-      switch (core.peerConnection.signalingState) {
-        case 'closed':
-          core.closeVideoCall();
-          break;
-      }
-    };
-    this.peerConnection.onnegotiationneeded = function handleNegotiationNeededEvent() {
+    this.peerConnections[userId].onnegotiationneeded = function handleNegotiationNeededEvent() {
       log('info', '---> Creating offer');
-      core.peerConnection
+      core.peerConnections[userId]
         .createOffer()
         .then((offer): 1 | void | PromiseLike<void> => {
-          if (!core.peerConnection) {
-            log(
-              'warn',
-              'Can not set local description because peerConnection is',
-              core.peerConnection
-            );
-            return 1;
-          }
-          return core.peerConnection.setLocalDescription(offer).catch((err) => {
+          return core.peerConnections[userId].setLocalDescription(offer).catch((err) => {
             log('error', 'Error create local description', err);
           });
         })
         .then(() => {
-          const { localDescription } = core.peerConnection;
+          const { localDescription } = core.peerConnections[userId];
           if (localDescription) {
             log('info', '---> Sending offer to remote peer');
             core.ws.sendMessage({
@@ -107,11 +106,11 @@ class RTC implements RTCInterface {
           }
         });
     };
-    this.peerConnection.ontrack = (e) => {
+    this.peerConnections[userId].ontrack = (e) => {
       this.streams[targetUserId] = e.streams[0];
       log('info', 'onTrack', e.streams);
     };
-  }
+  };
 
   public invite({ targetUserId, userId }: { targetUserId: number; userId: number }) {
     this.handleIceCandidate({ targetUserId, userId });
@@ -121,11 +120,11 @@ class RTC implements RTCInterface {
     cb?: (cand: RTCIceCandidate | null) => any
   ) {
     const {
-      data: { candidate },
+      data: { candidate, userId },
     } = msg;
     const cand = new wrtc.RTCIceCandidate(candidate);
     if (cand.candidate) {
-      this.peerConnection
+      this.peerConnections[userId]
         .addIceCandidate(cand)
         .then(() => {
           log('info', 'Adding received ICE candidate:', cand.usernameFragment);
@@ -170,33 +169,32 @@ class RTC implements RTCInterface {
       userId: id,
     });
     const desc = new wrtc.RTCSessionDescription(sdp);
-    this.peerConnection
+    this.peerConnections[userId]
       .setRemoteDescription(desc)
       .then(() => {
         log('info', '-- Local video stream obtained');
         this.streams[userId].getTracks().forEach((track) => {
-          this.peerConnection.addTrack(track, this.streams[userId]);
+          this.peerConnections[userId].addTrack(track, this.streams[userId]);
         });
       })
       .then(() => {
         log('info', '------> Creating answer');
-        this.peerConnection.createAnswer().then((answ) => {
-          if (!answ || !this.peerConnection) {
+        this.peerConnections[userId].createAnswer().then((answ) => {
+          if (!answ) {
             log('error', 'Failed set local description for answer.', {
               answ,
-              peerConnection: this.peerConnection,
             });
             cb(null);
             return;
           }
           log('info', '------> Setting local description after creating answer');
-          this.peerConnection
+          this.peerConnections[userId]
             .setLocalDescription(answ)
             .catch((err) => {
               log('error', 'Error set local description for answer', err);
             })
             .then(() => {
-              const { localDescription } = this.peerConnection;
+              const { localDescription } = this.peerConnections[userId];
               if (localDescription) {
                 log('info', 'Sending answer packet back to other peer');
                 this.ws.sendMessage({
@@ -223,11 +221,11 @@ class RTC implements RTCInterface {
 
   public handleVideoAnswerMsg(msg: SendMessageArgs<MessageType.ANSWER>, cb: (res: 1 | 0) => any) {
     const {
-      data: { sdp },
+      data: { sdp, userId },
     } = msg;
     log('info', 'Call recipient has accepted our call');
     const desc = new wrtc.RTCSessionDescription(sdp);
-    this.peerConnection
+    this.peerConnections[userId]
       .setRemoteDescription(desc)
       .then(() => {
         cb(0);
@@ -238,15 +236,15 @@ class RTC implements RTCInterface {
       });
   }
 
-  private closeVideoCall() {
+  private closeVideoCall({ userId }: { userId: number }) {
     log('info', 'Closing the call');
-    this.peerConnection.onicecandidate = null;
-    this.peerConnection.oniceconnectionstatechange = null;
-    this.peerConnection.onicegatheringstatechange = null;
-    this.peerConnection.onsignalingstatechange = null;
-    this.peerConnection.onnegotiationneeded = null;
-    this.peerConnection.ontrack = null;
-    this.peerConnection.close();
+    this.peerConnections[userId].onicecandidate = null;
+    this.peerConnections[userId].oniceconnectionstatechange = null;
+    this.peerConnections[userId].onicegatheringstatechange = null;
+    this.peerConnections[userId].onsignalingstatechange = null;
+    this.peerConnections[userId].onnegotiationneeded = null;
+    this.peerConnections[userId].ontrack = null;
+    this.peerConnections[userId].close();
   }
 }
 
