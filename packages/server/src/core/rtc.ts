@@ -5,7 +5,7 @@ import WS from './ws';
 
 class RTC implements RTCInterface {
   public peerConnection: RTCPeerConnection;
-  public rooms: number[] = [];
+  public rooms: Record<number, number[]> = {};
   private ws: WS;
   private streams: Record<number, MediaStream> = {};
   constructor({ roomId, ws }: { roomId: number; ws: WS }) {
@@ -49,7 +49,7 @@ class RTC implements RTCInterface {
     this.peerConnection.oniceconnectionstatechange = function handleICEConnectionStateChangeEvent(
       event: Event
     ) {
-      log('info', `ICE connection state changed to ${core.peerConnection.iceConnectionState}`);
+      log('info', 'ICE connection state changed to:', core.peerConnection.iceConnectionState);
       switch (core.peerConnection.iceConnectionState) {
         case 'closed':
         case 'failed':
@@ -145,6 +145,12 @@ class RTC implements RTCInterface {
     }
   }
 
+  public addUserToRoom({ userId, roomId }: { userId: number; roomId: number }) {
+    if (this.rooms[roomId].indexOf(userId) === -1) {
+      this.rooms[roomId].push(userId);
+    }
+  }
+
   public handleOfferMessage(
     msg: SendMessageArgs<MessageType.OFFER>,
     cb: (desc: RTCSessionDescription | null) => any
@@ -160,7 +166,8 @@ class RTC implements RTCInterface {
     }
     this.handleIceCandidate({
       targetUserId: userId,
-      userId: this.rooms[0],
+      // TODO right userId
+      userId: this.rooms[id][0],
     });
     const desc = new wrtc.RTCSessionDescription(sdp);
     this.peerConnection

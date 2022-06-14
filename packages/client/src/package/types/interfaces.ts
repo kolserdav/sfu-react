@@ -29,7 +29,9 @@ type GetGuestId = {
   isRoom?: boolean;
 };
 type SetGuestId = undefined;
-type GetRoom = undefined;
+type GetRoom = {
+  userId: number;
+};
 type SetRoom = undefined;
 type SetError = {
   message: string;

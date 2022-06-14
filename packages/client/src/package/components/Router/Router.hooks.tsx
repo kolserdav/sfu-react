@@ -5,7 +5,6 @@ import WS from '../../core/ws';
 import DB from '../../core/db';
 import {
   log,
-  setLoginCookie,
   getLoginCookie,
   parseQueryString,
   setTokenCookie,
@@ -15,16 +14,7 @@ import { MessageType } from '../../types/interfaces';
 import RTC from '../../core/rtc';
 
 // eslint-disable-next-line import/prefer-default-export
-export const useHandleMessages = ({
-  ws: _ws,
-  db,
-  restart,
-}: {
-  ws: WS;
-  db: DB;
-  restart: boolean;
-}) => {
-  const ws = _ws;
+export const useHandleMessages = ({ ws, db, restart }: { ws: WS; db: DB; restart: boolean }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { pathname, search } = location;
@@ -38,7 +28,7 @@ export const useHandleMessages = ({
     let rtc: RTC | null = null;
     const roomOpen = Number.isInteger(roomId);
     if (roomOpen) {
-      ws.userId = id;
+      ws.setUserId(id);
       rtc = new RTC({ roomId, ws });
       rtc.onAddTrack = (e) => {
         // TODO create media stream
@@ -86,7 +76,7 @@ export const useHandleMessages = ({
         },
       };
       if (type === MessageType.SET_USER_ID) {
-        ws.userId = _id;
+        ws.setUserId(id);
         res = db.guestFindFirst(args);
       }
       switch (type) {
@@ -95,7 +85,6 @@ export const useHandleMessages = ({
           if (_token && _token !== 'null') {
             setTokenCookie(_token);
             setAuth(true);
-            db.token = _token;
             let isAuth = false;
             if (qS?.token) {
               isAuth = true;
@@ -119,7 +108,9 @@ export const useHandleMessages = ({
               type: MessageType.GET_ROOM,
               id: roomId,
               token: db.token,
-              data: undefined,
+              data: {
+                userId: ws.userId,
+              },
             });
           }
           setId(__id);

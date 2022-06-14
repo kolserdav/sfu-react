@@ -43,7 +43,6 @@ wss.connection.on('connection', function connection(ws) {
     const { type, id, token, isAuth } = rawMessage;
     let authRes: string | null = null;
     let args;
-    let userId = 0;
     const rtc: RTC | null = new RTC({ roomId: id, ws: wss });
     // TODO auth
     switch (type) {
@@ -159,6 +158,15 @@ wss.connection.on('connection', function connection(ws) {
         break;
       case Types.MessageType.GET_ROOM:
         const conn = new wss.websocket(`ws://localhost:${SERVER_PORT}`);
+        const { userId: uid } = wss.getMessage(Types.MessageType.GET_ROOM, rawMessage).data;
+        if (!rtc.rooms[id]) {
+          rtc.rooms[id] = [uid];
+        } else {
+          rtc.addUserToRoom({
+            roomId: id,
+            userId: uid,
+          });
+        }
         conn.onopen = () => {
           conn.send(
             JSON.stringify({
@@ -176,7 +184,7 @@ wss.connection.on('connection', function connection(ws) {
               switch (type) {
                 case Types.MessageType.OFFER:
                   console.log('offer');
-                  userId = wss.getMessage(Types.MessageType.OFFER, msg).data.userId;
+                  const userId = wss.getMessage(Types.MessageType.OFFER, msg).data.userId;
                   rtc.invite({ targetUserId: userId, userId: id });
                   rtc.handleOfferMessage(msg, () => {
                     console.log('cn');

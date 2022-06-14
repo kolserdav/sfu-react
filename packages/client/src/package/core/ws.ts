@@ -6,6 +6,10 @@ class WS implements Types.WSInterface {
 
   userId = 0;
 
+  public setUserId(userId: number) {
+    this.userId = userId;
+  }
+
   // eslint-disable-next-line class-methods-use-this
   public onOpen: (ev: Event) => void = () => {
     /** */

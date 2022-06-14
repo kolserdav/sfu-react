@@ -52,7 +52,7 @@ class RTC implements RTCInterface {
     this.peerConnection.oniceconnectionstatechange = function handleICEConnectionStateChangeEvent(
       event: Event
     ) {
-      log('info', `ICE connection state changed to ${core.peerConnection.iceConnectionState}`);
+      log('info', 'ICE connection state changed to:', core.peerConnection.iceConnectionState);
       switch (core.peerConnection.iceConnectionState) {
         case 'closed':
         case 'failed':
@@ -198,11 +198,7 @@ class RTC implements RTCInterface {
         const localStream = stream;
         log('info', '-- Local video stream obtained');
         localStream.getTracks().forEach((track) => {
-          if (!this.peerConnection) {
-            log('warn', 'failed to add candidate video track');
-          } else {
-            this.peerConnection.addTrack(track, localStream);
-          }
+          this.peerConnection.addTrack(track, localStream);
         });
       })
       .then(() => {
