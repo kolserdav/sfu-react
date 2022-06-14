@@ -50,6 +50,9 @@ function Router() {
       rtc.onAddTrack = (e) => {
         // TODO create media stream
         log('info', 'onAddTrack', e);
+        const _streams = streams.map((item) => item);
+        _streams.push(e.streams[0]);
+        setStreams(_streams);
       };
     }
     const qS = parseQueryString(search);
@@ -205,7 +208,6 @@ function Router() {
   }, [id]);
 
   const _streams = useMemo(() => createStreams(streams), [streams]);
-
   return (
     <div>
       {loggedAs && <div>Logged as {loggedAs}</div>}

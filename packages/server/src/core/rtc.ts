@@ -29,123 +29,84 @@ class RTC implements RTCInterface {
   }
 
   public handleIceCandidate({ targetUserId, userId }: { targetUserId: number; userId: number }) {
-    if (!this.peerConnection) {
-      log('warn', 'Failed handle ice candidate because peerConnection is', this.peerConnection);
-      return;
-    }
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const core = this;
     this.peerConnection.onicecandidate = function handleICECandidateEvent(
       event: RTCPeerConnectionIceEvent
     ) {
       if (event.candidate) {
-        log('info', `Outgoing ICE candidate: ${event.candidate.candidate}`);
+        log('info', 'Outgoing ICE candidate:', event.candidate.usernameFragment);
         core.ws.sendMessage({
           type: MessageType.CANDIDATE,
-          id: targetUserId,
+          id: userId,
           token: '',
           data: {
             candidate: event.candidate,
-            userId,
+            userId: targetUserId,
           },
         });
       }
     };
     this.peerConnection.oniceconnectionstatechange = function handleICEConnectionStateChangeEvent(
       event: Event
-    ): 1 | 0 {
-      if (core.peerConnection) {
-        log('info', `ICE connection state changed to ${core.peerConnection.iceConnectionState}`);
-        switch (core.peerConnection.iceConnectionState) {
-          case 'closed':
-          case 'failed':
-          case 'disconnected':
-            core.closeVideoCall();
-            break;
-        }
-        return 0;
+    ) {
+      log('info', `ICE connection state changed to ${core.peerConnection.iceConnectionState}`);
+      switch (core.peerConnection.iceConnectionState) {
+        case 'closed':
+        case 'failed':
+        case 'disconnected':
+          core.closeVideoCall();
+          break;
       }
-      log('warn', 'Can not change state of ice peer connection that is', core.peerConnection);
-      return 1;
     };
     this.peerConnection.onicegatheringstatechange = function handleICEGatheringStateChangeEvent(
       ev: Event
-    ): 1 | 0 {
-      if (core.peerConnection) {
-        log('info', `*** ICE gathering state changed to: ${core.peerConnection.iceGatheringState}`);
-        return 0;
-      }
-      log(
-        'warn',
-        'Handle ICE fathering state is wrong because peerConnection is',
-        core.peerConnection
-      );
-      return 1;
+    ) {
+      log('info', `*** ICE gathering state changed to: ${core.peerConnection.iceGatheringState}`);
     };
     this.peerConnection.onsignalingstatechange = function handleSignalingStateChangeEvent(
       ev: Event
-    ): 1 | 0 {
-      if (core.peerConnection) {
-        log('info', `WebRTC signaling state changed to: ${core.peerConnection.signalingState}`);
-        switch (core.peerConnection.signalingState) {
-          case 'closed':
-            core.closeVideoCall();
-            break;
-        }
-        return 0;
+    ) {
+      log('info', `WebRTC signaling state changed to: ${core.peerConnection.signalingState}`);
+      switch (core.peerConnection.signalingState) {
+        case 'closed':
+          core.closeVideoCall();
+          break;
       }
-      log(
-        'warn',
-        'Can not handle signaling state chage event because peerConnections is',
-        core.peerConnection
-      );
-      return 1;
     };
     this.peerConnection.onnegotiationneeded = function handleNegotiationNeededEvent() {
-      if (core.peerConnection) {
-        log('info', '---> Creating offer');
-        core.peerConnection
-          .createOffer()
-          .then((offer): 1 | void | PromiseLike<void> => {
-            if (!core.peerConnection) {
-              log(
-                'warn',
-                'Can not set local description because peerConnection is',
-                core.peerConnection
-              );
-              return 1;
-            }
-            return core.peerConnection.setLocalDescription(offer).catch((err) => {
-              log('error', 'Error create local description', err);
-            });
-          })
-          .then(() => {
-            if (core.peerConnection) {
-              const { localDescription } = core.peerConnection;
-              if (localDescription) {
-                log('info', '---> Sending offer to remote peer');
-                core.ws.sendMessage({
-                  id: targetUserId,
-                  type: MessageType.OFFER,
-                  token: '',
-                  data: {
-                    sdp: localDescription,
-                    userId,
-                  },
-                });
-                // cb(localDescription);
-                return 0;
-              }
-              log('warn', 'Local description is', localDescription);
-            } else {
-              log('warn', 'Peer connection is', core.peerConnection);
-            }
-            log('error', 'Local description not set');
+      log('info', '---> Creating offer');
+      core.peerConnection
+        .createOffer()
+        .then((offer): 1 | void | PromiseLike<void> => {
+          if (!core.peerConnection) {
+            log(
+              'warn',
+              'Can not set local description because peerConnection is',
+              core.peerConnection
+            );
             return 1;
+          }
+          return core.peerConnection.setLocalDescription(offer).catch((err) => {
+            log('error', 'Error create local description', err);
           });
-      } else {
-        log('warn', 'Offer can not created that peerConnection is', core.peerConnection);
-      }
+        })
+        .then(() => {
+          const { localDescription } = core.peerConnection;
+          if (localDescription) {
+            log('info', '---> Sending offer to remote peer');
+            core.ws.sendMessage({
+              id: targetUserId,
+              type: MessageType.OFFER,
+              token: '',
+              data: {
+                sdp: localDescription,
+                userId,
+              },
+            });
+            // cb(localDescription);
+          }
+        });
     };
     this.peerConnection.ontrack = (e) => {
       // TODO save user track
@@ -163,13 +124,6 @@ class RTC implements RTCInterface {
     const {
       data: { candidate },
     } = msg;
-    if (!this.peerConnection) {
-      log('warn', 'Failed create ice candidate because peerConnection is', this.peerConnection);
-      if (cb) {
-        cb(null);
-      }
-      return;
-    }
     const cand = new wrtc.RTCIceCandidate(candidate);
     if (cand.candidate) {
       this.peerConnection
@@ -205,11 +159,6 @@ class RTC implements RTCInterface {
       cb(null);
       return;
     }
-    if (!this.peerConnection) {
-      log('warn', 'Failed create answer:', { peerConnection: this.peerConnection });
-      cb(null);
-      return;
-    }
     this.handleIceCandidate({
       targetUserId: userId,
       userId: this.rooms[0],
@@ -233,10 +182,6 @@ class RTC implements RTCInterface {
         });
       })
       .then(() => {
-        if (!this.peerConnection) {
-          log('warn', 'Failed create answer because peerConnection is', this.peerConnection);
-          return;
-        }
         log('info', '------> Creating answer');
         this.peerConnection.createAnswer().then((answ) => {
           if (!answ || !this.peerConnection) {
@@ -254,23 +199,21 @@ class RTC implements RTCInterface {
               log('error', 'Error set local description for answer', err);
             })
             .then(() => {
-              if (this.peerConnection) {
-                const { localDescription } = this.peerConnection;
-                if (localDescription) {
-                  log('info', 'Sending answer packet back to other peer');
-                  this.ws.sendMessage({
-                    id,
-                    type: MessageType.ANSWER,
-                    token: '',
-                    data: {
-                      sdp: localDescription,
-                      userId: this.rooms[1],
-                    },
-                  });
-                  cb(localDescription);
-                } else {
-                  log('warn', 'Failed send answer because localDescription is', localDescription);
-                }
+              const { localDescription } = this.peerConnection;
+              if (localDescription) {
+                log('info', 'Sending answer packet back to other peer');
+                this.ws.sendMessage({
+                  id: userId,
+                  type: MessageType.ANSWER,
+                  token: '',
+                  data: {
+                    sdp: localDescription,
+                    userId: id,
+                  },
+                });
+                cb(localDescription);
+              } else {
+                log('warn', 'Failed send answer because localDescription is', localDescription);
               }
             });
         });
@@ -285,39 +228,28 @@ class RTC implements RTCInterface {
     const {
       data: { sdp },
     } = msg;
-    if (this.peerConnection) {
-      log('info', 'Call recipient has accepted our call');
-      const desc = new wrtc.RTCSessionDescription(sdp);
-      this.peerConnection
-        .setRemoteDescription(desc)
-        .then(() => {
-          cb(0);
-        })
-        .catch((e) => {
-          log('error', 'Error set description for answer', e);
-          cb(1);
-        });
-    } else {
-      log('warn', 'Answer description mot set because peerConnection is', this.peerConnection);
-      cb(1);
-    }
+    log('info', 'Call recipient has accepted our call');
+    const desc = new wrtc.RTCSessionDescription(sdp);
+    this.peerConnection
+      .setRemoteDescription(desc)
+      .then(() => {
+        cb(0);
+      })
+      .catch((e) => {
+        log('error', 'Error set description for answer', e);
+        cb(1);
+      });
   }
 
-  private closeVideoCall(): 0 | 1 {
-    if (this.peerConnection) {
-      log('info', 'Closing the call');
-      this.peerConnection.onicecandidate = null;
-      this.peerConnection.oniceconnectionstatechange = null;
-      this.peerConnection.onicegatheringstatechange = null;
-      this.peerConnection.onsignalingstatechange = null;
-      this.peerConnection.onnegotiationneeded = null;
-      this.peerConnection.ontrack = null;
-      this.peerConnection.close();
-      // this.peerConnection = null;
-      return 0;
-    }
-    log('warn', 'Peer connection cant close that is', this.peerConnection);
-    return 1;
+  private closeVideoCall() {
+    log('info', 'Closing the call');
+    this.peerConnection.onicecandidate = null;
+    this.peerConnection.oniceconnectionstatechange = null;
+    this.peerConnection.onicegatheringstatechange = null;
+    this.peerConnection.onsignalingstatechange = null;
+    this.peerConnection.onnegotiationneeded = null;
+    this.peerConnection.ontrack = null;
+    this.peerConnection.close();
   }
 }
 
