@@ -199,6 +199,9 @@ wss.connection.on('connection', function connection(ws) {
                 case Types.MessageType.OFFER:
                   const userId = wss.getMessage(Types.MessageType.OFFER, msg).data.userId;
                   const item = wss.getMessage(Types.MessageType.OFFER, msg).data.item;
+                  if (item) {
+                    rtc.createRTC({ id: item });
+                  }
                   rtc.invite({ targetUserId: userId, userId: id, item });
                   rtc.handleOfferMessage(msg);
                   break;

@@ -51,3 +51,5 @@ export function parseToken(token: string): JWTFull | null {
   }
   return data;
 }
+
+export const compareNumbers = (a: number, b: number) => parseInt(`${a}${b}`, 10);
