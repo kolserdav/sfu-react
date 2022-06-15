@@ -118,7 +118,7 @@ class RTC implements RTCInterface {
               token: '',
               data: {
                 sdp: localDescription,
-                userId: core.ws.userId,
+                userId,
                 item,
               },
             });
@@ -172,7 +172,7 @@ class RTC implements RTCInterface {
     this.peerConnections[peerId]
       .addIceCandidate(cand)
       .then(() => {
-        log('info', 'Adding received ICE candidate:', { id, item });
+        log('info', '< Adding received ICE candidate:', { id, item });
         if (cb) {
           cb(cand);
         }
@@ -216,7 +216,7 @@ class RTC implements RTCInterface {
     this.peerConnections[peerId]
       .setRemoteDescription(desc)
       .then(() => {
-        log('info', 'Setting up the local media stream...');
+        log('info', '-- Local video stream obtained', { id, userId, item });
         return navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS);
       })
       .then((stream) => {
@@ -227,7 +227,7 @@ class RTC implements RTCInterface {
         });
       })
       .then(() => {
-        log('info', '<- Creating answer');
+        log('info', '<- Creating answer', { id, userId, item });
         this.peerConnections[peerId].createAnswer().then((answ) => {
           if (!answ || !this.peerConnections[peerId]) {
             log('error', 'Failed set local description for answer.', {
@@ -299,7 +299,7 @@ class RTC implements RTCInterface {
   };
 
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ targetUserId, item }) => {
-    log('info', '| Closing the call');
+    log('info', '| Closing the call', { targetUserId, item });
     const peerId = compareNumbers(targetUserId, item || 0);
     this.peerConnections[peerId].onicecandidate = null;
     this.peerConnections[peerId].oniceconnectionstatechange = null;

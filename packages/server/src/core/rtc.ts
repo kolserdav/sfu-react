@@ -114,9 +114,8 @@ class RTC implements RTCInterface {
         });
     };
     this.peerConnections[peerId].ontrack = (e) => {
-      log('warn', 'stssssssssssss', { peerId });
       this.streams[peerId] = e.streams[0];
-      log('info', 'onTrack', e.streams);
+      log('info', 'onTrack', { peerId });
     };
   };
 
@@ -129,9 +128,9 @@ class RTC implements RTCInterface {
     userId: number;
     item?: number;
   }) {
-    const peerId = compareNumbers(targetUserId, item || 0);
     this.handleIceCandidate({ targetUserId, userId, item });
   }
+
   public handleCandidateMessage: RTCInterface['handleCandidateMessage'] = (msg, cb) => {
     const {
       id,
@@ -143,7 +142,7 @@ class RTC implements RTCInterface {
       this.peerConnections[peerId]
         .addIceCandidate(cand)
         .then(() => {
-          log('info', 'Adding received ICE candidate:', { userId, id, item });
+          log('info', '< Adding received ICE candidate:', { userId, id, item });
           if (cb) {
             cb(cand);
           }
@@ -188,7 +187,7 @@ class RTC implements RTCInterface {
     this.peerConnections[peerId]
       .setRemoteDescription(desc)
       .then(() => {
-        log('info', '-- Local video stream obtained', item);
+        log('info', '-- Local video stream obtained', { id, userId, item });
         if (item) {
           this.streams[peerId].getTracks().forEach((track) => {
             this.peerConnections[peerId].addTrack(track, this.streams[peerId]);
@@ -196,7 +195,7 @@ class RTC implements RTCInterface {
         }
       })
       .then(() => {
-        log('info', '<- Creating answer');
+        log('info', '<- Creating answer', { id, userId, item });
         this.peerConnections[peerId].createAnswer().then((answ) => {
           if (!answ) {
             log('error', 'Failed set local description for answer.', {
@@ -267,7 +266,7 @@ class RTC implements RTCInterface {
   };
 
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ targetUserId, item }) => {
-    log('info', '| Closing the call');
+    log('info', '| Closing the call', { targetUserId, item });
     const peerId = compareNumbers(targetUserId, item || 0);
     this.peerConnections[peerId].onicecandidate = null;
     this.peerConnections[peerId].oniceconnectionstatechange = null;

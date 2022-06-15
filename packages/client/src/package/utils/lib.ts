@@ -1,11 +1,21 @@
 import { Cookies } from 'react-cookie';
-import { COOKIE_USER_ID, COOKIE_TOKEN } from './constants';
+import { COOKIE_USER_ID, COOKIE_TOKEN, LOG_LEVEL } from './constants';
 
 const cookies = new Cookies();
 
+// eslint-disable-next-line no-unused-vars
+enum LogLevel {
+  log = 0,
+  info = 1,
+  warn = 2,
+  error = 3,
+}
+
 export const log = (type: 'info' | 'warn' | 'error' | 'log', text: string, data?: any) => {
-  // eslint-disable-next-line no-console
-  console[type](type, text, data);
+  if (LogLevel[type] >= LOG_LEVEL) {
+    // eslint-disable-next-line no-console
+    console[type](type, text, data);
+  }
 };
 
 export const getTarget = () => {

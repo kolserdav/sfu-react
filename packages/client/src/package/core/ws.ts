@@ -39,7 +39,7 @@ class WS implements Types.WSInterface {
         log('error', 'sendMessage', e);
         resolve(1);
       }
-      log('info', 'sendMessage', res);
+      log('log', 'sendMessage', res);
       this.connection.send(res);
       resolve(0);
     });
@@ -79,9 +79,11 @@ class WS implements Types.WSInterface {
   public createConnection() {
     this.newConnection({});
     this.connection.onopen = (ev: Event) => {
+      log('log', 'onOpen', ev);
       this.onOpen(ev);
     };
     this.connection.onmessage = (ev: MessageEvent<any>) => {
+      log('log', 'onMessage', ev.data);
       this.onMessage(ev);
     };
     this.connection.onerror = (ev: Event) => {

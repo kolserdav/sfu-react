@@ -32,7 +32,6 @@ export const useHandleMessages = ({ ws, db, restart }: { ws: WS; db: DB; restart
     const token = qS?.token || getTokenCookie()?.token || '';
     db.setToken(token);
     ws.onOpen = (ev) => {
-      log('info', 'onOpen', ev);
       ws.sendMessage({
         type: MessageType.GET_USER_ID,
         id: !qSUserId ? id : 0,
@@ -42,7 +41,6 @@ export const useHandleMessages = ({ ws, db, restart }: { ws: WS; db: DB; restart
     };
 
     ws.onMessage = (ev) => {
-      log('info', 'onMessage', ev.data);
       const { data } = ev;
       const rawMessage = ws.parseMessage(data);
       if (!rawMessage) {
@@ -133,16 +131,17 @@ export const useHandleMessages = ({ ws, db, restart }: { ws: WS; db: DB; restart
           break;
         case MessageType.SET_CHANGE_ROOM_GUESTS:
           const { roomUsers } = ws.getMessage(MessageType.SET_CHANGE_ROOM_GUESTS, rawMessage).data;
+          log('info', 'onChangeRoomGuests', { roomUsers });
           roomUsers.forEach((item) => {
             if (item !== ws.userId && rtc) {
               rtc.createRTC({ id: roomId, item });
-              rtc.invite({ targetUserId: roomId, userId: ws.userId, item });
               rtc.onAddTrack = (e) => {
                 log('warn', 'onAddTrack', e);
                 const _streams = streams.map((_item) => _item);
                 _streams.push(e.streams[0]);
                 setStreams(_streams);
               };
+              rtc.invite({ targetUserId: roomId, userId: ws.userId, item });
             }
           });
           break;
