@@ -135,7 +135,13 @@ export abstract class RTCInterface {
     item?: number;
   }): void;
 
-  public abstract closeVideoCall({ targetUserId }: { targetUserId: number }): void;
+  public abstract closeVideoCall({
+    targetUserId,
+    item,
+  }: {
+    targetUserId: number;
+    item?: number;
+  }): void;
 
   public abstract handleOfferMessage(
     msg: SendMessageArgs<MessageType.OFFER>,

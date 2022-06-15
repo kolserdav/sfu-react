@@ -183,7 +183,6 @@ class RTC implements RTCInterface {
         log('info', '-- Local video stream obtained', item);
         log('warn', 'item', item);
         log('warn', 'userId', userId);
-        console.log(this.streams[item || userId].id, item, userId);
         if (item) {
           this.streams[item].getTracks().forEach((track) => {
             this.peerConnections[item].addTrack(track, this.streams[item]);
