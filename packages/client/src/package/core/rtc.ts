@@ -8,6 +8,8 @@ class RTC implements RTCInterface {
 
   private ws: WS;
 
+  private localStream: MediaStream | null = null;
+
   public room: number | null = null;
 
   constructor({ ws }: { ws: WS }) {
@@ -144,18 +146,33 @@ class RTC implements RTCInterface {
   }) {
     const peerId = compareNumbers(targetUserId, item || 0);
     this.handleIceCandidate({ targetUserId, userId, item });
-    navigator.mediaDevices
-      .getUserMedia(MEDIA_CONSTRAINTS)
-      .then((localStream) => {
-        log('info', '> Adding tracks to local media stream', { targetUserId, userId, item });
-        localStream.getTracks().forEach((track) => {
-          this.peerConnections[peerId].addTrack(track, localStream);
+    if (!this.localStream) {
+      navigator.mediaDevices
+        .getUserMedia(MEDIA_CONSTRAINTS)
+        .then((localStream) => {
+          this.localStream = localStream;
+          log('info', '> Adding tracks to new local media stream', {
+            streamId: localStream.id,
+          });
+          localStream.getTracks().forEach((track) => {
+            this.peerConnections[peerId].addTrack(track, localStream);
+          });
+          this.onAddTrack(userId, localStream);
+        })
+        .catch((err) => {
+          log('error', 'Error get self user media', err);
         });
-        this.onAddTrack(userId, localStream);
-      })
-      .catch((err) => {
-        log('error', 'Error get self user media', err);
+    } else {
+      log('info', '> Adding tracks to current local media stream', {
+        streamId: this.localStream.id,
       });
+      this.localStream.getTracks().forEach((track) => {
+        if (this.localStream) {
+          this.peerConnections[peerId].addTrack(track, this.localStream);
+        }
+      });
+      this.onAddTrack(userId, this.localStream);
+    }
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -219,17 +236,6 @@ class RTC implements RTCInterface {
     const desc = new RTCSessionDescription(sdp);
     this.peerConnections[peerId]
       .setRemoteDescription(desc)
-      .then(() => {
-        log('info', '-- Local video stream obtained', { id, userId, item });
-        return navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS);
-      })
-      .then((stream) => {
-        const localStream = stream;
-        log('info', '-- Local video stream obtained');
-        localStream.getTracks().forEach((track) => {
-          this.peerConnections[peerId].addTrack(track, localStream);
-        });
-      })
       .then(() => {
         log('info', '<- Creating answer', { id, userId, item });
         this.peerConnections[peerId].createAnswer().then((answ) => {

@@ -73,7 +73,7 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
           break;
         case MessageType.SET_CHANGE_ROOM_GUESTS:
           const { roomUsers } = ws.getMessage(MessageType.SET_CHANGE_ROOM_GUESTS, rawMessage).data;
-          log('warn', 'onChangeRoomGuests', { roomUsers, id });
+          log('info', 'onChangeRoomGuests', { roomUsers, id });
           // Add new guests
           roomUsers.forEach((item) => {
             if (item !== ws.userId && rtc) {

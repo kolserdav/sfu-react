@@ -124,7 +124,6 @@ class RTC implements RTCInterface {
       const stream = e.streams[0];
       this.streams[target] = stream;
       this.onAddTrack(target, stream);
-      log('info', 'On get remote stream', { peerId, streamId: stream.id });
     };
   };
 
@@ -189,14 +188,9 @@ class RTC implements RTCInterface {
       .setRemoteDescription(desc)
       .then(() => {
         log('info', '-- Local video stream obtained', { peerId });
-        if (!item) {
-          const emptyStream: MediaStream = new wrtc.MediaStream();
-          emptyStream.getTracks().forEach((track) => {
-            this.peerConnections[peerId].addTrack(track, emptyStream);
-          });
-        } else {
-          this.streams[userId].getTracks().forEach((track) => {
-            this.peerConnections[peerId].addTrack(track, this.streams[item]);
+        if (item) {
+          this.streams[item].getTracks().forEach((track) => {
+            this.peerConnections[peerId].addTrack(track, this.streams[userId]);
           });
         }
       })
@@ -358,15 +352,7 @@ class RTC implements RTCInterface {
   }
 
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ targetUserId, userId, item }) => {
-    log('info', '| Closing the call', { targetUserId, userId, item });
-    const peerId = compareNumbers(targetUserId, userId || 0, item || 0);
-    this.peerConnections[peerId].onicecandidate = null;
-    this.peerConnections[peerId].oniceconnectionstatechange = null;
-    this.peerConnections[peerId].onicegatheringstatechange = null;
-    this.peerConnections[peerId].onsignalingstatechange = null;
-    this.peerConnections[peerId].onnegotiationneeded = null;
-    this.peerConnections[peerId].ontrack = null;
-    this.peerConnections[peerId].close();
+    log('warn', '| Closing the call', { targetUserId, userId, item });
   };
 }
 
