@@ -159,8 +159,12 @@ class RTC implements RTCInterface {
   };
 
   public addUserToRoom({ userId, roomId }: { userId: number; roomId: number }) {
-    if (this.rooms[roomId].indexOf(userId) === -1) {
+    if (!this.rooms[roomId]) {
+      this.rooms[roomId] = [userId];
+    } else if (this.rooms[roomId].indexOf(userId) === -1) {
       this.rooms[roomId].push(userId);
+    } else {
+      log('warn', 'Duplicate adding user to room');
     }
   }
 
@@ -280,15 +284,10 @@ class RTC implements RTCInterface {
     } = message;
     // Room creatting counter local connection with every user
     const conn = new this.ws.websocket(`ws://localhost:${SERVER_PORT}`);
-    // Create new room
-    if (!this.rooms[id]) {
-      this.rooms[id] = [uid];
-    } else {
-      this.addUserToRoom({
-        roomId: id,
-        userId: uid,
-      });
-    }
+    this.addUserToRoom({
+      roomId: id,
+      userId: uid,
+    });
     this.createRTC({ id, userId: uid, item: 0 });
     conn.onopen = () => {
       conn.send(
@@ -300,7 +299,19 @@ class RTC implements RTCInterface {
           },
         })
       );
-      let sendInvites = false;
+      this.rooms[id].forEach((_item) => {
+        if (_item !== uid) {
+          this.ws.sendMessage({
+            type: MessageType.SET_CHANGE_ROOM_GUESTS,
+            id: _item,
+            token: '',
+            data: {
+              roomUsers: this.rooms[id],
+            },
+          });
+        }
+      });
+      let sendList = false;
       conn.onmessage = (mess) => {
         const msg = this.ws.parseMessage(mess.data as string);
         if (msg) {
@@ -308,7 +319,9 @@ class RTC implements RTCInterface {
           switch (type) {
             case MessageType.OFFER:
               // eslint-disable-next-line no-case-declarations
-              const item = this.ws.getMessage(MessageType.OFFER, msg).data.item;
+              const {
+                data: { item, userId },
+              } = this.ws.getMessage(MessageType.OFFER, msg);
               // If user call to other guest via new connection with room
               if (item) {
                 this.createRTC({
@@ -318,18 +331,16 @@ class RTC implements RTCInterface {
                 });
               }
               this.handleOfferMessage(msg, () => {
-                // Send user list of room
-                if (!sendInvites) {
-                  sendInvites = true;
-                  this.rooms[id].forEach((_item) => {
-                    this.ws.sendMessage({
-                      type: MessageType.SET_CHANGE_ROOM_GUESTS,
-                      id: _item,
-                      token: '',
-                      data: {
-                        roomUsers: this.rooms[id],
-                      },
-                    });
+                // Send users list to new guest
+                if (uid === userId && !sendList) {
+                  sendList = true;
+                  this.ws.sendMessage({
+                    type: MessageType.SET_CHANGE_ROOM_GUESTS,
+                    id: uid,
+                    token: '',
+                    data: {
+                      roomUsers: this.rooms[id],
+                    },
                   });
                 }
               });
