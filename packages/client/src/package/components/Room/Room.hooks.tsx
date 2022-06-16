@@ -76,9 +76,8 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
           log('info', 'onChangeRoomGuests', { roomUsers, id });
           // Add new guests
           roomUsers.forEach((item) => {
-            const peerId = compareNumbers(ws.userId, item);
-            console.log(peerId);
-            if (item !== ws.userId && rtc) {
+            const peerId = compareNumbers(roomId, item);
+            if (item !== ws.userId && rtc && !rtc.peerConnections[peerId]) {
               rtc.createRTC({ id: roomId, target: item });
               rtc.onAddTrack = (addedUserId, stream) => {
                 log('info', 'Added stream of new user to room', { addedUserId, item });

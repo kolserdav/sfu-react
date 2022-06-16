@@ -63,12 +63,11 @@ class RTC implements RTCInterface {
           core.peerConnections[peerId].iceConnectionState
         );
         if (core.peerConnections[peerId].iceConnectionState === 'connected') {
-          log('warn', 'ss', { roomId, userId, target, peerId });
-
-          rooms[roomId].forEach((_item) => {
+          // Send to all users list of room's guests
+          rooms[roomId].forEach((id) => {
             ws.sendMessage({
               type: MessageType.SET_CHANGE_ROOM_GUESTS,
-              id: _item,
+              id,
               data: {
                 roomUsers: rooms[roomId],
               },
