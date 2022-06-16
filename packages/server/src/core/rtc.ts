@@ -1,6 +1,7 @@
 import wrtc from '../../node-webrtc/lib/index';
-import { RTCInterface, MessageType } from '../types/interfaces';
+import { RTCInterface, MessageType, SendMessageArgs } from '../types/interfaces';
 import { log, compareNumbers } from '../utils/lib';
+import { SERVER_PORT } from '../utils/constants';
 import WS from './ws';
 
 class RTC implements RTCInterface {
@@ -124,21 +125,10 @@ class RTC implements RTCInterface {
       const target = parseInt(targets[2] === '0' ? targets[1] : targets[2], 10);
       const stream = e.streams[0];
       this.streams[target] = stream;
+      this.onAddTrack(target, stream);
       log('info', 'On get remote stream', { peerId, streamId: stream.id });
     };
   };
-
-  public invite({
-    targetUserId,
-    userId,
-    item,
-  }: {
-    targetUserId: number;
-    userId: number;
-    item?: number;
-  }) {
-    this.handleIceCandidate({ targetUserId, userId, item });
-  }
 
   public handleCandidateMessage: RTCInterface['handleCandidateMessage'] = (msg, cb) => {
     const {
@@ -196,7 +186,7 @@ class RTC implements RTCInterface {
     this.peerConnections[peerId]
       .setRemoteDescription(desc)
       .then(() => {
-        log('warn', '-- Local video stream obtained', { peerId });
+        log('info', '-- Local video stream obtained', { peerId });
         if (!item) {
           const emptyStream: MediaStream = new wrtc.MediaStream();
           emptyStream.getTracks().forEach((track) => {
@@ -282,6 +272,85 @@ class RTC implements RTCInterface {
         }
       });
   };
+
+  public handleGetRoomMessage({ message }: { message: SendMessageArgs<MessageType.GET_ROOM> }) {
+    const {
+      data: { userId: uid },
+      id,
+    } = message;
+    // Room creatting counter local connection with every user
+    const conn = new this.ws.websocket(`ws://localhost:${SERVER_PORT}`);
+    // Create new room
+    if (!this.rooms[id]) {
+      this.rooms[id] = [uid];
+    } else {
+      this.addUserToRoom({
+        roomId: id,
+        userId: uid,
+      });
+    }
+    this.createRTC({ id, userId: uid, item: 0 });
+    conn.onopen = () => {
+      conn.send(
+        JSON.stringify({
+          type: MessageType.GET_USER_ID,
+          id,
+          data: {
+            isRoom: true,
+          },
+        })
+      );
+      let sendInvites = false;
+      conn.onmessage = (mess) => {
+        const msg = this.ws.parseMessage(mess.data as string);
+        if (msg) {
+          const { type } = msg;
+          switch (type) {
+            case MessageType.OFFER:
+              // eslint-disable-next-line no-case-declarations
+              const item = this.ws.getMessage(MessageType.OFFER, msg).data.item;
+              // If user call to other guest via new connection with room
+              if (item) {
+                this.createRTC({
+                  id,
+                  userId: this.ws.getMessage(MessageType.OFFER, msg).data.userId,
+                  item,
+                });
+              }
+              this.handleOfferMessage(msg, () => {
+                // Send user list of room
+                if (!sendInvites) {
+                  sendInvites = true;
+                  this.rooms[id].forEach((_item) => {
+                    this.ws.sendMessage({
+                      type: MessageType.SET_CHANGE_ROOM_GUESTS,
+                      id: _item,
+                      token: '',
+                      data: {
+                        roomUsers: this.rooms[id],
+                      },
+                    });
+                  });
+                }
+              });
+              break;
+            case MessageType.ANSWER:
+              this.handleVideoAnswerMsg(msg);
+              break;
+            case MessageType.CANDIDATE:
+              this.handleCandidateMessage(msg);
+              break;
+          }
+        }
+      };
+    };
+    this.ws.sendMessage({
+      type: MessageType.SET_ROOM,
+      id,
+      token: 'null',
+      data: undefined,
+    });
+  }
 
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ targetUserId, userId, item }) => {
     log('info', '| Closing the call', { targetUserId, item });
