@@ -339,13 +339,18 @@ class RTC implements RTCInterface {
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, userId, target }) => {
     log('info', '| Closing the call', { roomId, userId, target });
     const peerId = compareNumbers(roomId, userId || 0, target || 0);
-    this.peerConnections[peerId].onicecandidate = null;
-    this.peerConnections[peerId].oniceconnectionstatechange = null;
-    this.peerConnections[peerId].onicegatheringstatechange = null;
-    this.peerConnections[peerId].onsignalingstatechange = null;
-    this.peerConnections[peerId].onnegotiationneeded = null;
-    this.peerConnections[peerId].ontrack = null;
-    this.peerConnections[peerId].close();
+    /*const { connectionState } = this.peerConnections[peerId];
+    setTimeout(() => {
+      if (this.peerConnections[peerId].connectionState === connectionState) {
+        this.peerConnections[peerId].onicecandidate = null;
+        this.peerConnections[peerId].oniceconnectionstatechange = null;
+        this.peerConnections[peerId].onicegatheringstatechange = null;
+        this.peerConnections[peerId].onsignalingstatechange = null;
+        this.peerConnections[peerId].onnegotiationneeded = null;
+        this.peerConnections[peerId].ontrack = null;
+        this.peerConnections[peerId].close();
+      }
+    }, 3000);*/
   };
 }
 

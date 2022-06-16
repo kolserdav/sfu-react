@@ -133,8 +133,8 @@ class RTC implements RTCInterface {
   };
 
   public invite({ roomId, userId, target }: { roomId: number; userId: number; target?: number }) {
-    const peerId = compareNumbers(roomId, target || 0);
     this.handleIceCandidate({ roomId, userId, target });
+    const peerId = compareNumbers(roomId, target || 0);
     if (!this.localStream) {
       navigator.mediaDevices
         .getUserMedia(MEDIA_CONSTRAINTS)
@@ -245,7 +245,7 @@ class RTC implements RTCInterface {
               log('error', 'Error set local description for answer', err);
             })
             .then(() => {
-              const { localDescription } = this.peerConnections[id];
+              const { localDescription } = this.peerConnections[peerId];
               if (localDescription) {
                 log('info', 'Sending answer packet back to other peer', { userId, target, id });
                 this.ws.sendMessage({
@@ -297,17 +297,22 @@ class RTC implements RTCInterface {
       });
   };
 
+  // eslint-disable-next-line class-methods-use-this
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, target }) => {
     log('info', '| Closing the call', { roomId, target });
     const peerId = compareNumbers(roomId, target || 0);
-    this.peerConnections[peerId].onicecandidate = null;
-    this.peerConnections[peerId].oniceconnectionstatechange = null;
-    this.peerConnections[peerId].onicegatheringstatechange = null;
-    this.peerConnections[peerId].onsignalingstatechange = null;
-    this.peerConnections[peerId].onnegotiationneeded = null;
-    this.peerConnections[peerId].ontrack = null;
-    this.peerConnections[peerId].close();
-    delete this.peerConnections[peerId];
+    /* const { connectionState } = this.peerConnections[peerId];
+    setTimeout(() => {
+      if (this.peerConnections[peerId].connectionState === connectionState) {
+        this.peerConnections[peerId].onicecandidate = null;
+        this.peerConnections[peerId].oniceconnectionstatechange = null;
+        this.peerConnections[peerId].onicegatheringstatechange = null;
+        this.peerConnections[peerId].onsignalingstatechange = null;
+        this.peerConnections[peerId].onnegotiationneeded = null;
+        this.peerConnections[peerId].ontrack = null;
+        this.peerConnections[peerId].close();
+      }
+    }, 3000); */
   };
 }
 
