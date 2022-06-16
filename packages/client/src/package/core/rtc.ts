@@ -54,8 +54,8 @@ class RTC implements RTCInterface {
       function handleICEConnectionStateChangeEvent(event: Event) {
         log(
           'info',
-          '!!! ICE connection state changed to:',
-          core.peerConnections[peerId].iceConnectionState
+          `!!! ICE connection state changed to: ${core.peerConnections[peerId].iceConnectionState}`,
+          { peerId }
         );
         switch (core.peerConnections[peerId].iceConnectionState) {
           case 'closed':
@@ -69,8 +69,8 @@ class RTC implements RTCInterface {
       function handleICEGatheringStateChangeEvent(ev: Event) {
         log(
           'info',
-          '*** ICE gathering state changed to:',
-          core.peerConnections[peerId].iceGatheringState
+          `*** ICE gathering state changed to: ${core.peerConnections[peerId].iceGatheringState}`,
+          { peerId }
         );
       };
     this.peerConnections[peerId].onsignalingstatechange = function handleSignalingStateChangeEvent(
@@ -301,18 +301,13 @@ class RTC implements RTCInterface {
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, target }) => {
     log('info', '| Closing the call', { roomId, target });
     const peerId = compareNumbers(roomId, target || 0);
-    /* const { connectionState } = this.peerConnections[peerId];
-    setTimeout(() => {
-      if (this.peerConnections[peerId].connectionState === connectionState) {
-        this.peerConnections[peerId].onicecandidate = null;
-        this.peerConnections[peerId].oniceconnectionstatechange = null;
-        this.peerConnections[peerId].onicegatheringstatechange = null;
-        this.peerConnections[peerId].onsignalingstatechange = null;
-        this.peerConnections[peerId].onnegotiationneeded = null;
-        this.peerConnections[peerId].ontrack = null;
-        this.peerConnections[peerId].close();
-      }
-    }, 3000); */
+    this.peerConnections[peerId].onicecandidate = null;
+    this.peerConnections[peerId].oniceconnectionstatechange = null;
+    this.peerConnections[peerId].onicegatheringstatechange = null;
+    this.peerConnections[peerId].onsignalingstatechange = null;
+    this.peerConnections[peerId].onnegotiationneeded = null;
+    this.peerConnections[peerId].ontrack = null;
+    this.peerConnections[peerId].close();
   };
 }
 

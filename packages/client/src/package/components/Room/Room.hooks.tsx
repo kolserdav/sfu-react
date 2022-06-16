@@ -4,16 +4,18 @@ import WS from '../../core/ws';
 import RTC from '../../core/rtc';
 import { compareNumbers, log } from '../../utils/lib';
 import { MessageType } from '../../types/interfaces';
+import { RawStreams } from '../../types';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number | null }) => {
-  const [streams, setStreams] = useState<{ userId: number; stream: MediaStream }[]>([]);
+  const [streams, setStreams] = useState<RawStreams[]>([]);
   const [roomIsSaved, setRoomIsSaved] = useState<boolean>(false);
 
   const ws = useMemo(() => new WS(), []);
   const rtc = useMemo(() => new RTC({ ws }), [ws]);
 
   useEffect(() => {
+    let mounted = true;
     if (!roomId) {
       return () => {
         /** */
@@ -77,16 +79,19 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
           // Add new guests
           roomUsers.forEach((item) => {
             const peerId = compareNumbers(roomId, item);
-            if (item !== ws.userId && rtc && !rtc.peerConnections[peerId]) {
+            if (!rtc.peerConnections[peerId]) {
               rtc.createRTC({ id: roomId, target: item });
+              const _streams = streams.map((_item) => _item);
               rtc.onAddTrack = (addedUserId, stream) => {
-                log('info', 'Added stream of new user to room', { addedUserId, item });
-                const _streams = streams.map((_item) => _item);
-                const isExists = _streams.filter((_item) => _item.userId === addedUserId);
+                log('info', 'Added stream of new user to room', { addedUserId, item, mounted });
                 // If it is not me
+                const isExists = _streams.filter((_item) => _item.userId === addedUserId);
                 if (!isExists[0]) {
                   _streams.push({ userId: addedUserId, stream });
-                  setStreams(_streams);
+                  // FIXME . without setTimeout after reload some users get lost
+                  setTimeout(() => {
+                    setStreams(_streams);
+                  }, 1000);
                 }
               };
               rtc.invite({ roomId, userId: ws.userId, target: item });
@@ -123,6 +128,7 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
       }
     };
     return () => {
+      mounted = false;
       ws.onOpen = () => {
         /** */
       };
