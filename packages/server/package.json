@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "license": "MIT",
-  "prisma": {
-    "schema": "orm/schema.prisma"
-  },
   "scripts": {
     "watch": "tsc -p . -w",
     "dev:start": "nodemon dist/src/index.js",

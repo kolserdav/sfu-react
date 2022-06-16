@@ -1,7 +1,5 @@
 import { Cookies } from 'react-cookie';
-import { COOKIE_USER_ID, COOKIE_TOKEN, LOG_LEVEL } from './constants';
-
-const cookies = new Cookies();
+import { LOG_LEVEL } from './constants';
 
 // eslint-disable-next-line no-unused-vars
 enum LogLevel {
@@ -18,11 +16,9 @@ export const log = (type: 'info' | 'warn' | 'error' | 'log', text: string, data?
   }
 };
 
-export const getTarget = () => {
-  const {
-    location: { pathname },
-  } = window;
-  return parseInt(pathname.replace(/^\//, ''), 10);
+export const getTarget = (pathname: string) => {
+  const res = parseInt(pathname.replace(/^\//, ''), 10);
+  return Number.isNaN(res) ? null : res;
 };
 
 export const parseMessage = (message: string): object => {
@@ -33,43 +29,6 @@ export const parseMessage = (message: string): object => {
     /** */
   }
   return result;
-};
-
-export const isRoom = () => window.location.search === '?room=1';
-
-export const setLoginCookie = ({ userId }: { userId: number }) => {
-  const expires = new Date();
-  expires.setMonth(expires.getMonth() + 1);
-  cookies.set(COOKIE_USER_ID, userId, {
-    sameSite: true,
-    expires,
-    secure: true,
-  });
-};
-
-export const getLoginCookie = (): number => {
-  const str = cookies.get(COOKIE_USER_ID);
-  const num = parseInt(str, 10);
-  return Number.isNaN(num) ? 0 : num;
-};
-
-export const setTokenCookie = (token: string) => {
-  const expires = new Date();
-  expires.setMonth(expires.getMonth() + 1);
-  cookies.set(COOKIE_TOKEN, token, {
-    sameSite: true,
-    expires,
-    secure: true,
-  });
-};
-
-export const getTokenCookie = (): { token: string } | null => {
-  const str = cookies.get(COOKIE_TOKEN);
-  return str
-    ? {
-        token: str,
-      }
-    : null;
 };
 
 export const parseQueryString = (query: string): Record<string, string> | null => {

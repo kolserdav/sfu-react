@@ -1,53 +1,29 @@
 /* eslint-disable no-case-declarations */
-import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useMemo } from 'react';
 import WS from '../../core/ws';
-import DB from '../../core/db';
-import {
-  log,
-  getLoginCookie,
-  parseQueryString,
-  setTokenCookie,
-  getTokenCookie,
-} from '../../utils/lib';
-import { MessageType } from '../../types/interfaces';
 import RTC from '../../core/rtc';
+import { log } from '../../utils/lib';
+import { MessageType } from '../../types/interfaces';
 
 // eslint-disable-next-line import/prefer-default-export
-export const useHandleMessages = ({
-  ws,
-  db,
-  restart,
-  rtc,
-}: {
-  ws: WS;
-  db: DB;
-  rtc: RTC;
-  restart: boolean;
-}) => {
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  const { pathname, search } = location;
-
-  const [id, setId] = useState<number>(getLoginCookie());
-  const [auth, setAuth] = useState<boolean>(false);
-  const [loggedAs, setLoggedAs] = useState<string>('');
+export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number | null }) => {
   const [streams, setStreams] = useState<{ userId: number; stream: MediaStream }[]>([]);
   const [roomIsSaved, setRoomIsSaved] = useState<boolean>(false);
 
+  const ws = useMemo(() => new WS(), []);
+  const rtc = useMemo(() => new RTC({ ws }), [ws]);
+
   useEffect(() => {
-    const roomId = parseInt(pathname.replace('/', ''), 10);
+    if (!roomId) {
+      return () => {
+        /** */
+      };
+    }
     const roomOpen = Number.isInteger(roomId);
-    const qS = parseQueryString(search);
-    const qSUserId = qS?.userId;
-    const token = qS?.token || getTokenCookie()?.token || '';
-    db.setToken(token);
     ws.onOpen = (ev) => {
       ws.sendMessage({
         type: MessageType.GET_USER_ID,
-        id: !qSUserId ? id : 0,
-        token: !qSUserId ? db.token : 'null',
+        id,
         data: {},
       });
     };
@@ -59,47 +35,11 @@ export const useHandleMessages = ({
         return;
       }
       const { type, id: _id } = rawMessage;
-      let res;
-      const args = {
-        where: {
-          id: _id,
-        },
-        include: {
-          User: {
-            select: {
-              email: true,
-            },
-          },
-        },
-      };
       if (type === MessageType.SET_USER_ID) {
         ws.setUserId(_id);
-        res = db.guestFindFirst(args);
       }
       switch (type) {
         case MessageType.SET_USER_ID:
-          const { id: __id, token: _token } = ws.getMessage(MessageType.SET_USER_ID, rawMessage);
-          if (_token && _token !== 'null') {
-            setTokenCookie(_token);
-            setAuth(true);
-            let isAuth = false;
-            if (qS?.token) {
-              isAuth = true;
-              navigate(pathname);
-            }
-            ws.sendMessage({
-              id: ws.userId,
-              token,
-              isAuth,
-              type: MessageType.GET_GUEST_FIND_FIRST,
-              data: {
-                args,
-              },
-            });
-          } else {
-            setAuth(false);
-            setLoggedAs('');
-          }
           if (roomOpen) {
             ws.setUserId(_id);
             rtc.createRTC({ id: roomId });
@@ -113,21 +53,11 @@ export const useHandleMessages = ({
             ws.sendMessage({
               type: MessageType.GET_ROOM,
               id: roomId,
-              token: db.token,
               data: {
                 userId: ws.userId,
               },
             });
           }
-          setId(__id);
-          break;
-        case MessageType.SET_GUEST_FIND_FIRST:
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const r: Awaited<typeof res> = (rawMessage.data as any).argv;
-          setLoggedAs(r?.User[0].email || '');
-          break;
-        case MessageType.SET_AUTH:
-          console.log(ws.getMessage(MessageType.SET_AUTH, rawMessage).data.message);
           break;
         case MessageType.OFFER:
           if (rtc) {
@@ -143,19 +73,32 @@ export const useHandleMessages = ({
           break;
         case MessageType.SET_CHANGE_ROOM_GUESTS:
           const { roomUsers } = ws.getMessage(MessageType.SET_CHANGE_ROOM_GUESTS, rawMessage).data;
-          log('info', 'onChangeRoomGuests', { roomUsers });
+          log('warn', 'onChangeRoomGuests', { roomUsers, id });
+          // Add new guests
           roomUsers.forEach((item) => {
             if (item !== ws.userId && rtc) {
               rtc.createRTC({ id: roomId, item });
               rtc.onAddTrack = (addedUserId, stream) => {
                 log('info', 'Added stream of new user to room', { addedUserId, item });
                 const _streams = streams.map((_item) => _item);
-                _streams.push({ userId: addedUserId, stream });
-                setStreams(_streams);
+                const isExists = _streams.filter((_item) => _item.userId === addedUserId);
+                // If it is not me
+                if (!isExists[0]) {
+                  _streams.push({ userId: addedUserId, stream });
+                  setStreams(_streams);
+                }
               };
               rtc.invite({ targetUserId: roomId, userId: ws.userId, item });
             }
           });
+          // Remove disconnected
+          const _streams = streams.filter((item) => {
+            const isExists = roomUsers.filter((_item) => _item === item.userId);
+            return isExists[0] !== undefined;
+          });
+          if (streams.length !== _streams.length) {
+            setStreams(_streams);
+          }
           break;
         case MessageType.ANSWER:
           if (rtc) {
@@ -186,6 +129,7 @@ export const useHandleMessages = ({
         /** */
       };
     };
-  }, [restart, pathname, roomIsSaved, streams]);
-  return { auth, loggedAs, streams, id };
+  }, [roomId, streams, ws, rtc, id, roomIsSaved]);
+
+  return { streams };
 };

@@ -1,13 +1,23 @@
 import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
 import Main from './package/Main';
 import './App.scss';
 
+const createRoom = () => {
+  window.location.href = new Date().getTime().toString();
+};
+
 function App() {
+  const isHall = window.location.pathname === '/';
   return (
-    <BrowserRouter>
-      <Main test="mest" />
-    </BrowserRouter>
+    <div>
+      {isHall ? (
+        <button type="button" onClick={createRoom}>
+          Create room
+        </button>
+      ) : (
+        <Main id={new Date().getTime()} />
+      )}
+    </div>
   );
 }
 

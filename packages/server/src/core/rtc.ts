@@ -50,7 +50,6 @@ class RTC implements RTCInterface {
         core.ws.sendMessage({
           type: MessageType.CANDIDATE,
           id: targetUserId,
-          token: '',
           data: {
             candidate: event.candidate,
             userId,
@@ -69,7 +68,7 @@ class RTC implements RTCInterface {
           case 'closed':
           case 'failed':
           case 'disconnected':
-            core.closeVideoCall({ targetUserId, item });
+            core.closeVideoCall({ targetUserId, userId, item });
             break;
         }
       };
@@ -111,7 +110,6 @@ class RTC implements RTCInterface {
             core.ws.sendMessage({
               id: targetUserId,
               type: MessageType.OFFER,
-              token: '',
               data: {
                 sdp: localDescription,
                 userId,
@@ -229,7 +227,6 @@ class RTC implements RTCInterface {
                 this.ws.sendMessage({
                   id: userId,
                   type: MessageType.ANSWER,
-                  token: '',
                   data: {
                     sdp: localDescription,
                     userId: id,
@@ -304,7 +301,6 @@ class RTC implements RTCInterface {
           this.ws.sendMessage({
             type: MessageType.SET_CHANGE_ROOM_GUESTS,
             id: _item,
-            token: '',
             data: {
               roomUsers: this.rooms[id],
             },
@@ -337,7 +333,6 @@ class RTC implements RTCInterface {
                   this.ws.sendMessage({
                     type: MessageType.SET_CHANGE_ROOM_GUESTS,
                     id: uid,
-                    token: '',
                     data: {
                       roomUsers: this.rooms[id],
                     },
@@ -358,13 +353,12 @@ class RTC implements RTCInterface {
     this.ws.sendMessage({
       type: MessageType.SET_ROOM,
       id,
-      token: 'null',
       data: undefined,
     });
   }
 
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ targetUserId, userId, item }) => {
-    log('info', '| Closing the call', { targetUserId, item });
+    log('info', '| Closing the call', { targetUserId, userId, item });
     const peerId = compareNumbers(targetUserId, userId || 0, item || 0);
     this.peerConnections[peerId].onicecandidate = null;
     this.peerConnections[peerId].oniceconnectionstatechange = null;

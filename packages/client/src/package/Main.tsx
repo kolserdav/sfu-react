@@ -1,5 +1,6 @@
 import React, { createContext } from 'react';
-import Router from './components/Router/Router';
+import Room from './components/Room/Room';
+import { RoomProps } from './types';
 
 const themes = {
   dark: {},
@@ -9,10 +10,10 @@ const themes = {
 const MainContext = createContext(themes.dark);
 
 // TODO theme provider
-function Main(props: any) {
+function Main({ id }: RoomProps) {
   return (
     <MainContext.Provider value={themes.light}>
-      <Router />
+      <Room id={id} />
     </MainContext.Provider>
   );
 }

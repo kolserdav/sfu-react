@@ -45,7 +45,6 @@ class RTC implements RTCInterface {
         core.ws.sendMessage({
           type: MessageType.CANDIDATE,
           id: targetUserId,
-          token: '',
           data: {
             candidate: event.candidate,
             userId: core.ws.userId,
@@ -115,7 +114,6 @@ class RTC implements RTCInterface {
             core.ws.sendMessage({
               id: targetUserId,
               type: MessageType.OFFER,
-              token: '',
               data: {
                 sdp: localDescription,
                 userId,
@@ -258,7 +256,6 @@ class RTC implements RTCInterface {
                 this.ws.sendMessage({
                   id,
                   type: MessageType.ANSWER,
-                  token: '',
                   data: {
                     sdp: localDescription,
                     userId: this.ws.userId,

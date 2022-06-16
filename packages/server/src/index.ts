@@ -1,14 +1,9 @@
 /* eslint-disable no-case-declarations */
-import dotenv from 'dotenv';
 import { v4 } from 'uuid';
-dotenv.config();
-import { SERVER_PORT, APP_URL } from './utils/constants';
-import { sendEmail } from './utils/email';
+import { SERVER_PORT } from './utils/constants';
 import WS from './core/ws';
-import DB from './core/db';
 import * as Types from './types/interfaces';
-import { createToken, log } from './utils/lib';
-import { auth } from './utils/auth';
+import { log } from './utils/lib';
 import RTC from './core/rtc';
 
 process.on('uncaughtException', (err: Error) => {
@@ -19,7 +14,6 @@ process.on('unhandledRejection', (err: Error) => {
 });
 
 const wss = new WS({ port: SERVER_PORT });
-const db = new DB();
 
 const getConnectionId = (): string => {
   const connId = v4();
@@ -41,122 +35,19 @@ wss.connection.on('connection', function connection(ws) {
     if (!rawMessage) {
       return;
     }
-    const { type, id, token, isAuth } = rawMessage;
-    let authRes: string | null = null;
-    let args;
-    // TODO auth
+    const { type, id } = rawMessage;
     switch (type) {
       case Types.MessageType.GET_USER_ID:
         const { isRoom } = wss.getMessage(Types.MessageType.GET_USER_ID, rawMessage).data;
         // TODO fixed isRoom problem
-        const { id: _id, token: _token } = isRoom
-          ? { id, token: 'null' }
-          : await db.getUserId(id, token);
         if (isRoom) {
           rtc.roomCons[connId] = id;
         }
-        wss.setSocket({ id: _id, ws, connId, isRoom });
+        wss.setSocket({ id, ws, connId, isRoom });
         wss.sendMessage({
           type: Types.MessageType.SET_USER_ID,
-          id: _id,
-          token: _token ? _token : 'null',
+          id,
           data: undefined,
-        });
-        break;
-      case Types.MessageType.GET_GUEST_FIND_FIRST:
-        args = wss.getMessage(Types.MessageType.GET_GUEST_FIND_FIRST, rawMessage).data.args;
-        authRes = await auth({
-          args,
-          token,
-          isAuth,
-        });
-        if (authRes !== null) {
-          wss.sendMessage({
-            type: Types.MessageType.SET_ERROR,
-            id,
-            token,
-            data: {
-              message: authRes,
-            },
-          });
-          break;
-        }
-        wss.sendMessage({
-          type: Types.MessageType.SET_GUEST_FIND_FIRST,
-          id,
-          token,
-          data: {
-            argv: await db.guestFindFirst(args),
-          },
-        });
-        break;
-      case Types.MessageType.GET_AUTH:
-        const { email } = wss.getMessage(Types.MessageType.GET_AUTH, rawMessage).data;
-        const date = new Date();
-        const user = await db.guestUpdate({
-          where: {
-            id,
-          },
-          data: {
-            lastLogin: date,
-          },
-          select: {
-            lastLogin: true,
-            lastVisit: true,
-          },
-        });
-        if (user && user.lastLogin) {
-          const __token = createToken({
-            id,
-            email,
-            lastLogin: user.lastLogin.toISOString(),
-            lastVisit: user.lastVisit.toISOString(),
-          });
-          await sendEmail({
-            email,
-            type: 'login',
-            lang: 'en',
-            link: `${APP_URL}?token=${__token}`,
-          });
-        }
-        wss.sendMessage({
-          type: Types.MessageType.SET_AUTH,
-          id,
-          token,
-          data: {
-            message: 'Email was send',
-          },
-        });
-        break;
-      case Types.MessageType.GET_GUEST_UPDATE:
-        args = wss.getMessage(Types.MessageType.GET_GUEST_UPDATE, rawMessage).data.args;
-        authRes = await auth<'Guest'>({
-          args,
-          token,
-          selfUsage: {
-            model: 'User',
-            field: 'id',
-            closedSelf: ['User'],
-          },
-        });
-        if (authRes !== null) {
-          wss.sendMessage({
-            type: Types.MessageType.SET_ERROR,
-            id,
-            token,
-            data: {
-              message: authRes,
-            },
-          });
-          break;
-        }
-        wss.sendMessage({
-          type: Types.MessageType.SET_GUEST_UPDATE,
-          id,
-          token,
-          data: {
-            argv: await db.guestUpdate(args),
-          },
         });
         break;
       case Types.MessageType.GET_ROOM:
@@ -167,7 +58,6 @@ wss.connection.on('connection', function connection(ws) {
       default:
         wss.sendMessage({
           type,
-          token: 'null',
           data: rawMessage.data,
           id,
         });
@@ -196,7 +86,6 @@ wss.connection.on('connection', function connection(ws) {
             wss.sendMessage({
               type: Types.MessageType.SET_CHANGE_ROOM_GUESTS,
               id: _item,
-              token: '',
               data: {
                 roomUsers: rtc.rooms[item],
               },
