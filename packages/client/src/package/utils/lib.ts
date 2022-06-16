@@ -49,4 +49,4 @@ export const parseQueryString = (query: string): Record<string, string> | null =
   return res;
 };
 
-export const compareNumbers = (a: number, b: number) => parseInt(`${a}${b}`, 10);
+export const compareNumbers = (roomId: number, target: number) => `${roomId}-${target}`;

@@ -19,8 +19,8 @@ class RTC implements RTCInterface {
     this.ws = ws;
   }
 
-  public createRTC: RTCInterface['createRTC'] = ({ id, userId, item }) => {
-    const peerId = compareNumbers(id, userId || 0, item || 0);
+  public createRTC: RTCInterface['createRTC'] = ({ id, userId, target }) => {
+    const peerId = compareNumbers(id, userId || 0, target || 0);
     this.peerConnections[peerId] = new wrtc.RTCPeerConnection({
       iceServers:
         process.env.NODE_ENV === 'production'
@@ -34,22 +34,18 @@ class RTC implements RTCInterface {
     return this.peerConnections;
   };
 
-  public handleIceCandidate: RTCInterface['handleIceCandidate'] = ({
-    targetUserId,
-    userId,
-    item,
-  }) => {
-    const peerId = compareNumbers(targetUserId, userId, item || 0);
+  public handleIceCandidate: RTCInterface['handleIceCandidate'] = ({ roomId, userId, target }) => {
+    const peerId = compareNumbers(roomId, userId, target || 0);
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const core = this;
     this.peerConnections[peerId].onicecandidate = function handleICECandidateEvent(
       event: RTCPeerConnectionIceEvent
     ) {
       if (event.candidate) {
-        log('info', '* Outgoing ICE candidate:', { targetUserId, userId, item });
+        log('info', '* Outgoing ICE candidate:', { roomId, userId, target });
         core.ws.sendMessage({
           type: MessageType.CANDIDATE,
-          id: targetUserId,
+          id: roomId,
           data: {
             candidate: event.candidate,
             userId,
@@ -57,6 +53,8 @@ class RTC implements RTCInterface {
         });
       }
     };
+    const ws = this.ws;
+    const rooms = this.rooms;
     this.peerConnections[peerId].oniceconnectionstatechange =
       function handleICEConnectionStateChangeEvent(event: Event) {
         log(
@@ -64,11 +62,24 @@ class RTC implements RTCInterface {
           '!!! ICE connection state changed to:',
           core.peerConnections[peerId].iceConnectionState
         );
+        if (core.peerConnections[peerId].iceConnectionState === 'connected') {
+          log('warn', 'ss', { roomId, userId, target, peerId });
+
+          rooms[roomId].forEach((_item) => {
+            ws.sendMessage({
+              type: MessageType.SET_CHANGE_ROOM_GUESTS,
+              id: _item,
+              data: {
+                roomUsers: rooms[roomId],
+              },
+            });
+          });
+        }
         switch (core.peerConnections[peerId].iceConnectionState) {
           case 'closed':
           case 'failed':
           case 'disconnected':
-            core.closeVideoCall({ targetUserId, userId, item });
+            core.closeVideoCall({ roomId, userId, target });
             break;
         }
       };
@@ -90,12 +101,12 @@ class RTC implements RTCInterface {
       );
       switch (core.peerConnections[peerId].signalingState) {
         case 'closed':
-          core.closeVideoCall({ targetUserId, item });
+          core.closeVideoCall({ roomId, target });
           break;
       }
     };
     this.peerConnections[peerId].onnegotiationneeded = function handleNegotiationNeededEvent() {
-      log('info', '--> Creating offer', { targetUserId, userId, item });
+      log('info', '--> Creating offer', { roomId, userId, target });
       core.peerConnections[peerId]
         .createOffer()
         .then((offer): 1 | void | PromiseLike<void> => {
@@ -106,9 +117,9 @@ class RTC implements RTCInterface {
         .then(() => {
           const { localDescription } = core.peerConnections[peerId];
           if (localDescription) {
-            log('info', '---> Sending offer to remote peer', { targetUserId, userId, item });
+            log('info', '---> Sending offer to remote peer', { roomId, userId, target });
             core.ws.sendMessage({
-              id: targetUserId,
+              id: roomId,
               type: MessageType.OFFER,
               data: {
                 sdp: localDescription,
@@ -120,24 +131,23 @@ class RTC implements RTCInterface {
     };
     this.peerConnections[peerId].ontrack = (e) => {
       const stream = e.streams[0];
-      const target = item ? userId : targetUserId;
       this.streams[userId] = stream;
-      this.onAddTrack(target, stream);
+      this.onAddTrack(userId, stream);
     };
   };
 
   public handleCandidateMessage: RTCInterface['handleCandidateMessage'] = (msg, cb) => {
     const {
       id,
-      data: { candidate, userId, item },
+      data: { candidate, userId, target },
     } = msg;
-    const peerId = compareNumbers(id, userId, item || 0);
+    const peerId = compareNumbers(id, userId, target || 0);
     const cand = new wrtc.RTCIceCandidate(candidate);
     if (cand.candidate) {
       this.peerConnections[peerId]
         .addIceCandidate(cand)
         .then(() => {
-          log('info', '< Adding received ICE candidate:', { userId, id, item });
+          log('info', '< Adding received ICE candidate:', { userId, id, target });
           if (cb) {
             cb(cand);
           }
@@ -167,7 +177,7 @@ class RTC implements RTCInterface {
   public handleOfferMessage: RTCInterface['handleOfferMessage'] = (msg, cb) => {
     const {
       id,
-      data: { sdp, userId, item },
+      data: { sdp, userId, target },
     } = msg;
     if (!sdp) {
       log('warn', 'Message offer error because sdp is:', sdp);
@@ -176,25 +186,26 @@ class RTC implements RTCInterface {
       }
       return;
     }
-    const peerId = compareNumbers(id, userId, item || 0);
+    const peerId = compareNumbers(id, userId, target || 0);
     this.handleIceCandidate({
-      targetUserId: id,
+      roomId: id,
       userId: userId,
-      item,
+      target,
     });
     const desc = new wrtc.RTCSessionDescription(sdp);
     this.peerConnections[peerId]
       .setRemoteDescription(desc)
       .then(() => {
         log('info', '-- Local video stream obtained', { peerId });
-        if (item) {
-          this.streams[item].getTracks().forEach((track) => {
-            this.peerConnections[peerId].addTrack(track, this.streams[item]);
+        // If a user creates a new connection with a room to get another user's stream
+        if (target) {
+          this.streams[target].getTracks().forEach((track) => {
+            this.peerConnections[peerId].addTrack(track, this.streams[target]);
           });
         }
       })
       .then(() => {
-        log('info', '<- Creating answer', { id, userId, item });
+        log('info', '<- Creating answer', { id, userId, target });
         this.peerConnections[peerId].createAnswer().then((answ) => {
           if (!answ) {
             log('error', 'Failed set local description for answer.', {
@@ -223,7 +234,7 @@ class RTC implements RTCInterface {
                   data: {
                     sdp: localDescription,
                     userId: id,
-                    item,
+                    target,
                   },
                 });
                 if (cb) {
@@ -246,11 +257,11 @@ class RTC implements RTCInterface {
   public handleVideoAnswerMsg: RTCInterface['handleVideoAnswerMsg'] = (msg, cb) => {
     const {
       id,
-      data: { sdp, userId, item },
+      data: { sdp, userId, target },
     } = msg;
     // TODO maybe wrong
-    const peerId = compareNumbers(userId, id, item || 0);
-    log('info', '<-- Call recipient has accepted our call', { userId, item });
+    const peerId = compareNumbers(userId, id, target || 0);
+    log('info', '<-- Call recipient has accepted our call', { userId, target });
     const desc = new wrtc.RTCSessionDescription(sdp);
     this.peerConnections[peerId]
       .setRemoteDescription(desc)
@@ -278,7 +289,7 @@ class RTC implements RTCInterface {
       roomId: id,
       userId: uid,
     });
-    this.createRTC({ id, userId: uid, item: 0 });
+    this.createRTC({ id, userId: uid, target: 0 });
     conn.onopen = () => {
       conn.send(
         JSON.stringify({
@@ -289,18 +300,6 @@ class RTC implements RTCInterface {
           },
         })
       );
-      this.rooms[id].forEach((_item) => {
-        if (_item !== uid) {
-          this.ws.sendMessage({
-            type: MessageType.SET_CHANGE_ROOM_GUESTS,
-            id: _item,
-            data: {
-              roomUsers: this.rooms[id],
-            },
-          });
-        }
-      });
-      let sendList = false;
       conn.onmessage = (mess) => {
         const msg = this.ws.parseMessage(mess.data as string);
         if (msg) {
@@ -309,29 +308,17 @@ class RTC implements RTCInterface {
             case MessageType.OFFER:
               // eslint-disable-next-line no-case-declarations
               const {
-                data: { item, userId },
+                data: { target, userId },
               } = this.ws.getMessage(MessageType.OFFER, msg);
               // If user call to other guest via new connection with room
-              if (item) {
+              if (target) {
                 this.createRTC({
                   id,
                   userId: this.ws.getMessage(MessageType.OFFER, msg).data.userId,
-                  item,
+                  target,
                 });
               }
-              this.handleOfferMessage(msg, () => {
-                // Send users list to new guest
-                if (uid === userId && !sendList) {
-                  sendList = true;
-                  this.ws.sendMessage({
-                    type: MessageType.SET_CHANGE_ROOM_GUESTS,
-                    id: uid,
-                    data: {
-                      roomUsers: this.rooms[id],
-                    },
-                  });
-                }
-              });
+              this.handleOfferMessage(msg);
               break;
             case MessageType.ANSWER:
               this.handleVideoAnswerMsg(msg);
@@ -350,8 +337,16 @@ class RTC implements RTCInterface {
     });
   }
 
-  public closeVideoCall: RTCInterface['closeVideoCall'] = ({ targetUserId, userId, item }) => {
-    log('warn', '| Closing the call', { targetUserId, userId, item });
+  public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, userId, target }) => {
+    log('info', '| Closing the call', { roomId, userId, target });
+    const peerId = compareNumbers(roomId, userId || 0, target || 0);
+    this.peerConnections[peerId].onicecandidate = null;
+    this.peerConnections[peerId].oniceconnectionstatechange = null;
+    this.peerConnections[peerId].onicegatheringstatechange = null;
+    this.peerConnections[peerId].onsignalingstatechange = null;
+    this.peerConnections[peerId].onnegotiationneeded = null;
+    this.peerConnections[peerId].ontrack = null;
+    this.peerConnections[peerId].close();
   };
 }
 

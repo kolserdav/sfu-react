@@ -76,24 +76,6 @@ wss.connection.on('connection', function connection(ws) {
     });
     // Remove user from room
     if (userId) {
-      const peerKeys = Object.keys(rtc.peerConnections);
-      peerKeys.forEach((_item) => {
-        if (new RegExp(`_${userId}_`).test(_item)) {
-          const peerId = compareNumbers(
-            parseInt(_item.split('-')[0], 10),
-            userId,
-            parseInt(_item.split('-')[2], 10)
-          );
-          rtc.peerConnections[peerId].onicecandidate = null;
-          rtc.peerConnections[peerId].oniceconnectionstatechange = null;
-          rtc.peerConnections[peerId].onicegatheringstatechange = null;
-          rtc.peerConnections[peerId].onsignalingstatechange = null;
-          rtc.peerConnections[peerId].onnegotiationneeded = null;
-          rtc.peerConnections[peerId].ontrack = null;
-          rtc.peerConnections[peerId].close();
-          delete rtc.peerConnections[peerId];
-        }
-      });
       const roomKeys = Object.keys(rtc.rooms);
       roomKeys.forEach((item) => {
         const index = rtc.rooms[item].indexOf(userId);

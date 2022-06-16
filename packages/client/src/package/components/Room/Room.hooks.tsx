@@ -2,7 +2,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import WS from '../../core/ws';
 import RTC from '../../core/rtc';
-import { log } from '../../utils/lib';
+import { compareNumbers, log } from '../../utils/lib';
 import { MessageType } from '../../types/interfaces';
 
 // eslint-disable-next-line import/prefer-default-export
@@ -49,7 +49,7 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
               _streams.push({ userId: myId, stream });
               setStreams(_streams);
             };
-            rtc.invite({ targetUserId: roomId, userId: _id });
+            rtc.invite({ roomId, userId: _id });
             ws.sendMessage({
               type: MessageType.GET_ROOM,
               id: roomId,
@@ -76,8 +76,10 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
           log('info', 'onChangeRoomGuests', { roomUsers, id });
           // Add new guests
           roomUsers.forEach((item) => {
+            const peerId = compareNumbers(ws.userId, item);
+            console.log(peerId);
             if (item !== ws.userId && rtc) {
-              rtc.createRTC({ id: roomId, item });
+              rtc.createRTC({ id: roomId, target: item });
               rtc.onAddTrack = (addedUserId, stream) => {
                 log('info', 'Added stream of new user to room', { addedUserId, item });
                 const _streams = streams.map((_item) => _item);
@@ -88,7 +90,7 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
                   setStreams(_streams);
                 }
               };
-              rtc.invite({ targetUserId: roomId, userId: ws.userId, item });
+              rtc.invite({ roomId, userId: ws.userId, target: item });
             }
           });
           // Remove disconnected
