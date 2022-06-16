@@ -119,10 +119,9 @@ class RTC implements RTCInterface {
         });
     };
     this.peerConnections[peerId].ontrack = (e) => {
-      const targets = peerId.split('-');
-      const target = parseInt(targets[2] === '0' ? targets[1] : targets[2], 10);
       const stream = e.streams[0];
-      this.streams[target] = stream;
+      const target = item ? userId : targetUserId;
+      this.streams[userId] = stream;
       this.onAddTrack(target, stream);
     };
   };
@@ -190,7 +189,7 @@ class RTC implements RTCInterface {
         log('info', '-- Local video stream obtained', { peerId });
         if (item) {
           this.streams[item].getTracks().forEach((track) => {
-            this.peerConnections[peerId].addTrack(track, this.streams[userId]);
+            this.peerConnections[peerId].addTrack(track, this.streams[item]);
           });
         }
       })
