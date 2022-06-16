@@ -121,9 +121,13 @@ export type ArgsSubset<T> = T extends MessageType.OFFER
   : unknown;
 
 export abstract class RTCInterface {
-  public abstract peerConnections: Record<number, RTCPeerConnection>;
+  public abstract peerConnections: Record<string, RTCPeerConnection>;
 
-  public abstract createRTC(args: { id: number; item?: number }): Record<number, RTCPeerConnection>;
+  public abstract createRTC(args: {
+    id: number;
+    userId?: number;
+    item?: number;
+  }): Record<number, RTCPeerConnection>;
 
   public abstract handleIceCandidate({
     targetUserId,
@@ -137,11 +141,15 @@ export abstract class RTCInterface {
 
   public abstract closeVideoCall({
     targetUserId,
+    userId,
     item,
   }: {
     targetUserId: number;
+    userId?: number;
     item?: number;
   }): void;
+
+  public abstract onAddTrack(userId: number, stream: MediaStream): void;
 
   public abstract handleOfferMessage(
     msg: SendMessageArgs<MessageType.OFFER>,

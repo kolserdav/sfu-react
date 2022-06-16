@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import WS from '../../core/ws';
+import RTC from '../../core/rtc';
 import DB from '../../core/db';
 import { setLoginCookie, setTokenCookie } from '../../utils/lib';
 import { MessageType } from '../../types/interfaces';
@@ -8,13 +9,13 @@ import s from './Router.module.scss';
 import { useHandleMessages } from './Router.hooks';
 
 const createStreams = (
-  _str: MediaStream[]
-): { stream: MediaStream; ref: React.Ref<HTMLVideoElement> }[] =>
-  _str.map((item) => ({
-    stream: item,
+  strArr: { stream: MediaStream; userId: number }[]
+): { userId: number; ref: React.Ref<HTMLVideoElement> }[] =>
+  strArr.map((item) => ({
+    userId: item.userId,
     ref: (node: HTMLVideoElement) => {
       // eslint-disable-next-line no-param-reassign
-      if (node) node.srcObject = item;
+      if (node) node.srcObject = item.stream;
     },
   }));
 
@@ -24,8 +25,9 @@ function Router() {
   const { pathname } = location;
   const [restart, setRestart] = useState<boolean>(false);
   const ws = useMemo(() => new WS(), [restart, pathname]);
+  const rtc = useMemo(() => new RTC({ ws }), [restart, pathname]);
   const db = useMemo(() => new DB(), [restart, pathname]);
-  const { auth, loggedAs, streams, id } = useHandleMessages({ ws, db, restart });
+  const { auth, loggedAs, streams, id } = useHandleMessages({ ws, db, rtc, restart });
 
   const login = () => {
     const email = prompt('Set email');
@@ -96,14 +98,14 @@ function Router() {
       </button>
       <a href={roomLink}>{roomLink}</a>
       <div className={s.container}>
-        {_streams.map((item, index) => (
-          <div key={item.stream.id} className={s.video}>
+        {_streams.map((item) => (
+          <div key={item.userId} className={s.video}>
             <video
               width={300}
               height={200}
               ref={item.ref}
-              id={item.stream.id}
-              title={item.stream.id}
+              id={item.userId.toString()}
+              title={item.userId.toString()}
               autoPlay
             />
           </div>

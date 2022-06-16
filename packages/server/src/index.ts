@@ -56,7 +56,6 @@ wss.connection.on('connection', function connection(ws) {
           rtc.roomCons[connId] = id;
         }
         wss.setSocket({ id: _id, ws, connId, isRoom });
-        rtc.createRTC({ id: _id });
         wss.sendMessage({
           type: Types.MessageType.SET_USER_ID,
           id: _id,
@@ -165,6 +164,7 @@ wss.connection.on('connection', function connection(ws) {
         if (!rtc.rooms[id]) {
           rtc.rooms[id] = [];
         }
+        rtc.createRTC({ id, userId: uid, item: 0 });
         const conn = new wss.websocket(`ws://localhost:${SERVER_PORT}`);
         rtc.addUserToRoom({
           roomId: id,
@@ -172,14 +172,16 @@ wss.connection.on('connection', function connection(ws) {
         });
         // Send user list of room
         rtc.rooms[id].forEach((item) => {
-          wss.sendMessage({
-            type: Types.MessageType.SET_CHANGE_ROOM_GUESTS,
-            id: item,
-            token: '',
-            data: {
-              roomUsers: rtc.rooms[id],
-            },
-          });
+          if (uid !== item) {
+            wss.sendMessage({
+              type: Types.MessageType.SET_CHANGE_ROOM_GUESTS,
+              id: item,
+              token: '',
+              data: {
+                roomUsers: rtc.rooms[id],
+              },
+            });
+          }
         });
         conn.onopen = () => {
           conn.send(
@@ -200,7 +202,7 @@ wss.connection.on('connection', function connection(ws) {
                   const userId = wss.getMessage(Types.MessageType.OFFER, msg).data.userId;
                   const item = wss.getMessage(Types.MessageType.OFFER, msg).data.item;
                   if (item) {
-                    rtc.createRTC({ id, item });
+                    rtc.createRTC({ id, userId, item });
                   }
                   rtc.invite({ targetUserId: id, userId, item });
                   rtc.handleOfferMessage(msg);

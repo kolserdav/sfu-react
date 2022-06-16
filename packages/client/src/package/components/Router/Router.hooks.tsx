@@ -14,18 +14,30 @@ import { MessageType } from '../../types/interfaces';
 import RTC from '../../core/rtc';
 
 // eslint-disable-next-line import/prefer-default-export
-export const useHandleMessages = ({ ws, db, restart }: { ws: WS; db: DB; restart: boolean }) => {
+export const useHandleMessages = ({
+  ws,
+  db,
+  restart,
+  rtc,
+}: {
+  ws: WS;
+  db: DB;
+  rtc: RTC;
+  restart: boolean;
+}) => {
   const location = useLocation();
   const navigate = useNavigate();
+
   const { pathname, search } = location;
+
   const [id, setId] = useState<number>(getLoginCookie());
   const [auth, setAuth] = useState<boolean>(false);
   const [loggedAs, setLoggedAs] = useState<string>('');
-  const [streams, setStreams] = useState<MediaStream[]>([]);
+  const [streams, setStreams] = useState<{ userId: number; stream: MediaStream }[]>([]);
   const [roomIsSaved, setRoomIsSaved] = useState<boolean>(false);
+
   useEffect(() => {
     const roomId = parseInt(pathname.replace('/', ''), 10);
-    const rtc = new RTC({ ws });
     const roomOpen = Number.isInteger(roomId);
     const qS = parseQueryString(search);
     const qSUserId = qS?.userId;
@@ -91,10 +103,10 @@ export const useHandleMessages = ({ ws, db, restart }: { ws: WS; db: DB; restart
           if (roomOpen) {
             ws.setUserId(_id);
             rtc.createRTC({ id: roomId });
-            rtc.onAddTrack = (e) => {
-              log('info', 'onAddTrack', e);
-              const _streams = streams.map((item) => item);
-              _streams.push(e.streams[0]);
+            rtc.onAddTrack = (myId, stream) => {
+              log('info', 'Added local stream to room', { myId, _id });
+              const _streams = streams.map((_item) => _item);
+              _streams.push({ userId: myId, stream });
               setStreams(_streams);
             };
             rtc.invite({ targetUserId: roomId, userId: _id });
@@ -135,10 +147,10 @@ export const useHandleMessages = ({ ws, db, restart }: { ws: WS; db: DB; restart
           roomUsers.forEach((item) => {
             if (item !== ws.userId && rtc) {
               rtc.createRTC({ id: roomId, item });
-              rtc.onAddTrack = (e) => {
-                log('warn', 'onAddTrack', e);
+              rtc.onAddTrack = (addedUserId, stream) => {
+                log('info', 'Added stream of new user to room', { addedUserId, item });
                 const _streams = streams.map((_item) => _item);
-                _streams.push(e.streams[0]);
+                _streams.push({ userId: addedUserId, stream });
                 setStreams(_streams);
               };
               rtc.invite({ targetUserId: roomId, userId: ws.userId, item });

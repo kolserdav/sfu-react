@@ -126,7 +126,12 @@ class RTC implements RTCInterface {
         });
     };
     this.peerConnections[peerId].ontrack = (e) => {
-      this.onAddTrack(e);
+      const stream = e.streams[0];
+      log('info', 'On add remote stream', {
+        targetUserId: item || targetUserId,
+        streamId: stream.id,
+      });
+      this.onAddTrack(item || targetUserId, stream);
     };
   };
 
@@ -144,10 +149,11 @@ class RTC implements RTCInterface {
     navigator.mediaDevices
       .getUserMedia(MEDIA_CONSTRAINTS)
       .then((localStream) => {
-        log('info', '-> Adding tracks to local media stream', { targetUserId, userId, item });
+        log('info', '> Adding tracks to local media stream', { targetUserId, userId, item });
         localStream.getTracks().forEach((track) => {
           this.peerConnections[peerId].addTrack(track, localStream);
         });
+        this.onAddTrack(userId, localStream);
       })
       .catch((err) => {
         log('error', 'Error get self user media', err);
@@ -155,9 +161,9 @@ class RTC implements RTCInterface {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  public onAddTrack(e: RTCTrackEvent): void {
+  public onAddTrack: RTCInterface['onAddTrack'] = () => {
     /** */
-  }
+  };
 
   /**
    * handleNewICECandidateMsg
@@ -278,10 +284,11 @@ class RTC implements RTCInterface {
 
   public handleVideoAnswerMsg: RTCInterface['handleVideoAnswerMsg'] = (msg, cb) => {
     const {
+      id,
       data: { sdp, userId, item },
     } = msg;
     const peerId = compareNumbers(userId, item || 0);
-    log('info', '<-- Call recipient has accepted our call', { userId, item });
+    log('info', '<-- Call recipient has accepted our call', { id, userId, item });
     const desc = new RTCSessionDescription(sdp);
     this.peerConnections[peerId]
       .setRemoteDescription(desc)
