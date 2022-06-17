@@ -1,5 +1,5 @@
 export interface RoomProps {
-  id: number;
+  id: number | string;
 }
 
 export interface Streams {

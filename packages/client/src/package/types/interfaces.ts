@@ -71,7 +71,7 @@ export abstract class RTCInterface {
   public abstract peerConnections: Record<string, RTCPeerConnection>;
 
   public abstract createRTC(args: {
-    id: number | string;
+    roomId: number | string;
     userId: number | string;
     target: string | number;
   }): Record<number, RTCPeerConnection>;

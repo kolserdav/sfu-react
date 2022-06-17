@@ -33,4 +33,4 @@ export const getComparedString = (
   id: number | string,
   userId: number | string,
   target: number | string
-) => `${id}-${userId}-${target}`;
+) => `${id}-${userId}-${target || 0}`;

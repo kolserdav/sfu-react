@@ -20,6 +20,9 @@ export const useHandleMessages = ({
 
   const ws = useMemo(() => new WS(), []);
   const rtc = useMemo(() => new RTC({ ws }), [ws]);
+  if (!ws.userId) {
+    ws.setUserId(id);
+  }
 
   useEffect(() => {
     if (!roomId) {
@@ -40,16 +43,15 @@ export const useHandleMessages = ({
       if (!rawMessage) {
         return;
       }
-      const { type, id: _id } = rawMessage;
+      const { type } = rawMessage;
       switch (type) {
         case MessageType.SET_USER_ID:
-          ws.setUserId(_id);
-          rtc.createRTC({ id: roomId, userId: ws.userId, target: 0 });
+          rtc.createRTC({ roomId, userId: id, target: 0 });
           // Added local stream
           rtc.onAddTrack = (myId, stream) => {
-            log('info', '-> Added local stream to room', { myId, _id });
+            log('info', '-> Added local stream to room', { myId, id });
             const _streams = streams.map((_item) => _item);
-            const isExists = _streams.filter((_item) => _item.targetId === _id);
+            const isExists = _streams.filter((_item) => _item.targetId === id);
             if (!isExists[0]) {
               _streams.push({
                 targetId: myId,
@@ -64,12 +66,12 @@ export const useHandleMessages = ({
               setStreams(_streams);
             }
           };
-          rtc.invite({ roomId, userId: _id, target: 0 });
+          rtc.invite({ roomId, userId: id, target: 0 });
           ws.sendMessage({
             type: MessageType.GET_ROOM,
             id: roomId,
             data: {
-              userId: ws.userId,
+              userId: id,
             },
           });
           break;
@@ -85,13 +87,13 @@ export const useHandleMessages = ({
           // Add remote streams
           roomUsers.forEach((item) => {
             const peerId = getComparedString(roomId, item);
-            if (!rtc.peerConnections[peerId] && item !== ws.userId) {
-              rtc.createRTC({ id: roomId, target: item, userId: ws.userId });
+            if (item !== id && !rtc.peerConnections[peerId]) {
+              rtc.createRTC({ roomId, target: item, userId: id });
               const _streams = streams.map((_item) => _item);
               rtc.onAddTrack = (addedUserId, stream) => {
-                log('info', '-> Added stream of new user to room', { addedUserId, item });
                 const isExists = _streams.filter((_item) => _item.targetId === addedUserId);
                 if (!isExists[0]) {
+                  log('info', '-> Added stream of new user to room', { addedUserId, item, id });
                   _streams.push({
                     targetId: addedUserId,
                     stream,
@@ -108,12 +110,15 @@ export const useHandleMessages = ({
                   }, START_TIMEOUT);
                 }
               };
-              rtc.invite({ roomId, userId: ws.userId, target: item });
+              rtc.invite({ roomId, userId: id, target: item });
             }
           });
           // Remove disconnected
           const _streams = streams.filter((item) => {
             const isExists = roomUsers.filter((_item) => _item === item.targetId);
+            if (!isExists[0]) {
+              rtc.closeVideoCall({ roomId, userId: id, target: item.targetId });
+            }
             return isExists[0] !== undefined;
           });
           if (streams.length !== _streams.length) {

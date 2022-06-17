@@ -46,4 +46,4 @@ export const parseQueryString = (query: string): Record<string, string> | null =
 };
 
 export const getComparedString = (roomId: number | string, target: number | string) =>
-  `${roomId}-${target}`;
+  `${roomId}-${target || 0}`;

@@ -16,8 +16,8 @@ class RTC implements RTCInterface {
     this.ws = ws;
   }
 
-  public createRTC: RTCInterface['createRTC'] = ({ id, target }) => {
-    this.peerConnections[getComparedString(id, target)] = new RTCPeerConnection({
+  public createRTC: RTCInterface['createRTC'] = ({ roomId, target }) => {
+    this.peerConnections[getComparedString(roomId, target)] = new RTCPeerConnection({
       iceServers:
         process.env.NODE_ENV === 'production'
           ? [
@@ -136,10 +136,12 @@ class RTC implements RTCInterface {
     roomId,
     userId,
     target,
+    clone = false,
   }: {
     roomId: number | string;
     userId: number | string;
     target: number | string;
+    clone?: boolean;
   }) {
     this.handleIceCandidate({ roomId, userId, target });
     const peerId = getComparedString(roomId, target);
@@ -183,14 +185,14 @@ class RTC implements RTCInterface {
   public handleCandidateMessage: RTCInterface['handleCandidateMessage'] = (msg, cb) => {
     const {
       id,
-      data: { candidate, target },
+      data: { candidate, target, userId },
     } = msg;
     const peerId = getComparedString(id, target);
     const cand = new RTCIceCandidate(candidate);
     this.peerConnections[peerId]
       .addIceCandidate(cand)
       .then(() => {
-        log('log', '!! Adding received ICE candidate:', { id, target });
+        log('log', '!! Adding received ICE candidate:', { id, target, userId });
         if (cb) {
           cb(cand);
         }
@@ -307,7 +309,7 @@ class RTC implements RTCInterface {
 
   // eslint-disable-next-line class-methods-use-this
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, target }) => {
-    //  log('info', '| Closing the call', { roomId, target });
+    log('warn', '| Closing the call', { roomId, target });
     const peerId = getComparedString(roomId, target);
     this.peerConnections[peerId].onicecandidate = null;
     this.peerConnections[peerId].oniceconnectionstatechange = null;
@@ -316,6 +318,7 @@ class RTC implements RTCInterface {
     this.peerConnections[peerId].onnegotiationneeded = null;
     this.peerConnections[peerId].ontrack = null;
     this.peerConnections[peerId].close();
+    delete this.peerConnections[peerId];
   };
 }
 

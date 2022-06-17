@@ -3,7 +3,7 @@ import Main from './package/Main';
 import './App.scss';
 
 const createRoom = () => {
-  window.location.href = 'jfshoho';
+  window.location.href = 'secret-or-public-address-of-room?d=1';
 };
 
 function App() {
@@ -15,7 +15,7 @@ function App() {
           Create room
         </button>
       ) : (
-        <Main id={new Date().getTime()} />
+        <Main id={window.location.search.replace(/[?=]*/g, '')} />
       )}
     </div>
   );

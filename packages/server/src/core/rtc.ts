@@ -19,8 +19,8 @@ class RTC implements RTCInterface {
     this.ws = ws;
   }
 
-  public createRTC: RTCInterface['createRTC'] = ({ id, userId, target }) => {
-    const peerId = getComparedString(id, userId, target);
+  public createRTC: RTCInterface['createRTC'] = ({ roomId, userId, target }) => {
+    const peerId = getComparedString(roomId, userId, target);
     this.peerConnections[peerId] = new wrtc.RTCPeerConnection({
       iceServers:
         process.env.NODE_ENV === 'production'
@@ -170,8 +170,6 @@ class RTC implements RTCInterface {
       this.rooms[roomId] = [userId];
     } else if (this.rooms[roomId].indexOf(userId) === -1) {
       this.rooms[roomId].push(userId);
-    } else {
-      log('warn', 'Duplicate adding user to room');
     }
   }
 
@@ -187,10 +185,18 @@ class RTC implements RTCInterface {
       }
       return;
     }
+    // If user call to other guest via new connection with room
+    if (target) {
+      this.createRTC({
+        roomId: id,
+        userId,
+        target,
+      });
+    }
     const peerId = getComparedString(id, userId, target);
     this.handleIceCandidate({
       roomId: id,
-      userId: userId,
+      userId,
       target,
     });
     const desc = new wrtc.RTCSessionDescription(sdp);
@@ -290,7 +296,7 @@ class RTC implements RTCInterface {
       roomId: id,
       userId: uid,
     });
-    this.createRTC({ id, userId: uid, target: 0 });
+    this.createRTC({ roomId: id, userId: uid, target: 0 });
     conn.onopen = () => {
       conn.send(
         JSON.stringify({
@@ -307,18 +313,6 @@ class RTC implements RTCInterface {
           const { type } = msg;
           switch (type) {
             case MessageType.OFFER:
-              // eslint-disable-next-line no-case-declarations
-              const {
-                data: { target, userId },
-              } = this.ws.getMessage(MessageType.OFFER, msg);
-              // If user call to other guest via new connection with room
-              if (target) {
-                this.createRTC({
-                  id,
-                  userId,
-                  target,
-                });
-              }
               this.handleOfferMessage(msg);
               break;
             case MessageType.ANSWER:
@@ -340,6 +334,7 @@ class RTC implements RTCInterface {
 
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, userId, target }) => {
     // log('info', '| Closing the call', { roomId, userId, target });
+
     const peerId = getComparedString(roomId, userId, target);
     this.peerConnections[peerId].onicecandidate = null;
     this.peerConnections[peerId].oniceconnectionstatechange = null;
