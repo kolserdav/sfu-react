@@ -3,7 +3,7 @@ import { v4 } from 'uuid';
 import { SERVER_PORT } from './utils/constants';
 import WS from './core/ws';
 import * as Types from './types/interfaces';
-import { log, compareNumbers } from './utils/lib';
+import { log } from './utils/lib';
 import RTC from './core/rtc';
 
 process.on('uncaughtException', (err: Error) => {
@@ -65,7 +65,7 @@ wss.connection.on('connection', function connection(ws) {
   });
   ws.onclose = () => {
     // Get deleted userId
-    let userId = 0;
+    let userId: number | string = 0;
     const keys = Object.keys(wss.users);
     keys.forEach((item) => {
       const id = parseInt(item, 10);

@@ -2,13 +2,19 @@
 import { useEffect, useState, useMemo } from 'react';
 import WS from '../../core/ws';
 import RTC from '../../core/rtc';
-import { compareNumbers, log } from '../../utils/lib';
+import { getComparedString, log } from '../../utils/lib';
 import { START_TIMEOUT } from '../../utils/constants';
 import { MessageType } from '../../types/interfaces';
 import { Streams } from '../../types';
 
 // eslint-disable-next-line import/prefer-default-export
-export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number | null }) => {
+export const useHandleMessages = ({
+  id,
+  roomId,
+}: {
+  id: number | string;
+  roomId: number | string | null;
+}) => {
   const [streams, setStreams] = useState<Streams[]>([]);
   const [roomIsSaved, setRoomIsSaved] = useState<boolean>(false);
 
@@ -21,7 +27,6 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
         /** */
       };
     }
-    const roomOpen = Number.isInteger(roomId);
     ws.onOpen = () => {
       ws.sendMessage({
         type: MessageType.GET_USER_ID,
@@ -38,61 +43,57 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
       const { type, id: _id } = rawMessage;
       switch (type) {
         case MessageType.SET_USER_ID:
-          if (roomOpen) {
-            ws.setUserId(_id);
-            rtc.createRTC({ id: roomId, userId: ws.userId, target: 0 });
-            // Added local stream
-            rtc.onAddTrack = (myId, stream) => {
-              log('info', '-> Added local stream to room', { myId, _id });
-              const _streams = streams.map((_item) => _item);
-              const isExists = _streams.filter((_item) => _item.userId === _id);
-              if (!isExists[0]) {
-                _streams.push({
-                  userId: myId,
-                  stream,
-                  ref: (node) => {
-                    if (node) {
-                      // eslint-disable-next-line no-param-reassign
-                      node.srcObject = stream;
-                    }
-                  },
-                });
-                setStreams(_streams);
-              }
-            };
-            rtc.invite({ roomId, userId: _id, target: 0 });
-            ws.sendMessage({
-              type: MessageType.GET_ROOM,
-              id: roomId,
-              data: {
-                userId: ws.userId,
-              },
-            });
-          }
+          ws.setUserId(_id);
+          rtc.createRTC({ id: roomId, userId: ws.userId, target: 0 });
+          // Added local stream
+          rtc.onAddTrack = (myId, stream) => {
+            log('info', '-> Added local stream to room', { myId, _id });
+            const _streams = streams.map((_item) => _item);
+            const isExists = _streams.filter((_item) => _item.targetId === _id);
+            if (!isExists[0]) {
+              _streams.push({
+                targetId: myId,
+                stream,
+                ref: (node) => {
+                  if (node) {
+                    // eslint-disable-next-line no-param-reassign
+                    node.srcObject = stream;
+                  }
+                },
+              });
+              setStreams(_streams);
+            }
+          };
+          rtc.invite({ roomId, userId: _id, target: 0 });
+          ws.sendMessage({
+            type: MessageType.GET_ROOM,
+            id: roomId,
+            data: {
+              userId: ws.userId,
+            },
+          });
           break;
         case MessageType.OFFER:
           rtc.handleOfferMessage(rawMessage);
           break;
         case MessageType.CANDIDATE:
-          if (rtc) {
-            rtc.handleCandidateMessage(rawMessage);
-          }
+          rtc.handleCandidateMessage(rawMessage);
           break;
         case MessageType.SET_CHANGE_ROOM_GUESTS:
           const { roomUsers } = ws.getMessage(MessageType.SET_CHANGE_ROOM_GUESTS, rawMessage).data;
           log('log', 'onChangeRoomGuests', { roomUsers, id });
           // Add remote streams
           roomUsers.forEach((item) => {
-            const peerId = compareNumbers(roomId, item);
+            const peerId = getComparedString(roomId, item);
             if (!rtc.peerConnections[peerId] && item !== ws.userId) {
               rtc.createRTC({ id: roomId, target: item, userId: ws.userId });
               const _streams = streams.map((_item) => _item);
               rtc.onAddTrack = (addedUserId, stream) => {
                 log('info', '-> Added stream of new user to room', { addedUserId, item });
-                const isExists = _streams.filter((_item) => _item.userId === addedUserId);
+                const isExists = _streams.filter((_item) => _item.targetId === addedUserId);
                 if (!isExists[0]) {
                   _streams.push({
-                    userId: addedUserId,
+                    targetId: addedUserId,
                     stream,
                     ref: (node) => {
                       if (node) {
@@ -112,7 +113,7 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
           });
           // Remove disconnected
           const _streams = streams.filter((item) => {
-            const isExists = roomUsers.filter((_item) => _item === item.userId);
+            const isExists = roomUsers.filter((_item) => _item === item.targetId);
             return isExists[0] !== undefined;
           });
           if (streams.length !== _streams.length) {

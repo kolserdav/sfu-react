@@ -7,8 +7,8 @@ class WS implements WSInterface {
 
   public sockets: Record<string, WebSocket> = {};
 
-  public users: Record<number, string> = {};
-  public rooms: Record<number, string> = {};
+  public users: Record<number | string, string> = {};
+  public rooms: Record<number | string, string> = {};
 
   public websocket = WebSocket;
 
@@ -22,7 +22,7 @@ class WS implements WSInterface {
     connId,
     isRoom,
   }: {
-    id: number;
+    id: number | string;
     ws: WebSocket;
     connId: string;
     isRoom?: boolean;

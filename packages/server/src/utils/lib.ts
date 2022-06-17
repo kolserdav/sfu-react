@@ -29,5 +29,8 @@ export const log = (type: keyof typeof LogLevel, text: string, data?: any) => {
   }
 };
 
-export const compareNumbers = (id: number, userId: number, item: number) =>
-  `${id}-${userId}-${item}`;
+export const getComparedString = (
+  id: number | string,
+  userId: number | string,
+  target: number | string
+) => `${id}-${userId}-${target}`;

@@ -22,35 +22,29 @@ type GetGuestId = {
 };
 type SetGuestId = undefined;
 type GetRoom = {
-  userId: number;
+  userId: number | string;
 };
 type SetChangeRoomGuests = {
-  roomUsers: number[];
+  roomUsers: (number | string)[];
 };
 type SetRoom = undefined;
 type SetError = {
   message: string;
 };
-interface GetAuth {
-  email: string;
-}
-interface SetAuth {
-  message: string;
-}
 type Offer = {
   sdp: RTCSessionDescriptionInit;
-  userId: number;
-  target: number;
+  userId: number | string;
+  target: number | string;
 };
 type Candidate = {
-  candidate: any;
-  userId: number;
-  target: number;
+  candidate: RTCIceCandidate;
+  userId: number | string;
+  target: number | string;
 };
 type Answer = {
   sdp: RTCSessionDescriptionInit;
-  userId: number;
-  target: number;
+  userId: number | string;
+  target: number | string;
 };
 
 export type ArgsSubset<T> = T extends MessageType.OFFER
@@ -77,9 +71,9 @@ export abstract class RTCInterface {
   public abstract peerConnections: Record<string, RTCPeerConnection>;
 
   public abstract createRTC(args: {
-    id: number;
-    userId: number;
-    target: number;
+    id: number | string;
+    userId: number | string;
+    target: string | number;
   }): Record<number, RTCPeerConnection>;
 
   public abstract handleIceCandidate({
@@ -87,9 +81,9 @@ export abstract class RTCInterface {
     userId,
     target,
   }: {
-    roomId: number;
-    userId: number;
-    target: number;
+    roomId: number | string;
+    userId: number | string;
+    target: string | number;
   }): void;
 
   public abstract closeVideoCall({
@@ -97,12 +91,12 @@ export abstract class RTCInterface {
     userId,
     target,
   }: {
-    roomId: number;
-    userId: number;
-    target: number;
+    roomId: number | string;
+    userId: number | string;
+    target: string | number;
   }): void;
 
-  public abstract onAddTrack(userId: number, stream: MediaStream): void;
+  public abstract onAddTrack(target: number | string, stream: MediaStream): void;
 
   public abstract handleOfferMessage(
     msg: SendMessageArgs<MessageType.OFFER>,
@@ -122,7 +116,7 @@ export abstract class RTCInterface {
 
 export interface SendMessageArgs<T> {
   type: T;
-  id: number;
+  id: number | string;
   isAuth?: boolean;
   data: ArgsSubset<T>;
 }

@@ -3,7 +3,7 @@ import Main from './package/Main';
 import './App.scss';
 
 const createRoom = () => {
-  window.location.href = new Date().getTime().toString();
+  window.location.href = 'jfshoho';
 };
 
 function App() {

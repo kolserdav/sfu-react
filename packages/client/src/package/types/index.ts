@@ -3,7 +3,7 @@ export interface RoomProps {
 }
 
 export interface Streams {
-  userId: number;
+  targetId: number | string;
   stream: MediaStream;
   ref: React.Ref<HTMLVideoElement>;
 }

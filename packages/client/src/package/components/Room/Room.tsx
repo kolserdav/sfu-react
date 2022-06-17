@@ -15,14 +15,14 @@ function Room({ id }: RoomProps) {
     <div className={s.wrapper}>
       <div className={s.container}>
         {streams.map((item) => (
-          <div key={item.userId} className={s.video}>
+          <div key={item.targetId} className={s.video}>
             <video
-              muted={item.userId === id}
+              muted={item.targetId === id}
               width={300}
               height={200}
               ref={item.ref}
-              id={item.userId.toString()}
-              title={item.userId.toString()}
+              id={item.targetId.toString()}
+              title={item.targetId.toString()}
               autoPlay
             />
           </div>

@@ -1,4 +1,3 @@
-import { Cookies } from 'react-cookie';
 import { LOG_LEVEL } from './constants';
 
 // eslint-disable-next-line no-unused-vars
@@ -16,10 +15,7 @@ export const log = (type: keyof typeof LogLevel, text: string, data?: any) => {
   }
 };
 
-export const getTarget = (pathname: string) => {
-  const res = parseInt(pathname.replace(/^\//, ''), 10);
-  return Number.isNaN(res) ? null : res;
-};
+export const getTarget = (pathname: string) => pathname.replace(/^\//, '');
 
 export const parseMessage = (message: string): object => {
   let result = {};
@@ -49,4 +45,5 @@ export const parseQueryString = (query: string): Record<string, string> | null =
   return res;
 };
 
-export const compareNumbers = (roomId: number, target: number) => `${roomId}-${target}`;
+export const getComparedString = (roomId: number | string, target: number | string) =>
+  `${roomId}-${target}`;

@@ -4,9 +4,9 @@ import { log } from '../utils/lib';
 class WS implements Types.WSInterface {
   public connection: WebSocket;
 
-  userId = 0;
+  userId: number | string = 0;
 
-  public setUserId(userId: number) {
+  public setUserId(userId: number | string) {
     this.userId = userId;
   }
 
