@@ -38,7 +38,7 @@ class RTC implements RTCInterface {
       event: RTCPeerConnectionIceEvent
     ) {
       if (event.candidate) {
-        log('info', '* Outgoing ICE candidate:', { roomId, userId, target });
+        log('log', '* Outgoing ICE candidate:', { roomId, userId, target });
         core.ws.sendMessage({
           type: MessageType.CANDIDATE,
           id: roomId,
@@ -53,8 +53,8 @@ class RTC implements RTCInterface {
     this.peerConnections[peerId].oniceconnectionstatechange =
       function handleICEConnectionStateChangeEvent(event: Event) {
         log(
-          'info',
-          `!!! ICE connection state changed to: ${core.peerConnections[peerId].iceConnectionState}`,
+          'log',
+          `* ICE connection state changed to: ${core.peerConnections[peerId].iceConnectionState}`,
           { peerId }
         );
         switch (core.peerConnections[peerId].iceConnectionState) {
@@ -68,7 +68,7 @@ class RTC implements RTCInterface {
     this.peerConnections[peerId].onicegatheringstatechange =
       function handleICEGatheringStateChangeEvent(ev: Event) {
         log(
-          'info',
+          'log',
           `*** ICE gathering state changed to: ${core.peerConnections[peerId].iceGatheringState}`,
           { peerId }
         );
@@ -182,7 +182,7 @@ class RTC implements RTCInterface {
     this.peerConnections[peerId]
       .addIceCandidate(cand)
       .then(() => {
-        log('info', '< Adding received ICE candidate:', { id, target });
+        log('log', '!! Adding received ICE candidate:', { id, target });
         if (cb) {
           cb(cand);
         }
@@ -226,7 +226,7 @@ class RTC implements RTCInterface {
     this.peerConnections[peerId]
       .setRemoteDescription(desc)
       .then(() => {
-        log('info', '<- Creating answer', { id, userId, target });
+        log('info', '--> Creating answer', { id, userId, target });
         this.peerConnections[peerId].createAnswer().then((answ) => {
           if (!answ || !this.peerConnections[peerId]) {
             log('error', 'Failed set local description for answer.', {
@@ -238,7 +238,7 @@ class RTC implements RTCInterface {
             }
             return;
           }
-          log('info', '------> Setting local description after creating answer');
+          log('info', '---> Setting local description after creating answer');
           this.peerConnections[peerId]
             .setLocalDescription(answ)
             .catch((err) => {
@@ -280,7 +280,7 @@ class RTC implements RTCInterface {
       data: { sdp, userId, target },
     } = msg;
     const peerId = compareNumbers(userId, target || 0);
-    log('info', '<-- Call recipient has accepted our call', { id, userId, target });
+    log('info', '----> Call recipient has accepted our call', { id, userId, target });
     const desc = new RTCSessionDescription(sdp);
     this.peerConnections[peerId]
       .setRemoteDescription(desc)
@@ -299,7 +299,7 @@ class RTC implements RTCInterface {
 
   // eslint-disable-next-line class-methods-use-this
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, target }) => {
-    log('info', '| Closing the call', { roomId, target });
+    //  log('info', '| Closing the call', { roomId, target });
     const peerId = compareNumbers(roomId, target || 0);
     this.peerConnections[peerId].onicecandidate = null;
     this.peerConnections[peerId].oniceconnectionstatechange = null;

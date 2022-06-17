@@ -9,7 +9,7 @@ enum LogLevel {
   error = 3,
 }
 
-export const log = (type: 'info' | 'warn' | 'error' | 'log', text: string, data?: any) => {
+export const log = (type: keyof typeof LogLevel, text: string, data?: any) => {
   if (LogLevel[type] >= LOG_LEVEL) {
     // eslint-disable-next-line no-console
     console[type](type, text, data);

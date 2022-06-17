@@ -46,7 +46,7 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
             ws.setUserId(_id);
             rtc.createRTC({ id: roomId });
             rtc.onAddTrack = (myId, stream) => {
-              log('info', 'Added local stream to room', { myId, _id });
+              log('info', '-> Added local stream to room', { myId, _id });
               const _streams = streams.map((_item) => _item);
               _streams.push({ userId: myId, stream });
               setStreams(_streams);
@@ -75,23 +75,20 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
           break;
         case MessageType.SET_CHANGE_ROOM_GUESTS:
           const { roomUsers } = ws.getMessage(MessageType.SET_CHANGE_ROOM_GUESTS, rawMessage).data;
-          log('info', 'onChangeRoomGuests', { roomUsers, id });
+          log('log', 'onChangeRoomGuests', { roomUsers, id });
           // Add new guests
           roomUsers.forEach((item) => {
             const peerId = compareNumbers(roomId, item);
-            if (!rtc.peerConnections[peerId]) {
+            if (!rtc.peerConnections[peerId] && item !== ws.userId) {
               rtc.createRTC({ id: roomId, target: item });
               const _streams = streams.map((_item) => _item);
               rtc.onAddTrack = (addedUserId, stream) => {
-                log('info', 'Added stream of new user to room', { addedUserId, item, mounted });
+                log('info', '->Added stream of new user to room', { addedUserId, item, mounted });
                 // If it is not me
                 const isExists = _streams.filter((_item) => _item.userId === addedUserId);
                 if (!isExists[0]) {
                   _streams.push({ userId: addedUserId, stream });
-                  // FIXME . without setTimeout after reload some users get lost
-                  setTimeout(() => {
-                    setStreams(_streams);
-                  }, 1000);
+                  setStreams(_streams);
                 }
               };
               rtc.invite({ roomId, userId: ws.userId, target: item });

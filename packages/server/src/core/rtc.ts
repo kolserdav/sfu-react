@@ -42,7 +42,7 @@ class RTC implements RTCInterface {
       event: RTCPeerConnectionIceEvent
     ) {
       if (event.candidate) {
-        log('info', '* Outgoing ICE candidate:', { roomId, userId, target });
+        log('log', '* Outgoing ICE candidate:', { roomId, userId, target });
         core.ws.sendMessage({
           type: MessageType.CANDIDATE,
           id: roomId,
@@ -58,12 +58,12 @@ class RTC implements RTCInterface {
     this.peerConnections[peerId].oniceconnectionstatechange =
       function handleICEConnectionStateChangeEvent(event: Event) {
         log(
-          'info',
-          `!!! ICE connection state changed to: ${core.peerConnections[peerId].iceConnectionState}`,
+          'log',
+          `* ICE connection state changed to: ${core.peerConnections[peerId].iceConnectionState}`,
           { peerId }
         );
         if (core.peerConnections[peerId].iceConnectionState === 'connected') {
-          // Send to all users list of room's guests
+          // Send to all users list of room's guest
           rooms[roomId].forEach((id) => {
             ws.sendMessage({
               type: MessageType.SET_CHANGE_ROOM_GUESTS,
@@ -85,7 +85,7 @@ class RTC implements RTCInterface {
     this.peerConnections[peerId].onicegatheringstatechange =
       function handleICEGatheringStateChangeEvent(ev: Event) {
         log(
-          'info',
+          'log',
           `*** ICE gathering state changed to: ${core.peerConnections[peerId].iceGatheringState}`,
           { peerId }
         );
@@ -146,7 +146,7 @@ class RTC implements RTCInterface {
       this.peerConnections[peerId]
         .addIceCandidate(cand)
         .then(() => {
-          log('info', '< Adding received ICE candidate:', { userId, id, target });
+          log('log', '!! Adding received ICE candidate:', { userId, id, target });
           if (cb) {
             cb(cand);
           }
@@ -195,7 +195,7 @@ class RTC implements RTCInterface {
     this.peerConnections[peerId]
       .setRemoteDescription(desc)
       .then(() => {
-        log('info', '-- Local video stream obtained', { peerId });
+        log('info', '-> Local video stream obtained', { peerId });
         // If a user creates a new connection with a room to get another user's stream
         if (target) {
           this.streams[target].getTracks().forEach((track) => {
@@ -204,7 +204,7 @@ class RTC implements RTCInterface {
         }
       })
       .then(() => {
-        log('info', '<- Creating answer', { id, userId, target });
+        log('info', '--> Creating answer', { id, userId, target });
         this.peerConnections[peerId].createAnswer().then((answ) => {
           if (!answ) {
             log('error', 'Failed set local description for answer.', {
@@ -215,7 +215,7 @@ class RTC implements RTCInterface {
             }
             return;
           }
-          log('info', '------> Setting local description after creating answer');
+          log('info', '---> Setting local description after creating answer');
           this.peerConnections[peerId]
             .setLocalDescription(answ)
             .catch((err) => {
@@ -260,7 +260,7 @@ class RTC implements RTCInterface {
     } = msg;
     // TODO maybe wrong
     const peerId = compareNumbers(userId, id, target || 0);
-    log('info', '<-- Call recipient has accepted our call', { userId, target });
+    log('info', '----> Call recipient has accepted our call', { userId, target });
     const desc = new wrtc.RTCSessionDescription(sdp);
     this.peerConnections[peerId]
       .setRemoteDescription(desc)
@@ -337,7 +337,7 @@ class RTC implements RTCInterface {
   }
 
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, userId, target }) => {
-    log('info', '| Closing the call', { roomId, userId, target });
+    // log('info', '| Closing the call', { roomId, userId, target });
     const peerId = compareNumbers(roomId, userId || 0, target || 0);
     this.peerConnections[peerId].onicecandidate = null;
     this.peerConnections[peerId].oniceconnectionstatechange = null;
