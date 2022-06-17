@@ -37,9 +37,6 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
         return;
       }
       const { type, id: _id } = rawMessage;
-      if (type === MessageType.SET_USER_ID) {
-        ws.setUserId(_id);
-      }
       switch (type) {
         case MessageType.SET_USER_ID:
           if (roomOpen) {
@@ -48,8 +45,11 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
             rtc.onAddTrack = (myId, stream) => {
               log('info', '-> Added local stream to room', { myId, _id });
               const _streams = streams.map((_item) => _item);
-              _streams.push({ userId: myId, stream });
-              setStreams(_streams);
+              const isExists = _streams.filter((_item) => _item.userId === _id);
+              if (!isExists[0]) {
+                _streams.push({ userId: myId, stream });
+                setStreams(_streams);
+              }
             };
             rtc.invite({ roomId, userId: _id });
             ws.sendMessage({
@@ -62,11 +62,7 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
           }
           break;
         case MessageType.OFFER:
-          if (rtc) {
-            rtc.handleOfferMessage(rawMessage, (e) => {
-              console.log(11, e);
-            });
-          }
+          rtc.handleOfferMessage(rawMessage);
           break;
         case MessageType.CANDIDATE:
           if (rtc) {
@@ -83,7 +79,7 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
               rtc.createRTC({ id: roomId, target: item });
               const _streams = streams.map((_item) => _item);
               rtc.onAddTrack = (addedUserId, stream) => {
-                log('info', '->Added stream of new user to room', { addedUserId, item, mounted });
+                log('info', '-> Added stream of new user to room', { addedUserId, item, mounted });
                 // If it is not me
                 const isExists = _streams.filter((_item) => _item.userId === addedUserId);
                 if (!isExists[0]) {
@@ -104,13 +100,11 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
           }
           break;
         case MessageType.ANSWER:
-          if (rtc) {
-            rtc.handleVideoAnswerMsg(rawMessage, (e) => {
-              if (e) {
-                log('warn', 'onHandleVideoAnswerMsg', e);
-              }
-            });
-          }
+          rtc.handleVideoAnswerMsg(rawMessage, (e) => {
+            if (e) {
+              log('warn', 'onHandleVideoAnswerMsg', e);
+            }
+          });
           break;
         case MessageType.SET_ROOM:
           setRoomIsSaved(true);

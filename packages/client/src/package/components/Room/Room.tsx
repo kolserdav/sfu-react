@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { log, getTarget } from '../../utils/lib';
+import { getTarget } from '../../utils/lib';
 import s from './Room.module.scss';
 import { RoomProps } from '../../types/index';
 import { useHandleMessages } from './Room.hooks';
