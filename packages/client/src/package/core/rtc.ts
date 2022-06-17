@@ -1,10 +1,12 @@
 import { RTCInterface, MessageType } from '../types/interfaces';
-import { log, getComparedString } from '../utils/lib';
+import { log } from '../utils/lib';
 import { MEDIA_CONSTRAINTS } from '../utils/constants';
 import WS from './ws';
 
 class RTC implements RTCInterface {
   public peerConnections: RTCInterface['peerConnections'] = {};
+
+  public readonly delimiter = '_';
 
   private ws: WS;
 
@@ -17,7 +19,7 @@ class RTC implements RTCInterface {
   }
 
   public createRTC: RTCInterface['createRTC'] = ({ roomId, target }) => {
-    this.peerConnections[getComparedString(roomId, target)] = new RTCPeerConnection({
+    this.peerConnections[this.getComparedString(roomId, target)] = new RTCPeerConnection({
       iceServers:
         process.env.NODE_ENV === 'production'
           ? [
@@ -30,8 +32,12 @@ class RTC implements RTCInterface {
     return this.peerConnections;
   };
 
+  public getComparedString(roomId: number | string, target: number | string) {
+    return `${roomId}${this.delimiter}${target || 0}`;
+  }
+
   public handleIceCandidate: RTCInterface['handleIceCandidate'] = ({ roomId, userId, target }) => {
-    const peerId = getComparedString(roomId, target);
+    const peerId = this.getComparedString(roomId, target);
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const core = this;
     this.peerConnections[peerId].onicecandidate = function handleICECandidateEvent(
@@ -57,13 +63,6 @@ class RTC implements RTCInterface {
           `* ICE connection state changed to: ${core.peerConnections[peerId].iceConnectionState}`,
           { peerId }
         );
-        switch (core.peerConnections[peerId].iceConnectionState) {
-          case 'closed':
-          case 'failed':
-          case 'disconnected':
-            core.closeVideoCall({ roomId, target, userId });
-            break;
-        }
       };
     this.peerConnections[peerId].onicegatheringstatechange =
       function handleICEGatheringStateChangeEvent(ev: Event) {
@@ -81,11 +80,6 @@ class RTC implements RTCInterface {
         '! WebRTC signaling state changed to:',
         core.peerConnections[peerId].signalingState
       );
-      switch (core.peerConnections[peerId].signalingState) {
-        case 'closed':
-          core.closeVideoCall({ roomId, target, userId });
-          break;
-      }
     };
     this.peerConnections[peerId].onnegotiationneeded = function handleNegotiationNeededEvent() {
       log('info', '--> Creating offer', { roomId, userId, target });
@@ -144,7 +138,7 @@ class RTC implements RTCInterface {
     clone?: boolean;
   }) {
     this.handleIceCandidate({ roomId, userId, target });
-    const peerId = getComparedString(roomId, target);
+    const peerId = this.getComparedString(roomId, target);
     if (!this.localStream) {
       navigator.mediaDevices
         .getUserMedia(MEDIA_CONSTRAINTS)
@@ -187,7 +181,7 @@ class RTC implements RTCInterface {
       id,
       data: { candidate, target, userId },
     } = msg;
-    const peerId = getComparedString(id, target);
+    const peerId = this.getComparedString(id, target);
     const cand = new RTCIceCandidate(candidate);
     this.peerConnections[peerId]
       .addIceCandidate(cand)
@@ -218,7 +212,7 @@ class RTC implements RTCInterface {
       id,
       data: { sdp, userId, target },
     } = msg;
-    const peerId = getComparedString(id, target);
+    const peerId = this.getComparedString(id, target);
     if (!sdp) {
       log('warn', 'Message offer error because sdp is:', sdp);
       if (cb) {
@@ -289,7 +283,7 @@ class RTC implements RTCInterface {
       id,
       data: { sdp, userId, target },
     } = msg;
-    const peerId = getComparedString(userId, target);
+    const peerId = this.getComparedString(userId, target);
     log('info', '----> Call recipient has accepted our call', { id, userId, target });
     const desc = new RTCSessionDescription(sdp);
     this.peerConnections[peerId]
@@ -309,8 +303,8 @@ class RTC implements RTCInterface {
 
   // eslint-disable-next-line class-methods-use-this
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, target }) => {
-    log('warn', '| Closing the call', { roomId, target });
-    const peerId = getComparedString(roomId, target);
+    const peerId = this.getComparedString(roomId, target);
+    log('info', '| Closing the call', { peerId });
     this.peerConnections[peerId].onicecandidate = null;
     this.peerConnections[peerId].oniceconnectionstatechange = null;
     this.peerConnections[peerId].onicegatheringstatechange = null;

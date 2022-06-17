@@ -2,7 +2,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import WS from '../../core/ws';
 import RTC from '../../core/rtc';
-import { getComparedString, log } from '../../utils/lib';
+import { log } from '../../utils/lib';
 import { START_TIMEOUT } from '../../utils/constants';
 import { MessageType } from '../../types/interfaces';
 import { Streams } from '../../types';
@@ -86,31 +86,35 @@ export const useHandleMessages = ({
           log('log', 'onChangeRoomGuests', { roomUsers, id });
           // Add remote streams
           roomUsers.forEach((item) => {
-            const peerId = getComparedString(roomId, item);
-            if (item !== id && !rtc.peerConnections[peerId]) {
-              rtc.createRTC({ roomId, target: item, userId: id });
-              const _streams = streams.map((_item) => _item);
-              rtc.onAddTrack = (addedUserId, stream) => {
-                const isExists = _streams.filter((_item) => _item.targetId === addedUserId);
-                if (!isExists[0]) {
-                  log('info', '-> Added stream of new user to room', { addedUserId, item, id });
-                  _streams.push({
-                    targetId: addedUserId,
-                    stream,
-                    ref: (node) => {
-                      if (node) {
-                        // eslint-disable-next-line no-param-reassign
-                        node.srcObject = stream;
-                      }
-                    },
-                  });
-                  // Why without set timeout component unmounted while come third user?
-                  setTimeout(() => {
-                    setStreams(_streams);
-                  }, START_TIMEOUT);
-                }
-              };
-              rtc.invite({ roomId, userId: id, target: item });
+            if (item !== id) {
+              const peerId = rtc.getComparedString(roomId, item);
+              if (!rtc.peerConnections[peerId]) {
+                rtc.createRTC({ roomId, target: item, userId: id });
+                const _streams = streams.map((_item) => _item);
+                rtc.onAddTrack = (addedUserId, stream) => {
+                  const isExists = _streams.filter((_item) => _item.targetId === addedUserId);
+                  if (!isExists[0]) {
+                    log('info', '-> Added stream of new user to room', { addedUserId, item, id });
+                    _streams.push({
+                      targetId: addedUserId,
+                      stream,
+                      ref: (node) => {
+                        if (node) {
+                          // eslint-disable-next-line no-param-reassign
+                          node.srcObject = stream;
+                        }
+                      },
+                    });
+                    // Why without set timeout component unmounted while come third user?
+                    setTimeout(() => {
+                      setStreams(_streams);
+                    }, START_TIMEOUT);
+                  }
+                };
+                rtc.invite({ roomId, userId: id, target: item });
+              } else if (rtc.peerConnections[peerId].connectionState !== 'connected') {
+                console.warn({ peerId, d: rtc.peerConnections[peerId].connectionState });
+              }
             }
           });
           // Remove disconnected

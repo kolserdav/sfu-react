@@ -1,11 +1,12 @@
 import wrtc from '../../node-webrtc/lib/index';
 import { RTCInterface, MessageType, SendMessageArgs } from '../types/interfaces';
-import { log, getComparedString } from '../utils/lib';
+import { log } from '../utils/lib';
 import { SERVER_PORT } from '../utils/constants';
 import WS from './ws';
 
 class RTC implements RTCInterface {
   public peerConnections: RTCInterface['peerConnections'] = {};
+  public readonly delimiter = '_';
   public rooms: Record<string, (string | number)[]> = {};
   public roomCons: Record<string, number | string> = {};
   private ws: WS;
@@ -19,8 +20,12 @@ class RTC implements RTCInterface {
     this.ws = ws;
   }
 
+  public getComparedString(id: number | string, userId: number | string, target: number | string) {
+    return `${id}${this.delimiter}${userId}${this.delimiter}${target || 0}`;
+  }
+
   public createRTC: RTCInterface['createRTC'] = ({ roomId, userId, target }) => {
-    const peerId = getComparedString(roomId, userId, target);
+    const peerId = this.getComparedString(roomId, userId, target);
     this.peerConnections[peerId] = new wrtc.RTCPeerConnection({
       iceServers:
         process.env.NODE_ENV === 'production'
@@ -35,7 +40,7 @@ class RTC implements RTCInterface {
   };
 
   public handleIceCandidate: RTCInterface['handleIceCandidate'] = ({ roomId, userId, target }) => {
-    const peerId = getComparedString(roomId, userId, target);
+    const peerId = this.getComparedString(roomId, userId, target);
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const core = this;
     this.peerConnections[peerId].onicecandidate = function handleICECandidateEvent(
@@ -54,8 +59,7 @@ class RTC implements RTCInterface {
         });
       }
     };
-    const ws = this.ws;
-    const rooms = this.rooms;
+    const { ws, rooms, delimiter } = this;
     this.peerConnections[peerId].oniceconnectionstatechange =
       function handleICEConnectionStateChangeEvent(event: Event) {
         log(
@@ -65,22 +69,18 @@ class RTC implements RTCInterface {
         );
         if (core.peerConnections[peerId].iceConnectionState === 'connected') {
           // Send to all users list of room's guest
-          rooms[roomId].forEach((id) => {
-            ws.sendMessage({
-              type: MessageType.SET_CHANGE_ROOM_GUESTS,
-              id,
-              data: {
-                roomUsers: rooms[roomId],
-              },
+          const isRoom = peerId.split(delimiter)[2] === '0';
+          if (isRoom) {
+            rooms[roomId].forEach((id) => {
+              ws.sendMessage({
+                type: MessageType.SET_CHANGE_ROOM_GUESTS,
+                id,
+                data: {
+                  roomUsers: rooms[roomId],
+                },
+              });
             });
-          });
-        }
-        switch (core.peerConnections[peerId].iceConnectionState) {
-          case 'closed':
-          case 'failed':
-          case 'disconnected':
-            core.closeVideoCall({ roomId, userId, target });
-            break;
+          }
         }
       };
     this.peerConnections[peerId].onicegatheringstatechange =
@@ -99,11 +99,6 @@ class RTC implements RTCInterface {
         '! WebRTC signaling state changed to:',
         core.peerConnections[peerId].signalingState
       );
-      switch (core.peerConnections[peerId].signalingState) {
-        case 'closed':
-          core.closeVideoCall({ roomId, target, userId });
-          break;
-      }
     };
     this.peerConnections[peerId].onnegotiationneeded = function handleNegotiationNeededEvent() {
       log('info', '--> Creating offer', { roomId, userId, target });
@@ -142,7 +137,7 @@ class RTC implements RTCInterface {
       id,
       data: { candidate, userId, target },
     } = msg;
-    const peerId = getComparedString(id, userId, target);
+    const peerId = this.getComparedString(id, userId, target);
     const cand = new wrtc.RTCIceCandidate(candidate);
     if (cand.candidate) {
       this.peerConnections[peerId]
@@ -193,7 +188,7 @@ class RTC implements RTCInterface {
         target,
       });
     }
-    const peerId = getComparedString(id, userId, target);
+    const peerId = this.getComparedString(id, userId, target);
     this.handleIceCandidate({
       roomId: id,
       userId,
@@ -267,7 +262,7 @@ class RTC implements RTCInterface {
       data: { sdp, userId, target },
     } = msg;
     // TODO maybe wrong
-    const peerId = getComparedString(userId, id, target);
+    const peerId = this.getComparedString(userId, id, target);
     log('info', '----> Call recipient has accepted our call', { userId, target });
     const desc = new wrtc.RTCSessionDescription(sdp);
     this.peerConnections[peerId]
@@ -333,9 +328,9 @@ class RTC implements RTCInterface {
   }
 
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, userId, target }) => {
-    // log('info', '| Closing the call', { roomId, userId, target });
-
-    const peerId = getComparedString(roomId, userId, target);
+    const peerId = this.getComparedString(roomId, userId, target);
+    delete this.streams[userId];
+    log('info', '| Closing the call', { peerId });
     this.peerConnections[peerId].onicecandidate = null;
     this.peerConnections[peerId].oniceconnectionstatechange = null;
     this.peerConnections[peerId].onicegatheringstatechange = null;
@@ -343,6 +338,7 @@ class RTC implements RTCInterface {
     this.peerConnections[peerId].onnegotiationneeded = null;
     this.peerConnections[peerId].ontrack = null;
     this.peerConnections[peerId].close();
+    delete this.peerConnections[peerId];
   };
 }
 

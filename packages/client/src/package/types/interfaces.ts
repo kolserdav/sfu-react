@@ -70,6 +70,8 @@ export type ArgsSubset<T> = T extends MessageType.OFFER
 export abstract class RTCInterface {
   public abstract peerConnections: Record<string, RTCPeerConnection>;
 
+  public readonly delimiter = '_';
+
   public abstract createRTC(args: {
     roomId: number | string;
     userId: number | string;
@@ -85,6 +87,8 @@ export abstract class RTCInterface {
     userId: number | string;
     target: string | number;
   }): void;
+
+  public abstract getComparedString(...args: (number | string)[]): string;
 
   public abstract closeVideoCall({
     roomId,
