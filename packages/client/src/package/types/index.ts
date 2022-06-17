@@ -2,7 +2,8 @@ export interface RoomProps {
   id: number;
 }
 
-export interface RawStreams {
+export interface Streams {
   userId: number;
   stream: MediaStream;
+  ref: React.Ref<HTMLVideoElement>;
 }

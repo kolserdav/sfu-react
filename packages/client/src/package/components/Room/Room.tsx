@@ -3,20 +3,18 @@ import { getTarget } from '../../utils/lib';
 import s from './Room.module.scss';
 import { RoomProps } from '../../types/index';
 import { useHandleMessages } from './Room.hooks';
-import { createStreams, getRoomLink, getPathname } from './Room.lib';
+import { getRoomLink, getPathname } from './Room.lib';
 
 function Room({ id }: RoomProps) {
   const pathname = getPathname();
   const roomId = useMemo(() => getTarget(pathname || ''), [pathname]);
   const { streams } = useHandleMessages({ id, roomId });
-
-  const _streams = useMemo(() => createStreams(streams), [streams]);
   const roomLink = useMemo(() => getRoomLink(roomId), [roomId]);
 
   return (
     <div className={s.wrapper}>
       <div className={s.container}>
-        {_streams.map((item) => (
+        {streams.map((item) => (
           <div key={item.userId} className={s.video}>
             <video
               width={300}
