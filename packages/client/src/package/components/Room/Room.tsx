@@ -17,6 +17,7 @@ function Room({ id }: RoomProps) {
         {streams.map((item) => (
           <div key={item.userId} className={s.video}>
             <video
+              muted={item.userId === id}
               width={300}
               height={200}
               ref={item.ref}

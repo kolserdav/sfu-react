@@ -21,7 +21,7 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
       };
     }
     const roomOpen = Number.isInteger(roomId);
-    ws.onOpen = (ev) => {
+    ws.onOpen = () => {
       ws.sendMessage({
         type: MessageType.GET_USER_ID,
         id,
@@ -100,7 +100,10 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
                       }
                     },
                   });
-                  setStreams(_streams);
+                  // Why without set timeout component unmounted while come third user?
+                  setTimeout(() => {
+                    setStreams(_streams);
+                  }, 1000);
                 }
               };
               rtc.invite({ roomId, userId: ws.userId, target: item });
@@ -116,11 +119,7 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
           }
           break;
         case MessageType.ANSWER:
-          rtc.handleVideoAnswerMsg(rawMessage, (e) => {
-            if (e) {
-              log('warn', 'onHandleVideoAnswerMsg', e);
-            }
-          });
+          rtc.handleVideoAnswerMsg(rawMessage);
           break;
         case MessageType.SET_ROOM:
           setRoomIsSaved(true);
