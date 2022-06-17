@@ -63,6 +63,13 @@ class RTC implements RTCInterface {
           `* ICE connection state changed to: ${core.peerConnections[peerId].iceConnectionState}`,
           { peerId }
         );
+        switch (core.peerConnections[peerId].iceConnectionState) {
+          case 'closed':
+          case 'failed':
+          case 'disconnected':
+            core.onClosedCall({ roomId, userId, target });
+            break;
+        }
       };
     this.peerConnections[peerId].onicegatheringstatechange =
       function handleICEGatheringStateChangeEvent(ev: Event) {
@@ -80,6 +87,11 @@ class RTC implements RTCInterface {
         '! WebRTC signaling state changed to:',
         core.peerConnections[peerId].signalingState
       );
+      switch (core.peerConnections[peerId].signalingState) {
+        case 'closed':
+          core.onClosedCall({ roomId, userId, target });
+          break;
+      }
     };
     this.peerConnections[peerId].onnegotiationneeded = function handleNegotiationNeededEvent() {
       log('info', '--> Creating offer', { roomId, userId, target });
@@ -183,6 +195,7 @@ class RTC implements RTCInterface {
     } = msg;
     const peerId = this.getComparedString(id, target);
     const cand = new RTCIceCandidate(candidate);
+    log('info', 'Trying to add ice candidate', { peerId });
     this.peerConnections[peerId]
       .addIceCandidate(cand)
       .then(() => {
@@ -230,7 +243,7 @@ class RTC implements RTCInterface {
     this.peerConnections[peerId]
       .setRemoteDescription(desc)
       .then(() => {
-        log('info', '--> Creating answer', { id, userId, target });
+        log('info', '--> Creating answer', { peerId });
         this.peerConnections[peerId].createAnswer().then((answ) => {
           if (!answ || !this.peerConnections[peerId]) {
             log('error', 'Failed set local description for answer.', {
@@ -313,6 +326,12 @@ class RTC implements RTCInterface {
     this.peerConnections[peerId].ontrack = null;
     this.peerConnections[peerId].close();
     delete this.peerConnections[peerId];
+  };
+
+  // eslint-disable-next-line class-methods-use-this
+  public onClosedCall: RTCInterface['onClosedCall'] = (args) => {
+    /** TODO catch unexpected shutdowns */
+    log('log', 'Connection on closed', { ...args });
   };
 }
 

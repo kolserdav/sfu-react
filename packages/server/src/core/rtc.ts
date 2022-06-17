@@ -82,6 +82,13 @@ class RTC implements RTCInterface {
             });
           }
         }
+        switch (core.peerConnections[peerId].iceConnectionState) {
+          case 'closed':
+          case 'failed':
+          case 'disconnected':
+            core.onClosedCall({ roomId, userId, target });
+            break;
+        }
       };
     this.peerConnections[peerId].onicegatheringstatechange =
       function handleICEGatheringStateChangeEvent(ev: Event) {
@@ -99,6 +106,11 @@ class RTC implements RTCInterface {
         '! WebRTC signaling state changed to:',
         core.peerConnections[peerId].signalingState
       );
+      switch (core.peerConnections[peerId].signalingState) {
+        case 'closed':
+          core.onClosedCall({ roomId, userId, target });
+          break;
+      }
     };
     this.peerConnections[peerId].onnegotiationneeded = function handleNegotiationNeededEvent() {
       log('info', '--> Creating offer', { roomId, userId, target });
@@ -139,25 +151,25 @@ class RTC implements RTCInterface {
     } = msg;
     const peerId = this.getComparedString(id, userId, target);
     const cand = new wrtc.RTCIceCandidate(candidate);
-    if (cand.candidate) {
-      this.peerConnections[peerId]
-        .addIceCandidate(cand)
-        .then(() => {
-          log('log', '!! Adding received ICE candidate:', { userId, id, target });
-          if (cb) {
-            cb(cand);
-          }
-        })
-        .catch((e) => {
-          log('error', 'Set candidate error', {
-            error: e,
-            cand,
-          });
-          if (cb) {
-            cb(null);
-          }
+
+    log('info', 'Trying to add ice candidate', { peerId });
+    this.peerConnections[peerId]
+      .addIceCandidate(cand)
+      .then(() => {
+        log('log', '!! Adding received ICE candidate:', { userId, id, target });
+        if (cb) {
+          cb(cand);
+        }
+      })
+      .catch((e) => {
+        log('error', 'Set candidate error', {
+          error: e,
+          cand,
         });
-    }
+        if (cb) {
+          cb(null);
+        }
+      });
   };
 
   public addUserToRoom({ userId, roomId }: { userId: number | string; roomId: number | string }) {
@@ -207,7 +219,7 @@ class RTC implements RTCInterface {
         }
       })
       .then(() => {
-        log('info', '--> Creating answer', { id, userId, target });
+        log('info', '--> Creating answer', { peerId });
         this.peerConnections[peerId].createAnswer().then((answ) => {
           if (!answ) {
             log('error', 'Failed set local description for answer.', {
@@ -339,6 +351,11 @@ class RTC implements RTCInterface {
     this.peerConnections[peerId].ontrack = null;
     this.peerConnections[peerId].close();
     delete this.peerConnections[peerId];
+  };
+
+  public onClosedCall: RTCInterface['onClosedCall'] = (args) => {
+    /** TODO catch unexpected shutdowns */
+    log('log', 'Connection on closed', { ...args });
   };
 }
 

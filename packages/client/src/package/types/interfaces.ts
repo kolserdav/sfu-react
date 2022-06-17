@@ -100,6 +100,16 @@ export abstract class RTCInterface {
     target: string | number;
   }): void;
 
+  public abstract onClosedCall({
+    roomId,
+    userId,
+    target,
+  }: {
+    roomId: number | string;
+    userId: number | string;
+    target: string | number;
+  }): void;
+
   public abstract onAddTrack(target: number | string, stream: MediaStream): void;
 
   public abstract handleOfferMessage(
