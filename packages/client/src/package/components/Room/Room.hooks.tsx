@@ -3,6 +3,7 @@ import { useEffect, useState, useMemo } from 'react';
 import WS from '../../core/ws';
 import RTC from '../../core/rtc';
 import { compareNumbers, log } from '../../utils/lib';
+import { START_TIMEOUT } from '../../utils/constants';
 import { MessageType } from '../../types/interfaces';
 import { Streams } from '../../types';
 
@@ -39,7 +40,7 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
         case MessageType.SET_USER_ID:
           if (roomOpen) {
             ws.setUserId(_id);
-            rtc.createRTC({ id: roomId });
+            rtc.createRTC({ id: roomId, userId: ws.userId, target: 0 });
             // Added local stream
             rtc.onAddTrack = (myId, stream) => {
               log('info', '-> Added local stream to room', { myId, _id });
@@ -59,7 +60,7 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
                 setStreams(_streams);
               }
             };
-            rtc.invite({ roomId, userId: _id });
+            rtc.invite({ roomId, userId: _id, target: 0 });
             ws.sendMessage({
               type: MessageType.GET_ROOM,
               id: roomId,
@@ -84,7 +85,7 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
           roomUsers.forEach((item) => {
             const peerId = compareNumbers(roomId, item);
             if (!rtc.peerConnections[peerId] && item !== ws.userId) {
-              rtc.createRTC({ id: roomId, target: item });
+              rtc.createRTC({ id: roomId, target: item, userId: ws.userId });
               const _streams = streams.map((_item) => _item);
               rtc.onAddTrack = (addedUserId, stream) => {
                 log('info', '-> Added stream of new user to room', { addedUserId, item });
@@ -103,7 +104,7 @@ export const useHandleMessages = ({ id, roomId }: { id: number; roomId: number |
                   // Why without set timeout component unmounted while come third user?
                   setTimeout(() => {
                     setStreams(_streams);
-                  }, 1000);
+                  }, START_TIMEOUT);
                 }
               };
               rtc.invite({ roomId, userId: ws.userId, target: item });

@@ -40,17 +40,17 @@ interface SetAuth {
 type Offer = {
   sdp: RTCSessionDescriptionInit;
   userId: number;
-  target?: number;
+  target: number;
 };
 type Candidate = {
   candidate: any;
   userId: number;
-  target?: number;
+  target: number;
 };
 type Answer = {
   sdp: RTCSessionDescriptionInit;
   userId: number;
-  target?: number;
+  target: number;
 };
 
 export type ArgsSubset<T> = T extends MessageType.OFFER
@@ -78,8 +78,8 @@ export abstract class RTCInterface {
 
   public abstract createRTC(args: {
     id: number;
-    userId?: number;
-    target?: number;
+    userId: number;
+    target: number;
   }): Record<number, RTCPeerConnection>;
 
   public abstract handleIceCandidate({
@@ -89,7 +89,7 @@ export abstract class RTCInterface {
   }: {
     roomId: number;
     userId: number;
-    target?: number;
+    target: number;
   }): void;
 
   public abstract closeVideoCall({
@@ -98,8 +98,8 @@ export abstract class RTCInterface {
     target,
   }: {
     roomId: number;
-    userId?: number;
-    target?: number;
+    userId: number;
+    target: number;
   }): void;
 
   public abstract onAddTrack(userId: number, stream: MediaStream): void;
