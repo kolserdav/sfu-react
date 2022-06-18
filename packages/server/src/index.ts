@@ -20,13 +20,6 @@ import { name, version } from '../../../package.json';
 log('info', `${name}@${version} started`, '...', true);
 console.log('\n');
 
-process.on('uncaughtException', (err: Error) => {
-  log('error', 'uncaughtException', err, true);
-});
-process.on('unhandledRejection', (err: Error) => {
-  log('error', 'unhandledRejection', err, true);
-});
-
 const argv: { port: string } = yargs(hideBin(process.argv)).argv as any;
 
 const args = Object.keys(argv);
