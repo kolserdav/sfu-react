@@ -11,11 +11,11 @@ npm i -g node-pre-gyp
 - Install source as global:
 
 ```sh
-npm i -g julia-teams
+npm i -g uyem
 ```
 
 - Link library for import:
 
 ```sh
-npm link julia-teams
+npm link uyem
 ```
