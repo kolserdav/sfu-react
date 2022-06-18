@@ -1,6 +1,6 @@
 {
   "name": "julia-teams",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "repository": "https://github.com/kolserdav/julia-teams.git",
   "description": "Selective Forwarding Unit (SFU) WebRTC implementation for Node and ReactJS",
   "keywords": [
@@ -21,6 +21,7 @@
     "packages/server/dist",
     "packages/client/dist",
     "bin",
+    "dist",
     "index.js",
     "scripts/create-interfaces-symlink.js",
     "THIRD_PARTY_LICENSES.md",
@@ -34,11 +35,11 @@
   },
   "main": "index.js",
   "scripts": {
-    "prebuild": "cd packages/server && npm run build",
-    "build": "npm run prebuild && node -e \"fs.rmSync('packages/client/dist', { recursive: true, force: true })\" && cd packages/client && microbundle --format es",
+    "build:server": "cd packages/server && node -e \"fs.rmSync('dist', { recursive: true, force: true })\" && npm run build",
+    "build:client": "node -e \"fs.rmSync('packages/client/dist', { recursive: true, force: true })\" && cd packages/client && microbundle --format es",
+    "build": "npm run build:server && npm run build:client",
     "copy-interfaces": "node scripts/create-interfaces-symlink.js",
-    "prepare": "npm run copy-interfaces",
-    "preinstall": "npm run prepare",
+    "preinstall": "npm run copy-interfaces",
     "dev:server": "cd packages/server && npm run dev",
     "dev:install": "cd packages/server/node-webrtc && SKIP_DOWNLOAD=true npm install",
     "dev:client": "cd packages/client && npm start",
