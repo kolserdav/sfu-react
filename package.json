@@ -23,6 +23,7 @@
     "bin",
     "dist",
     "index.js",
+    "index.d.ts",
     "scripts/create-interfaces-symlink.js",
     "THIRD_PARTY_LICENSES.md",
     "LICENSE"
