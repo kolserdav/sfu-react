@@ -1,9 +1,6 @@
 // @ts-check
-import { existsSync, symlink } from 'fs';
-import { resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const { existsSync, symlink } = require('fs');
+const { resolve } = require('path');
 
 const destPath = resolve(__dirname, '../packages/server/src/types/interfaces.ts');
 const srcPath = resolve(__dirname, '../packages/client/src/package/types/interfaces.ts');

@@ -1,6 +1,6 @@
 {
   "name": "julia-teams",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "repository": "https://github.com/kolserdav/julia-teams.git",
   "author": {
     "name": "Sergey Kolmiller",
@@ -12,7 +12,7 @@
   "files": [
     "packages/server/dist",
     "packages/client/dist",
-    "scrips",
+    "scripts/create-interfaces-symlink.js",
     "THIRD_PARTY_LICENSES.md",
     "LICENSE"
   ],
@@ -78,7 +78,6 @@
     "microbundle": "^0.15.0",
     "node-pre-gyp": "^0.17.0",
     "prettier": "^2.6.2",
-    "prisma": "^3.14.0",
     "react-scripts": "5.0.1",
     "sass": "^1.52.2",
     "stylelint": "^14.8.5",
