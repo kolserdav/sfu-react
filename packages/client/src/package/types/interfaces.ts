@@ -73,38 +73,45 @@ export abstract class RTCInterface {
   public readonly delimiter = '_';
 
   public abstract createRTC(args: {
+    connId: string;
     roomId: number | string;
     userId: number | string;
     target: string | number;
   }): Record<number, RTCPeerConnection>;
 
   public abstract handleIceCandidate({
+    connId,
     roomId,
     userId,
     target,
   }: {
+    connId: string;
     roomId: number | string;
     userId: number | string;
     target: string | number;
   }): void;
 
-  public abstract getComparedString(...args: (number | string)[]): string;
+  public abstract getPeerId(...args: (number | string)[]): string;
 
   public abstract closeVideoCall({
+    connId,
     roomId,
     userId,
     target,
   }: {
+    connId: string;
     roomId: number | string;
     userId: number | string;
     target: string | number;
   }): void;
 
   public abstract onClosedCall({
+    connId,
     roomId,
     userId,
     target,
   }: {
+    connId: string;
     roomId: number | string;
     userId: number | string;
     target: string | number;
@@ -127,12 +134,12 @@ export abstract class RTCInterface {
     cb?: (res: 1 | 0) => any
   ): void;
 }
-
+type ConnectionId<T> = T extends infer R ? R : never;
 export interface SendMessageArgs<T> {
   type: T;
   id: number | string;
-  isAuth?: boolean;
   data: ArgsSubset<T>;
+  connId?: ConnectionId<string>;
 }
 
 export abstract class WSInterface {

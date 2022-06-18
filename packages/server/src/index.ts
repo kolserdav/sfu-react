@@ -48,6 +48,7 @@ wss.connection.on('connection', function connection(ws) {
           type: Types.MessageType.SET_USER_ID,
           id,
           data: undefined,
+          connId,
         });
         break;
       case Types.MessageType.GET_ROOM:
@@ -79,11 +80,11 @@ wss.connection.on('connection', function connection(ws) {
       roomKeys.forEach((item) => {
         const index = rtc.rooms[item].indexOf(userId);
         if (index !== -1 && connId === wss.users[userId]) {
-          rtc.closeVideoCall({ roomId: item, userId, target: 0 });
+          rtc.closeVideoCall({ roomId: item, userId, target: 0, connId });
           rtc.rooms[item].splice(index, 1);
           // Send user list of room
           rtc.rooms[item].forEach((_item) => {
-            rtc.closeVideoCall({ roomId: item, userId, target: _item });
+            rtc.closeVideoCall({ roomId: item, userId, target: _item, connId });
             wss.sendMessage({
               type: Types.MessageType.SET_CHANGE_ROOM_GUESTS,
               id: _item,

@@ -41,6 +41,7 @@ class WS implements WSInterface {
   };
 
   public parseMessage: WSInterface['parseMessage'] = (message) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let data: any;
     try {
       data = JSON.parse(message);
@@ -52,6 +53,7 @@ class WS implements WSInterface {
   };
 
   public getMessage: WSInterface['getMessage'] = (type, data) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const res: any = data;
     return res;
   };
