@@ -2,7 +2,7 @@
   "name": "uyem",
   "version": "1.0.9",
   "repository": "https://github.com/kolserdav/uyem.git",
-  "description": "Selective Forwarding Unit (SFU) WebRTC implementation for Node and ReactJS",
+  "description": "Unit Jawing ESM Module (UYEM). Create Selective Forwarding Unit (SFU) server side of which written on Node and client on ReactJS",
   "keywords": [
     "node",
     "react",
@@ -12,8 +12,7 @@
   ],
   "author": {
     "name": "Sergey Kolmiller",
-    "email": "uyem.ru@gmail.com",
-    "url": "https://portfolio.uyem.ru/en"
+    "email": "uyem.ru@gmail.com"
   },
   "bugs": "https://github.com/kolserdav/uyem/issues",
   "license": "BSD-2-Clause",
@@ -51,6 +50,7 @@
     "bin": "node bin/julia-teams.js"
   },
   "dependencies": {
+    "clsx": "^1.1.1",
     "html-to-text": "^8.2.0",
     "jsonwebtoken": "^8.5.1",
     "nodemailer": "^6.7.5",
@@ -93,7 +93,7 @@
   },
   "fhead": {
     "root": "packages/server",
-    "repository": "https://github.com/kolserdav/julia-teams.git",
+    "repository": "https://github.com/kolserdav/uyem.git",
     "patterns": [
       ".js",
       ".ts",

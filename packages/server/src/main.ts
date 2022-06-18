@@ -1,12 +1,12 @@
 /******************************************************************************************
- * Repository: https://github.com/kolserdav/julia-teams.git
+ * Repository: https://github.com/kolserdav/uyem.git
  * File name: main.ts
  * Author: Sergey Kolmiller
  * Email: <uyem.ru@gmail.com>
  * License: BSD-2-Clause
  * License text: Binary distributions of this software include WebRTC and other third-party libraries.
  * Copyright: kolserdav, All rights reserved (c)
- * Create Date: Sun Jun 19 2022 00:09:49 GMT+0700 (Krasnoyarsk Standard Time)
+ * Create Date: Sun Jun 19 2022 01:46:25 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 /* eslint-disable no-case-declarations */
 import { v4 } from 'uuid';
@@ -14,11 +14,19 @@ import WS from './core/ws';
 import RTC from './core/rtc';
 import * as Types from './types/interfaces';
 import { log } from './utils/lib';
+import { PORT } from './utils/constants';
+
+process.on('uncaughtException', (err: Error) => {
+  log('error', 'uncaughtException', err);
+});
+process.on('unhandledRejection', (err: Error) => {
+  log('error', 'unhandledRejection', err);
+});
 
 /**
  * Create SFU WebRTC server
  */
-function createServer({ port }: { port: number }) {
+function createServer({ port = PORT }: { port?: number }) {
   log('info', 'Server listen at port:', port);
   const getConnectionId = (): string => {
     const connId = v4();
@@ -110,3 +118,7 @@ function createServer({ port }: { port: number }) {
   });
 }
 export default createServer;
+
+if (require.main === module) {
+  createServer({ port: PORT });
+}

@@ -1,11 +1,11 @@
 {
   "name": "server",
   "version": "1.0.1",
-  "main": "dist/src/main.js",
+  "main": "dist/main.js",
   "license": "MIT",
   "scripts": {
     "watch": "tsc -p . -w",
-    "dev:start": "nodemon dist/src/main.js",
+    "dev:start": "nodemon dist/main.js",
     "dev": "concurrently \"npm run watch\" \"npm run dev:start\"",
     "build": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\" && tsc -p ."
   },

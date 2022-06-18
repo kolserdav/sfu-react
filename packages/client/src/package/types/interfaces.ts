@@ -1,15 +1,15 @@
-/* eslint-disable @typescript-eslint/no-namespace */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /******************************************************************************************
- * Repository: https://github.com/kolserdav/julia-teams.git
+ * Repository: https://github.com/kolserdav/uyem.git
  * File name: interfaces.ts
  * Author: Sergey Kolmiller
  * Email: <uyem.ru@gmail.com>
  * License: BSD-2-Clause
  * License text: Binary distributions of this software include WebRTC and other third-party libraries.
  * Copyright: kolserdav, All rights reserved (c)
- * Create Date: Sat Jun 18 2022 10:59:02 GMT+0700 (Krasnoyarsk Standard Time)
+ * Create Date: Sun Jun 19 2022 01:46:25 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-namespace */
 /* eslint-disable max-classes-per-file */
 /* eslint-disable no-unused-vars */
 

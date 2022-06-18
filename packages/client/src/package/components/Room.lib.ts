@@ -1,6 +1,6 @@
 /******************************************************************************************
  * Repository: https://github.com/kolserdav/uyem.git
- * File name: App.test.tsx
+ * File name: Room.lib.ts
  * Author: Sergey Kolmiller
  * Email: <uyem.ru@gmail.com>
  * License: BSD-2-Clause
@@ -8,12 +8,18 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Sun Jun 19 2022 01:44:53 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import App from './App';
+export const getRoomLink = (roomId: number | string | null): string | null => {
+  let res = null;
+  if (typeof window !== 'undefined' && roomId) {
+    res = `${window.location.href.replace(/\?.*/, '')}?d=${new Date().getTime()}`;
+  }
+  return res;
+};
 
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
-});
+export const getPathname = (): string | null => {
+  let res = null;
+  if (typeof window !== 'undefined') {
+    res = window.location.pathname;
+  }
+  return res;
+};

@@ -1,18 +1,31 @@
-import React, { useMemo } from 'react';
-import { getTarget } from '../../utils/lib';
+/******************************************************************************************
+ * Repository: https://github.com/kolserdav/uyem.git
+ * File name: Room.tsx
+ * Author: Sergey Kolmiller
+ * Email: <uyem.ru@gmail.com>
+ * License: BSD-2-Clause
+ * License text: Binary distributions of this software include WebRTC and other third-party libraries.
+ * Copyright: kolserdav, All rights reserved (c)
+ * Create Date: Sun Jun 19 2022 01:44:53 GMT+0700 (Krasnoyarsk Standard Time)
+ ******************************************************************************************/
+import React, { useMemo, useContext } from 'react';
+import clsx from 'clsx';
+import { getTarget } from '../utils/lib';
 import s from './Room.module.scss';
-import { RoomProps } from '../../types/index';
-import { useHandleMessages } from './Room.hooks';
+import { RoomProps } from '../types/index';
+import { useConnection } from './Room.hooks';
+import { ThemeContext } from '../Main.context';
 import { getRoomLink, getPathname } from './Room.lib';
 
 function Room({ id }: RoomProps) {
   const pathname = getPathname();
   const roomId = useMemo(() => getTarget(pathname || ''), [pathname]);
-  const { streams } = useHandleMessages({ id, roomId });
   const roomLink = useMemo(() => getRoomLink(roomId), [roomId]);
+  const { streams } = useConnection({ id, roomId });
+  const theme = useContext(ThemeContext);
 
   return (
-    <div className={s.wrapper}>
+    <div className={clsx(theme.wrapper, s.wrapper)}>
       <div className={s.container}>
         {streams.map((item) => (
           <div key={item.targetId} className={s.video}>

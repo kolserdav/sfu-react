@@ -1,12 +1,12 @@
 /******************************************************************************************
- * Repository: https://github.com/kolserdav/julia-teams.git
+ * Repository: https://github.com/kolserdav/uyem.git
  * File name: index.ts
  * Author: Sergey Kolmiller
  * Email: <uyem.ru@gmail.com>
  * License: BSD-2-Clause
  * License text: Binary distributions of this software include WebRTC and other third-party libraries.
  * Copyright: kolserdav, All rights reserved (c)
- * Create Date: Sun Jun 19 2022 00:09:49 GMT+0700 (Krasnoyarsk Standard Time)
+ * Create Date: Sun Jun 19 2022 01:46:25 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 /* eslint-disable no-case-declarations */
 import { log } from './utils/lib';
@@ -21,10 +21,10 @@ log('info', `${name}@${version} started`, '...', true);
 console.log('\n');
 
 process.on('uncaughtException', (err: Error) => {
-  log('error', 'uncaughtException', err);
+  log('error', 'uncaughtException', err, true);
 });
 process.on('unhandledRejection', (err: Error) => {
-  log('error', 'unhandledRejection', err);
+  log('error', 'unhandledRejection', err, true);
 });
 
 const argv: { port: string } = yargs(hideBin(process.argv)).argv as any;
@@ -36,7 +36,7 @@ const ARGS = {
   version: 'Show installed version',
 };
 
-const REQUIRED: (keyof typeof ARGS)[] = ['port'];
+const REQUIRED: (keyof typeof ARGS)[] = [];
 
 const defKeys = Object.keys(ARGS);
 const skipedReq = [];
@@ -63,7 +63,7 @@ for (let n = 0; args[n]; n++) {
     case 'port':
       port = parseInt(argv.port, 10);
       if (Number.isNaN(port)) {
-        log('warn', 'Port is:', port, true);
+        log('warn', 'Required number type of port, received:', port, true);
         code = 1;
         break;
       }
