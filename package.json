@@ -1,7 +1,15 @@
 {
   "name": "julia-teams",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "repository": "https://github.com/kolserdav/julia-teams.git",
+  "description": "Selective Forwarding Unit (SFU) WebRTC implementation for Node and ReactJS",
+  "keywords": [
+    "node",
+    "react",
+    "webrtc",
+    "p2p",
+    "peer"
+  ],
   "author": {
     "name": "Sergey Kolmiller",
     "email": "uyem.ru@gmail.com",
@@ -23,14 +31,8 @@
   "bin": {
     "julia-teams": "bin/julia-teams.js"
   },
-  "description": "Selective Forwarding Unit (SFU) WebRTC implementation for Node and ReactJS",
-  "keywords": [
-    "node",
-    "react",
-    "webrtc",
-    "p2p",
-    "peer"
-  ],
+  "main": "packages/client/dist/Main.js",
+  "module": "packages/client/Main.esm.js",
   "scripts": {
     "prebuild": "cd packages/server && npm run build",
     "build": "npm run prebuild && node -e \"fs.rmSync('packages/client/dist', { recursive: true, force: true })\" && cd packages/client && microbundle --format es",

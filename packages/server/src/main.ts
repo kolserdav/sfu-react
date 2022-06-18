@@ -9,7 +9,7 @@ import { log } from './utils/lib';
  * julia-teams server
  */
 function Server({ port }: { port: number }) {
-  log('info', 'Server listen at port: ', port);
+  log('info', 'Server listen at port:', port);
   const getConnectionId = (): string => {
     const connId = v4();
     if (wss.sockets[connId]) {
