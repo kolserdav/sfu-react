@@ -6,7 +6,7 @@
  * License: BSD-2-Clause
  * License text: Binary distributions of this software include WebRTC and other third-party libraries.
  * Copyright: kolserdav, All rights reserved (c)
- * Create Date: Sat Jun 18 2022 10:59:02 GMT+0700 (Krasnoyarsk Standard Time)
+ * Create Date: Sun Jun 19 2022 00:09:49 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import wrtc from 'wrtc';
 import { RTCInterface, MessageType, SendMessageArgs } from '../types/interfaces';
@@ -208,6 +208,7 @@ class RTC implements RTCInterface {
       connId: conn,
       data: { sdp, userId, target },
     } = msg;
+
     if (!sdp) {
       log('warn', 'Message offer error because sdp is:', sdp);
       if (cb) {

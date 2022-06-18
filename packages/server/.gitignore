@@ -9,5 +9,4 @@ tmp
 cloud/*
 !cloud/.gitkeep
 
-src/types/*
-!src/types/.gitkeep
+src/types/interfaces.ts

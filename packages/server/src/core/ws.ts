@@ -6,7 +6,7 @@
  * License: BSD-2-Clause
  * License text: Binary distributions of this software include WebRTC and other third-party libraries.
  * Copyright: kolserdav, All rights reserved (c)
- * Create Date: Sat Jun 18 2022 10:59:02 GMT+0700 (Krasnoyarsk Standard Time)
+ * Create Date: Sun Jun 19 2022 00:09:49 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { WebSocketServer, Server, WebSocket, ServerOptions } from 'ws';
 import { WSInterface } from '../types/interfaces';
