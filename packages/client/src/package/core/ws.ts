@@ -71,6 +71,7 @@ class WS implements Types.WSInterface {
   public getMessage: Types.WSInterface['getMessage'] = (type, data) => data as any;
 
   private newConnection({ local = false }: { local?: boolean }): WebSocket {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let connection: any;
     if (typeof window !== 'undefined') {
       connection = new WebSocket(
@@ -92,6 +93,7 @@ class WS implements Types.WSInterface {
       log('log', 'onOpen', ev);
       this.onOpen(ev);
     };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.connection.onmessage = (ev: MessageEvent<any>) => {
       log('log', 'onMessage', ev.data);
       this.onMessage(ev);
