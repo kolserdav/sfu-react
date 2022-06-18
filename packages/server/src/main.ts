@@ -6,9 +6,9 @@ import * as Types from './types/interfaces';
 import { log } from './utils/lib';
 
 /**
- * julia-teams server
+ * Create SFU WebRTC server
  */
-function Server({ port }: { port: number }) {
+function createServer({ port }: { port: number }) {
   log('info', 'Server listen at port:', port);
   const getConnectionId = (): string => {
     const connId = v4();
@@ -99,4 +99,4 @@ function Server({ port }: { port: number }) {
     };
   });
 }
-export default Server;
+export default createServer;
