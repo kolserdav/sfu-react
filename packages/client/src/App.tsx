@@ -1,5 +1,5 @@
 import React from 'react';
-import Main from 'julia-teams';
+import { Room as Main } from 'julia-teams/dist/client';
 import './App.scss';
 
 const createRoom = () => {
