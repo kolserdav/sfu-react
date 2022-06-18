@@ -24,6 +24,8 @@
   "plugins": ["@typescript-eslint", "react", "prettier", "eslint-plugin-prettier"],
   "ignorePatterns": ["src/package/types/prisma.d.ts"],
   "rules": {
+    "import/no-extraneous-dependencies": 0,
+    "spaced-comment": 0,
     "react/react-in-jsx-scope": 2,
     "prettier/prettier": 1,
     "react/jsx-filename-extension": [

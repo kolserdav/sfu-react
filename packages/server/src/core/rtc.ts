@@ -1,7 +1,16 @@
-import wrtc from '../../node-webrtc/lib/index';
+/******************************************************************************************
+ * Repository: https://github.com/kolserdav/julia-teams.git
+ * File name: rtc.ts
+ * Author: Sergey Kolmiller
+ * Email: <uyem.ru@gmail.com>
+ * License: BSD-2-Clause
+ * License text: Binary distributions of this software include WebRTC and other third-party libraries.
+ * Copyright: kolserdav, All rights reserved (c)
+ * Create Date: Sat Jun 18 2022 10:59:02 GMT+0700 (Krasnoyarsk Standard Time)
+ ******************************************************************************************/
+import wrtc from 'wrtc';
 import { RTCInterface, MessageType, SendMessageArgs } from '../types/interfaces';
 import { log } from '../utils/lib';
-import { SERVER_PORT } from '../utils/constants';
 import WS from './ws';
 
 class RTC implements RTCInterface {
@@ -309,14 +318,20 @@ class RTC implements RTCInterface {
       });
   };
 
-  public handleGetRoomMessage({ message }: { message: SendMessageArgs<MessageType.GET_ROOM> }) {
+  public handleGetRoomMessage({
+    message,
+    port,
+  }: {
+    message: SendMessageArgs<MessageType.GET_ROOM>;
+    port: number;
+  }) {
     const {
       data: { userId: uid },
       id,
       connId: conn,
     } = message;
     // Room creatting counter local connection with every user
-    const connection = new this.ws.websocket(`ws://localhost:${SERVER_PORT}`);
+    const connection = new this.ws.websocket(`ws://localhost:${port}`);
     this.addUserToRoom({
       roomId: id,
       userId: uid,

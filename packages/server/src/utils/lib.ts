@@ -1,3 +1,13 @@
+/******************************************************************************************
+ * Repository: https://github.com/kolserdav/julia-teams.git
+ * File name: lib.ts
+ * Author: Sergey Kolmiller
+ * Email: <uyem.ru@gmail.com>
+ * License: BSD-2-Clause
+ * License text: Binary distributions of this software include WebRTC and other third-party libraries.
+ * Copyright: kolserdav, All rights reserved (c)
+ * Create Date: Sat Jun 18 2022 10:59:02 GMT+0700 (Krasnoyarsk Standard Time)
+ ******************************************************************************************/
 import { LOG_LEVEL } from './constants';
 
 // eslint-disable-next-line no-unused-vars
@@ -9,22 +19,28 @@ enum LogLevel {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const log = (type: keyof typeof LogLevel, text: string, data?: any) => {
+export const log = (type: keyof typeof LogLevel, text: string, data?: any, cons?: boolean) => {
   const Red = '\x1b[31m';
   const Reset = '\x1b[0m';
   const Bright = '\x1b[1m';
   const Yellow = '\x1b[33m';
   const Dim = '\x1b[2m';
-  if (LogLevel[type] >= LOG_LEVEL) {
-    console[type](
-      new Date(),
-      type === 'error' ? Red : type === 'warn' ? Yellow : Bright,
-      type,
-      Reset,
-      text,
-      Dim,
-      data,
-      Reset
-    );
+  const Cyan = '\x1b[36m';
+  if (cons) {
+    console.log(type === 'info' ? Cyan : type === 'warn' ? Yellow : type === 'error' ? Red : Reset);
+    console[type](type, Reset, text, Bright, data, Reset);
+  } else {
+    if (LogLevel[type] >= LOG_LEVEL) {
+      console[type](
+        new Date(),
+        type === 'error' ? Red : type === 'warn' ? Yellow : Bright,
+        type,
+        Reset,
+        text,
+        Dim,
+        data,
+        Reset
+      );
+    }
   }
 };

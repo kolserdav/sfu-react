@@ -1,10 +1,20 @@
+/******************************************************************************************
+ * Repository: https://github.com/kolserdav/julia-teams.git
+ * File name: index.ts
+ * Author: Sergey Kolmiller
+ * Email: <uyem.ru@gmail.com>
+ * License: BSD-2-Clause
+ * License text: Binary distributions of this software include WebRTC and other third-party libraries.
+ * Copyright: kolserdav, All rights reserved (c)
+ * Create Date: Sat Jun 18 2022 10:59:02 GMT+0700 (Krasnoyarsk Standard Time)
+ ******************************************************************************************/
 /* eslint-disable no-case-declarations */
-import { v4 } from 'uuid';
-import { SERVER_PORT } from './utils/constants';
-import WS from './core/ws';
-import * as Types from './types/interfaces';
 import { log } from './utils/lib';
-import RTC from './core/rtc';
+import yargs from 'yargs/yargs';
+import { hideBin } from 'yargs/helpers';
+import { name, version } from '../../../package.json';
+
+log('info', `${name}@${version} started`, '...', true);
 
 process.on('uncaughtException', (err: Error) => {
   log('error', 'uncaughtException', err);
@@ -13,90 +23,52 @@ process.on('unhandledRejection', (err: Error) => {
   log('error', 'unhandledRejection', err);
 });
 
-const wss = new WS({ port: SERVER_PORT });
+const argv = yargs(hideBin(process.argv)).argv;
 
-const getConnectionId = (): string => {
-  const connId = v4();
-  if (wss.sockets[connId]) {
-    return getConnectionId();
-  }
-  return connId;
+const args = Object.keys(argv);
+
+const ARGS = {
+  port: 'Server websocket port',
+  version: 'Show installed version',
 };
 
-const rtc: RTC | null = new RTC({ ws: wss });
-wss.connection.on('connection', function connection(ws) {
-  const connId = getConnectionId();
-  ws.on('message', async function message(message) {
-    let _data = '';
-    if (typeof message !== 'string') {
-      _data = message.toString('utf8');
-    }
-    const rawMessage = wss.parseMessage(_data);
-    if (!rawMessage) {
-      return;
-    }
-    const { type, id } = rawMessage;
-    switch (type) {
-      case Types.MessageType.GET_USER_ID:
-        const { isRoom } = wss.getMessage(Types.MessageType.GET_USER_ID, rawMessage).data;
-        // TODO fixed isRoom problem
-        if (isRoom) {
-          rtc.roomCons[connId] = id;
-        }
-        wss.setSocket({ id, ws, connId, isRoom });
-        wss.sendMessage({
-          type: Types.MessageType.SET_USER_ID,
-          id,
-          data: undefined,
-          connId,
-        });
+const REQUIRED: (keyof typeof ARGS)[] = ['port'];
+
+const defKeys = Object.keys(ARGS);
+const skipedReq = [];
+
+for (let i = 0; REQUIRED[i]; i++) {
+  const rArg = REQUIRED[i];
+  if (args.indexOf(rArg) === -1) {
+    skipedReq.push(rArg);
+  }
+}
+if (skipedReq.length) {
+  log('error', 'Missing required parameter(s):', REQUIRED.join(', '), true);
+  console.log('\n');
+  process.exit(1);
+}
+
+for (let n = 0; args[n]; n++) {
+  const arg = args[n];
+  switch (arg) {
+    case 'port':
+      break;
+    case 'help':
+      log('info', ``, ARGS, true);
+      break;
+    default:
+      if (arg === '$0' || arg === '_') {
         break;
-      case Types.MessageType.GET_ROOM:
-        rtc.handleGetRoomMessage({
-          message: wss.getMessage(Types.MessageType.GET_ROOM, rawMessage),
-        });
-        break;
-      default:
-        wss.sendMessage({
-          type,
-          data: rawMessage.data,
-          id,
-        });
-    }
-  });
-  ws.onclose = () => {
-    // Get deleted userId
-    let userId: number | string = 0;
-    const keys = Object.keys(wss.users);
-    keys.forEach((item) => {
-      const _connId = wss.users[item];
-      if (wss.sockets[connId] && _connId === connId) {
-        userId = item;
       }
-    });
-    // Remove user from room
-    if (userId) {
-      const roomKeys = Object.keys(rtc.rooms);
-      roomKeys.forEach((item) => {
-        const index = rtc.rooms[item].indexOf(userId);
-        if (index !== -1 && connId === wss.users[userId]) {
-          rtc.closeVideoCall({ roomId: item, userId, target: 0, connId });
-          rtc.rooms[item].splice(index, 1);
-          // Send user list of room
-          rtc.rooms[item].forEach((_item) => {
-            rtc.closeVideoCall({ roomId: item, userId, target: _item, connId });
-            wss.sendMessage({
-              type: Types.MessageType.SET_CHANGE_ROOM_GUESTS,
-              id: _item,
-              data: {
-                roomUsers: rtc.rooms[item],
-              },
-            });
-          });
+      log('warn', 'Unknown argument:', arg);
+      for (let i = 0; defKeys[i]; i++) {
+        if (new RegExp(arg).test(defKeys[i])) {
+          log('info', 'Maybe need: ', defKeys[i], true);
+          break;
         }
-        delete wss.sockets[connId];
-        delete wss.users[userId];
-      });
-    }
-  };
-});
+      }
+      log('info', 'Try run:', '--help');
+      process.exit(1);
+  }
+}
