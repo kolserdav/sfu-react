@@ -1,7 +1,7 @@
 {
-  "name": "julia-teams",
-  "version": "1.0.8",
-  "repository": "https://github.com/kolserdav/julia-teams.git",
+  "name": "uyem",
+  "version": "1.0.9",
+  "repository": "https://github.com/kolserdav/uyem.git",
   "description": "Selective Forwarding Unit (SFU) WebRTC implementation for Node and ReactJS",
   "keywords": [
     "node",
@@ -15,7 +15,7 @@
     "email": "uyem.ru@gmail.com",
     "url": "https://portfolio.uyem.ru/en"
   },
-  "bugs": "https://github.com/kolserdav/julia-teams/issues",
+  "bugs": "https://github.com/kolserdav/uyem/issues",
   "license": "BSD-2-Clause",
   "files": [
     "packages/server/dist",
@@ -35,12 +35,12 @@
     "linux"
   ],
   "bin": {
-    "julia-teams": "bin/julia-teams.js"
+    "uyem": "bin/uyem.js"
   },
   "main": "index.js",
   "scripts": {
-    "build:server": "cd packages/server && node -e \"fs.rmSync('dist', { recursive: true, force: true })\" && npm run build",
-    "build:client": "node -e \"fs.rmSync('packages/client/dist', { recursive: true, force: true })\" && cd packages/client && npm run compile",
+    "build:server": "cd packages/server && npm run build",
+    "build:client": "cd packages/client && npm run compile",
     "build": "npm run build:server && npm run build:client",
     "copy-interfaces": "node scripts/create-interfaces-symlink.js",
     "preinstall": "npm run copy-interfaces",

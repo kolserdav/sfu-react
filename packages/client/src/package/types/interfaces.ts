@@ -87,6 +87,7 @@ export namespace DataTypes {
 }
 
 export namespace Signaling {
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   export interface SendMessageArgs<T> {
     type: T;
     id: number | string;

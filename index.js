@@ -1,7 +1,12 @@
-const { createServer } = require('./dist/server');
-const { Room } = require('./client');
+const { createServer } = require('./server');
+const { Hall, Room } = require('./client');
 
 module.exports = {
-  createServer,
-  Room,
+  server: {
+    createServer,
+  },
+  client: {
+    Room,
+    Hall,
+  },
 };

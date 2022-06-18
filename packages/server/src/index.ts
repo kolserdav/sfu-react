@@ -13,6 +13,8 @@ import { log } from './utils/lib';
 import yargs from 'yargs/yargs';
 import { hideBin } from 'yargs/helpers';
 import Server from './main';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+//@ts-ignore
 import { name, version } from '../../../package.json';
 
 log('info', `${name}@${version} started`, '...', true);
