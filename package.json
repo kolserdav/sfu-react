@@ -1,6 +1,6 @@
 {
   "name": "julia-teams",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "repository": "https://github.com/kolserdav/julia-teams.git",
   "author": {
     "name": "Sergey Kolmiller",
@@ -12,6 +12,7 @@
   "files": [
     "packages/server/dist",
     "packages/client/dist",
+    "bin",
     "scripts/create-interfaces-symlink.js",
     "THIRD_PARTY_LICENSES.md",
     "LICENSE"
@@ -20,7 +21,7 @@
     "linux"
   ],
   "bin": {
-    "julia-teams": "packages/server/dist/packages/server/src/bin/julia-teams.js"
+    "julia-teams": "bin/julia-teams.js"
   },
   "description": "Selective Forwarding Unit (SFU) WebRTC implementation for Node and ReactJS",
   "keywords": [
@@ -40,7 +41,7 @@
     "dev:install": "cd packages/server/node-webrtc && SKIP_DOWNLOAD=true npm install",
     "dev:client": "cd packages/client && npm start",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "bin": " node packages/server/dist/packages/server/src/bin/julia-teams.js"
+    "bin": "node bin/julia-teams.js"
   },
   "dependencies": {
     "@prisma/client": "^3.14.0",
@@ -76,7 +77,6 @@
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.0.0",
     "microbundle": "^0.15.0",
-    "node-pre-gyp": "^0.17.0",
     "prettier": "^2.6.2",
     "react-scripts": "5.0.1",
     "sass": "^1.52.2",

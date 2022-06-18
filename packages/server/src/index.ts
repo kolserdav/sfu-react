@@ -12,6 +12,7 @@
 import { log } from './utils/lib';
 import yargs from 'yargs/yargs';
 import { hideBin } from 'yargs/helpers';
+import Server from './main';
 import { name, version } from '../../../package.json';
 
 log('info', `${name}@${version} started`, '...', true);
@@ -23,7 +24,7 @@ process.on('unhandledRejection', (err: Error) => {
   log('error', 'unhandledRejection', err);
 });
 
-const argv = yargs(hideBin(process.argv)).argv;
+const argv: { port: string } = yargs(hideBin(process.argv)).argv as any;
 
 const args = Object.keys(argv);
 
@@ -43,16 +44,27 @@ for (let i = 0; REQUIRED[i]; i++) {
     skipedReq.push(rArg);
   }
 }
+
 if (skipedReq.length) {
-  log('error', 'Missing required parameter(s):', REQUIRED.join(', '), true);
+  log('warn', 'Missing required parameter(s):', REQUIRED.join(', '), true);
   console.log('\n');
   process.exit(1);
 }
 
+let port = 3000;
+let code = 0;
+
 for (let n = 0; args[n]; n++) {
-  const arg = args[n];
+  const arg: string = args[n];
   switch (arg) {
     case 'port':
+      port = parseInt(argv.port, 10);
+      if (Number.isNaN(port)) {
+        log('warn', 'Port is:', port, true);
+        code = 1;
+        break;
+      }
+      Server({ port });
       break;
     case 'help':
       log('info', ``, ARGS, true);
@@ -69,6 +81,9 @@ for (let n = 0; args[n]; n++) {
         }
       }
       log('info', 'Try run:', '--help');
-      process.exit(1);
+      code = 1;
   }
+}
+if (code) {
+  log('warn', 'Script end with code:', code, true);
 }

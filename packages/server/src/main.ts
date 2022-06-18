@@ -3,11 +3,13 @@ import { v4 } from 'uuid';
 import WS from './core/ws';
 import RTC from './core/rtc';
 import * as Types from './types/interfaces';
+import { log } from './utils/lib';
 
 /**
  * julia-teams server
  */
 function Server({ port }: { port: number }) {
+  log('info', 'Server listen at port: ', port);
   const getConnectionId = (): string => {
     const connId = v4();
     if (wss.sockets[connId]) {

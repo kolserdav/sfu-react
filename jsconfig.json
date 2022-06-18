@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "module": "esnext",
-    "rootDir": "./scripts"
+    "module": "esnext"
   },
-  "exclude": ["packages"]
+  "exclude": ["packages"],
+  "include": ["scripts", "packages/server"]
 }
