@@ -67,7 +67,6 @@ for (let n = 0; args[n]; n++) {
         code = 1;
         break;
       }
-      Server({ port });
       break;
     case 'help':
       log('info', ``, ARGS, true);
@@ -89,4 +88,6 @@ for (let n = 0; args[n]; n++) {
 }
 if (code) {
   log('warn', 'Script end with code:', code, true);
+} else {
+  Server({ port });
 }

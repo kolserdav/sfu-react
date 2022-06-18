@@ -1,6 +1,6 @@
 {
   "name": "uyem",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "repository": "https://github.com/kolserdav/uyem.git",
   "description": "Unit Jawing ESM Module (UYEM). Create Selective Forwarding Unit (SFU) server side of which written on Node and client on ReactJS",
   "keywords": [
@@ -47,7 +47,7 @@
     "dev:install": "cd packages/server/node-webrtc && SKIP_DOWNLOAD=true npm install",
     "dev:client": "cd packages/client && npm start",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "bin": "node bin/julia-teams.js"
+    "bin": "node bin/uyem.js"
   },
   "dependencies": {
     "clsx": "^1.1.1",
