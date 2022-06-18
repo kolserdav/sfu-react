@@ -1,5 +1,5 @@
-import Room from './packages/client/dist/package/Main';
-import Room from './packages/client/dist/package/components/Hall';
+import Hall from './packages/client/dist/package/Main';
+import Room from './packages/client/dist/package/components/Room';
 
 interface Client {
   Room: Room;

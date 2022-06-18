@@ -1,7 +1,7 @@
 import { createServer } from './packages/server/src/main';
 
-interface JuliaTeamsServer {
+interface UyemServer {
   createServer: typeof createServer;
 }
 
-export default JuliaTeamsServer;
+export default UyemServer;
