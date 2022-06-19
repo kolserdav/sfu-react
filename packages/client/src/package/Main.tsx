@@ -29,7 +29,7 @@ function Main({ id }: RoomProps) {
   useEffect(() => {
     setTheme(themes[currentTheme]);
   }, [currentTheme]);
-  console.log(theme);
+
   return (
     <ThemeContext.Provider value={theme}>
       <Room id={id} />
@@ -39,7 +39,7 @@ function Main({ id }: RoomProps) {
         tabIndex={0}
         onClick={changeTheme}
       >
-        <SettingsIcon className={s.button__icon} color={theme.colors.shadow} width={20} />
+        <SettingsIcon className={s.button__icon} color={theme.colors.shadow} />
       </div>
     </ThemeContext.Provider>
   );

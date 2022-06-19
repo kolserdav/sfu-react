@@ -73,11 +73,7 @@ function createServer({ port = PORT }: { port?: number }) {
           });
           break;
         default:
-          wss.sendMessage({
-            type,
-            data: rawMessage.data,
-            id,
-          });
+          wss.sendMessage(rawMessage);
       }
     });
     ws.onclose = () => {
@@ -96,7 +92,13 @@ function createServer({ port = PORT }: { port?: number }) {
         roomKeys.forEach((item) => {
           const index = rtc.rooms[item].indexOf(userId);
           if (index !== -1 && connId === wss.users[userId]) {
-            rtc.closeVideoCall({ roomId: item, userId, target: 0, connId });
+            const peerKeys = Object.keys(rtc.peerConnections);
+            peerKeys.forEach((_item) => {
+              const peer = _item.split(rtc.delimiter);
+              if (userId.toString() === peer[1] && peer[3] !== connId) {
+                rtc.closeVideoCall({ roomId: item, userId, target: 0, connId: peer[3] });
+              }
+            });
             rtc.rooms[item].splice(index, 1);
             // Send user list of room
             rtc.rooms[item].forEach((_item) => {
@@ -107,6 +109,7 @@ function createServer({ port = PORT }: { port?: number }) {
                 data: {
                   roomUsers: rtc.rooms[item],
                 },
+                connId,
               });
             });
           }

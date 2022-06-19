@@ -21,6 +21,7 @@ type Colors = {
 type Theme = {
   wrapper: string;
   button: string;
+  link: string;
   colors: Colors['light' | 'dark'];
 };
 
@@ -41,11 +42,13 @@ export const themes: Themes = {
   dark: {
     wrapper: clsx(s.wrapper, s.dark),
     button: clsx(s.button, s.dark),
+    link: clsx(s.link, s.dark),
     colors: colors.light,
   },
   light: {
     wrapper: clsx(s.wrapper, s.light),
     button: clsx(s.button, s.light),
+    link: clsx(s.link, s.light),
     colors: colors.dark,
   },
 };
