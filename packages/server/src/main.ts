@@ -76,6 +76,7 @@ function createServer({ port = PORT }: { port?: number }) {
           wss.sendMessage(rawMessage);
       }
     });
+
     ws.onclose = () => {
       // Get deleted userId
       let userId: number | string = 0;
@@ -91,18 +92,18 @@ function createServer({ port = PORT }: { port?: number }) {
         const roomKeys = Object.keys(rtc.rooms);
         roomKeys.forEach((item) => {
           const index = rtc.rooms[item].indexOf(userId);
-          if (index !== -1 && connId === wss.users[userId]) {
-            const peerKeys = Object.keys(rtc.peerConnections);
-            peerKeys.forEach((_item) => {
-              const peer = _item.split(rtc.delimiter);
-              if (userId.toString() === peer[1] && peer[3] !== connId) {
-                rtc.closeVideoCall({ roomId: item, userId, target: 0, connId: peer[3] });
-              }
-            });
+          if (index !== -1) {
+            rtc.cleanConnections(item, userId.toString());
             rtc.rooms[item].splice(index, 1);
             // Send user list of room
             rtc.rooms[item].forEach((_item) => {
-              rtc.closeVideoCall({ roomId: item, userId, target: _item, connId });
+              log('info', 'Needed delete user', {
+                _item,
+                d: Object.keys(rtc.peerConnections),
+                connId,
+                userId,
+                c: wss.users[userId],
+              });
               wss.sendMessage({
                 type: Types.MessageType.SET_CHANGE_ROOM_GUESTS,
                 id: _item,

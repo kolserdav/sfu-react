@@ -62,13 +62,19 @@ class RTC implements RTCInterface {
       event: RTCPeerConnectionIceEvent
     ) {
       if (event.candidate) {
-        log('log', '* Outgoing ICE candidate:', { roomId, userId, target });
+        log('info', '* Outgoing ICE candidate:', {
+          roomId,
+          userId,
+          target,
+          connId,
+          d: Object.keys(core.peerConnections),
+        });
         core.ws.sendMessage({
           type: MessageType.CANDIDATE,
           id: roomId,
           data: {
             candidate: event.candidate,
-            userId: core.ws.userId,
+            userId,
             target,
           },
           connId,
@@ -342,7 +348,7 @@ class RTC implements RTCInterface {
   // eslint-disable-next-line class-methods-use-this
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, target, connId }) => {
     const peerId = this.getPeerId(roomId, target, connId);
-    log('info', '| Closing the call', { peerId });
+    log('info', '| Closing the call', { peerId, k: Object.keys(this.peerConnections) });
     this.peerConnections[peerId].onicecandidate = null;
     this.peerConnections[peerId].oniceconnectionstatechange = null;
     this.peerConnections[peerId].onicegatheringstatechange = null;

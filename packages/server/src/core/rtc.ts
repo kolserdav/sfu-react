@@ -83,7 +83,7 @@ class RTC implements RTCInterface {
     };
     const { ws, rooms, delimiter } = this;
     this.peerConnections[peerId].oniceconnectionstatechange =
-      function handleICEConnectionStateChangeEvent(event: Event) {
+      function handleICEConnectionStateChangeEvent() {
         log(
           'log',
           `* ICE connection state changed to: ${core.peerConnections[peerId]?.iceConnectionState}`,
@@ -174,10 +174,28 @@ class RTC implements RTCInterface {
       connId,
       data: { candidate, userId, target },
     } = msg;
-    const peerId = this.getPeerId(id, userId, target, connId);
+    let _connId = connId;
+    if (target === 0) {
+      const peerKeys = Object.keys(this.peerConnections);
+      peerKeys.forEach((item) => {
+        const peer = item.split(this.delimiter);
+        if (peer[1] === userId.toString() && peer[2] === '0') {
+          _connId = peer[3];
+        }
+      });
+    }
+    const peerId = this.getPeerId(id, userId, target, _connId);
     const cand = new wrtc.RTCIceCandidate(candidate);
 
-    log('warn', 'Trying to add ice candidate', { peerId });
+    log('info', 'Trying to add ice candidate', {
+      peerId,
+      d: Object.keys(this.peerConnections).length,
+      connId,
+      id,
+      userId,
+      target,
+      _connId,
+    });
     this.peerConnections[peerId]
       .addIceCandidate(cand)
       .then(() => {
@@ -383,7 +401,7 @@ class RTC implements RTCInterface {
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, userId, target, connId }) => {
     const peerId = this.getPeerId(roomId, userId, target, connId);
     delete this.streams[peerId];
-    log('info', '| Closing the call', { peerId });
+    log('info', '| Closing the call', { peerId, k: Object.keys(this.peerConnections).length });
     this.peerConnections[peerId].onicecandidate = null;
     this.peerConnections[peerId].oniceconnectionstatechange = null;
     this.peerConnections[peerId].onicegatheringstatechange = null;
@@ -393,9 +411,32 @@ class RTC implements RTCInterface {
     this.peerConnections[peerId].close();
     delete this.peerConnections[peerId];
   };
+
   public onClosedCall: RTCInterface['onClosedCall'] = (args) => {
     log('log', 'Call is closed', { ...args });
   };
+
+  public cleanConnections(roomId: string, userId: string) {
+    const peerKeys = Object.keys(this.peerConnections);
+    peerKeys.forEach((__item) => {
+      const peer = __item.split(this.delimiter);
+      if (peer[1] === userId.toString()) {
+        this.closeVideoCall({
+          roomId,
+          userId,
+          target: peer[2],
+          connId: peer[3],
+        });
+      } else if (peer[2] === userId.toString()) {
+        this.closeVideoCall({
+          roomId,
+          userId: peer[1],
+          target: userId,
+          connId: peer[3],
+        });
+      }
+    });
+  }
 }
 
 export default RTC;

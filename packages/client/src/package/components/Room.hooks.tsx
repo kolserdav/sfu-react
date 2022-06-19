@@ -102,7 +102,10 @@ export const useConnection = ({
           roomUsers.forEach((item) => {
             if (item !== id) {
               const peerId = rtc.getPeerId(roomId, item, connId);
-              if (!rtc.peerConnections[peerId]) {
+              const _isExists = Object.keys(rtc.peerConnections).filter(
+                (_item) => item === _item.split(rtc.delimiter)[1]
+              );
+              if (!_isExists[0]) {
                 rtc.createRTC({ roomId, target: item, userId: id, connId });
                 const _streams = streams.map((_item) => _item);
                 rtc.onAddTrack = (addedUserId, stream) => {
@@ -126,11 +129,18 @@ export const useConnection = ({
                   }
                 };
                 rtc.invite({ roomId, userId: id, target: item, connId });
-              } else if (rtc.peerConnections[peerId].connectionState !== 'connected') {
-                log('warn', 'Unclosed connection', {
-                  peerId,
-                  d: rtc.peerConnections[peerId].connectionState,
-                });
+              } else if (rtc.peerConnections[peerId]) {
+                const { connectionState } = rtc.peerConnections[peerId];
+                switch (connectionState) {
+                  case 'closed':
+                  case 'failed':
+                  case 'disconnected':
+                    log('warn', 'Unclosed connection', {
+                      peerId,
+                      d: rtc.peerConnections[peerId].connectionState,
+                    });
+                    break;
+                }
               }
             }
           });
@@ -140,7 +150,7 @@ export const useConnection = ({
             if (!isExists[0]) {
               Object.keys(rtc.peerConnections).forEach((__item) => {
                 const peer = __item.split(rtc.delimiter);
-                if (peer[1] === item.targetId && peer[2] !== connId) {
+                if (peer[1] === item.targetId) {
                   rtc.closeVideoCall({
                     roomId,
                     userId: id,
