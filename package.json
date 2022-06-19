@@ -2,7 +2,7 @@
   "name": "uyem",
   "version": "1.0.12",
   "repository": "https://github.com/kolserdav/uyem.git",
-  "description": "Unit Yawing ESM Module (UYEM). Create Selective Forwarding Unit (SFU) server side of which written on Node and client on ReactJS",
+  "description": "Selective Forwarding Unit (SFU) server side of which written on Node and client side on ReactJS",
   "keywords": [
     "node",
     "react",
