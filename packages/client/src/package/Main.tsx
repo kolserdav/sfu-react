@@ -19,8 +19,8 @@ import s from './Main.module.scss';
 
 // TODO theme provider
 function Main({ id }: RoomProps) {
-  const [currentTheme, setCurrentTheme] = useState<keyof Themes>('dark');
-  const [theme, setTheme] = useState<Themes['dark' | 'light']>(themes.dark);
+  const [currentTheme, setCurrentTheme] = useState<keyof Themes>('light');
+  const [theme, setTheme] = useState<Themes['dark' | 'light']>(themes.light);
 
   const changeTheme = () => {
     setCurrentTheme(currentTheme === 'dark' ? 'light' : 'dark');

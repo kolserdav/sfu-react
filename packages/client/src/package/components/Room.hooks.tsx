@@ -122,7 +122,6 @@ export const useConnection = ({
                         }
                       },
                     });
-                    // Why without set timeout component unmounted while come third user?
                     setTimeout(() => {
                       setStreams(_streams);
                     }, START_TIMEOUT);
@@ -145,12 +144,21 @@ export const useConnection = ({
             }
           });
           // Remove disconnected
-          const _streams = streams.filter((item) => {
+          streams.forEach((item) => {
             const isExists = roomUsers.filter((_item) => _item === item.targetId);
             if (!isExists[0]) {
               Object.keys(rtc.peerConnections).forEach((__item) => {
                 const peer = __item.split(rtc.delimiter);
                 if (peer[1] === item.targetId) {
+                  streams.forEach((i, index) => {
+                    if (i.targetId === item.targetId) {
+                      const _streams = streams.map((u) => u);
+                      _streams.splice(index, 1);
+                      setTimeout(() => {
+                        setStreams(_streams);
+                      }, START_TIMEOUT / 3);
+                    }
+                  });
                   rtc.closeVideoCall({
                     roomId,
                     userId: id,
@@ -162,9 +170,6 @@ export const useConnection = ({
             }
             return isExists[0] !== undefined;
           });
-          if (streams.length !== _streams.length) {
-            setStreams(_streams);
-          }
           break;
         case MessageType.ANSWER:
           rtc.handleVideoAnswerMsg(rawMessage);

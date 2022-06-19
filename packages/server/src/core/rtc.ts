@@ -196,7 +196,7 @@ class RTC implements RTCInterface {
       target,
       _connId,
     });
-    if (!this.peerConnections[peerId] || this.peerConnections[peerId]?.connectionState === 'new') {
+    if (!this.peerConnections[peerId]) {
       return;
     }
     this.peerConnections[peerId]
@@ -208,13 +208,22 @@ class RTC implements RTCInterface {
         }
       })
       .catch((e) => {
-        log('error', 'Set candidate error', {
+        log('warn', 'Set candidate error', {
           error: e.message,
           connId,
           id,
           userId,
           target,
           state: this.peerConnections[peerId].connectionState,
+          ice: this.peerConnections[peerId].iceConnectionState,
+        });
+        this.ws.sendMessage({
+          type: MessageType.SET_ERROR,
+          id: userId,
+          connId,
+          data: {
+            message: 'Set candidate error',
+          },
         });
         if (cb) {
           cb(null);
@@ -236,7 +245,6 @@ class RTC implements RTCInterface {
       connId,
       data: { sdp, userId, target },
     } = msg;
-
     if (!sdp) {
       log('warn', 'Message offer error because sdp is:', sdp);
       if (cb) {
