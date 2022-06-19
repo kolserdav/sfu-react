@@ -29,6 +29,9 @@ class RTC implements RTCInterface {
   }
 
   public createRTC: RTCInterface['createRTC'] = ({ connId, roomId, target }) => {
+    if (!connId) {
+      log('warn', 'Connection id is: ', { connId });
+    }
     this.peerConnections[this.getPeerId(roomId, target, connId)] = new RTCPeerConnection({
       iceServers:
         process.env.NODE_ENV === 'production'
@@ -68,6 +71,7 @@ class RTC implements RTCInterface {
             userId: core.ws.userId,
             target,
           },
+          connId,
         });
       }
     };
@@ -137,6 +141,7 @@ class RTC implements RTCInterface {
                 userId,
                 target,
               },
+              connId,
             });
           }
         });
@@ -209,7 +214,7 @@ class RTC implements RTCInterface {
       connId,
       data: { candidate, target, userId },
     } = msg;
-    const peerId = this.getPeerId(id, target, connId || '');
+    const peerId = this.getPeerId(id, target, connId);
     const cand = new RTCIceCandidate(candidate);
     log('info', 'Trying to add ice candidate', { peerId });
     this.peerConnections[peerId]
@@ -242,7 +247,7 @@ class RTC implements RTCInterface {
       connId,
       data: { sdp, userId, target },
     } = msg;
-    const peerId = this.getPeerId(id, target, connId || '');
+    const peerId = this.getPeerId(id, target, connId);
     if (!sdp) {
       log('warn', 'Message offer error because sdp is:', sdp);
       if (cb) {
@@ -255,7 +260,7 @@ class RTC implements RTCInterface {
       roomId: id,
       userId,
       target,
-      connId: connId || '',
+      connId,
     });
     const desc = new RTCSessionDescription(sdp);
     this.peerConnections[peerId]
@@ -291,6 +296,7 @@ class RTC implements RTCInterface {
                     userId: this.ws.userId,
                     target,
                   },
+                  connId,
                 });
                 if (cb) {
                   cb(localDescription);
@@ -315,8 +321,8 @@ class RTC implements RTCInterface {
       connId,
       data: { sdp, userId, target },
     } = msg;
-    const peerId = this.getPeerId(userId, target, connId || '');
-    log('info', '----> Call recipient has accepted our call', { id, userId, target });
+    const peerId = this.getPeerId(userId, target, connId);
+    log('info', '----> Call recipient has accepted our call', { id, userId, target, peerId });
     const desc = new RTCSessionDescription(sdp);
     this.peerConnections[peerId]
       .setRemoteDescription(desc)

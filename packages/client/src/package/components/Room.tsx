@@ -44,7 +44,7 @@ function Room({ id }: RoomProps) {
       <div className={s.actions}>
         <div>{id}</div>
         {roomLink && (
-          <a className={s.room__link} href={roomLink}>
+          <a className={clsx(theme.link, s.room__link)} href={roomLink}>
             {roomLink}
           </a>
         )}

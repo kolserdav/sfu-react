@@ -92,7 +92,7 @@ export namespace Signaling {
     type: T;
     id: number | string;
     data: DataTypes.ArgsSubset<T>;
-    connId?: DataTypes.MessageTypes.ConnectionId<string>;
+    connId: DataTypes.MessageTypes.ConnectionId<string>;
   }
   export abstract class WSInterface {
     public abstract connection: any;

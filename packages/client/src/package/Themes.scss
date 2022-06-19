@@ -4,7 +4,7 @@ $color-dark-shadow: #beb2c8;
 $color-light-paper: #fff;
 $color-light-text: #5d5e60;
 $color-light-shadow: #8d8d92;
-$button-width: 40px;
+$color-black: #000;
 
 .wrapper {
   &.dark {
@@ -28,27 +28,14 @@ $button-width: 40px;
     background-color: $color-light-shadow;
     color: $color-dark-text;
   }
-
-  cursor: pointer;
-  border-radius: 50%;
-  width: $button-width;
-  height: $button-width;
-  font-size: x-small;
-  position: fixed;
-  right: $button-width;
-  bottom: $button-width;
-  margin: auto;
-  border: none;
 }
 
-.button__container {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
+.link {
+  &.dark {
+    color: $color-light-paper;
+  }
 
-.button__icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  &.light {
+    color: $color-black;
+  }
 }
