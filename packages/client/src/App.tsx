@@ -15,7 +15,7 @@ import './App.scss';
 
 const createRoom = () => {
   // Do not use the symbol "_" in room address
-  window.location.href = 'room-address?d=1';
+  window.location.href = `room-address-${new Date().getTime()}?d=1`;
 };
 
 function App() {

@@ -196,6 +196,9 @@ class RTC implements RTCInterface {
       target,
       _connId,
     });
+    if (!this.peerConnections[peerId] || this.peerConnections[peerId]?.connectionState === 'new') {
+      return;
+    }
     this.peerConnections[peerId]
       .addIceCandidate(cand)
       .then(() => {
@@ -206,8 +209,12 @@ class RTC implements RTCInterface {
       })
       .catch((e) => {
         log('error', 'Set candidate error', {
-          error: e,
-          cand,
+          error: e.message,
+          connId,
+          id,
+          userId,
+          target,
+          state: this.peerConnections[peerId].connectionState,
         });
         if (cb) {
           cb(null);
