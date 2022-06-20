@@ -256,11 +256,11 @@ export const useVideoDimensions = ({
             });
             const coeff = videoWidth / videoHeight;
             if (videoHeight < videoWidth) {
-              target.setAttribute('width', width.toString());
-              target.setAttribute('height', (width / coeff).toString());
-            } else {
               target.setAttribute('width', (width * coeff).toString());
               target.setAttribute('height', width.toString());
+            } else {
+              target.setAttribute('width', width.toString());
+              target.setAttribute('height', (width * coeff).toString());
             }
             target.parentElement?.parentElement?.setAttribute(
               'style',

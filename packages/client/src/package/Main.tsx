@@ -26,6 +26,10 @@ function Main({ id }: RoomProps) {
     setCurrentTheme(currentTheme === 'dark' ? 'light' : 'dark');
   };
 
+  const openMenu = () => {
+    /** */
+  };
+
   useEffect(() => {
     setTheme(themes[currentTheme]);
   }, [currentTheme]);
@@ -33,12 +37,7 @@ function Main({ id }: RoomProps) {
   return (
     <ThemeContext.Provider value={theme}>
       <Room id={id} />
-      <div
-        className={clsx(theme.button, s.button)}
-        role="button"
-        tabIndex={0}
-        onClick={changeTheme}
-      >
+      <div className={clsx(theme.button, s.button)} role="button" tabIndex={0} onClick={openMenu}>
         <ChevronLeftIcon className={s.button__icon} color={theme.colors.shadow} />
       </div>
     </ThemeContext.Provider>
