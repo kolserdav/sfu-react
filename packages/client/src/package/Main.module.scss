@@ -3,14 +3,15 @@
 $button-width: 40px;
 
 .button {
+  z-index: 100;
   cursor: pointer;
-  border-radius: 50%;
+  border-radius: 25%;
   width: $button-width;
   height: $button-width;
   font-size: x-small;
   position: fixed;
-  right: $button-width;
-  bottom: $button-width;
+  right: calc(#{$button-width} / 2 * -1);
+  bottom: calc(#{$button-width} / 2);
   margin: auto;
   border: none;
 }
@@ -21,5 +22,5 @@ $button-width: 40px;
   height: 100%;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
 }

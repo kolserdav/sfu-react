@@ -13,9 +13,10 @@ import clsx from 'clsx';
 import { getTarget } from '../utils/lib';
 import s from './Room.module.scss';
 import { RoomProps } from '../types/index';
-import { useConnection, useVideoDimensions } from './Room.hooks';
+import { useConnection, useVideoDimensions, useOnclickClose, usePressEscape } from './Room.hooks';
 import { ThemeContext } from '../Main.context';
 import { getRoomLink, getPathname, onClickVideo } from './Room.lib';
+import CloseButton from './ui/CloseButton';
 
 function Room({ id }: RoomProps) {
   const pathname = getPathname();
@@ -28,16 +29,17 @@ function Room({ id }: RoomProps) {
     container: container.current,
     lenght,
   });
+  const onClickClose = useOnclickClose({ container: container.current, lenght });
+  const onPressEscape = usePressEscape();
 
   return (
     <div className={clsx(theme.wrapper, s.wrapper)}>
       <div className={s.container} ref={container}>
-        {streams.map((item) => (
+        {streams.map((item, index) => (
           <div key={item.targetId} className={s.video}>
+            <CloseButton onClick={onClickClose} onKeyDown={onPressEscape} tabindex={index} />
             <video
               muted={item.targetId === id}
-              width={200}
-              height={200}
               onTimeUpdate={(e) => {
                 setVideoDimensions(e, item.stream);
               }}

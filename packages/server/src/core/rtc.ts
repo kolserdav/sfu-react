@@ -210,6 +210,9 @@ class RTC implements RTCInterface {
       log('info', 'Skiping add ice candidate', { id, target, userId, _connId });
       return;
     }
+    if (cand.candidate === '') {
+      return;
+    }
     this.peerConnections[peerId]
       .addIceCandidate(cand)
       .then(() => {
@@ -219,7 +222,7 @@ class RTC implements RTCInterface {
         }
       })
       .catch((e) => {
-        log('info', 'Set candidate error', {
+        log('warn', 'Set candidate error', {
           error: e.message,
           connId,
           id,

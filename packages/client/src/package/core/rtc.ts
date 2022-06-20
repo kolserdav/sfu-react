@@ -229,6 +229,9 @@ class RTC implements RTCInterface {
     } = msg;
     const peerId = this.getPeerId(id, target, connId);
     const cand = new RTCIceCandidate(candidate);
+    if (cand.candidate === '') {
+      return;
+    }
     log('info', 'Trying to add ice candidate', { peerId });
     this.peerConnections[peerId]
       .addIceCandidate(cand)

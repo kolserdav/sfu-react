@@ -267,6 +267,7 @@ export const useVideoDimensions = ({
               `grid-template-columns: repeat(${cols}, auto);
               grid-template-rows: repeat(${rows}, auto);`
             );
+            // Change track constraints
             stream.getVideoTracks().forEach((item) => {
               const oldWidth = item.getConstraints().width;
               if (oldWidth !== width) {
@@ -317,3 +318,7 @@ export const useOnclickClose =
       video.setAttribute('height', height.toString());
     }
   };
+
+export const usePressEscape = () => (e: React.KeyboardEvent<HTMLDivElement>) => {
+  /** TODO */
+};

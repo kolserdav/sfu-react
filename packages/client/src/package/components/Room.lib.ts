@@ -75,7 +75,7 @@ export const getWidthOfItem = ({
   };
 };
 
-export const onClickVideo = () => (e: React.MouseEvent<HTMLVideoElement, MouseEvent>) => {
+export const onClickVideo = (e: React.MouseEvent<HTMLVideoElement, MouseEvent>) => {
   const { target }: { target: HTMLVideoElement } = e as any;
   const { videoWidth, videoHeight } = target;
   const { outerWidth } = window;

@@ -14,7 +14,7 @@ import clsx from 'clsx';
 import Room from './components/Room';
 import { RoomProps } from './types';
 import { ThemeContext, themes, Themes } from './Main.context';
-import SettingsIcon from './Icons/Settings';
+import ChevronLeftIcon from './Icons/ChevronLeft';
 import s from './Main.module.scss';
 
 // TODO theme provider
@@ -39,7 +39,7 @@ function Main({ id }: RoomProps) {
         tabIndex={0}
         onClick={changeTheme}
       >
-        <SettingsIcon className={s.button__icon} color={theme.colors.shadow} />
+        <ChevronLeftIcon className={s.button__icon} color={theme.colors.shadow} />
       </div>
     </ThemeContext.Provider>
   );
