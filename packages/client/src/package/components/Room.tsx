@@ -37,6 +37,15 @@ function Room({ id }: RoomProps) {
               id={item.stream.id.toString()}
               title={item.targetId.toString()}
               autoPlay
+              onLoadedMetadata={(e) => {
+                item.stream.getVideoTracks().forEach((_item) => {
+                  console.log(1, _item.getSettings());
+                  _item.applyConstraints({ advanced: [{ width: 10, height: 10 }] }).then(() => {
+                    const { videoWidth }: any = e.target;
+                    console.log(2, _item.getSettings());
+                  });
+                });
+              }}
             />
           </div>
         ))}
