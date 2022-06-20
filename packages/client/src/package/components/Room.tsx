@@ -23,7 +23,6 @@ function Room({ id }: RoomProps) {
   const roomLink = useMemo(() => getRoomLink(roomId), [roomId]);
   const { streams } = useConnection({ id, roomId });
   const theme = useContext(ThemeContext);
-
   return (
     <div className={clsx(theme.wrapper, s.wrapper)}>
       <div className={s.container}>
@@ -34,7 +33,7 @@ function Room({ id }: RoomProps) {
               width={300}
               height={200}
               ref={item.ref}
-              id={item.targetId.toString()}
+              id={item.stream.id.toString()}
               title={item.targetId.toString()}
               autoPlay
             />

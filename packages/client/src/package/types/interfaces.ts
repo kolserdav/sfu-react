@@ -46,6 +46,7 @@ export namespace DataTypes {
     export type SetRoom = undefined;
     export type SetError = {
       message: string;
+      context: any;
     };
     export type Offer = {
       sdp: RTCSessionDescriptionInit;

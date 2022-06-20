@@ -121,20 +121,19 @@ class RTC implements RTCInterface {
           { peerId }
         );
       };
-    this.peerConnections[peerId].onsignalingstatechange = function handleSignalingStateChangeEvent(
-      ev: Event
-    ) {
-      log(
-        'info',
-        '! WebRTC signaling state changed to:',
-        core.peerConnections[peerId].signalingState
-      );
-      switch (core.peerConnections[peerId].signalingState) {
-        case 'closed':
-          core.onClosedCall({ roomId, userId, target, connId });
-          break;
-      }
-    };
+    this.peerConnections[peerId].onsignalingstatechange =
+      function handleSignalingStateChangeEvent() {
+        log(
+          'info',
+          '! WebRTC signaling state changed to:',
+          core.peerConnections[peerId].signalingState
+        );
+        switch (core.peerConnections[peerId].signalingState) {
+          case 'closed':
+            core.onClosedCall({ roomId, userId, target, connId });
+            break;
+        }
+      };
     this.peerConnections[peerId].onnegotiationneeded = function handleNegotiationNeededEvent() {
       log('info', '--> Creating offer', { roomId, userId, target });
       core.peerConnections[peerId]
@@ -184,7 +183,7 @@ class RTC implements RTCInterface {
         }
       });
     }
-    const peerId = this.getPeerId(id, userId, target, _connId);
+    let peerId = this.getPeerId(id, userId, target, _connId);
     const cand = new wrtc.RTCIceCandidate(candidate);
 
     log('info', 'Trying to add ice candidate', {
@@ -197,6 +196,10 @@ class RTC implements RTCInterface {
       _connId,
     });
     if (!this.peerConnections[peerId]) {
+      peerId = this.getPeerId(id, target, userId, _connId);
+    }
+    if (!this.peerConnections[peerId]) {
+      log('warn', 'Skiping add ice candidate', { id, target, userId, _connId });
       return;
     }
     this.peerConnections[peerId]
@@ -208,14 +211,14 @@ class RTC implements RTCInterface {
         }
       })
       .catch((e) => {
-        log('warn', 'Set candidate error', {
+        log('log', 'Set candidate error', {
           error: e.message,
           connId,
           id,
           userId,
           target,
-          state: this.peerConnections[peerId].connectionState,
-          ice: this.peerConnections[peerId].iceConnectionState,
+          state: this.peerConnections[peerId]?.connectionState,
+          ice: this.peerConnections[peerId]?.iceConnectionState,
         });
         this.ws.sendMessage({
           type: MessageType.SET_ERROR,
@@ -223,6 +226,7 @@ class RTC implements RTCInterface {
           connId,
           data: {
             message: 'Set candidate error',
+            context: { peerId, userId, target },
           },
         });
         if (cb) {
@@ -275,8 +279,26 @@ class RTC implements RTCInterface {
         log('info', '-> Local video stream obtained', { peerId });
         // If a user creates a new connection with a room to get another user's stream
         if (target) {
-          this.streams[peerId].getTracks().forEach((track) => {
-            this.peerConnections[peerId].addTrack(track, this.streams[peerId]);
+          let _connId = connId;
+          Object.keys(this.streams).forEach((element) => {
+            const str = element.split(this.delimiter);
+            if (str[1] === target.toString() && str[2] === '0') {
+              _connId = str[3];
+            }
+          });
+          const _peerId = this.getPeerId(id, target, 0, _connId);
+          const stream = this.streams[_peerId];
+          if (!stream) {
+            log('warn', 'Skiping add track', {
+              roomId: id,
+              userId,
+              target,
+              connId,
+            });
+            return;
+          }
+          stream.getTracks().forEach((track) => {
+            this.peerConnections[peerId].addTrack(track, stream);
           });
         }
       })

@@ -14,7 +14,7 @@ import WS from '../core/ws';
 import RTC from '../core/rtc';
 import { log } from '../utils/lib';
 import { START_TIMEOUT } from '../utils/constants';
-import { MessageType } from '../types/interfaces';
+import { MessageType, SendMessageArgs } from '../types/interfaces';
 import { Streams } from '../types';
 
 // eslint-disable-next-line import/prefer-default-export
@@ -33,6 +33,92 @@ export const useConnection = ({
   if (!ws.userId) {
     ws.setUserId(id);
   }
+
+  const changeRoomGuestsHandler = ({ rawMessage }: { rawMessage: SendMessageArgs<any> }) => {
+    if (!roomId) {
+      return;
+    }
+    const {
+      data: { roomUsers },
+      connId,
+    } = ws.getMessage(MessageType.SET_CHANGE_ROOM_GUESTS, rawMessage);
+    const _streams = streams.map((_item) => _item);
+    log('warn', 'onChangeRoomGuests', { roomUsers, id, st: _streams.map((i) => i.targetId) });
+    // Add remote streams
+    roomUsers.forEach((item) => {
+      if (item !== id) {
+        const peerId = rtc.getPeerId(roomId, item, connId);
+        const _isExists = _streams.filter((_item) => item === _item.targetId);
+        if (!_isExists[0]) {
+          log('warn', 'Check new user', { item });
+          rtc.createRTC({ roomId, target: item, userId: id, connId });
+          rtc.onAddTrack = (addedUserId, stream) => {
+            const isExists = _streams.filter((_item) => _item.targetId === addedUserId);
+            if (!isExists[0]) {
+              _streams.push({
+                targetId: addedUserId,
+                stream,
+                ref: (node) => {
+                  if (node) {
+                    // eslint-disable-next-line no-param-reassign
+                    node.srcObject = stream;
+                  }
+                },
+              });
+              setTimeout(() => {
+                log('info', 'Set streams', { _streams });
+                setStreams(_streams);
+              }, START_TIMEOUT / 3);
+            }
+          };
+          rtc.invite({ roomId, userId: id, target: item, connId });
+        } else if (rtc.peerConnections[peerId]) {
+          const { connectionState } = rtc.peerConnections[peerId];
+          switch (connectionState) {
+            case 'closed':
+            case 'failed':
+            case 'disconnected':
+              log('warn', 'Unclosed connection', {
+                peerId,
+                d: rtc.peerConnections[peerId].connectionState,
+              });
+              break;
+          }
+        } else {
+          log('error', 'Wrong connection', {
+            item,
+            d: rtc.peerConnections[peerId]?.connectionState,
+          });
+        }
+      }
+    });
+    // Remove disconnected
+    streams.forEach((item) => {
+      const isExists = roomUsers.filter((_item) => _item === item.targetId);
+      if (!isExists[0]) {
+        Object.keys(rtc.peerConnections).forEach((__item) => {
+          const peer = __item.split(rtc.delimiter);
+          if (peer[1] === item.targetId) {
+            streams.forEach((i, index) => {
+              if (i.targetId === item.targetId) {
+                _streams.splice(index, 1);
+                setTimeout(() => {
+                  setStreams(_streams);
+                }, START_TIMEOUT / 3);
+              }
+            });
+            rtc.closeVideoCall({
+              roomId,
+              userId: id,
+              target: item.targetId,
+              connId: peer[2],
+            });
+          }
+        });
+      }
+      return isExists[0] !== undefined;
+    });
+  };
 
   useEffect(() => {
     if (!roomId) {
@@ -94,82 +180,7 @@ export const useConnection = ({
           rtc.handleCandidateMessage(rawMessage);
           break;
         case MessageType.SET_CHANGE_ROOM_GUESTS:
-          const {
-            data: { roomUsers },
-          } = ws.getMessage(MessageType.SET_CHANGE_ROOM_GUESTS, rawMessage);
-          log('log', 'onChangeRoomGuests', { roomUsers, id });
-          // Add remote streams
-          roomUsers.forEach((item) => {
-            if (item !== id) {
-              const peerId = rtc.getPeerId(roomId, item, connId);
-              const _isExists = Object.keys(rtc.peerConnections).filter(
-                (_item) => item === _item.split(rtc.delimiter)[1]
-              );
-              if (!_isExists[0]) {
-                rtc.createRTC({ roomId, target: item, userId: id, connId });
-                const _streams = streams.map((_item) => _item);
-                rtc.onAddTrack = (addedUserId, stream) => {
-                  const isExists = _streams.filter((_item) => _item.targetId === addedUserId);
-                  if (!isExists[0]) {
-                    log('info', '-> Added stream of new user to room', { addedUserId, item, id });
-                    _streams.push({
-                      targetId: addedUserId,
-                      stream,
-                      ref: (node) => {
-                        if (node) {
-                          // eslint-disable-next-line no-param-reassign
-                          node.srcObject = stream;
-                        }
-                      },
-                    });
-                    setTimeout(() => {
-                      setStreams(_streams);
-                    }, START_TIMEOUT);
-                  }
-                };
-                rtc.invite({ roomId, userId: id, target: item, connId });
-              } else if (rtc.peerConnections[peerId]) {
-                const { connectionState } = rtc.peerConnections[peerId];
-                switch (connectionState) {
-                  case 'closed':
-                  case 'failed':
-                  case 'disconnected':
-                    log('warn', 'Unclosed connection', {
-                      peerId,
-                      d: rtc.peerConnections[peerId].connectionState,
-                    });
-                    break;
-                }
-              }
-            }
-          });
-          // Remove disconnected
-          streams.forEach((item) => {
-            const isExists = roomUsers.filter((_item) => _item === item.targetId);
-            if (!isExists[0]) {
-              Object.keys(rtc.peerConnections).forEach((__item) => {
-                const peer = __item.split(rtc.delimiter);
-                if (peer[1] === item.targetId) {
-                  streams.forEach((i, index) => {
-                    if (i.targetId === item.targetId) {
-                      const _streams = streams.map((u) => u);
-                      _streams.splice(index, 1);
-                      setTimeout(() => {
-                        setStreams(_streams);
-                      }, START_TIMEOUT / 3);
-                    }
-                  });
-                  rtc.closeVideoCall({
-                    roomId,
-                    userId: id,
-                    target: item.targetId,
-                    connId: peer[2],
-                  });
-                }
-              });
-            }
-            return isExists[0] !== undefined;
-          });
+          changeRoomGuestsHandler({ rawMessage });
           break;
         case MessageType.ANSWER:
           rtc.handleVideoAnswerMsg(rawMessage);

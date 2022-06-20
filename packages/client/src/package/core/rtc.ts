@@ -327,16 +327,14 @@ class RTC implements RTCInterface {
       connId,
       data: { sdp, userId, target },
     } = msg;
-    const peerId = this.getPeerId(userId, target, connId);
+    let peerId = this.getPeerId(userId, target, connId);
     log('info', '----> Call recipient has accepted our call', { id, userId, target, peerId });
     const desc = new RTCSessionDescription(sdp);
     if (!this.peerConnections[peerId]) {
-      log('warn', 'Set remote descriptions skiping', {
-        roomId: id,
-        userId,
-        target,
-        connId,
-      });
+      peerId = this.getPeerId(id, target, connId);
+    }
+    if (!this.peerConnections[peerId]) {
+      log('warn', 'Set remote description skiping', { id, userId, target, peerId });
       return;
     }
     this.peerConnections[peerId]
