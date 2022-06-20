@@ -41,7 +41,8 @@
         "tsx": "always",
         "hooks": "always",
         "lib": "always",
-        "context": "always"
+        "context": "always",
+        "scss": "always"
       }
     ],
     "no-unused-vars": 1,

@@ -10,7 +10,6 @@
  ******************************************************************************************/
 import { RTCInterface, MessageType } from '../types/interfaces';
 import { log } from '../utils/lib';
-import { MEDIA_CONSTRAINTS } from '../utils/constants';
 import WS from './ws';
 
 class RTC implements RTCInterface {
@@ -119,7 +118,7 @@ class RTC implements RTCInterface {
       }
     };
     this.peerConnections[peerId].onnegotiationneeded = function handleNegotiationNeededEvent() {
-      log('warn', '--> Creating offer', {
+      log('info', '--> Creating offer', {
         roomId,
         userId,
         target,
@@ -184,7 +183,10 @@ class RTC implements RTCInterface {
     const peerId = this.getPeerId(roomId, target, connId);
     if (!this.localStream) {
       navigator.mediaDevices
-        .getUserMedia(MEDIA_CONSTRAINTS)
+        .getUserMedia({
+          audio: true,
+          video: true,
+        })
         .then((localStream) => {
           this.localStream = localStream;
           log('info', '> Adding tracks to new local media stream', {

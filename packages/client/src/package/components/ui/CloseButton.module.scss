@@ -1,0 +1,14 @@
+.wrapper {
+  cursor: pointer;
+  position: absolute;
+  z-index: 12;
+  right: 1rem;
+  top: 1rem;
+  width: 24;
+  height: 24;
+  display: none;
+
+  &.open {
+    display: block;
+  }
+}

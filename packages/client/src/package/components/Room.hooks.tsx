@@ -9,13 +9,16 @@
  * Create Date: Sun Jun 19 2022 01:44:53 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 /* eslint-disable no-case-declarations */
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import WS from '../core/ws';
 import RTC from '../core/rtc';
 import { log } from '../utils/lib';
-import { START_TIMEOUT } from '../utils/constants';
+import { getWidthOfItem } from './Room.lib';
+import { START_DELAY } from '../utils/constants';
 import { MessageType, SendMessageArgs } from '../types/interfaces';
 import { Streams } from '../types';
+import s from './Room.module.scss';
+import c from './ui/CloseButton.module.scss';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -58,7 +61,7 @@ export const useConnection = ({
         setTimeout(() => {
           log('info', 'Set streams', { _streams });
           setStreams(_streams);
-        }, START_TIMEOUT);
+        }, START_DELAY);
       }
     };
 
@@ -113,7 +116,7 @@ export const useConnection = ({
                   _streams.splice(index, 1);
                   setTimeout(() => {
                     setStreams(_streams);
-                  }, START_TIMEOUT / 3);
+                  }, START_DELAY / 3);
                 }
               });
               rtc.closeVideoCall({
@@ -222,5 +225,95 @@ export const useConnection = ({
     };
   }, [roomId, ws, lenght, streams, connectionId, id]);
 
-  return { streams };
+  return { streams, lenght };
 };
+
+export const useVideoDimensions = ({
+  lenght,
+  container,
+}: {
+  lenght: number;
+  container: HTMLDivElement | null;
+}) => {
+  let time = 0;
+  return useCallback(
+    (e: React.SyntheticEvent<HTMLVideoElement, Event>, stream: MediaStream) => {
+      time++;
+      if (time % 5 === 0) {
+        requestAnimationFrame(() => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { target }: { target: HTMLVideoElement } = e as any;
+          const _container =
+            target.getAttribute('data') !== 'full'
+              ? container
+              : (target.parentElement as HTMLDivElement);
+          if (_container) {
+            const { videoHeight, videoWidth } = target;
+            const { width, cols, rows } = getWidthOfItem({
+              lenght,
+              container: _container,
+              coeff: videoWidth / videoHeight,
+            });
+            const coeff = videoWidth / videoHeight;
+            if (videoHeight < videoWidth) {
+              target.setAttribute('width', width.toString());
+              target.setAttribute('height', (width / coeff).toString());
+            } else {
+              target.setAttribute('width', (width * coeff).toString());
+              target.setAttribute('height', width.toString());
+            }
+            target.parentElement?.parentElement?.setAttribute(
+              'style',
+              `grid-template-columns: repeat(${cols}, auto);
+              grid-template-rows: repeat(${rows}, auto);`
+            );
+            stream.getVideoTracks().forEach((item) => {
+              const oldWidth = item.getConstraints().width;
+              if (oldWidth !== width) {
+                item
+                  .applyConstraints({ width, height: width })
+                  .then(() => {
+                    log('warn', 'Constraints changed', {
+                      width,
+                      oldWidth,
+                    });
+                  })
+                  .catch((error) => {
+                    log('warn', 'Constraints not changed', { error, width, oldWidth });
+                  });
+              }
+            });
+          }
+        });
+      }
+    },
+    [lenght]
+  );
+};
+
+export const useOnclickClose =
+  ({ lenght, container }: { lenght: number; container: HTMLDivElement | null }) =>
+  (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    if (container) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { target }: any = e;
+      const { nodeName } = target;
+      const button: HTMLButtonElement =
+        nodeName === 'path'
+          ? target.parentElement?.parentElement
+          : nodeName === 'svg'
+          ? target.parentElement
+          : target;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const video: HTMLVideoElement = button.nextElementSibling as any;
+      const { videoWidth, videoHeight } = video;
+      const { width } = getWidthOfItem({ lenght, container, coeff: videoWidth / videoHeight });
+      const coeff = videoWidth / videoHeight;
+      const height = width / coeff;
+      video.parentElement?.classList.remove(s.video__fixed);
+      button.classList.remove(c.open);
+      video.setAttribute('data', '');
+      video.setAttribute('width', width.toString());
+      video.setAttribute('height', height.toString());
+    }
+  };
