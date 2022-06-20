@@ -28,11 +28,15 @@ export enum MessageType {
   GET_ROOM = 'GET_ROOM',
   SET_ROOM = 'SET_ROOM',
   SET_ERROR = 'SET_ERROR',
+  GET_CHANGE_ROOM_GUESTS = 'GET_CHANGE_ROOM_GUESTS',
   SET_CHANGE_ROOM_GUESTS = 'SET_CHANGE_ROOM_GUESTS',
 }
 
 export namespace DataTypes {
   export namespace MessageTypes {
+    export type GetChangeRoomGuests = {
+      roomId: number | string;
+    };
     export type GetGuestId = {
       isRoom?: boolean;
     };
@@ -80,6 +84,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.GetRoom
     : T extends MessageType.SET_ROOM
     ? DataTypes.MessageTypes.SetRoom
+    : T extends MessageType.GET_CHANGE_ROOM_GUESTS
+    ? DataTypes.MessageTypes.GetChangeRoomGuests
     : T extends MessageType.SET_CHANGE_ROOM_GUESTS
     ? DataTypes.MessageTypes.SetChangeRoomGuests
     : T extends MessageType.SET_ERROR
@@ -136,7 +142,7 @@ export namespace Connection {
       roomId: number | string;
       userId: number | string;
       target: string | number;
-    }): void;
+    }): any;
 
     public abstract getPeerId(...args: (number | string)[]): string;
 

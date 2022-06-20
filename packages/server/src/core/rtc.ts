@@ -61,7 +61,10 @@ class RTC implements RTCInterface {
     target,
     connId,
   }) => {
-    const peerId = this.getPeerId(roomId, userId, target, connId);
+    let peerId = this.getPeerId(roomId, userId, target, connId);
+    if (!this.peerConnections[peerId]) {
+      peerId = this.getPeerId(roomId, target, userId, connId);
+    }
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const core = this;
     this.peerConnections[peerId].onicecandidate = function handleICECandidateEvent(
@@ -135,7 +138,12 @@ class RTC implements RTCInterface {
         }
       };
     this.peerConnections[peerId].onnegotiationneeded = function handleNegotiationNeededEvent() {
-      log('info', '--> Creating offer', { roomId, userId, target });
+      log('info', '--> Creating offer', {
+        roomId,
+        userId,
+        target,
+        state: core.peerConnections[peerId].signalingState,
+      });
       core.peerConnections[peerId]
         .createOffer()
         .then((offer): 1 | void | PromiseLike<void> => {
@@ -289,7 +297,7 @@ class RTC implements RTCInterface {
           const _peerId = this.getPeerId(id, target, 0, _connId);
           const stream = this.streams[_peerId];
           if (!stream) {
-            log('warn', 'Skiping add track', {
+            log('info', 'Skiping add track', {
               roomId: id,
               userId,
               target,
@@ -298,7 +306,14 @@ class RTC implements RTCInterface {
             return;
           }
           stream.getTracks().forEach((track) => {
-            this.peerConnections[peerId].addTrack(track, stream);
+            const sender = this.peerConnections[peerId]
+              .getSenders()
+              .find((item) => item.track?.kind === track.kind);
+            if (sender?.track?.id !== track.id) {
+              this.peerConnections[peerId].addTrack(track, stream);
+            } else {
+              log('warn', 'Skiping add track track', { peerId });
+            }
           });
         }
       })
@@ -315,10 +330,34 @@ class RTC implements RTCInterface {
             return;
           }
           log('info', '---> Setting local description after creating answer');
-          this.peerConnections[peerId]
+          let _peerId = peerId;
+          if (!this.peerConnections[peerId]) {
+            _peerId = this.getPeerId(id, target, userId, connId);
+          }
+          if (!this.peerConnections[peerId]) {
+            log('warn', 'Skip set local description fo answer', {
+              roomId: id,
+              userId,
+              target,
+              connId,
+              k: Object.keys(this.peerConnections).length,
+              s: Object.keys(this.streams).length,
+              r: this.rooms[id].length,
+            });
+          }
+          this.peerConnections[_peerId]
             .setLocalDescription(answ)
             .catch((err) => {
-              log('error', 'Error set local description for answer', err);
+              log('error', 'Error set local description for answer', {
+                message: err.message,
+                roomId: id,
+                userId,
+                target,
+                connId,
+                k: Object.keys(this.peerConnections).length,
+                s: Object.keys(this.streams).length,
+                r: this.rooms[id].length,
+              });
             })
             .then(() => {
               const { localDescription } = this.peerConnections[peerId];
@@ -346,7 +385,13 @@ class RTC implements RTCInterface {
         });
       })
       .catch((e) => {
-        log('error', 'Failed get user media', e);
+        log('error', 'Failed get user media', {
+          message: e.message,
+          roomId: id,
+          userId,
+          target,
+          connId,
+        });
         if (cb) {
           cb(null);
         }

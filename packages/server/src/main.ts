@@ -72,6 +72,19 @@ function createServer({ port = PORT }: { port?: number }) {
             port,
           });
           break;
+        case Types.MessageType.GET_CHANGE_ROOM_GUESTS:
+          wss.sendMessage({
+            type: Types.MessageType.SET_CHANGE_ROOM_GUESTS,
+            id,
+            data: {
+              roomUsers:
+                rtc.rooms[
+                  wss.getMessage(Types.MessageType.GET_CHANGE_ROOM_GUESTS, rawMessage).data.roomId
+                ],
+            },
+            connId,
+          });
+          break;
         default:
           wss.sendMessage(rawMessage);
       }

@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Sun Jun 19 2022 01:44:53 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import React, { useMemo, useContext } from 'react';
+import React, { useMemo, useContext, useEffect } from 'react';
 import clsx from 'clsx';
 import { getTarget } from '../utils/lib';
 import s from './Room.module.scss';
@@ -23,6 +23,7 @@ function Room({ id }: RoomProps) {
   const roomLink = useMemo(() => getRoomLink(roomId), [roomId]);
   const { streams } = useConnection({ id, roomId });
   const theme = useContext(ThemeContext);
+
   return (
     <div className={clsx(theme.wrapper, s.wrapper)}>
       <div className={s.container}>

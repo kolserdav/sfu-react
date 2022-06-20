@@ -119,7 +119,12 @@ class RTC implements RTCInterface {
       }
     };
     this.peerConnections[peerId].onnegotiationneeded = function handleNegotiationNeededEvent() {
-      log('info', '--> Creating offer', { roomId, userId, target });
+      log('warn', '--> Creating offer', {
+        roomId,
+        userId,
+        target,
+        state: core.peerConnections[peerId].signalingState,
+      });
       core.peerConnections[peerId]
         .createOffer()
         .then((offer): 1 | void | PromiseLike<void> => {
@@ -342,7 +347,9 @@ class RTC implements RTCInterface {
     }
     if (
       !this.peerConnections[peerId] ||
-      this.peerConnections[peerId]?.iceConnectionState === 'connected'
+      this.peerConnections[peerId]?.iceConnectionState === 'connected' ||
+      (this.peerConnections[peerId]?.iceConnectionState === 'new' &&
+        this.peerConnections[peerId]?.connectionState === 'new')
     ) {
       log('warn', 'Skiping set remote desc for answer', {
         id,
@@ -366,6 +373,7 @@ class RTC implements RTCInterface {
       })
       .catch((e) => {
         log('error', 'Error set description for answer:', {
+          message: e.message,
           id,
           userId,
           target,
