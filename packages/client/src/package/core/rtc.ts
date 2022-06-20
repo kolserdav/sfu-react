@@ -328,13 +328,33 @@ class RTC implements RTCInterface {
       data: { sdp, userId, target },
     } = msg;
     let peerId = this.getPeerId(userId, target, connId);
-    log('info', '----> Call recipient has accepted our call', { id, userId, target, peerId });
+    log('info', '----> Call recipient has accepted our call', {
+      id,
+      userId,
+      target,
+      peerId,
+      s: this.peerConnections[peerId]?.connectionState,
+      is: this.peerConnections[peerId]?.iceConnectionState,
+    });
     const desc = new RTCSessionDescription(sdp);
     if (!this.peerConnections[peerId]) {
       peerId = this.getPeerId(id, target, connId);
     }
-    if (!this.peerConnections[peerId]) {
-      log('warn', 'Set remote description skiping', { id, userId, target, peerId });
+    if (
+      !this.peerConnections[peerId] ||
+      this.peerConnections[peerId]?.iceConnectionState === 'connected'
+    ) {
+      log('warn', 'Skiping set remote desc for answer', {
+        id,
+        userId,
+        target,
+        peerId,
+        s: this.peerConnections[peerId]?.connectionState,
+        is: this.peerConnections[peerId]?.iceConnectionState,
+      });
+      setTimeout(() => {
+        // this.invite({ roomId: id, userId, target, connId });
+      }, 1000);
       return;
     }
     this.peerConnections[peerId]
@@ -345,7 +365,14 @@ class RTC implements RTCInterface {
         }
       })
       .catch((e) => {
-        log('error', 'Error set description for answer:', e);
+        log('error', 'Error set description for answer:', {
+          id,
+          userId,
+          target,
+          peerId,
+          s: this.peerConnections[peerId]?.connectionState,
+          is: this.peerConnections[peerId]?.iceConnectionState,
+        });
         if (cb) {
           cb(1);
         }
