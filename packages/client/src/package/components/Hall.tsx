@@ -19,7 +19,6 @@ import IconButton from './ui/IconButton';
 
 const changeThemeHandler = () => {
   const { theme } = storeTheme.getState();
-  console.log(theme);
   storeTheme.dispatch(changeTheme({ theme }));
 };
 

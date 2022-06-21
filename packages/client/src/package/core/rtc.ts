@@ -23,7 +23,7 @@ class RTC implements RTCInterface {
 
   private localStream: MediaStream | null = null;
 
-  public room: number | null = null;
+  public roomId: number | null = null;
 
   constructor({ ws }: { ws: WS }) {
     this.ws = ws;
@@ -271,8 +271,8 @@ class RTC implements RTCInterface {
   };
 
   private getRoom() {
-    this.room = parseInt(window.location.pathname.replace('/', '').replace(/\?.*$/, ''), 10);
-    return this.room;
+    this.roomId = parseInt(window.location.pathname.replace('/', '').replace(/\?.*$/, ''), 10);
+    return this.roomId;
   }
 
   public handleOfferMessage: RTCInterface['handleOfferMessage'] = (msg, cb) => {
@@ -293,7 +293,7 @@ class RTC implements RTCInterface {
       }
       return;
     }
-    this.room = this.getRoom();
+    this.roomId = this.getRoom();
     this.handleIceCandidate({
       roomId: id,
       userId,
@@ -374,11 +374,7 @@ class RTC implements RTCInterface {
       log('warn', 'Handle video answer msg', { peerId });
       return;
     }
-    if (
-      this.peerConnections[peerId]?.iceConnectionState === 'connected' ||
-      (this.peerConnections[peerId]?.iceConnectionState === 'new' &&
-        this.peerConnections[peerId]?.connectionState === 'new')
-    ) {
+    if (!this.peerConnections[peerId]) {
       log('warn', 'Skiping set remote desc for answer', {
         id,
         userId,

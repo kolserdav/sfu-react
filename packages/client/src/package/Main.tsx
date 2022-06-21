@@ -39,7 +39,6 @@ function Main({ id }: RoomProps) {
   useEffect(() => {
     const cleanSubs = storeTheme.subscribe(() => {
       const { theme: _theme } = storeTheme.getState();
-      console.log(theme);
       setCurrentTheme(_theme);
     });
     return () => {

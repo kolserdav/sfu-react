@@ -8,6 +8,8 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Sun Jun 19 2022 01:44:53 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
+import RTC from '../core/rtc';
+import { log } from '../utils/lib';
 import s from './Room.module.scss';
 import c from './ui/CloseButton.module.scss';
 
@@ -27,6 +29,17 @@ export const getPathname = (): string | null => {
   return res;
 };
 
+const checkVideoFixed = (container: HTMLDivElement) => {
+  const { classList } = container;
+  let check = false;
+  for (let i = 0; classList[i]; i++) {
+    if (classList[i] === s.video__fixed) {
+      check = true;
+    }
+  }
+  return check;
+};
+
 export const getWidthOfItem = ({
   lenght,
   container,
@@ -42,14 +55,15 @@ export const getWidthOfItem = ({
     rows: 1,
   };
   const { width, height } = container.getBoundingClientRect();
-  if (lenght) {
+  const _lenght = checkVideoFixed(container) ? 1 : lenght;
+  if (_lenght) {
     const horizontal = width > height;
-    switch (lenght) {
+    switch (_lenght) {
       case 2:
         dims = horizontal ? { cols: 2, rows: 1 } : { cols: 1, rows: 2 };
         break;
       case 3:
-        dims = { cols: 2, rows: 2 };
+        dims = horizontal ? { cols: 3, rows: 1 } : { cols: 1, rows: 3 };
         break;
       case 4:
         dims = { cols: 2, rows: 2 };
@@ -65,8 +79,7 @@ export const getWidthOfItem = ({
     }
     const w = width / dims.cols;
     const h = height / dims.rows;
-    a = coeff > 1 ? w : h;
-    a = a > width ? width : a > height ? height : a;
+    a = coeff < 1 ? w : h;
   }
   return {
     width: Math.ceil(a),

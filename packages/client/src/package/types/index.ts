@@ -13,8 +13,9 @@ export interface RoomProps {
 }
 
 export interface Streams {
-  targetId: number | string;
+  target: number | string;
   stream: MediaStream;
+  connId: string;
   ref: React.Ref<HTMLVideoElement>;
 }
 

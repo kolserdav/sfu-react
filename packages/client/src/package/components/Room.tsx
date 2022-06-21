@@ -22,7 +22,7 @@ function Room({ id }: RoomProps) {
   const container = useRef<HTMLDivElement>(null);
   const roomId = useMemo(() => getTarget(pathname || ''), [pathname]);
   const roomLink = useMemo(() => getRoomLink(roomId), [roomId]);
-  const { streams, lenght } = useConnection({ id, roomId });
+  const { streams, lenght, lostStreamHandler } = useConnection({ id, roomId });
   const theme = useContext(ThemeContext);
   const setVideoDimensions = useVideoDimensions({
     container: container.current,
@@ -35,20 +35,26 @@ function Room({ id }: RoomProps) {
     <div className={s.wrapper} style={theme.wrapper}>
       <div className={s.container} ref={container}>
         {streams.map((item, index) => (
-          <div key={item.targetId} className={s.video}>
+          <div key={item.target} className={s.video}>
             <CloseButton onClick={onClickClose} onKeyDown={onPressEscape} tabindex={index} />
             <video
-              muted={item.targetId === id}
+              muted={item.target === id}
               onTimeUpdate={(e) => {
                 if (item.stream.active === false) {
-                  log('warn', 'Stream is not active', { uid: item.targetId, sid: item.stream.id });
+                  log('warn', 'Stream is not active', { uid: item.target, sid: item.stream.id });
+                  lostStreamHandler({
+                    video: e.target as HTMLVideoElement,
+                    target: item.target,
+                    connId: item.connId,
+                  });
+                } else {
+                  setVideoDimensions(e, item.stream);
                 }
-                setVideoDimensions(e, item.stream);
               }}
               onClick={onClickVideo}
               ref={item.ref}
               id={item.stream.id}
-              title={item.targetId.toString()}
+              title={item.target.toString()}
               autoPlay
               onLoadedMetadata={(e) => {
                 log('log', 'Onload meta data', { active: item.stream.active });

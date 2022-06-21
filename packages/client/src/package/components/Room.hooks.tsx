@@ -36,6 +36,29 @@ export const useConnection = ({
   const ws = useMemo(() => new WS(), []);
   const rtc = useMemo(() => new RTC({ ws }), [ws]);
 
+  const lostStreamHandler = ({
+    target,
+    connId,
+    video,
+  }: {
+    target: number | string;
+    connId: string;
+    video: HTMLVideoElement;
+  }) => {
+    if (!roomId) {
+      return;
+    }
+    const peerId = rtc.getPeerId(roomId, target, connId);
+    if (!rtc.peerConnections[peerId]) {
+      log('warn', 'Lost stream handler without peer connection', { peerId });
+      return;
+    }
+    rtc.closeVideoCall({ roomId, userId: ws.userId, target, connId });
+    const _strems = streams.filter((item) => item.target !== target);
+    setStreams(_strems);
+    video.parentElement?.removeChild(video);
+  };
+
   useEffect(() => {
     if (!roomId) {
       return () => {
@@ -45,12 +68,23 @@ export const useConnection = ({
     if (!ws.userId) {
       ws.setUserId(id);
     }
-    const onAddTrack = (_streams: Streams[], addedUserId: string | number, stream: MediaStream) => {
-      const isExists = _streams.filter((_item) => _item.targetId === addedUserId);
+    const onAddTrack = ({
+      _streams,
+      addedUserId,
+      stream,
+      connId,
+    }: {
+      _streams: Streams[];
+      addedUserId: string | number;
+      stream: MediaStream;
+      connId: string;
+    }) => {
+      const isExists = _streams.filter((_item) => _item.target === addedUserId);
       if (!isExists[0]) {
         _streams.push({
-          targetId: addedUserId,
+          target: addedUserId,
           stream,
+          connId,
           ref: (node) => {
             if (node) {
               // eslint-disable-next-line no-param-reassign
@@ -65,6 +99,7 @@ export const useConnection = ({
       }
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const changeRoomGuestsHandler = ({ rawMessage }: { rawMessage: SendMessageArgs<any> }) => {
       if (!roomId) {
         return;
@@ -74,19 +109,19 @@ export const useConnection = ({
         connId,
       } = ws.getMessage(MessageType.SET_CHANGE_ROOM_GUESTS, rawMessage);
       const _streams = streams.map((_item) => _item);
-      log('info', 'onChangeRoomGuests', { roomUsers, id, st: _streams.map((i) => i.targetId) });
+      log('info', 'onChangeRoomGuests', { roomUsers, id, st: _streams.map((i) => i.target) });
       // Add remote streams
       setLenght(roomUsers.length);
       roomUsers.forEach((item) => {
         if (item !== id) {
           const peerId = rtc.getPeerId(roomId, item, connId);
-          const _isExists = _streams.filter((_item) => item === _item.targetId);
+          const _isExists = _streams.filter((_item) => item === _item.target);
           if (!_isExists[0]) {
             log('info', 'Check new user', { item });
             rtc.createRTC({ roomId, target: item, userId: id, connId });
             rtc.onAddTrack = (addedUserId, stream) => {
               log('info', '-> Added remote stream to room', { addedUserId, id });
-              onAddTrack(_streams, addedUserId, stream);
+              onAddTrack({ _streams, addedUserId, stream, connId });
             };
             rtc.invite({ roomId, userId: id, target: item, connId });
           } else if (rtc.peerConnections[peerId]) {
@@ -106,13 +141,13 @@ export const useConnection = ({
       });
       // Remove disconnected
       streams.forEach((item) => {
-        const isExists = roomUsers.filter((_item) => _item === item.targetId);
+        const isExists = roomUsers.filter((_item) => _item === item.target);
         if (!isExists[0]) {
           Object.keys(rtc.peerConnections).forEach((__item) => {
             const peer = __item.split(rtc.delimiter);
-            if (peer[1] === item.targetId) {
+            if (peer[1] === item.target) {
               streams.forEach((i, index) => {
-                if (i.targetId === item.targetId) {
+                if (i.target === item.target) {
                   _streams.splice(index, 1);
                   setTimeout(() => {
                     setStreams(_streams);
@@ -122,7 +157,7 @@ export const useConnection = ({
               rtc.closeVideoCall({
                 roomId,
                 userId: id,
-                target: item.targetId,
+                target: item.target,
                 connId: peer[2],
               });
             }
@@ -154,7 +189,7 @@ export const useConnection = ({
           rtc.onAddTrack = (myId, stream) => {
             log('info', '-> Added stream to room', { myId, id });
             const _streams = streams.map((_item) => _item);
-            onAddTrack(_streams, myId, stream);
+            onAddTrack({ _streams, addedUserId: myId, stream, connId });
           };
           rtc.invite({ roomId, userId: id, target: 0, connId });
           ws.sendMessage({
@@ -225,7 +260,7 @@ export const useConnection = ({
     };
   }, [roomId, ws, lenght, streams, connectionId, id]);
 
-  return { streams, lenght };
+  return { streams, lenght, lostStreamHandler };
 };
 
 export const useVideoDimensions = ({
@@ -249,6 +284,7 @@ export const useVideoDimensions = ({
               : (target.parentElement as HTMLDivElement);
           if (_container) {
             const { videoHeight, videoWidth } = target;
+            const coeff = videoWidth / videoHeight;
             const { width, cols, rows } = getWidthOfItem({
               lenght,
               container: _container,
@@ -258,13 +294,18 @@ export const useVideoDimensions = ({
             stream.getVideoTracks().forEach((item) => {
               const oldWidth = item.getConstraints().width;
               if (oldWidth !== width) {
-                const coeff = videoWidth / videoHeight;
+                let _width = 0;
+                let _height = 0;
                 if (videoHeight < videoWidth) {
-                  target.setAttribute('width', width.toString());
-                  target.setAttribute('height', (width / coeff).toString());
+                  _width = width;
+                  _height = Math.floor(width / coeff);
+                  target.setAttribute('width', _width.toString());
+                  target.setAttribute('height', _height.toString());
                 } else {
-                  target.setAttribute('width', width.toString());
-                  target.setAttribute('height', (width * coeff).toString());
+                  _width = Math.floor(width * coeff);
+                  _height = width;
+                  target.setAttribute('width', _width.toString());
+                  target.setAttribute('height', _height.toString());
                 }
                 target.parentElement?.parentElement?.setAttribute(
                   'style',
@@ -272,7 +313,7 @@ export const useVideoDimensions = ({
                   grid-template-rows: repeat(${rows}, auto);`
                 );
                 item
-                  .applyConstraints({ width, height: width })
+                  .applyConstraints({ width: _width, height: _height })
                   .then(() => {
                     log('log', 'Constraints changed', {
                       width,
@@ -280,7 +321,12 @@ export const useVideoDimensions = ({
                     });
                   })
                   .catch((error) => {
-                    log('warn', 'Constraints not changed', { error, width, oldWidth });
+                    log('log', 'Constraints not changed', {
+                      error,
+                      width: _width,
+                      height: _height,
+                      oldWidth,
+                    });
                   });
               }
             });
@@ -288,7 +334,7 @@ export const useVideoDimensions = ({
         });
       }
     },
-    [lenght, container]
+    [lenght, container, time]
   );
 };
 
