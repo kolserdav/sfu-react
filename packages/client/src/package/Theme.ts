@@ -18,7 +18,7 @@ export type Themes = {
 export interface Color {
   paper: string;
   text: string;
-  shadow: string;
+  active: string;
 }
 
 type Colors = {
@@ -38,13 +38,13 @@ type Theme = {
 const colors: Colors = {
   dark: {
     paper: '#36413e',
-    text: '#d7d6d6',
-    shadow: '#beb2c8',
+    text: '#5d5e60',
+    active: '#8d8d92',
   },
   light: {
     paper: '#fff',
-    text: '#5d5e60',
-    shadow: '#8d8d92',
+    text: '#d7d6d6',
+    active: '#beb2c8',
   },
 };
 
@@ -55,17 +55,17 @@ export const themes: Themes = {
       color: colors.light.text,
     },
     container: {
-      backgroundColor: colors.light.text,
+      backgroundColor: colors.dark.active,
       color: colors.light.paper,
     },
     button: {
-      backgroundColor: colors.light.shadow,
+      backgroundColor: colors.light.active,
       color: colors.dark.text,
     },
     link: {
       color: colors.light.paper,
     },
-    colors: colors.dark,
+    colors: colors.light,
   },
   light: {
     wrapper: {
@@ -73,16 +73,16 @@ export const themes: Themes = {
       color: colors.dark.text,
     },
     container: {
-      backgroundColor: colors.dark.text,
+      backgroundColor: colors.light.active,
       color: colors.dark.paper,
     },
     button: {
-      backgroundColor: colors.dark.shadow,
+      backgroundColor: colors.dark.active,
       color: colors.light.text,
     },
     link: {
       color: colors.dark.paper,
     },
-    colors: colors.light,
+    colors: colors.dark,
   },
 };

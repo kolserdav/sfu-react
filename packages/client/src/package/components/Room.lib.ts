@@ -8,8 +8,6 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Sun Jun 19 2022 01:44:53 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import RTC from '../core/rtc';
-import { log } from '../utils/lib';
 import s from './Room.module.scss';
 import c from './ui/CloseButton.module.scss';
 
@@ -54,7 +52,7 @@ export const getWidthOfItem = ({
     cols: 1,
     rows: 1,
   };
-  const { width, height } = container.getBoundingClientRect();
+  const { offsetWidth: width, offsetHeight: height } = container;
   const _lenght = checkVideoFixed(container) ? 1 : lenght;
   if (_lenght) {
     const horizontal = width > height;
@@ -79,10 +77,11 @@ export const getWidthOfItem = ({
     }
     const w = width / dims.cols;
     const h = height / dims.rows;
-    a = coeff < 1 ? w : h;
+    a = coeff > 1 ? w : h;
   }
+
   return {
-    width: Math.ceil(a),
+    width: Math.floor(a),
     cols: dims.cols,
     rows: dims.rows,
   };

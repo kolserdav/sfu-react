@@ -58,9 +58,9 @@ function Main({ id }: RoomProps) {
       >
         <IconButton className={clsx(s.button__icon, hallOpen ? s.active : '')}>
           {hallOpen ? (
-            <ChevronRightIcon color={theme.colors.shadow} />
+            <ChevronRightIcon color={theme.colors.text} />
           ) : (
-            <ChevronLeftIcon color={theme.colors.shadow} />
+            <ChevronLeftIcon color={theme.colors.text} />
           )}
         </IconButton>
       </div>

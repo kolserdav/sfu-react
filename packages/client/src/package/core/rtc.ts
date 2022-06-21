@@ -374,7 +374,13 @@ class RTC implements RTCInterface {
       log('warn', 'Handle video answer msg', { peerId });
       return;
     }
-    if (!this.peerConnections[peerId]) {
+    if (
+      !this.peerConnections[peerId] ||
+      (this.peerConnections[peerId]?.iceConnectionState === 'connected' &&
+        !this.peerConnections[peerId]?.connectionState) ||
+      this.peerConnections[peerId]?.connectionState === 'connected' ||
+      this.peerConnections[peerId]?.connectionState === 'connecting'
+    ) {
       log('warn', 'Skiping set remote desc for answer', {
         id,
         userId,

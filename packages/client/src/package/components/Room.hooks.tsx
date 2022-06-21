@@ -32,7 +32,6 @@ export const useConnection = ({
   const [roomIsSaved, setRoomIsSaved] = useState<boolean>(false);
   const [lenght, setLenght] = useState<number>(0);
   const [connectionId, setConnectionId] = useState<string>('');
-
   const ws = useMemo(() => new WS(), []);
   const rtc = useMemo(() => new RTC({ ws }), [ws]);
 
@@ -312,6 +311,7 @@ export const useVideoDimensions = ({
                   `grid-template-columns: repeat(${cols}, auto);
                   grid-template-rows: repeat(${rows}, auto);`
                 );
+
                 item
                   .applyConstraints({ width: _width, height: _height })
                   .then(() => {
