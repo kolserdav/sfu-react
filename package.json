@@ -50,6 +50,7 @@
     "bin": "node bin/uyem.js"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^1.8.2",
     "clsx": "^1.1.1",
     "html-to-text": "^8.2.0",
     "jsonwebtoken": "^8.5.1",
@@ -92,7 +93,7 @@
     "typescript": "^4.7.2"
   },
   "fhead": {
-    "root": "packages/server",
+    "root": "packages/client",
     "repository": "https://github.com/kolserdav/uyem.git",
     "patterns": [
       ".js",
@@ -109,6 +110,6 @@
     "license": "BSD-2-Clause",
     "licenseText": "Binary distributions of this software include WebRTC and other third-party libraries.",
     "copyright": "kolserdav, All rights reserved (c)",
-    "renewAll": true
+    "renewAll": false
   }
 }

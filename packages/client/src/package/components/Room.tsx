@@ -9,7 +9,6 @@
  * Create Date: Sun Jun 19 2022 01:44:53 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import React, { useMemo, useContext, useRef } from 'react';
-import clsx from 'clsx';
 import { getTarget } from '../utils/lib';
 import s from './Room.module.scss';
 import { RoomProps } from '../types/index';
@@ -33,7 +32,7 @@ function Room({ id }: RoomProps) {
   const onPressEscape = usePressEscape();
 
   return (
-    <div className={clsx(theme.wrapper, s.wrapper)}>
+    <div className={s.wrapper} style={theme.wrapper}>
       <div className={s.container} ref={container}>
         {streams.map((item, index) => (
           <div key={item.targetId} className={s.video}>
@@ -58,7 +57,7 @@ function Room({ id }: RoomProps) {
       <div className={s.actions}>
         <div>{id}</div>
         {roomLink && (
-          <a className={clsx(theme.link, s.room__link)} href={roomLink}>
+          <a style={theme.link} className={s.room__link} href={roomLink}>
             {roomLink}
           </a>
         )}

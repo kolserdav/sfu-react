@@ -1,3 +1,13 @@
+/******************************************************************************************
+ * Repository: https://github.com/kolserdav/uyem.git
+ * File name: CloseButton.tsx
+ * Author: Sergey Kolmiller
+ * Email: <uyem.ru@gmail.com>
+ * License: BSD-2-Clause
+ * License text: Binary distributions of this software include WebRTC and other third-party libraries.
+ * Copyright: kolserdav, All rights reserved (c)
+ * Create Date: Tue Jun 21 2022 07:43:56 GMT+0700 (Krasnoyarsk Standard Time)
+ ******************************************************************************************/
 /* eslint-disable jsx-a11y/control-has-associated-label */
 import React from 'react';
 import s from './CloseButton.module.scss';

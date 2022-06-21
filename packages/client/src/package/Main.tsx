@@ -12,34 +12,59 @@
 import React, { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import Room from './components/Room';
+import Hall from './components/Hall';
 import { RoomProps } from './types';
 import { ThemeContext, themes, Themes } from './Main.context';
-import ChevronLeftIcon from './Icons/ChevronLeft';
+import ChevronLeftIcon from './Icons/ChevronLeftIcon';
+import ChevronRightIcon from './Icons/ChevronRightIcon';
 import s from './Main.module.scss';
+import IconButton from './components/ui/IconButton';
+import storeTheme from './store/theme';
 
 // TODO theme provider
 function Main({ id }: RoomProps) {
   const [currentTheme, setCurrentTheme] = useState<keyof Themes>('light');
   const [theme, setTheme] = useState<Themes['dark' | 'light']>(themes.light);
-
-  const changeTheme = () => {
-    setCurrentTheme(currentTheme === 'dark' ? 'light' : 'dark');
-  };
+  const [hallOpen, setHallOpen] = useState<boolean>(false);
 
   const openMenu = () => {
-    /** */
+    setHallOpen(!hallOpen);
   };
 
   useEffect(() => {
     setTheme(themes[currentTheme]);
   }, [currentTheme]);
 
+  useEffect(() => {
+    const cleanSubs = storeTheme.subscribe(() => {
+      const { theme: _theme } = storeTheme.getState();
+      console.log(theme);
+      setCurrentTheme(_theme);
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, []);
+
   return (
     <ThemeContext.Provider value={theme}>
       <Room id={id} />
-      <div className={clsx(theme.button, s.button)} role="button" tabIndex={0} onClick={openMenu}>
-        <ChevronLeftIcon className={s.button__icon} color={theme.colors.shadow} />
+      <div
+        className={clsx(s.button, hallOpen ? s.active : '')}
+        role="button"
+        style={theme.button}
+        tabIndex={0}
+        onClick={openMenu}
+      >
+        <IconButton className={clsx(s.button__icon, hallOpen ? s.active : '')}>
+          {hallOpen ? (
+            <ChevronRightIcon color={theme.colors.shadow} />
+          ) : (
+            <ChevronLeftIcon color={theme.colors.shadow} />
+          )}
+        </IconButton>
       </div>
+      <Hall open={hallOpen} />
     </ThemeContext.Provider>
   );
 }
