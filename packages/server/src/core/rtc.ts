@@ -65,9 +65,13 @@ class RTC implements RTCInterface {
     if (!this.peerConnections[peerId]) {
       peerId = this.getPeerId(roomId, target, userId, connId);
     }
+    if (!this.peerConnections[peerId]) {
+      log('warn', 'Handle ice candidate without peerConnection', { peerId });
+      return;
+    }
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const core = this;
-    this.peerConnections[peerId].onicecandidate = function handleICECandidateEvent(
+    this.peerConnections[peerId]!.onicecandidate = function handleICECandidateEvent(
       event: RTCPeerConnectionIceEvent
     ) {
       if (event.candidate) {
@@ -85,7 +89,7 @@ class RTC implements RTCInterface {
       }
     };
     const { ws, rooms, delimiter } = this;
-    this.peerConnections[peerId].oniceconnectionstatechange =
+    this.peerConnections[peerId]!.oniceconnectionstatechange =
       function handleICEConnectionStateChangeEvent() {
         log(
           'log',
@@ -116,43 +120,50 @@ class RTC implements RTCInterface {
             break;
         }
       };
-    this.peerConnections[peerId].onicegatheringstatechange =
+    this.peerConnections[peerId]!.onicegatheringstatechange =
       function handleICEGatheringStateChangeEvent(ev: Event) {
         log(
           'log',
-          `*** ICE gathering state changed to: ${core.peerConnections[peerId].iceGatheringState}`,
+          `*** ICE gathering state changed to: ${core.peerConnections[peerId]!.iceGatheringState}`,
           { peerId }
         );
       };
-    this.peerConnections[peerId].onsignalingstatechange =
+    this.peerConnections[peerId]!.onsignalingstatechange =
       function handleSignalingStateChangeEvent() {
         log(
           'info',
           '! WebRTC signaling state changed to:',
-          core.peerConnections[peerId].signalingState
+          core.peerConnections[peerId]!.signalingState
         );
-        switch (core.peerConnections[peerId].signalingState) {
+        switch (core.peerConnections[peerId]!.signalingState) {
           case 'closed':
             core.onClosedCall({ roomId, userId, target, connId });
             break;
         }
       };
-    this.peerConnections[peerId].onnegotiationneeded = function handleNegotiationNeededEvent() {
+    this.peerConnections[peerId]!.onnegotiationneeded = function handleNegotiationNeededEvent() {
       log('info', '--> Creating offer', {
         roomId,
         userId,
         target,
-        state: core.peerConnections[peerId].signalingState,
+        state: core.peerConnections[peerId]!.signalingState,
       });
-      core.peerConnections[peerId]
-        .createOffer()
+      core.peerConnections[peerId]!.createOffer()
         .then((offer): 1 | void | PromiseLike<void> => {
-          return core.peerConnections[peerId].setLocalDescription(offer).catch((err) => {
+          if (!core.peerConnections[peerId]) {
+            log(
+              'warn',
+              'Can not set local description because peerConnection is',
+              core.peerConnections[peerId]
+            );
+            return 1;
+          }
+          return core.peerConnections[peerId]!.setLocalDescription(offer).catch((err) => {
             log('error', 'Error create local description', err);
           });
         })
         .then(() => {
-          const { localDescription } = core.peerConnections[peerId];
+          const { localDescription } = core.peerConnections[peerId]!;
           if (localDescription) {
             log('info', '---> Sending offer to remote peer', { roomId, userId, target });
             core.ws.sendMessage({
@@ -168,7 +179,7 @@ class RTC implements RTCInterface {
           }
         });
     };
-    this.peerConnections[peerId].ontrack = (e) => {
+    this.peerConnections[peerId]!.ontrack = (e) => {
       const stream = e.streams[0];
       this.streams[peerId] = stream;
       this.onAddTrack(userId, stream);
@@ -213,8 +224,7 @@ class RTC implements RTCInterface {
     if (cand.candidate === '') {
       return;
     }
-    this.peerConnections[peerId]
-      .addIceCandidate(cand)
+    this.peerConnections[peerId]!.addIceCandidate(cand)
       .then(() => {
         log('log', '!! Adding received ICE candidate:', { userId, id, target });
         if (cb) {
@@ -237,7 +247,7 @@ class RTC implements RTCInterface {
           connId,
           data: {
             message: 'Set candidate error',
-            context: { peerId, userId, target },
+            context: { id, type: MessageType.SET_ERROR, data: { userId, target }, connId },
           },
         });
         if (cb) {
@@ -267,16 +277,20 @@ class RTC implements RTCInterface {
       }
       return;
     }
-    // If user call to other guest via new connection with room
-    if (target) {
-      this.createRTC({
-        roomId: id,
-        userId,
-        target,
-        connId,
-      });
-    }
     const peerId = this.getPeerId(id, userId, target, connId);
+
+    this.createRTC({
+      roomId: id,
+      userId,
+      target,
+      connId,
+    });
+
+    if (!this.peerConnections[peerId]) {
+      log('warn', 'Handle offer message without peer connection', { peerId });
+      return;
+    }
+
     this.handleIceCandidate({
       roomId: id,
       userId,
@@ -284,8 +298,7 @@ class RTC implements RTCInterface {
       connId,
     });
     const desc = new wrtc.RTCSessionDescription(sdp);
-    this.peerConnections[peerId]
-      .setRemoteDescription(desc)
+    this.peerConnections[peerId]!.setRemoteDescription(desc)
       .then(() => {
         log('info', '-> Local video stream obtained', { peerId });
         // If a user creates a new connection with a room to get another user's stream
@@ -309,11 +322,11 @@ class RTC implements RTCInterface {
             return;
           }
           stream.getTracks().forEach((track) => {
-            const sender = this.peerConnections[peerId]
-              .getSenders()
-              .find((item) => item.track?.kind === track.kind);
+            const sender = this.peerConnections[peerId]!.getSenders().find(
+              (item) => item.track?.kind === track.kind
+            );
             if (sender?.track?.id !== track.id) {
-              this.peerConnections[peerId].addTrack(track, stream);
+              this.peerConnections[peerId]!.addTrack(track, stream);
             } else {
               log('warn', 'Skiping add track track', { peerId });
             }
@@ -322,7 +335,7 @@ class RTC implements RTCInterface {
       })
       .then(() => {
         log('info', '--> Creating answer', { peerId });
-        this.peerConnections[peerId].createAnswer().then((answ) => {
+        this.peerConnections[peerId]!.createAnswer().then((answ) => {
           if (!answ) {
             log('error', 'Failed set local description for answer.', {
               answ,
@@ -348,8 +361,7 @@ class RTC implements RTCInterface {
               r: this.rooms[id].length,
             });
           }
-          this.peerConnections[_peerId]
-            .setLocalDescription(answ)
+          this.peerConnections[_peerId]!.setLocalDescription(answ)
             .catch((err) => {
               log('error', 'Error set local description for answer', {
                 message: err.message,
@@ -363,7 +375,7 @@ class RTC implements RTCInterface {
               });
             })
             .then(() => {
-              const { localDescription } = this.peerConnections[peerId];
+              const { localDescription } = this.peerConnections[peerId]!;
               if (localDescription) {
                 log('info', 'Sending answer packet back to other peer', {
                   peerId,
@@ -410,9 +422,12 @@ class RTC implements RTCInterface {
     // TODO maybe wrong
     const peerId = this.getPeerId(userId, id, target, connId);
     log('info', '----> Call recipient has accepted our call', { userId, target });
+    if (!this.peerConnections[peerId]) {
+      log('warn', 'Handle video answer msg', { peerId });
+      return;
+    }
     const desc = new wrtc.RTCSessionDescription(sdp);
-    this.peerConnections[peerId]
-      .setRemoteDescription(desc)
+    this.peerConnections[peerId]!.setRemoteDescription(desc)
       .then(() => {
         if (cb) {
           cb(0);
@@ -424,6 +439,24 @@ class RTC implements RTCInterface {
           cb(1);
         }
       });
+  };
+
+  public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, userId, target, connId }) => {
+    const peerId = this.getPeerId(roomId, userId, target, connId);
+    delete this.streams[peerId];
+    if (!this.peerConnections[peerId]) {
+      log('warn', 'Close video call without peer connection', { peerId });
+      return;
+    }
+    log('info', '| Closing the call', { peerId, k: Object.keys(this.peerConnections).length });
+    this.peerConnections[peerId]!.onicecandidate = null;
+    this.peerConnections[peerId]!.oniceconnectionstatechange = null;
+    this.peerConnections[peerId]!.onicegatheringstatechange = null;
+    this.peerConnections[peerId]!.onsignalingstatechange = null;
+    this.peerConnections[peerId]!.onnegotiationneeded = null;
+    this.peerConnections[peerId]!.ontrack = null;
+    this.peerConnections[peerId]!.close();
+    delete this.peerConnections[peerId];
   };
 
   public handleGetRoomMessage({
@@ -482,20 +515,6 @@ class RTC implements RTCInterface {
       connId,
     });
   }
-
-  public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, userId, target, connId }) => {
-    const peerId = this.getPeerId(roomId, userId, target, connId);
-    delete this.streams[peerId];
-    log('info', '| Closing the call', { peerId, k: Object.keys(this.peerConnections).length });
-    this.peerConnections[peerId].onicecandidate = null;
-    this.peerConnections[peerId].oniceconnectionstatechange = null;
-    this.peerConnections[peerId].onicegatheringstatechange = null;
-    this.peerConnections[peerId].onsignalingstatechange = null;
-    this.peerConnections[peerId].onnegotiationneeded = null;
-    this.peerConnections[peerId].ontrack = null;
-    this.peerConnections[peerId].close();
-    delete this.peerConnections[peerId];
-  };
 
   public onClosedCall: RTCInterface['onClosedCall'] = (args) => {
     log('log', 'Call is closed', { ...args });

@@ -50,7 +50,7 @@ export namespace DataTypes {
     export type SetRoom = undefined;
     export type SetError = {
       message: string;
-      context: any;
+      context: SendMessageArgs<any>;
     };
     export type Offer = {
       sdp: RTCSessionDescriptionInit;
@@ -121,7 +121,7 @@ export namespace Signaling {
 
 export namespace Connection {
   export abstract class RTCInterface {
-    public abstract peerConnections: Record<string, RTCPeerConnection>;
+    public abstract peerConnections: Record<string, RTCPeerConnection | undefined>;
 
     public readonly delimiter = '_';
 
@@ -130,7 +130,7 @@ export namespace Connection {
       roomId: number | string;
       userId: number | string;
       target: string | number;
-    }): Record<number, RTCPeerConnection>;
+    }): Record<number, RTCPeerConnection | undefined>;
 
     public abstract handleIceCandidate({
       connId,

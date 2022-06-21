@@ -90,14 +90,14 @@ export const useConnection = ({
             };
             rtc.invite({ roomId, userId: id, target: item, connId });
           } else if (rtc.peerConnections[peerId]) {
-            const { connectionState } = rtc.peerConnections[peerId];
+            const { connectionState } = rtc.peerConnections[peerId]!;
             switch (connectionState) {
               case 'closed':
               case 'failed':
               case 'disconnected':
                 log('warn', 'Unclosed connection', {
                   peerId,
-                  d: rtc.peerConnections[peerId].connectionState,
+                  d: rtc.peerConnections[peerId]!.connectionState,
                 });
                 break;
             }
@@ -254,27 +254,27 @@ export const useVideoDimensions = ({
               container: _container,
               coeff: videoWidth / videoHeight,
             });
-            const coeff = videoWidth / videoHeight;
-            if (videoHeight < videoWidth) {
-              target.setAttribute('width', (width * coeff).toString());
-              target.setAttribute('height', width.toString());
-            } else {
-              target.setAttribute('width', width.toString());
-              target.setAttribute('height', (width * coeff).toString());
-            }
-            target.parentElement?.parentElement?.setAttribute(
-              'style',
-              `grid-template-columns: repeat(${cols}, auto);
-              grid-template-rows: repeat(${rows}, auto);`
-            );
             // Change track constraints
             stream.getVideoTracks().forEach((item) => {
               const oldWidth = item.getConstraints().width;
               if (oldWidth !== width) {
+                const coeff = videoWidth / videoHeight;
+                if (videoHeight < videoWidth) {
+                  target.setAttribute('width', width.toString());
+                  target.setAttribute('height', (width / coeff).toString());
+                } else {
+                  target.setAttribute('width', width.toString());
+                  target.setAttribute('height', (width * coeff).toString());
+                }
+                target.parentElement?.parentElement?.setAttribute(
+                  'style',
+                  `grid-template-columns: repeat(${cols}, auto);
+                  grid-template-rows: repeat(${rows}, auto);`
+                );
                 item
                   .applyConstraints({ width, height: width })
                   .then(() => {
-                    log('warn', 'Constraints changed', {
+                    log('log', 'Constraints changed', {
                       width,
                       oldWidth,
                     });
@@ -288,7 +288,7 @@ export const useVideoDimensions = ({
         });
       }
     },
-    [lenght, container, time]
+    [lenght, container]
   );
 };
 

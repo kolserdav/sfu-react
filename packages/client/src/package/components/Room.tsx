@@ -9,7 +9,7 @@
  * Create Date: Tue Jun 21 2022 08:49:55 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import React, { useMemo, useContext, useRef } from 'react';
-import { getTarget } from '../utils/lib';
+import { getTarget, log } from '../utils/lib';
 import s from './Room.module.scss';
 import { RoomProps } from '../types/index';
 import { useConnection, useVideoDimensions, useOnclickClose, usePressEscape } from './Room.hooks';
@@ -40,6 +40,9 @@ function Room({ id }: RoomProps) {
             <video
               muted={item.targetId === id}
               onTimeUpdate={(e) => {
+                if (item.stream.active === false) {
+                  log('warn', 'Stream is not active', { uid: item.targetId, sid: item.stream.id });
+                }
                 setVideoDimensions(e, item.stream);
               }}
               onClick={onClickVideo}
@@ -48,7 +51,7 @@ function Room({ id }: RoomProps) {
               title={item.targetId.toString()}
               autoPlay
               onLoadedMetadata={(e) => {
-                /** */
+                log('log', 'Onload meta data', { active: item.stream.active });
               }}
             />
           </div>

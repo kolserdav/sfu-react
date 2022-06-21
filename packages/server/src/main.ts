@@ -12,7 +12,7 @@
 import { v4 } from 'uuid';
 import WS from './core/ws';
 import RTC from './core/rtc';
-import * as Types from './types/interfaces';
+import { MessageType } from './types/interfaces';
 import { log } from './utils/lib';
 import { PORT } from './utils/constants';
 
@@ -52,34 +52,34 @@ function createServer({ port = PORT }: { port?: number }) {
       }
       const { type, id } = rawMessage;
       switch (type) {
-        case Types.MessageType.GET_USER_ID:
-          const { isRoom } = wss.getMessage(Types.MessageType.GET_USER_ID, rawMessage).data;
+        case MessageType.GET_USER_ID:
+          const { isRoom } = wss.getMessage(MessageType.GET_USER_ID, rawMessage).data;
           // TODO fixed isRoom problem
           if (isRoom) {
             rtc.roomCons[connId] = id;
           }
           wss.setSocket({ id, ws, connId, isRoom });
           wss.sendMessage({
-            type: Types.MessageType.SET_USER_ID,
+            type: MessageType.SET_USER_ID,
             id,
             data: undefined,
             connId,
           });
           break;
-        case Types.MessageType.GET_ROOM:
+        case MessageType.GET_ROOM:
           rtc.handleGetRoomMessage({
-            message: wss.getMessage(Types.MessageType.GET_ROOM, rawMessage),
+            message: wss.getMessage(MessageType.GET_ROOM, rawMessage),
             port,
           });
           break;
-        case Types.MessageType.GET_CHANGE_ROOM_GUESTS:
+        case MessageType.GET_CHANGE_ROOM_GUESTS:
           wss.sendMessage({
-            type: Types.MessageType.SET_CHANGE_ROOM_GUESTS,
+            type: MessageType.SET_CHANGE_ROOM_GUESTS,
             id,
             data: {
               roomUsers:
                 rtc.rooms[
-                  wss.getMessage(Types.MessageType.GET_CHANGE_ROOM_GUESTS, rawMessage).data.roomId
+                  wss.getMessage(MessageType.GET_CHANGE_ROOM_GUESTS, rawMessage).data.roomId
                 ],
             },
             connId,
@@ -118,7 +118,7 @@ function createServer({ port = PORT }: { port?: number }) {
                 c: wss.users[userId],
               });
               wss.sendMessage({
-                type: Types.MessageType.SET_CHANGE_ROOM_GUESTS,
+                type: MessageType.SET_CHANGE_ROOM_GUESTS,
                 id: _item,
                 data: {
                   roomUsers: rtc.rooms[item],
