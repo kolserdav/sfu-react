@@ -93,7 +93,7 @@
     "typescript": "^4.7.2"
   },
   "fhead": {
-    "root": "packages/client",
+    "root": "packages/server",
     "repository": "https://github.com/kolserdav/uyem.git",
     "patterns": [
       ".js",
@@ -108,7 +108,7 @@
     "name": "Sergey Kolmiller",
     "email": "uyem.ru@gmail.com",
     "license": "BSD-2-Clause",
-    "licenseText": "Binary distributions of this software include WebRTC and other third-party libraries.",
+    "licenseText": "Binary distributions of this software include 'wrtc' and other third-party libraries.",
     "copyright": "kolserdav, All rights reserved (c)",
     "renewAll": false
   }

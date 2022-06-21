@@ -1,16 +1,13 @@
 /******************************************************************************************
  * Repository: https://github.com/kolserdav/uyem.git
- * File name: Main.context.ts
+ * File name: Theme.ts
  * Author: Sergey Kolmiller
  * Email: <uyem.ru@gmail.com>
  * License: BSD-2-Clause
- * License text: Binary distributions of this software include WebRTC and other third-party libraries.
+ * License text: Binary distributions of this software include 'wrtc' and other third-party libraries.
  * Copyright: kolserdav, All rights reserved (c)
- * Create Date: Tue Jun 21 2022 07:43:56 GMT+0700 (Krasnoyarsk Standard Time)
+ * Create Date: Tue Jun 21 2022 08:49:55 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import { createContext } from 'react';
-import clsx from 'clsx';
-import s from './Main.module.scss';
 import { ThemeType } from './types';
 
 export type Themes = {
@@ -18,7 +15,7 @@ export type Themes = {
   light: Theme;
 };
 
-interface Color {
+export interface Color {
   paper: string;
   text: string;
   shadow: string;
@@ -29,6 +26,7 @@ type Colors = {
   dark: Color;
 };
 
+// Additionals
 type Theme = {
   wrapper: React.CSSProperties;
   container: React.CSSProperties;
@@ -88,6 +86,3 @@ export const themes: Themes = {
     colors: colors.light,
   },
 };
-
-// eslint-disable-next-line import/prefer-default-export
-export const ThemeContext = createContext(themes.dark);

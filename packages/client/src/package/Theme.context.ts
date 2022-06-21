@@ -1,6 +1,6 @@
 /******************************************************************************************
  * Repository: https://github.com/kolserdav/uyem.git
- * File name: constants.ts
+ * File name: Theme.context.ts
  * Author: Sergey Kolmiller
  * Email: <uyem.ru@gmail.com>
  * License: BSD-2-Clause
@@ -8,6 +8,12 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Tue Jun 21 2022 08:49:55 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-export const WS_TTL = 1;
-export const LOG_LEVEL = process.env.NODE_ENV === 'production' ? 3 : 2;
-export const START_DELAY = 999;
+/* eslint-disable no-unused-vars */
+import { createContext } from 'react';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { themes, Color } from './Theme';
+
+// eslint-disable-next-line import/prefer-default-export
+const MainContext = createContext(themes.dark);
+
+export default MainContext;

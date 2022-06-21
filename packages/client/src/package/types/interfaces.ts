@@ -4,9 +4,9 @@
  * Author: Sergey Kolmiller
  * Email: <uyem.ru@gmail.com>
  * License: BSD-2-Clause
- * License text: Binary distributions of this software include WebRTC and other third-party libraries.
+ * License text: Binary distributions of this software include 'wrtc' and other third-party libraries.
  * Copyright: kolserdav, All rights reserved (c)
- * Create Date: Sun Jun 19 2022 01:46:25 GMT+0700 (Krasnoyarsk Standard Time)
+ * Create Date: Tue Jun 21 2022 08:50:18 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-namespace */

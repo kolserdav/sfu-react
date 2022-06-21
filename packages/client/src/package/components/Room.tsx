@@ -4,16 +4,16 @@
  * Author: Sergey Kolmiller
  * Email: <uyem.ru@gmail.com>
  * License: BSD-2-Clause
- * License text: Binary distributions of this software include WebRTC and other third-party libraries.
+ * License text: Binary distributions of this software include 'wrtc' and other third-party libraries.
  * Copyright: kolserdav, All rights reserved (c)
- * Create Date: Sun Jun 19 2022 01:44:53 GMT+0700 (Krasnoyarsk Standard Time)
+ * Create Date: Tue Jun 21 2022 08:49:55 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import React, { useMemo, useContext, useRef } from 'react';
 import { getTarget } from '../utils/lib';
 import s from './Room.module.scss';
 import { RoomProps } from '../types/index';
 import { useConnection, useVideoDimensions, useOnclickClose, usePressEscape } from './Room.hooks';
-import { ThemeContext } from '../Main.context';
+import ThemeContext from '../Theme.context';
 import { getRoomLink, getPathname, onClickVideo } from './Room.lib';
 import CloseButton from './ui/CloseButton';
 

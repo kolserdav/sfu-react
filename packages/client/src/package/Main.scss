@@ -1,6 +1,6 @@
 /******************************************************************************************
  * Repository: https://github.com/kolserdav/uyem.git
- * File name: constants.ts
+ * File name: Main.scss
  * Author: Sergey Kolmiller
  * Email: <uyem.ru@gmail.com>
  * License: BSD-2-Clause
@@ -8,6 +8,16 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Tue Jun 21 2022 08:49:55 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-export const WS_TTL = 1;
-export const LOG_LEVEL = process.env.NODE_ENV === 'production' ? 3 : 2;
-export const START_DELAY = 999;
+// Constants
+$wrapper-width: 100vw;
+$wrapper-height: 100vh;
+$container-max-width: 1200px;
+$container-transition: 0.3s;
+
+// Colors. It's for example, implements in Theme.ts
+$color-dark-paper: #36413e;
+$color-dark-text: #d7d6d6;
+$color-dark-shadow: #beb2c8;
+$color-light-paper: #fff;
+$color-light-text: #5d5e60;
+$color-light-shadow: #8d8d92;

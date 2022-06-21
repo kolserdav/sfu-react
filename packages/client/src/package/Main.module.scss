@@ -4,13 +4,17 @@
  * Author: Sergey Kolmiller
  * Email: <uyem.ru@gmail.com>
  * License: BSD-2-Clause
- * License text: Binary distributions of this software include WebRTC and other third-party libraries.
+ * License text: Binary distributions of this software include 'wrtc' and other third-party libraries.
  * Copyright: kolserdav, All rights reserved (c)
- * Create Date: Tue Jun 21 2022 07:43:56 GMT+0700 (Krasnoyarsk Standard Time)
+ * Create Date: Tue Jun 21 2022 08:49:55 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-@import './Global';
+@import './Main';
 
 $button-width: 40px;
+
+.wrapper {
+  overflow: hidden;
+}
 
 .button {
   z-index: 100;
@@ -20,7 +24,7 @@ $button-width: 40px;
   height: $button-width;
   font-size: x-small;
   position: fixed;
-  left: calc((#{$button-width} / 2 * -1) + #{$container-width});
+  left: calc((#{$button-width} / 2 * -1) + #{$wrapper-width});
   bottom: calc(#{$button-width} / 2);
   margin: auto;
   border: none;
