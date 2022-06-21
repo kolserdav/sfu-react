@@ -66,6 +66,17 @@ class RTC implements RTCInterface {
     }
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const core = this;
+    this.peerConnections[peerId]!.onconnectionstatechange = (e) => {
+      const { currentTarget }: { currentTarget: RTCPeerConnection } = e as any;
+      switch (currentTarget.connectionState) {
+        case 'closed':
+        case 'disconnected':
+        case 'failed':
+          log('warn', 'Failed connection state', { cs: currentTarget.connectionState, peerId });
+          break;
+        default:
+      }
+    };
     this.peerConnections[peerId]!.onicecandidate = function handleICECandidateEvent(
       event: RTCPeerConnectionIceEvent
     ) {
@@ -93,10 +104,10 @@ class RTC implements RTCInterface {
       function handleICEConnectionStateChangeEvent(event: Event) {
         log(
           'log',
-          `* ICE connection state changed to: ${core.peerConnections[peerId]!.iceConnectionState}`,
+          `* ICE connection state changed to: ${core.peerConnections[peerId]?.iceConnectionState}`,
           { peerId }
         );
-        switch (core.peerConnections[peerId]!.iceConnectionState) {
+        switch (core.peerConnections[peerId]?.iceConnectionState) {
           case 'closed':
           case 'failed':
           case 'disconnected':
@@ -144,7 +155,11 @@ class RTC implements RTCInterface {
             return 1;
           }
           return core.peerConnections[peerId]!.setLocalDescription(offer).catch((err) => {
-            log('error', 'Error create local description', err);
+            log('error', 'Error create local description', {
+              err,
+              peerId,
+              peer: core.peerConnections[peerId],
+            });
           });
         })
         .then(() => {
@@ -367,18 +382,16 @@ class RTC implements RTCInterface {
       is: this.peerConnections[peerId]?.iceConnectionState,
     });
     const desc = new RTCSessionDescription(sdp);
-    if (!this.peerConnections[peerId]) {
-      log('warn', 'Handle video answer msg', { peerId });
-      return;
-    }
-    if (!this.peerConnections[peerId]) {
+    if (
+      !this.peerConnections[peerId] ||
+      this.peerConnections[peerId]?.iceConnectionState === 'connected'
+    ) {
       log('warn', 'Skiping set remote desc for answer', {
         id,
         userId,
         target,
         peerId,
-        s: this.peerConnections[peerId]?.connectionState,
-        is: this.peerConnections[peerId]?.iceConnectionState,
+        peer: this.peerConnections[peerId],
       });
       setTimeout(() => {
         // this.invite({ roomId: id, userId, target, connId });
@@ -398,8 +411,7 @@ class RTC implements RTCInterface {
           userId,
           target,
           peerId,
-          s: this.peerConnections[peerId]?.connectionState,
-          is: this.peerConnections[peerId]?.iceConnectionState,
+          peer: this.peerConnections[peerId],
         });
         if (cb) {
           cb(1);

@@ -56,8 +56,8 @@ function Room({ id }: RoomProps) {
               id={item.stream.id}
               title={item.target.toString()}
               autoPlay
-              onLoadedMetadata={(e) => {
-                log('log', 'Onload meta data', { active: item.stream.active });
+              onWaiting={(e) => {
+                log('warn', 'Onload meta data', { active: item.stream.active, id: item.target });
               }}
             />
           </div>

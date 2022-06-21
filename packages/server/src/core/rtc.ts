@@ -192,17 +192,8 @@ class RTC implements RTCInterface {
       connId,
       data: { candidate, userId, target },
     } = msg;
-    let _connId = connId;
-    if (target === 0) {
-      const peerKeys = Object.keys(this.peerConnections);
-      peerKeys.forEach((item) => {
-        const peer = item.split(this.delimiter);
-        if (peer[1] === userId.toString() && peer[2] === '0') {
-          _connId = peer[3];
-        }
-      });
-    }
-    const peerId = this.getPeerId(id, userId, target, _connId);
+
+    const peerId = this.getPeerId(id, userId, target, connId);
     const cand = new wrtc.RTCIceCandidate(candidate);
 
     log('log', 'Trying to add ice candidate', {
@@ -212,10 +203,21 @@ class RTC implements RTCInterface {
       id,
       userId,
       target,
-      _connId,
     });
-    if (!this.peerConnections[peerId]) {
-      log('warn', 'Skiping add ice candidate', { id, target, userId, _connId });
+
+    if (
+      !this.peerConnections[peerId] ||
+      this.peerConnections[peerId]?.connectionState === 'closed'
+    ) {
+      log('info', 'Skiping add ice candidate', {
+        connId,
+        id,
+        userId,
+        target,
+        state: this.peerConnections[peerId]?.connectionState,
+        ice: this.peerConnections[peerId]?.iceConnectionState,
+        ss: this.peerConnections[peerId]?.signalingState,
+      });
       return;
     }
     if (cand.candidate === '') {
@@ -229,7 +231,7 @@ class RTC implements RTCInterface {
         }
       })
       .catch((e) => {
-        log('warn', 'Set candidate error', {
+        log('error', 'Set candidate error', {
           error: e.message,
           connId,
           id,
@@ -237,6 +239,7 @@ class RTC implements RTCInterface {
           target,
           state: this.peerConnections[peerId]?.connectionState,
           ice: this.peerConnections[peerId]?.iceConnectionState,
+          ss: this.peerConnections[peerId]?.signalingState,
         });
         this.ws.sendMessage({
           type: MessageType.SET_ERROR,
@@ -403,6 +406,7 @@ class RTC implements RTCInterface {
           userId,
           target,
           connId,
+          desc,
         });
         if (cb) {
           cb(null);
@@ -419,8 +423,11 @@ class RTC implements RTCInterface {
     // TODO maybe wrong
     const peerId = this.getPeerId(userId, id, target, connId);
     log('info', '----> Call recipient has accepted our call', { userId, target });
-    if (!this.peerConnections[peerId]) {
-      log('warn', 'Handle video answer msg', { peerId });
+    if (
+      !this.peerConnections[peerId] ||
+      this.peerConnections[peerId]?.signalingState === 'stable'
+    ) {
+      log('warn', 'Skiping video answer', { peerId });
       return;
     }
     const desc = new wrtc.RTCSessionDescription(sdp);
