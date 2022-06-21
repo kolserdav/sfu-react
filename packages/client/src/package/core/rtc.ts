@@ -357,7 +357,7 @@ class RTC implements RTCInterface {
       connId,
       data: { sdp, userId, target },
     } = msg;
-    let peerId = this.getPeerId(userId, target, connId);
+    const peerId = this.getPeerId(userId, target, connId);
     log('info', '----> Call recipient has accepted our call', {
       id,
       userId,
@@ -368,19 +368,10 @@ class RTC implements RTCInterface {
     });
     const desc = new RTCSessionDescription(sdp);
     if (!this.peerConnections[peerId]) {
-      peerId = this.getPeerId(id, target, connId);
-    }
-    if (!this.peerConnections[peerId]) {
       log('warn', 'Handle video answer msg', { peerId });
       return;
     }
-    if (
-      !this.peerConnections[peerId] ||
-      (this.peerConnections[peerId]?.iceConnectionState === 'connected' &&
-        !this.peerConnections[peerId]?.connectionState) ||
-      this.peerConnections[peerId]?.connectionState === 'connected' ||
-      this.peerConnections[peerId]?.connectionState === 'connecting'
-    ) {
+    if (!this.peerConnections[peerId]) {
       log('warn', 'Skiping set remote desc for answer', {
         id,
         userId,

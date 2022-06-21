@@ -41,7 +41,7 @@ function Room({ id }: RoomProps) {
               muted={item.target === id}
               onTimeUpdate={(e) => {
                 if (item.stream.active === false) {
-                  log('warn', 'Stream is not active', { uid: item.target, sid: item.stream.id });
+                  log('log', 'Stream is not active', { uid: item.target, sid: item.stream.id });
                   lostStreamHandler({
                     video: e.target as HTMLVideoElement,
                     target: item.target,

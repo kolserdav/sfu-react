@@ -48,6 +48,7 @@ export const getWidthOfItem = ({
   coeff: number;
 }) => {
   let a = 0;
+  let vertical = false;
   let dims = {
     cols: 1,
     rows: 1,
@@ -77,11 +78,14 @@ export const getWidthOfItem = ({
     }
     const w = width / dims.cols;
     const h = height / dims.rows;
-    a = coeff > 1 ? w : h;
+    vertical = dims.cols > dims.rows;
+    a = vertical ? w : h;
+    a = dims.cols === dims.rows && horizontal ? h : w;
   }
 
   return {
     width: Math.floor(a),
+    vertical,
     cols: dims.cols,
     rows: dims.rows,
   };

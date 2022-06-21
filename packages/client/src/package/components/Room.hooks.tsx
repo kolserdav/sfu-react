@@ -49,7 +49,7 @@ export const useConnection = ({
     }
     const peerId = rtc.getPeerId(roomId, target, connId);
     if (!rtc.peerConnections[peerId]) {
-      log('warn', 'Lost stream handler without peer connection', { peerId });
+      log('info', 'Lost stream handler without peer connection', { peerId });
       return;
     }
     rtc.closeVideoCall({ roomId, userId: ws.userId, target, connId });

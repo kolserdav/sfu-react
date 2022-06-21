@@ -202,7 +202,7 @@ class RTC implements RTCInterface {
         }
       });
     }
-    let peerId = this.getPeerId(id, userId, target, _connId);
+    const peerId = this.getPeerId(id, userId, target, _connId);
     const cand = new wrtc.RTCIceCandidate(candidate);
 
     log('log', 'Trying to add ice candidate', {
@@ -215,10 +215,7 @@ class RTC implements RTCInterface {
       _connId,
     });
     if (!this.peerConnections[peerId]) {
-      peerId = this.getPeerId(id, target, userId, _connId);
-    }
-    if (!this.peerConnections[peerId]) {
-      log('info', 'Skiping add ice candidate', { id, target, userId, _connId });
+      log('warn', 'Skiping add ice candidate', { id, target, userId, _connId });
       return;
     }
     if (cand.candidate === '') {
