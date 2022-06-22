@@ -29,6 +29,7 @@ export const useConnection = ({
   roomId: number | string | null;
 }) => {
   const [streams, setStreams] = useState<Stream[]>([]);
+  const [selfStream, setSelfStream] = useState<Stream | null>(null);
   const [roomIsSaved, setRoomIsSaved] = useState<boolean>(false);
   const [lenght, setLenght] = useState<number>(streams.length);
   const [connectionId, setConnectionId] = useState<string>('');
@@ -71,17 +72,15 @@ export const useConnection = ({
       addedUserId,
       stream,
       connId,
-      self = true,
     }: {
       addedUserId: string | number;
       stream: MediaStream;
       connId: string;
-      self?: boolean;
     }) => {
       const _streams = streams.map((_item) => _item);
       const isExists = _streams.filter((_item) => _item.target === addedUserId);
       if (!isExists[0]) {
-        _streams.push({
+        const _stream: Stream = {
           target: addedUserId,
           stream,
           connId,
@@ -91,15 +90,10 @@ export const useConnection = ({
               node.srcObject = stream;
             }
           },
-        });
-        log('log', 'Set streams', { _streams });
-        if (self) {
-          setStreams(_streams);
-        } else {
-          setTimeout(() => {
-            setStreams(_streams);
-          }, START_DELAY);
-        }
+        };
+        _streams.push(_stream);
+        log('warn', 'Set streams', { _streams });
+        setStreams(_streams);
       }
     };
 
@@ -115,7 +109,7 @@ export const useConnection = ({
         case 'add':
         case 'added':
           if (userId !== target) {
-            log('info', 'Change room unit handler', {
+            log('warn', 'Change room unit handler', {
               userId,
               target,
               roomLenght,
@@ -126,9 +120,9 @@ export const useConnection = ({
             rtc.createPeerConnection(
               { roomId, target, userId: id, connId },
               ({ addedUserId, stream }) => {
-                if (!second) {
+                if (second === 1) {
                   log('info', 'Added unit track', { addedUserId, s: stream.id, connId });
-                  addStream({ addedUserId, stream, connId, self: false });
+                  addStream({ addedUserId, stream, connId });
                 }
                 second++;
               }
@@ -180,7 +174,7 @@ export const useConnection = ({
           const peerId = rtc.getPeerId(roomId, item, connId);
           const _isExists = _streams.filter((_item) => item === _item.target);
           if (!_isExists[0]) {
-            log('info', 'Check new user', { item });
+            log('warn', 'Check new user', { item });
             let second = 0;
             rtc.createPeerConnection(
               { roomId, target: item, userId: id, connId },
@@ -203,6 +197,16 @@ export const useConnection = ({
                 });
                 break;
             }
+          }
+        } else if (!streams.find((_item) => _item.target === ws.userId)) {
+          const __streams = streams.map((_item) => _item);
+          if (selfStream) {
+            __streams.push(selfStream);
+            setTimeout(() => {
+              setStreams(__streams);
+            }, 100);
+          } else {
+            log('warn', 'Self stream is not defined', { __streams });
           }
         }
       });
@@ -303,17 +307,18 @@ export const useConnection = ({
         /** */
       };
     };
-  }, [roomId, streams, ws, rtc, id, roomIsSaved, lenght]);
+  }, [roomId, streams, ws, rtc, id, roomIsSaved, lenght, selfStream]);
 
   useEffect(() => {
+    /*
     if (!roomId) {
       return () => {
-        /** */
+        //
       };
     }
+    
     const interval = setInterval(() => {
       if (lenght !== streams.length) {
-        console.log(1);
         setTimeout(() => {
           ws.sendMessage({
             type: MessageType.GET_ROOM_GUESTS,
@@ -323,12 +328,13 @@ export const useConnection = ({
               roomId,
             },
           });
-        }, 1000);
+        }, 100);
       }
     }, 1000);
     return () => {
       clearInterval(interval);
     };
+    */
   }, [roomId, ws, lenght, streams, connectionId, id]);
 
   return { streams, lenght, lostStreamHandler };
