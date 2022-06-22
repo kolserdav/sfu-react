@@ -92,7 +92,7 @@ class RTC implements RTCInterface {
     this.peerConnections[peerId]!.oniceconnectionstatechange =
       function handleICEConnectionStateChangeEvent() {
         log(
-          'warn',
+          'info',
           `* ICE connection state changed to: ${core.peerConnections[peerId]?.iceConnectionState}`,
           { peerId }
         );

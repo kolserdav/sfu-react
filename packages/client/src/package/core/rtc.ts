@@ -103,7 +103,7 @@ class RTC implements RTCInterface {
         case 'closed':
         case 'disconnected':
         case 'failed':
-          log('warn', 'Failed connection state', { cs: currentTarget.connectionState, peerId });
+          log('log', 'Failed connection state', { cs: currentTarget.connectionState, peerId });
           break;
         default:
       }
@@ -417,7 +417,7 @@ class RTC implements RTCInterface {
       !this.peerConnections[peerId] ||
       this.peerConnections[peerId]?.iceConnectionState === 'connected'
     ) {
-      log('warn', 'Skiping set remote desc for answer', {
+      log('info', 'Skiping set remote desc for answer', {
         id,
         userId,
         target,
@@ -454,7 +454,10 @@ class RTC implements RTCInterface {
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, target, connId }) => {
     const peerId = this.getPeerId(roomId, target, connId);
     if (!this.peerConnections[peerId]) {
-      log('warn', 'Close video call without peer connection', { peerId });
+      log('info', 'Close video call without peer connection', {
+        peerId,
+        r: Object.keys(this.peerConnections),
+      });
       return;
     }
     log('info', '| Closing the call', { peerId, k: Object.keys(this.peerConnections) });

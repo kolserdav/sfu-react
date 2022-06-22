@@ -180,7 +180,7 @@ export const useConnection = ({
           const peerId = rtc.getPeerId(roomId, item, connId);
           const _isExists = _streams.filter((_item) => item === _item.target);
           if (!_isExists[0]) {
-            log('warn', 'Check new user', { item });
+            log('info', 'Check new user', { item });
             let second = 0;
             rtc.createPeerConnection(
               { roomId, target: item, userId: id, connId },
@@ -304,6 +304,32 @@ export const useConnection = ({
       };
     };
   }, [roomId, streams, ws, rtc, id, roomIsSaved, lenght]);
+
+  useEffect(() => {
+    if (!roomId) {
+      return () => {
+        /** */
+      };
+    }
+    const interval = setInterval(() => {
+      if (lenght !== streams.length) {
+        console.log(1);
+        setTimeout(() => {
+          ws.sendMessage({
+            type: MessageType.GET_ROOM_GUESTS,
+            id,
+            connId: connectionId,
+            data: {
+              roomId,
+            },
+          });
+        }, 1000);
+      }
+    }, 1000);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [roomId, ws, lenght, streams, connectionId, id]);
 
   return { streams, lenght, lostStreamHandler };
 };
