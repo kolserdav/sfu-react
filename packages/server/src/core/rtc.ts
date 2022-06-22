@@ -96,27 +96,6 @@ class RTC implements RTCInterface {
           `* ICE connection state changed to: ${core.peerConnections[peerId]?.iceConnectionState}`,
           { peerId }
         );
-        if (
-          core.peerConnections[peerId]?.iceConnectionState === 'connected' &&
-          core.peerConnections[peerId]?.connectionState === 'connected'
-        ) {
-          // on connect notification
-          const isRoom = peerId.split(delimiter)[2] === '0';
-          if (isRoom) {
-            rooms[roomId].forEach((id) => {
-              ws.sendMessage({
-                type: MessageType.SET_CHANGE_ROOM_UNIT,
-                id,
-                data: {
-                  target: userId,
-                  eventName: 'add',
-                  roomLenght: rooms[roomId].length,
-                },
-                connId,
-              });
-            });
-          }
-        }
         switch (core.peerConnections[peerId]?.iceConnectionState) {
           case 'closed':
           case 'failed':
@@ -184,10 +163,33 @@ class RTC implements RTCInterface {
           }
         });
     };
+    let s = 1;
     this.peerConnections[peerId]!.ontrack = (e) => {
       const stream = e.streams[0];
+      log('info', 'ontrack', { peerId });
       this.streams[peerId] = stream;
       this.onAddTrack(userId, stream);
+      // on connect notification
+      const isRoom = peerId.split(delimiter)[2] === '0';
+      if (isRoom) {
+        if (s % 2 === 0) {
+          setTimeout(() => {
+            rooms[roomId].forEach((id) => {
+              ws.sendMessage({
+                type: MessageType.SET_CHANGE_ROOM_UNIT,
+                id,
+                data: {
+                  target: userId,
+                  eventName: 'add',
+                  roomLenght: rooms[roomId].length,
+                },
+                connId,
+              });
+            });
+          }, 0);
+        }
+        s++;
+      }
     };
   };
 
@@ -323,6 +325,8 @@ class RTC implements RTCInterface {
               userId,
               target,
               connId,
+              _connId,
+              k: Object.keys(this.streams),
             });
             return;
           }
@@ -428,7 +432,6 @@ class RTC implements RTCInterface {
       connId,
       data: { sdp, userId, target },
     } = msg;
-    // TODO maybe wrong
     const peerId = this.getPeerId(userId, id, target, connId);
     log('info', '----> Call recipient has accepted our call', { userId, target });
     if (

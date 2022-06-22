@@ -81,16 +81,16 @@ export const useConnection = ({
       ws.setUserId(id);
     }
     const addStream = ({
-      addedUserId,
+      target,
       stream,
       connId,
     }: {
-      addedUserId: string | number;
+      target: string | number;
       stream: MediaStream;
       connId: string;
     }) => {
       const _stream: Stream = {
-        target: addedUserId,
+        target,
         stream,
         connId,
         ref: (node) => {
@@ -101,6 +101,9 @@ export const useConnection = ({
         },
       };
       storeStreams.dispatch(changeStreams({ type: 'add', stream: _stream }));
+      if (!selfStream && target === ws.userId) {
+        setSelfStream(_stream);
+      }
       log('info', 'Add stream', { _stream });
     };
 
@@ -127,7 +130,7 @@ export const useConnection = ({
               { roomId, target, userId: id, connId },
               ({ addedUserId, stream }) => {
                 log('info', 'Added unit track', { addedUserId, s: stream.id, connId });
-                addStream({ addedUserId, stream, connId });
+                addStream({ target: addedUserId, stream, connId });
               }
             );
             if (eventName !== 'added') {
@@ -185,7 +188,7 @@ export const useConnection = ({
               { roomId, target: item, userId: id, connId },
               ({ addedUserId, stream }) => {
                 if (!second) {
-                  addStream({ addedUserId, stream, connId });
+                  addStream({ target: addedUserId, stream, connId });
                 }
                 second++;
               }
@@ -259,7 +262,7 @@ export const useConnection = ({
           rtc.onAddTrack = (myId, stream) => {
             log('info', '-> Added local stream to room', { myId, id });
 
-            addStream({ addedUserId: myId, stream, connId });
+            addStream({ target: myId, stream, connId });
           };
           rtc.invite({ roomId, userId: id, target: 0, connId });
           ws.sendMessage({
