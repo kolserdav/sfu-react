@@ -14,11 +14,11 @@ import WS from '../core/ws';
 import RTC from '../core/rtc';
 import { log } from '../utils/lib';
 import { getWidthOfItem } from './Room.lib';
-import { START_DELAY } from '../utils/constants';
 import { MessageType, SendMessageArgs } from '../types/interfaces';
 import { Stream } from '../types';
 import s from './Room.module.scss';
 import c from './ui/CloseButton.module.scss';
+import storeStreams, { changeStreams } from '../store/streams';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -54,10 +54,22 @@ export const useConnection = ({
       return;
     }
     rtc.closeVideoCall({ roomId, userId: ws.userId, target, connId });
-    const _strems = streams.filter((item) => item.target !== target);
-    setStreams(_strems);
-    video.parentElement?.removeChild(video);
+    const _stream = streams.find((item) => item.target === target);
+    if (_stream) {
+      storeStreams.dispatch(changeStreams({ type: 'delete', stream: _stream }));
+      video.parentElement?.removeChild(video);
+    }
   };
+
+  useEffect(() => {
+    const cleanSubs = storeStreams.subscribe(() => {
+      const state = storeStreams.getState();
+      setStreams(state.streams);
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, []);
 
   useEffect(() => {
     if (!roomId) {
@@ -77,24 +89,19 @@ export const useConnection = ({
       stream: MediaStream;
       connId: string;
     }) => {
-      const _streams = streams.map((_item) => _item);
-      const isExists = _streams.filter((_item) => _item.target === addedUserId);
-      if (!isExists[0]) {
-        const _stream: Stream = {
-          target: addedUserId,
-          stream,
-          connId,
-          ref: (node) => {
-            if (node) {
-              // eslint-disable-next-line no-param-reassign
-              node.srcObject = stream;
-            }
-          },
-        };
-        _streams.push(_stream);
-        log('warn', 'Set streams', { _streams });
-        setStreams(_streams);
-      }
+      const _stream: Stream = {
+        target: addedUserId,
+        stream,
+        connId,
+        ref: (node) => {
+          if (node) {
+            // eslint-disable-next-line no-param-reassign
+            node.srcObject = stream;
+          }
+        },
+      };
+      storeStreams.dispatch(changeStreams({ type: 'add', stream: _stream }));
+      log('info', 'Add stream', { _stream });
     };
 
     const changeRoomUnitHandler = ({
@@ -109,22 +116,18 @@ export const useConnection = ({
         case 'add':
         case 'added':
           if (userId !== target) {
-            log('warn', 'Change room unit handler', {
+            log('info', 'Change room unit handler', {
               userId,
               target,
               roomLenght,
               connId,
               eventName,
             });
-            let second = 0;
             rtc.createPeerConnection(
               { roomId, target, userId: id, connId },
               ({ addedUserId, stream }) => {
-                if (second === 1) {
-                  log('info', 'Added unit track', { addedUserId, s: stream.id, connId });
-                  addStream({ addedUserId, stream, connId });
-                }
-                second++;
+                log('info', 'Added unit track', { addedUserId, s: stream.id, connId });
+                addStream({ addedUserId, stream, connId });
               }
             );
             if (eventName !== 'added') {
@@ -150,8 +153,10 @@ export const useConnection = ({
             k: Object.keys(rtc.peerConnections),
           });
           rtc.closeVideoCall({ roomId, target, userId, connId });
-          const __streams = streams.filter((item) => item.target !== target);
-          setStreams(__streams);
+          const _stream = streams.find((item) => item.target === target);
+          if (_stream) {
+            storeStreams.dispatch(changeStreams({ type: 'delete', stream: _stream }));
+          }
           break;
       }
     };
@@ -201,10 +206,7 @@ export const useConnection = ({
         } else if (!streams.find((_item) => _item.target === ws.userId)) {
           const __streams = streams.map((_item) => _item);
           if (selfStream) {
-            __streams.push(selfStream);
-            setTimeout(() => {
-              setStreams(__streams);
-            }, 100);
+            storeStreams.dispatch(changeStreams({ type: 'add', stream: selfStream }));
           } else {
             log('warn', 'Self stream is not defined', { __streams });
           }
@@ -219,10 +221,7 @@ export const useConnection = ({
             if (peer[1] === item.target) {
               streams.forEach((i, index) => {
                 if (i.target === item.target) {
-                  _streams.splice(index, 1);
-                  setTimeout(() => {
-                    setStreams(_streams);
-                  }, START_DELAY / 3);
+                  storeStreams.dispatch(changeStreams({ type: 'delete', stream: i }));
                 }
               });
               rtc.closeVideoCall({

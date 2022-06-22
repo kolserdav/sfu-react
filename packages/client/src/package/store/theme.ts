@@ -11,31 +11,31 @@
 import { createSlice, configureStore } from '@reduxjs/toolkit';
 import { ThemeType } from '../types';
 
-interface ThemeState {
+interface State {
   theme: ThemeType;
 }
 
-interface ThemeAction {
-  payload: ThemeState;
+interface Action {
+  payload: State;
 }
 
-const themeSlice = createSlice({
+const slice = createSlice({
   name: 'theme',
   initialState: {
     theme: 'light',
-  } as ThemeState,
+  } as State,
   reducers: {
-    changeTheme: (state: ThemeState, action: ThemeAction) => {
+    changeTheme: (state: State, action: Action) => {
       // eslint-disable-next-line no-param-reassign
       state.theme = action.payload.theme === 'dark' ? 'light' : 'dark';
     },
   },
 });
 
-export const { changeTheme } = themeSlice.actions;
+export const { changeTheme } = slice.actions;
 
 const storeTheme = configureStore({
-  reducer: themeSlice.reducer,
+  reducer: slice.reducer,
 });
 
 export default storeTheme;
