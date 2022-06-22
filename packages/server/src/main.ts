@@ -138,6 +138,9 @@ function createServer({ port = PORT }: { port?: number }) {
                 connId: _connId,
               });
             });
+            if (rtc.rooms[item].length === 0) {
+              delete rtc.rooms[item];
+            }
           }
           delete wss.sockets[connId];
           delete wss.users[userId];
