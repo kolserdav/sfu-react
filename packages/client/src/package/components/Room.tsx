@@ -35,7 +35,7 @@ function Room({ id }: RoomProps) {
     <div className={s.wrapper} style={theme.wrapper}>
       <div className={s.container} ref={container}>
         {streams.map((item, index) => (
-          <div key={item.target} className={s.video}>
+          <div key={item.target} className={s.video} id={item.connId}>
             <CloseButton onClick={onClickClose} onKeyDown={onPressEscape} tabindex={index} />
             <video
               muted={item.target === id}

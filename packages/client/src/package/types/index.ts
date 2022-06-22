@@ -12,7 +12,7 @@ export interface RoomProps {
   id: number | string;
 }
 
-export interface Streams {
+export interface Stream {
   target: number | string;
   stream: MediaStream;
   connId: string;

@@ -72,15 +72,13 @@ function createServer({ port = PORT }: { port?: number }) {
             port,
           });
           break;
-        case MessageType.GET_CHANGE_ROOM_GUESTS:
+        case MessageType.GET_ROOM_GUESTS:
           wss.sendMessage({
-            type: MessageType.SET_CHANGE_ROOM_GUESTS,
+            type: MessageType.SET_ROOM_GUESTS,
             id,
             data: {
               roomUsers:
-                rtc.rooms[
-                  wss.getMessage(MessageType.GET_CHANGE_ROOM_GUESTS, rawMessage).data.roomId
-                ],
+                rtc.rooms[wss.getMessage(MessageType.GET_ROOM_GUESTS, rawMessage).data.roomId],
             },
             connId,
           });
@@ -118,10 +116,12 @@ function createServer({ port = PORT }: { port?: number }) {
                 c: wss.users[userId],
               });
               wss.sendMessage({
-                type: MessageType.SET_CHANGE_ROOM_GUESTS,
+                type: MessageType.SET_CHANGE_ROOM_UNIT,
                 id: _item,
                 data: {
-                  roomUsers: rtc.rooms[item],
+                  roomLenght: rtc.rooms[item].length,
+                  target: userId,
+                  eventName: 'delete',
                 },
                 connId,
               });

@@ -8,6 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Tue Jun 21 2022 08:49:55 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
+import { string } from 'yargs';
 import { RTCInterface, MessageType } from '../types/interfaces';
 import { log } from '../utils/lib';
 import WS from './ws';
@@ -27,6 +28,36 @@ class RTC implements RTCInterface {
 
   constructor({ ws }: { ws: WS }) {
     this.ws = ws;
+  }
+
+  public createPeerConnection(
+    {
+      roomId,
+      userId,
+      target,
+      connId,
+    }: {
+      roomId: string | number;
+      userId: string | number;
+      target: string | number;
+      connId: string;
+    },
+    cb: (args: { addedUserId: string | number; stream: MediaStream; connId: string }) => void
+  ) {
+    if (target !== userId) {
+      this.createRTC({ roomId, target, userId, connId });
+      this.onAddTrack = (addedUserId, stream) => {
+        if (addedUserId !== userId) {
+          log('info', '-> Added remote stream to room', { addedUserId, userId });
+          cb({ addedUserId, stream, connId });
+        } else {
+          /** self emty add track */
+        }
+      };
+      this.invite({ roomId, userId, target, connId });
+    } else {
+      log('warn', 'Attempt of duplicate peer connection');
+    }
   }
 
   public createRTC: RTCInterface['createRTC'] = ({ connId, roomId, target }) => {

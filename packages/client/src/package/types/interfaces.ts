@@ -28,23 +28,29 @@ export enum MessageType {
   GET_ROOM = 'GET_ROOM',
   SET_ROOM = 'SET_ROOM',
   SET_ERROR = 'SET_ERROR',
-  GET_CHANGE_ROOM_GUESTS = 'GET_CHANGE_ROOM_GUESTS',
-  SET_CHANGE_ROOM_GUESTS = 'SET_CHANGE_ROOM_GUESTS',
+  GET_ROOM_GUESTS = 'GET_ROOM_GUESTS',
+  SET_ROOM_GUESTS = 'SET_ROOM_GUESTS',
+  SET_CHANGE_ROOM_UNIT = 'SET_CHANGE_ROOM_UNIT',
 }
 
 export namespace DataTypes {
   export namespace MessageTypes {
-    export type GetChangeRoomGuests = {
+    export type GetRoomGuests = {
       roomId: number | string;
     };
     export type GetGuestId = {
       isRoom?: boolean;
     };
+    export type SerChangeRoomUnit = {
+      target: number | string;
+      eventName: 'delete' | 'add' | 'added';
+      roomLenght: number;
+    };
     export type SetGuestId = undefined;
     export type GetRoom = {
       userId: number | string;
     };
-    export type SetChangeRoomGuests = {
+    export type SetRoomGuests = {
       roomUsers: (number | string)[];
     };
     export type SetRoom = undefined;
@@ -84,10 +90,12 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.GetRoom
     : T extends MessageType.SET_ROOM
     ? DataTypes.MessageTypes.SetRoom
-    : T extends MessageType.GET_CHANGE_ROOM_GUESTS
-    ? DataTypes.MessageTypes.GetChangeRoomGuests
-    : T extends MessageType.SET_CHANGE_ROOM_GUESTS
-    ? DataTypes.MessageTypes.SetChangeRoomGuests
+    : T extends MessageType.GET_ROOM_GUESTS
+    ? DataTypes.MessageTypes.GetRoomGuests
+    : T extends MessageType.SET_ROOM_GUESTS
+    ? DataTypes.MessageTypes.SetRoomGuests
+    : T extends MessageType.SET_CHANGE_ROOM_UNIT
+    ? DataTypes.MessageTypes.SerChangeRoomUnit
     : T extends MessageType.SET_ERROR
     ? DataTypes.MessageTypes.SetError
     : unknown;

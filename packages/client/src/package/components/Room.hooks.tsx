@@ -16,7 +16,7 @@ import { log } from '../utils/lib';
 import { getWidthOfItem } from './Room.lib';
 import { START_DELAY } from '../utils/constants';
 import { MessageType, SendMessageArgs } from '../types/interfaces';
-import { Streams } from '../types';
+import { Stream } from '../types';
 import s from './Room.module.scss';
 import c from './ui/CloseButton.module.scss';
 
@@ -28,9 +28,9 @@ export const useConnection = ({
   id: number | string;
   roomId: number | string | null;
 }) => {
-  const [streams, setStreams] = useState<Streams[]>([]);
+  const [streams, setStreams] = useState<Stream[]>([]);
   const [roomIsSaved, setRoomIsSaved] = useState<boolean>(false);
-  const [lenght, setLenght] = useState<number>(0);
+  const [lenght, setLenght] = useState<number>(streams.length);
   const [connectionId, setConnectionId] = useState<string>('');
   const ws = useMemo(() => new WS(), []);
   const rtc = useMemo(() => new RTC({ ws }), [ws]);
@@ -67,17 +67,18 @@ export const useConnection = ({
     if (!ws.userId) {
       ws.setUserId(id);
     }
-    const onAddTrack = ({
-      _streams,
+    const addStream = ({
       addedUserId,
       stream,
       connId,
+      self = true,
     }: {
-      _streams: Streams[];
       addedUserId: string | number;
       stream: MediaStream;
       connId: string;
+      self?: boolean;
     }) => {
+      const _streams = streams.map((_item) => _item);
       const isExists = _streams.filter((_item) => _item.target === addedUserId);
       if (!isExists[0]) {
         _streams.push({
@@ -91,10 +92,66 @@ export const useConnection = ({
             }
           },
         });
-        setTimeout(() => {
-          log('info', 'Set streams', { _streams });
+        log('warn', 'Set streams', { _streams });
+        if (self) {
           setStreams(_streams);
-        }, START_DELAY);
+        } else {
+          setTimeout(() => {
+            setStreams(_streams);
+          }, START_DELAY);
+        }
+      }
+    };
+
+    const changeRoomUnitHandler = ({
+      id: userId,
+      data: { target, eventName, roomLenght },
+      connId,
+    }: SendMessageArgs<MessageType.SET_CHANGE_ROOM_UNIT>) => {
+      if (lenght !== roomLenght) {
+        setLenght(roomLenght);
+      }
+      switch (eventName) {
+        case 'add':
+        case 'added':
+          if (userId !== target) {
+            log('info', 'Change room unit handler', {
+              userId,
+              target,
+              roomLenght,
+              connId,
+              eventName,
+            });
+            let second = 0;
+            rtc.createPeerConnection(
+              { roomId, target, userId: id, connId },
+              ({ addedUserId, stream }) => {
+                if (!second) {
+                  log('info', 'Added unit track', { addedUserId, s: stream.id, connId });
+                  addStream({ addedUserId, stream, connId, self: false });
+                }
+                second++;
+              }
+            );
+            if (eventName !== 'added') {
+              ws.sendMessage({
+                type: MessageType.SET_CHANGE_ROOM_UNIT,
+                id: target,
+                connId,
+                data: {
+                  target: userId,
+                  roomLenght,
+                  eventName: 'added',
+                },
+              });
+            }
+          }
+          break;
+        case 'delete':
+          rtc.closeVideoCall({ roomId, target, userId, connId });
+          const __streams = streams.filter((item) => item.target !== target);
+          setStreams(__streams);
+          break;
       }
     };
 
@@ -106,7 +163,7 @@ export const useConnection = ({
       const {
         data: { roomUsers },
         connId,
-      } = ws.getMessage(MessageType.SET_CHANGE_ROOM_GUESTS, rawMessage);
+      } = ws.getMessage(MessageType.SET_ROOM_GUESTS, rawMessage);
       const _streams = streams.map((_item) => _item);
       log('info', 'onChangeRoomGuests', { roomUsers, id, st: _streams.map((i) => i.target) });
       // Add remote streams
@@ -116,13 +173,17 @@ export const useConnection = ({
           const peerId = rtc.getPeerId(roomId, item, connId);
           const _isExists = _streams.filter((_item) => item === _item.target);
           if (!_isExists[0]) {
-            log('info', 'Check new user', { item });
-            rtc.createRTC({ roomId, target: item, userId: id, connId });
-            rtc.onAddTrack = (addedUserId, stream) => {
-              log('info', '-> Added remote stream to room', { addedUserId, id });
-              onAddTrack({ _streams, addedUserId, stream, connId });
-            };
-            rtc.invite({ roomId, userId: id, target: item, connId });
+            log('warn', 'Check new user', { item });
+            let second = 0;
+            rtc.createPeerConnection(
+              { roomId, target: item, userId: id, connId },
+              ({ addedUserId, stream }) => {
+                if (!second) {
+                  addStream({ addedUserId, stream, connId });
+                }
+                second++;
+              }
+            );
           } else if (rtc.peerConnections[peerId]) {
             const { connectionState } = rtc.peerConnections[peerId]!;
             switch (connectionState) {
@@ -186,9 +247,9 @@ export const useConnection = ({
           rtc.createRTC({ roomId, userId: id, target: 0, connId });
           // Added local stream
           rtc.onAddTrack = (myId, stream) => {
-            log('info', '-> Added stream to room', { myId, id });
-            const _streams = streams.map((_item) => _item);
-            onAddTrack({ _streams, addedUserId: myId, stream, connId });
+            log('info', '-> Added local stream to room', { myId, id });
+
+            addStream({ addedUserId: myId, stream, connId });
           };
           rtc.invite({ roomId, userId: id, target: 0, connId });
           ws.sendMessage({
@@ -206,7 +267,7 @@ export const useConnection = ({
         case MessageType.CANDIDATE:
           rtc.handleCandidateMessage(rawMessage);
           break;
-        case MessageType.SET_CHANGE_ROOM_GUESTS:
+        case MessageType.SET_ROOM_GUESTS:
           changeRoomGuestsHandler({ rawMessage });
           break;
         case MessageType.ANSWER:
@@ -214,6 +275,9 @@ export const useConnection = ({
           break;
         case MessageType.SET_ROOM:
           setRoomIsSaved(true);
+          break;
+        case MessageType.SET_CHANGE_ROOM_UNIT:
+          changeRoomUnitHandler(ws.getMessage(MessageType.SET_CHANGE_ROOM_UNIT, rawMessage));
           break;
         case MessageType.SET_ERROR:
           const {
@@ -232,32 +296,7 @@ export const useConnection = ({
         /** */
       };
     };
-  }, [roomId, streams, ws, rtc, id, roomIsSaved]);
-
-  useEffect(() => {
-    if (!roomId) {
-      return () => {
-        /** */
-      };
-    }
-    const interval = setInterval(() => {
-      if (lenght !== streams.length) {
-        setTimeout(() => {
-          ws.sendMessage({
-            type: MessageType.GET_CHANGE_ROOM_GUESTS,
-            id,
-            connId: connectionId,
-            data: {
-              roomId,
-            },
-          });
-        }, 1000);
-      }
-    }, 1000);
-    return () => {
-      clearInterval(interval);
-    };
-  }, [roomId, ws, lenght, streams, connectionId, id]);
+  }, [roomId, streams, ws, rtc, id, roomIsSaved, lenght]);
 
   return { streams, lenght, lostStreamHandler };
 };

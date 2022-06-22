@@ -92,20 +92,25 @@ class RTC implements RTCInterface {
     this.peerConnections[peerId]!.oniceconnectionstatechange =
       function handleICEConnectionStateChangeEvent() {
         log(
-          'log',
+          'warn',
           `* ICE connection state changed to: ${core.peerConnections[peerId]?.iceConnectionState}`,
           { peerId }
         );
-        if (core.peerConnections[peerId]?.iceConnectionState === 'connected') {
-          // Send to all users list of room's guest
+        if (
+          core.peerConnections[peerId]?.iceConnectionState === 'connected' &&
+          core.peerConnections[peerId]?.connectionState === 'connected'
+        ) {
+          // on connect notification
           const isRoom = peerId.split(delimiter)[2] === '0';
           if (isRoom) {
             rooms[roomId].forEach((id) => {
               ws.sendMessage({
-                type: MessageType.SET_CHANGE_ROOM_GUESTS,
+                type: MessageType.SET_CHANGE_ROOM_UNIT,
                 id,
                 data: {
-                  roomUsers: rooms[roomId],
+                  target: userId,
+                  eventName: 'add',
+                  roomLenght: rooms[roomId].length,
                 },
                 connId,
               });
@@ -350,7 +355,7 @@ class RTC implements RTCInterface {
           if (!this.peerConnections[peerId]) {
             _peerId = this.getPeerId(id, target, userId, connId);
           }
-          if (!this.peerConnections[peerId]) {
+          if (!this.peerConnections[_peerId]) {
             log('warn', 'Skip set local description fo answer', {
               roomId: id,
               userId,
@@ -372,6 +377,9 @@ class RTC implements RTCInterface {
                 k: Object.keys(this.peerConnections).length,
                 s: Object.keys(this.streams).length,
                 r: this.rooms[id].length,
+                is: this.peerConnections[peerId]?.iceConnectionState,
+                cs: this.peerConnections[peerId]?.connectionState,
+                ss: this.peerConnections[peerId]?.signalingState,
               });
             })
             .then(() => {
