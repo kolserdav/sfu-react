@@ -104,16 +104,28 @@ function createServer({ port = PORT }: { port?: number }) {
         roomKeys.forEach((item) => {
           const index = rtc.rooms[item].indexOf(userId);
           if (index !== -1) {
+            const keys = Object.keys(rtc.peerConnections);
             rtc.cleanConnections(item, userId.toString());
             rtc.rooms[item].splice(index, 1);
             // Send user list of room
             rtc.rooms[item].forEach((_item) => {
+              let _connId = connId;
+              keys.forEach((i) => {
+                const peer = i.split(rtc.delimiter);
+                if (
+                  (peer[1] === _item && peer[2] === userId) ||
+                  (peer[1] === userId && peer[2] === _item)
+                ) {
+                  _connId = peer[3];
+                }
+              });
               log('info', 'Needed delete user', {
                 _item,
-                d: Object.keys(rtc.peerConnections),
+                d: keys,
                 connId,
                 userId,
                 c: wss.users[userId],
+                _connId,
               });
               wss.sendMessage({
                 type: MessageType.SET_CHANGE_ROOM_UNIT,
@@ -123,7 +135,7 @@ function createServer({ port = PORT }: { port?: number }) {
                   target: userId,
                   eventName: 'delete',
                 },
-                connId,
+                connId: _connId,
               });
             });
           }

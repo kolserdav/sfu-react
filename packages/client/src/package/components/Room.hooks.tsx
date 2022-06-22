@@ -92,7 +92,7 @@ export const useConnection = ({
             }
           },
         });
-        log('warn', 'Set streams', { _streams });
+        log('log', 'Set streams', { _streams });
         if (self) {
           setStreams(_streams);
         } else {
@@ -148,6 +148,13 @@ export const useConnection = ({
           }
           break;
         case 'delete':
+          log('info', 'Need delete user', {
+            roomId,
+            target,
+            userId,
+            connId,
+            k: Object.keys(rtc.peerConnections),
+          });
           rtc.closeVideoCall({ roomId, target, userId, connId });
           const __streams = streams.filter((item) => item.target !== target);
           setStreams(__streams);
