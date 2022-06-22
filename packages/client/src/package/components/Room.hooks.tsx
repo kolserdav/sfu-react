@@ -14,7 +14,6 @@ import WS from '../core/ws';
 import RTC from '../core/rtc';
 import { log } from '../utils/lib';
 import { getWidthOfItem } from './Room.lib';
-import { START_DELAY } from '../utils/constants';
 import { MessageType, SendMessageArgs } from '../types/interfaces';
 import { Stream } from '../types';
 import s from './Room.module.scss';
@@ -90,24 +89,19 @@ export const useConnection = ({
       stream: MediaStream;
       connId: string;
     }) => {
-      const _streams = streams.map((_item) => _item);
-      const isExists = _streams.filter((_item) => _item.target === addedUserId);
-      if (!isExists[0]) {
-        const _stream: Stream = {
-          target: addedUserId,
-          stream,
-          connId,
-          ref: (node) => {
-            if (node) {
-              // eslint-disable-next-line no-param-reassign
-              node.srcObject = stream;
-            }
-          },
-        };
-        console.warn('add', _stream);
-        storeStreams.dispatch(changeStreams({ type: 'add', stream: _stream }));
-        log('info', 'Add stream', { _stream });
-      }
+      const _stream: Stream = {
+        target: addedUserId,
+        stream,
+        connId,
+        ref: (node) => {
+          if (node) {
+            // eslint-disable-next-line no-param-reassign
+            node.srcObject = stream;
+          }
+        },
+      };
+      storeStreams.dispatch(changeStreams({ type: 'add', stream: _stream }));
+      log('info', 'Add stream', { _stream });
     };
 
     const changeRoomUnitHandler = ({
@@ -129,15 +123,11 @@ export const useConnection = ({
               connId,
               eventName,
             });
-            let second = 0;
             rtc.createPeerConnection(
               { roomId, target, userId: id, connId },
               ({ addedUserId, stream }) => {
-                if (second === 1) {
-                  log('info', 'Added unit track', { addedUserId, s: stream.id, connId });
-                  addStream({ addedUserId, stream, connId });
-                }
-                second++;
+                log('info', 'Added unit track', { addedUserId, s: stream.id, connId });
+                addStream({ addedUserId, stream, connId });
               }
             );
             if (eventName !== 'added') {
