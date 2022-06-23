@@ -319,22 +319,12 @@ class RTC implements RTCInterface {
       });
   };
 
-  private getRoom() {
-    this.roomId = parseInt(window.location.pathname.replace('/', '').replace(/\?.*$/, ''), 10);
-    return this.roomId;
-  }
-
   public handleOfferMessage: RTCInterface['handleOfferMessage'] = (msg, cb) => {
     const {
       id,
       connId,
       data: { sdp, userId, target },
     } = msg;
-    const peerId = this.getPeerId(id, target, connId);
-    if (!this.peerConnections[peerId]) {
-      log('warn', 'Handle offer message without peer connection', { peerId });
-      return;
-    }
     if (!sdp) {
       log('warn', 'Message offer error because sdp is:', sdp);
       if (cb) {
@@ -342,6 +332,12 @@ class RTC implements RTCInterface {
       }
       return;
     }
+    const peerId = this.getPeerId(id, target, connId);
+    if (!this.peerConnections[peerId]) {
+      log('warn', 'Handle offer message without peer connection', { peerId });
+      return;
+    }
+
     this.roomId = this.getRoom();
     this.handleIceCandidate({
       roomId: id,
@@ -367,7 +363,17 @@ class RTC implements RTCInterface {
           log('info', '---> Setting local description after creating answer');
           this.peerConnections[peerId]!.setLocalDescription(answ)
             .catch((err) => {
-              log('error', 'Error set local description for answer', err);
+              log('error', 'Error set local description for answer', {
+                message: err.message,
+                roomId: id,
+                userId,
+                target,
+                connId,
+                k: Object.keys(this.peerConnections).length,
+                is: this.peerConnections[peerId]?.iceConnectionState,
+                cs: this.peerConnections[peerId]?.connectionState,
+                ss: this.peerConnections[peerId]?.signalingState,
+              });
             })
             .then(() => {
               const { localDescription } = this.peerConnections[peerId]!;
@@ -393,7 +399,15 @@ class RTC implements RTCInterface {
         });
       })
       .catch((e) => {
-        log('error', 'Failed get user media', e);
+        log('error', 'Failed get user media', {
+          message: e.message,
+          stack: e.stack,
+          roomId: id,
+          userId,
+          target,
+          connId,
+          desc,
+        });
         if (cb) {
           cb(null);
         }
@@ -473,6 +487,11 @@ class RTC implements RTCInterface {
     this.peerConnections[peerId]!.close();
     delete this.peerConnections[peerId];
   };
+
+  private getRoom() {
+    this.roomId = parseInt(window.location.pathname.replace('/', '').replace(/\?.*$/, ''), 10);
+    return this.roomId;
+  }
 
   // eslint-disable-next-line class-methods-use-this
   public onClosedCall: RTCInterface['onClosedCall'] = (args) => {
