@@ -17,6 +17,21 @@ const VIEWPORT = {
   height: 480,
 };
 const EXIT_DELAY = 1000;
+
+/**
+ *
+ * @typedef {{
+ *  page: puppeteer.Page;
+ *  uid: string;
+ *  room: string;
+ * }} EvalPage
+ */
+
+let count = 0;
+let success = 0;
+let errors = 0;
+let warnings = 0;
+
 /**
  *
  * @param {string} room
@@ -40,26 +55,14 @@ async function openRoom(room, uid) {
     const text = message.text();
     if (!/DevTools/.test(text)) {
       log('warn', `Message on room: ${room} for user: ${uid}:`, message.text(), true);
+      warnings++;
     }
   });
-  log('info', 'Open page', _url, true);
+  log('info', 'Open page:', _url, true);
   await page.goto(_url);
+  await page.waitForSelector('video');
   return page;
 }
-
-/**
- *
- * @typedef {{
- *  page: puppeteer.Page;
- *  uid: string;
- *  room: string;
- * }} EvalPage
- */
-
-let count = 0;
-let success = 0;
-let errors = 0;
-let warnings = 0;
 
 /**
  *
@@ -69,20 +72,17 @@ let warnings = 0;
 async function evaluateRoom(evalPage, last = false) {
   const { page, room, uid } = evalPage;
   const videos = await page.$$('video');
-  warnings += await page.evaluate((_uid) => {
+  await page.evaluate((_uid) => {
     const _videos = document.querySelectorAll('video');
     let check = false;
-    let _warnings = 0;
     const streamIds = [];
     for (let i = 0; _videos[i]; i++) {
       const video = _videos[i];
       if (Boolean(video.played) !== true) {
         log('warn', 'Video not played', { room, uid, id: video.getAttribute('id') }, true);
-        _warnings++;
       }
       const { id } = video.parentElement;
       if (streamIds.indexOf(id) !== -1) {
-        _warnings++;
         console.log(`Non unique stream: ${id} for uid: ${_uid}`);
       }
       streamIds.push(id);
@@ -92,12 +92,9 @@ async function evaluateRoom(evalPage, last = false) {
       }
     }
     if (!check) {
-      _warnings++;
       console.log(`Self stream not defined uid: ${_uid}`);
     }
-    return _warnings;
   }, uid);
-
   const { length } = videos;
   count++;
   if (length < USERS) {
@@ -115,6 +112,16 @@ async function evaluateRoom(evalPage, last = false) {
       }
     }, EXIT_DELAY);
   }
+}
+
+/**
+ *
+ * @param {number} startTime
+ * @returns {number}
+ */
+function getTime(startTime) {
+  const delay = Math.ceil(new Date().getTime() - startTime);
+  return delay * ROOMS * USERS;
 }
 
 /**
@@ -143,6 +150,7 @@ function stdoutClean() {
  * @param {puppeteer.Page} page
  */
 async function reloadPage(page) {
+  log('log', 'Reload page:', page.url(), true);
   await page.reload();
   await page.waitForSelector('video');
 }
@@ -162,7 +170,6 @@ async function reloadPage(page) {
       }
       const uid = v4();
       const page = await openRoom(room, uid);
-      await page.waitForSelector('video');
       pages.push({
         page,
         uid,
@@ -170,8 +177,7 @@ async function reloadPage(page) {
       });
     }
   }
-  const delay = Math.ceil(new Date().getTime() - startTime);
-  const time = delay * ROOMS * USERS;
+  let time = getTime(startTime) + USERS * ROOMS * 500;
   let seconds = Math.ceil(time / 1000);
   log('log', 'Wait for evaluate:', `${seconds} seconds ...`, true);
   let timeout = stdoutWrite(seconds);
@@ -183,9 +189,12 @@ async function reloadPage(page) {
   }
   await pages[0].page.waitForTimeout(EXIT_DELAY);
   for (let i = 0; pages[i]; i++) {
-    log('log', 'Reload page', pages[i].page.url(), true);
+    if (!pages[i + 1]) {
+      startTime = new Date().getTime();
+    }
     await reloadPage(pages[i].page);
   }
+  time = getTime(startTime);
   seconds = Math.ceil(time / 1000);
   log('log', 'Wait for evaluate after reload:', `${seconds} seconds ...`, true);
   timeout = stdoutWrite(seconds);
