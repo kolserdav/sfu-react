@@ -174,14 +174,15 @@ class RTC implements RTCInterface {
       if (isRoom) {
         if (s % 2 === 0) {
           setTimeout(() => {
-            rooms[roomId].forEach((id) => {
+            const room = rooms[roomId];
+            room.forEach((id) => {
               ws.sendMessage({
                 type: MessageType.SET_CHANGE_ROOM_UNIT,
                 id,
                 data: {
                   target: userId,
                   eventName: 'add',
-                  roomLenght: rooms[roomId].length,
+                  roomLenght: rooms[roomId]?.length || 0,
                 },
                 connId,
               });
@@ -311,7 +312,8 @@ class RTC implements RTCInterface {
         // If a user creates a new connection with a room to get another user's stream
         if (target) {
           let _connId = connId;
-          Object.keys(this.streams).forEach((element) => {
+          const keysStreams = Object.keys(this.streams);
+          keysStreams.forEach((element) => {
             const str = element.split(this.delimiter);
             if (str[1] === target.toString() && str[2] === '0') {
               _connId = str[3];
@@ -330,14 +332,22 @@ class RTC implements RTCInterface {
             });
             return;
           }
-          stream.getTracks().forEach((track) => {
-            const sender = this.peerConnections[peerId]!.getSenders().find(
-              (item) => item.track?.kind === track.kind
-            );
-            if (sender?.track?.id !== track.id) {
-              this.peerConnections[peerId]!.addTrack(track, stream);
+          const tracks = stream.getTracks();
+          tracks.forEach((track) => {
+            if (this.peerConnections[peerId]) {
+              const sender = this.peerConnections[peerId]!.getSenders().find(
+                (item) => item.track?.kind === track.kind
+              );
+              if (sender?.track?.id !== track.id) {
+                this.peerConnections[peerId]!.addTrack(track, stream);
+              } else {
+                log('warn', 'Skiping add track track', { peerId });
+              }
             } else {
-              log('warn', 'Skiping add track track', { peerId });
+              log('warn', 'Add track without peer connection', {
+                peerId,
+                k: Object.keys(this.peerConnections),
+              });
             }
           });
         }

@@ -1,7 +1,7 @@
 {
   "url": "http://localhost:3000",
   "headless": true,
-  "rooms": 2,
+  "rooms": 3,
   "users": 3,
   "singleRoom": "string-or-false-or-null-or-undefined"
 }
