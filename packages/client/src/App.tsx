@@ -15,7 +15,7 @@ import './App.scss';
 
 const createRoom = () => {
   // Do not use the symbol "_" in room address
-  window.location.href = `room-address?d=1`;
+  window.location.href = `room-address?uid=1`;
 };
 
 function App() {
@@ -27,7 +27,7 @@ function App() {
           Create room
         </button>
       ) : (
-        <Main id={window.location.search.replace(/[?=]*/g, '')} />
+        <Main id={window.location.search.replace(/\?uid=/, '')} />
       )}
     </div>
   );

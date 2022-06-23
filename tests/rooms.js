@@ -3,12 +3,12 @@ const puppeteer = require('puppeteer');
 const { log } = require('../packages/server/dist/utils/lib');
 const { v4 } = require('uuid');
 const { stdout } = require('process');
-const { rooms, users, headless } = require('./rooms.json');
+const { rooms, users, headless, singleRoom, url } = require('./rooms.json');
 
 process.setMaxListeners(0);
 
 // Settings
-const ROOMS = rooms;
+const ROOMS = singleRoom ? 1 : rooms;
 const USERS = users;
 
 const HEADLESS = headless;
@@ -35,15 +35,15 @@ async function openRoom(room, uid) {
     ],
   });
   const [page] = await browser.pages();
-  const url = `http://localhost:3000/${room}?uid=${uid}`;
+  const _url = `${url}/${room}?uid=${uid}`;
   page.on('console', (message) => {
     const text = message.text();
     if (!/DevTools/.test(text)) {
       log('warn', `Message on room: ${room} for user: ${uid}:`, message.text(), true);
     }
   });
-  log('info', 'Open page', url, true);
-  await page.goto(url);
+  log('info', 'Open page', _url, true);
+  await page.goto(_url);
   return page;
 }
 
@@ -59,6 +59,7 @@ async function openRoom(room, uid) {
 let count = 0;
 let success = 0;
 let errors = 0;
+let warnings = 0;
 
 /**
  *
@@ -68,40 +69,47 @@ let errors = 0;
 async function evaluateRoom(evalPage, last = false) {
   const { page, room, uid } = evalPage;
   const videos = await page.$$('video');
-  await page.evaluate((_uid) => {
+  warnings += await page.evaluate((_uid) => {
     const _videos = document.querySelectorAll('video');
     let check = false;
+    let _warnings = 0;
     const streamIds = [];
     for (let i = 0; _videos[i]; i++) {
       const video = _videos[i];
+      if (Boolean(video.played) !== true) {
+        log('warn', 'Video not played', { room, uid, id: video.getAttribute('id') }, true);
+        _warnings++;
+      }
       const { id } = video.parentElement;
       if (streamIds.indexOf(id) !== -1) {
+        _warnings++;
         console.log(`Non unique stream: ${id} for uid: ${_uid}`);
       }
       streamIds.push(id);
-      const title = video.getAttribute('title').replace(/^uid/, '');
+      const title = video.getAttribute('title');
       if (title === _uid) {
         check = true;
       }
     }
-
     if (!check) {
+      _warnings++;
       console.log(`Self stream not defined uid: ${_uid}`);
     }
+    return _warnings;
   }, uid);
 
   const { length } = videos;
   count++;
-  if (length !== USERS) {
-    log('error', 'Failed test', { length, USERS, count, room, uid }, true);
+  if (length < USERS) {
+    log('error', 'Failed test', { length, USERS, count, room, uid, url: page.url() }, true);
     errors++;
   } else {
-    log('info', 'Success test', { length, USERS, count }, true);
+    log('info', 'Success test', page.url(), true);
     success++;
   }
   if (count === USERS * ROOMS) {
     setTimeout(() => {
-      log('log', 'Test end', { errors, success }, true);
+      log('log', 'Test end', { errors, success, warnings }, true);
       if (last) {
         process.exit(0);
       }
@@ -147,7 +155,7 @@ async function reloadPage(page) {
   const pages = [];
   let startTime = new Date().getTime();
   for (let i = 0; i < ROOMS; i++) {
-    const room = v4();
+    const room = typeof singleRoom === 'string' ? singleRoom : v4();
     for (let n = 0; n < USERS; n++) {
       if (n + 1 === USERS && i + 1 === ROOMS) {
         startTime = new Date().getTime();
@@ -162,8 +170,8 @@ async function reloadPage(page) {
       });
     }
   }
-  let delay = Math.ceil(new Date().getTime() - startTime);
-  let time = delay * ROOMS * USERS;
+  const delay = Math.ceil(new Date().getTime() - startTime);
+  const time = delay * ROOMS * USERS;
   let seconds = Math.ceil(time / 1000);
   log('log', 'Wait for evaluate:', `${seconds} seconds ...`, true);
   let timeout = stdoutWrite(seconds);
@@ -176,9 +184,6 @@ async function reloadPage(page) {
   await pages[0].page.waitForTimeout(EXIT_DELAY);
   for (let i = 0; pages[i]; i++) {
     log('log', 'Reload page', pages[i].page.url(), true);
-    if (!pages[i + 1]) {
-      startTime = new Date().getTime();
-    }
     await reloadPage(pages[i].page);
   }
   seconds = Math.ceil(time / 1000);

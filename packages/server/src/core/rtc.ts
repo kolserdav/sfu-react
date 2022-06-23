@@ -369,6 +369,7 @@ class RTC implements RTCInterface {
               s: Object.keys(this.streams).length,
               r: this.rooms[id].length,
             });
+            return;
           }
           this.peerConnections[_peerId]!.setLocalDescription(answ)
             .catch((err) => {

@@ -54,7 +54,10 @@ function Room({ id }: RoomProps) {
               onClick={onClickVideo}
               ref={item.ref}
               title={item.target.toString()}
-              autoPlay
+              onLoadedData={(e) => {
+                const { target }: { target: HTMLVideoElement } = e as any;
+                target.play();
+              }}
               onWaiting={(e) => {
                 log('warn', 'Onload meta data', { active: item.stream.active, id: item.target });
               }}

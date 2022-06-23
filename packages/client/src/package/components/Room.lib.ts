@@ -68,10 +68,13 @@ export const getWidthOfItem = ({
         dims = { cols: 2, rows: 2 };
         break;
       case 5:
-        dims = horizontal ? { cols: 3, rows: 2 } : { cols: 2, rows: 3 };
-        break;
       case 6:
         dims = horizontal ? { cols: 3, rows: 2 } : { cols: 2, rows: 3 };
+        break;
+      case 7:
+      case 8:
+      case 9:
+        dims = horizontal ? { cols: 3, rows: 3 } : { cols: 2, rows: 4 };
         break;
       default:
       // TODO other counts
