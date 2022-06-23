@@ -109,7 +109,7 @@ async function evaluateRoom(evalPage, last = false) {
   }
   if (count === USERS * ROOMS) {
     setTimeout(() => {
-      log('log', 'Test end', { errors, success, warnings }, true);
+      log('log', 'Test end', { success, warnings, errors }, true);
       if (last) {
         process.exit(0);
       }
