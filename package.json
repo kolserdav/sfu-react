@@ -48,8 +48,7 @@
     "dev:client": "cd packages/client && npm start",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "bin": "node bin/uyem.js",
-    "test": "node tests/puppeteer.js",
-    "dev:test": "nodemon tests/puppeteer.js"
+    "test": "node tests/rooms.js"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^1.8.2",

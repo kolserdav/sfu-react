@@ -173,7 +173,7 @@ export const useConnection = ({
         data: { roomUsers },
         connId,
       } = ws.getMessage(MessageType.SET_ROOM_GUESTS, rawMessage);
-      const _streams = streams.map((_item) => _item);
+      const _streams: Stream[] = storeStreams.getState().streams as Stream[];
       log('info', 'onChangeRoomGuests', { roomUsers, id, st: _streams.map((i) => i.target) });
       // Add remote streams
       setLenght(roomUsers.length);
@@ -182,7 +182,7 @@ export const useConnection = ({
           const peerId = rtc.getPeerId(roomId, item, connId);
           const _isExists = _streams.filter((_item) => item === _item.target);
           if (!_isExists[0]) {
-            log('warn', 'Check new user', { item });
+            log('info', 'Check new user', { item });
             let second = 0;
             rtc.createPeerConnection(
               { roomId, target: item, userId: id, connId },
@@ -312,16 +312,19 @@ export const useConnection = ({
   }, [roomId, streams, ws, rtc, id, roomIsSaved, lenght, selfStream]);
 
   useEffect(() => {
-    /*
     if (!roomId) {
       return () => {
         //
       };
     }
-    
-    const interval = setInterval(() => {
-      if (lenght !== streams.length) {
-        setTimeout(() => {
+    let interval = setTimeout(() => {
+      //
+    });
+    let _streams: Stream[] = storeStreams.getState().streams as Stream[];
+    if (_streams.length !== streams.length) {
+      interval = setInterval(() => {
+        _streams = storeStreams.getState().streams as Stream[];
+        if (_streams.length !== streams.length) {
           ws.sendMessage({
             type: MessageType.GET_ROOM_GUESTS,
             id,
@@ -330,13 +333,12 @@ export const useConnection = ({
               roomId,
             },
           });
-        }, 100);
-      }
-    }, 1000);
+        }
+      }, 1000);
+    }
     return () => {
-      clearInterval(interval);
+      clearTimeout(interval);
     };
-    */
   }, [roomId, ws, lenght, streams, connectionId, id]);
 
   return { streams, lenght, lostStreamHandler };

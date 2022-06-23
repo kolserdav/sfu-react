@@ -414,6 +414,7 @@ class RTC implements RTCInterface {
       .catch((e) => {
         log('error', 'Failed get user media', {
           message: e.message,
+          stack: e.stack,
           roomId: id,
           userId,
           target,
