@@ -332,6 +332,7 @@ class RTC implements RTCInterface {
             return;
           }
           const tracks = stream.getTracks();
+          console.log(Object.keys(this.peerConnections));
           tracks.forEach((track) => {
             if (this.peerConnections[peerId]) {
               const sender = this.peerConnections[peerId]!.getSenders().find(
@@ -581,12 +582,13 @@ class RTC implements RTCInterface {
       connId,
       data: { userId, roomId },
     } = msg;
-    Object.keys(this.peerConnections).forEach((item) => {
+    const keys = Object.keys(this.peerConnections);
+    keys.forEach((item) => {
       const peerId = this.getPeerId(roomId, userId, id, connId);
       const peer = item.split(this.delimiter);
       if (peer[1] === id.toString() && peer[2] === '0') {
         if (!this.streams[item]) {
-          log('warn', 'Add track without stream', { peer });
+          log('warn', 'Add track without stream', { peer, keys });
         } else {
           this.streams[item].getTracks().forEach((track) => {
             if (!this.peerConnections[peerId]) {

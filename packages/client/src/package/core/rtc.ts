@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Tue Jun 21 2022 08:49:55 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import { RTCInterface, MessageType } from '../types/interfaces';
+import { RTCInterface, MessageType, SendMessageArgs } from '../types/interfaces';
 import { log } from '../utils/lib';
 import WS from './ws';
 
@@ -255,7 +255,7 @@ class RTC implements RTCInterface {
   ) {
     const peerId = this.getPeerId(roomId, target, connId);
     if (!this.peerConnections[peerId]) {
-      log('warn', 'Invite without peer connection', { peerId });
+      log('warn', 'Set media without peer connection', { peerId });
       return;
     }
     const method: keyof typeof navigator.mediaDevices = this.shareScreen

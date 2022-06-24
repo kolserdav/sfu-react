@@ -157,18 +157,20 @@ export const useConnection = ({
           { roomId, target, userId: id, connId: peer[2] },
           ({ addedUserId, stream: _stream }) => {
             log('warn', 'Added unit track', { addedUserId, s: _stream.id, connId: peer[2] });
-            addStream({ target: addedUserId, stream: _stream, connId: peer[2] });
-            setTimeout(() => {
-              ws.sendMessage({
-                type: MessageType.GET_TRACKS,
-                id: addedUserId,
-                connId: peer[2],
-                data: {
-                  userId: ws.userId,
-                  roomId,
-                },
-              });
-            }, 500);
+            addStream({ target: addedUserId, stream: _stream, connId: peer[2], change: true });
+            if (ws.userId !== addedUserId) {
+              setTimeout(() => {
+                ws.sendMessage({
+                  type: MessageType.GET_TRACKS,
+                  id: addedUserId,
+                  connId: peer[2],
+                  data: {
+                    userId: ws.userId,
+                    roomId,
+                  },
+                });
+              }, 500);
+            }
           }
         );
       } else {
