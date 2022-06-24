@@ -9,7 +9,7 @@
  * Create Date: Tue Jun 21 2022 08:49:55 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import clsx from 'clsx';
 import Room from './components/Room';
 import Hall from './components/Hall';
@@ -18,14 +18,16 @@ import ThemeContext from './Theme.context';
 import { themes, Themes } from './Theme';
 import ChevronLeftIcon from './Icons/ChevronLeftIcon';
 import ChevronRightIcon from './Icons/ChevronRightIcon';
+import { changeColors } from './Main.lib';
 import s from './Main.module.scss';
 import IconButton from './components/ui/IconButton';
 import storeTheme from './store/theme';
 
 // TODO theme provider
-function Main({ id }: RoomProps) {
+function Main({ id, colors }: RoomProps) {
   const [currentTheme, setCurrentTheme] = useState<keyof Themes>('light');
-  const [theme, setTheme] = useState<Themes['dark' | 'light']>(themes.light);
+  const _themes = useMemo(() => changeColors({ colors, themes }), [colors]);
+  const [theme, setTheme] = useState<Themes['dark' | 'light']>(_themes.light);
   const [hallOpen, setHallOpen] = useState<boolean>(false);
 
   const openMenu = () => {
@@ -33,7 +35,7 @@ function Main({ id }: RoomProps) {
   };
 
   useEffect(() => {
-    setTheme(themes[currentTheme]);
+    setTheme(_themes[currentTheme]);
   }, [currentTheme]);
 
   useEffect(() => {
@@ -58,9 +60,9 @@ function Main({ id }: RoomProps) {
       >
         <IconButton className={clsx(s.button__icon, hallOpen ? s.active : '')}>
           {hallOpen ? (
-            <ChevronRightIcon color={theme.colors.text} />
+            <ChevronRightIcon color={theme.colors.paper} />
           ) : (
-            <ChevronLeftIcon color={theme.colors.text} />
+            <ChevronLeftIcon color={theme.colors.paper} />
           )}
         </IconButton>
       </div>

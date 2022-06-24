@@ -30,7 +30,7 @@ export enum MessageType {
   SET_ERROR = 'SET_ERROR',
   GET_ROOM_GUESTS = 'GET_ROOM_GUESTS',
   SET_ROOM_GUESTS = 'SET_ROOM_GUESTS',
-  SET_CHANGE_ROOM_UNIT = 'SET_CHANGE_ROOM_UNIT',
+  SET_CHANGE_UNIT = 'SET_CHANGE_UNIT',
 }
 
 export namespace DataTypes {
@@ -41,7 +41,7 @@ export namespace DataTypes {
     export type GetGuestId = {
       isRoom?: boolean;
     };
-    export type SerChangeRoomUnit = {
+    export type SetChangeRoomUnit = {
       target: number | string;
       eventName: 'delete' | 'add' | 'added';
       roomLenght: number;
@@ -94,8 +94,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.GetRoomGuests
     : T extends MessageType.SET_ROOM_GUESTS
     ? DataTypes.MessageTypes.SetRoomGuests
-    : T extends MessageType.SET_CHANGE_ROOM_UNIT
-    ? DataTypes.MessageTypes.SerChangeRoomUnit
+    : T extends MessageType.SET_CHANGE_UNIT
+    ? DataTypes.MessageTypes.SetChangeRoomUnit
     : T extends MessageType.SET_ERROR
     ? DataTypes.MessageTypes.SetError
     : unknown;
@@ -177,8 +177,6 @@ export namespace Connection {
       userId: number | string;
       target: string | number;
     }): void;
-
-    public abstract onAddTrack(target: number | string, stream: MediaStream): void;
 
     public abstract handleOfferMessage(
       msg: Signaling.SendMessageArgs<MessageType.OFFER>,

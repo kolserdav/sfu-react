@@ -128,7 +128,7 @@ function createServer({ port = PORT }: { port?: number }) {
                 _connId,
               });
               wss.sendMessage({
-                type: MessageType.SET_CHANGE_ROOM_UNIT,
+                type: MessageType.SET_CHANGE_UNIT,
                 id: _item,
                 data: {
                   roomLenght: rtc.rooms[item].length,

@@ -19,11 +19,7 @@ class RTC implements RTCInterface {
   public rooms: Record<string, (string | number)[]> = {};
   public roomCons: Record<string, number | string> = {};
   private ws: WS;
-  private streams: Record<string, MediaStream> = {};
-
-  public onAddTrack: RTCInterface['onAddTrack'] = () => {
-    /** */
-  };
+  public streams: Record<string, MediaStream> = {};
 
   constructor({ ws }: { ws: WS }) {
     this.ws = ws;
@@ -170,14 +166,13 @@ class RTC implements RTCInterface {
         const stream = e.streams[0];
         log('info', 'ontrack', { peerId });
         this.streams[peerId] = stream;
-        this.onAddTrack(userId, stream);
         if (s % 2 === 0) {
           setTimeout(() => {
             const room = rooms[roomId];
             // on connect notifications
             room.forEach((id) => {
               ws.sendMessage({
-                type: MessageType.SET_CHANGE_ROOM_UNIT,
+                type: MessageType.SET_CHANGE_UNIT,
                 id,
                 data: {
                   target: userId,

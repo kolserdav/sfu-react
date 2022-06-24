@@ -11,9 +11,9 @@
 /* eslint-disable no-unused-vars */
 import { createContext } from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { themes, Color } from './Theme';
+import { themes } from './Theme';
 
 // eslint-disable-next-line import/prefer-default-export
-const MainContext = createContext(themes.dark);
+const ThemeContext = createContext(themes.dark);
 
-export default MainContext;
+export default ThemeContext;

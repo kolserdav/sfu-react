@@ -24,11 +24,14 @@ import storeStreams, { changeStreams } from '../store/streams';
 export const useConnection = ({
   id,
   roomId,
+  shareScreen,
 }: {
   id: number | string;
   roomId: number | string | null;
+  shareScreen: boolean;
 }) => {
   const [streams, setStreams] = useState<Stream[]>([]);
+  const [localShareScreen, setLocalShareScreen] = useState<boolean>(false);
   const [selfStream, setSelfStream] = useState<Stream | null>(null);
   const [roomIsSaved, setRoomIsSaved] = useState<boolean>(false);
   const [lenght, setLenght] = useState<number>(streams.length);
@@ -57,10 +60,34 @@ export const useConnection = ({
     const _stream = streams.find((item) => item.target === target);
     if (_stream) {
       storeStreams.dispatch(changeStreams({ type: 'delete', stream: _stream }));
-      video.parentElement?.removeChild(video);
     }
   };
 
+  /**
+   * Change media source
+   */
+  useEffect(() => {
+    if (!roomId) {
+      return;
+    }
+    if (localShareScreen !== shareScreen) {
+      rtc.localStream = null;
+      const peer = rtc.parsePeerId({ target: 0 });
+      if (peer[2]) {
+        rtc.shareScreen = shareScreen;
+        rtc.setMedia({ roomId, userId: ws.userId, target: 0, connId: peer[2] }, (e) => {
+          log('info', 'Change media', { roomId, userId: ws.userId, target: 0, connId: peer[2] });
+          setLocalShareScreen(true);
+        });
+      } else {
+        log('warn', 'Peer not parsed', { userId: ws.userId, target: 0, peer });
+      }
+    }
+  }, [shareScreen, localShareScreen, roomId, rtc, ws.userId]);
+
+  /**
+   * Set streams from store
+   */
   useEffect(() => {
     const cleanSubs = storeStreams.subscribe(() => {
       const state = storeStreams.getState();
@@ -71,6 +98,9 @@ export const useConnection = ({
     };
   }, []);
 
+  /**
+   * Connections handler
+   */
   useEffect(() => {
     if (!roomId) {
       return () => {
@@ -80,14 +110,17 @@ export const useConnection = ({
     if (!ws.userId) {
       ws.setUserId(id);
     }
+    rtc.shareScreen = localShareScreen;
     const addStream = ({
       target,
       stream,
       connId,
+      change = false,
     }: {
       target: string | number;
       stream: MediaStream;
       connId: string;
+      change?: boolean;
     }) => {
       const _stream: Stream = {
         target,
@@ -100,7 +133,7 @@ export const useConnection = ({
           }
         },
       };
-      storeStreams.dispatch(changeStreams({ type: 'add', stream: _stream }));
+      storeStreams.dispatch(changeStreams({ type: 'add', stream: _stream, change }));
       if (!selfStream && target === ws.userId) {
         setSelfStream(_stream);
       }
@@ -111,7 +144,7 @@ export const useConnection = ({
       id: userId,
       data: { target, eventName, roomLenght },
       connId,
-    }: SendMessageArgs<MessageType.SET_CHANGE_ROOM_UNIT>) => {
+    }: SendMessageArgs<MessageType.SET_CHANGE_UNIT>) => {
       if (lenght !== roomLenght) {
         setLenght(roomLenght);
       }
@@ -135,7 +168,7 @@ export const useConnection = ({
             );
             if (eventName !== 'added') {
               ws.sendMessage({
-                type: MessageType.SET_CHANGE_ROOM_UNIT,
+                type: MessageType.SET_CHANGE_UNIT,
                 id: target,
                 connId,
                 data: {
@@ -257,22 +290,21 @@ export const useConnection = ({
       switch (type) {
         case MessageType.SET_USER_ID:
           setConnectionId(connId);
-          rtc.createRTC({ roomId, userId: id, target: 0, connId });
-          // Added local stream
-          rtc.onAddTrack = (myId, stream) => {
-            log('info', '-> Added local stream to room', { myId, id });
-
-            addStream({ target: myId, stream, connId });
-          };
-          rtc.invite({ roomId, userId: id, target: 0, connId });
-          ws.sendMessage({
-            type: MessageType.GET_ROOM,
-            id: roomId,
-            data: {
-              userId: id,
-            },
-            connId,
-          });
+          rtc.createPeerConnection(
+            { userId: ws.userId, target: 0, connId, roomId },
+            ({ addedUserId, stream }) => {
+              log('info', '-> Added local stream to room', { addedUserId, id });
+              addStream({ target: addedUserId, stream, connId, change: true });
+              ws.sendMessage({
+                type: MessageType.GET_ROOM,
+                id: roomId,
+                data: {
+                  userId: id,
+                },
+                connId,
+              });
+            }
+          );
           break;
         case MessageType.OFFER:
           rtc.handleOfferMessage(rawMessage);
@@ -289,8 +321,8 @@ export const useConnection = ({
         case MessageType.SET_ROOM:
           setRoomIsSaved(true);
           break;
-        case MessageType.SET_CHANGE_ROOM_UNIT:
-          changeRoomUnitHandler(ws.getMessage(MessageType.SET_CHANGE_ROOM_UNIT, rawMessage));
+        case MessageType.SET_CHANGE_UNIT:
+          changeRoomUnitHandler(ws.getMessage(MessageType.SET_CHANGE_UNIT, rawMessage));
           break;
         case MessageType.SET_ERROR:
           const {
@@ -309,7 +341,7 @@ export const useConnection = ({
         /** */
       };
     };
-  }, [roomId, streams, ws, rtc, id, roomIsSaved, lenght, selfStream]);
+  }, [roomId, streams, ws, rtc, id, roomIsSaved, lenght, selfStream, localShareScreen]);
 
   useEffect(() => {
     if (!roomId) {
@@ -321,7 +353,7 @@ export const useConnection = ({
       //
     });
     let _streams: Stream[] = storeStreams.getState().streams as Stream[];
-    if (_streams.length !== streams.length) {
+    if (_streams.length !== streams.length && !shareScreen) {
       interval = setInterval(() => {
         _streams = storeStreams.getState().streams as Stream[];
         if (_streams.length !== streams.length) {
@@ -339,7 +371,7 @@ export const useConnection = ({
     return () => {
       clearTimeout(interval);
     };
-  }, [roomId, ws, lenght, streams, connectionId, id]);
+  }, [roomId, ws, lenght, streams, connectionId, id, shareScreen]);
 
   return { streams, lenght, lostStreamHandler };
 };
@@ -446,6 +478,14 @@ export const useOnclickClose =
       video.setAttribute('height', height.toString());
     }
   };
+
+export const useShareScreen = () => {
+  const [shareScreen, setShareScreen] = useState<boolean>(false);
+  const screenShare = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    setShareScreen(!shareScreen);
+  };
+  return { shareScreen, screenShare };
+};
 
 export const usePressEscape = () => (e: React.KeyboardEvent<HTMLDivElement>) => {
   /** TODO */

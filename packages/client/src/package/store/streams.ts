@@ -8,46 +8,62 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Tue Jun 21 2022 08:49:55 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import { createSlice, configureStore } from '@reduxjs/toolkit';
+import { createSlice, configureStore, Draft, CaseReducer, PayloadAction } from '@reduxjs/toolkit';
 import { Stream } from '../types';
+import { log } from '../utils/lib';
 
 interface State {
   streams: Stream[];
 }
 
 interface Action {
-  payload: {
-    type: 'add' | 'delete';
-    stream: Stream;
-  };
+  type: 'add' | 'delete';
+  stream: Stream;
+  change?: boolean;
 }
+
+const ChangeStreams: CaseReducer<State, PayloadAction<Action>> = (state, action) => {
+  const oldStreams: Stream[] = state.streams.map((item) => item as Stream);
+  let streams: Draft<Stream>[] = [];
+  const {
+    payload: { stream, type, change = false },
+  } = action;
+  let index = -1;
+  switch (type) {
+    case 'add':
+      if (
+        !oldStreams.find((item, _index) => {
+          if (item.target === stream.target) {
+            index = _index;
+            return true;
+          }
+          return false;
+        })
+      ) {
+        oldStreams.push(stream);
+      } else if (change && index !== -1) {
+        oldStreams.splice(index, 1);
+        oldStreams.push(stream);
+      } else {
+        log('info', 'Unnecessary case add', { action, index, change });
+      }
+      streams = oldStreams as Draft<Stream>[];
+      break;
+    case 'delete':
+      streams = oldStreams.filter((item) => item.target !== stream.target) as Draft<Stream>[];
+      break;
+  }
+  // eslint-disable-next-line no-param-reassign
+  state.streams = streams;
+};
 
 const slice = createSlice({
   name: 'streams',
   initialState: {
     streams: [],
-  },
+  } as State,
   reducers: {
-    changeStreams: (state: State, action: Action) => {
-      const oldStreams = state.streams;
-      let streams: Stream[] = [];
-      const {
-        payload: { stream, type },
-      } = action;
-      switch (type) {
-        case 'add':
-          if (!oldStreams.find((item) => item.target === stream.target)) {
-            oldStreams.push(stream);
-            streams = oldStreams;
-          }
-          break;
-        case 'delete':
-          streams = oldStreams.filter((item) => item.target !== stream.target);
-          break;
-      }
-      // eslint-disable-next-line no-param-reassign
-      state.streams = streams;
-    },
+    changeStreams: ChangeStreams,
   },
 });
 
