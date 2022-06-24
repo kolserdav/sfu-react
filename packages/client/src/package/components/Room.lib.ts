@@ -14,7 +14,7 @@ import c from './ui/CloseButton.module.scss';
 export const getRoomLink = (roomId: number | string | null): string | null => {
   let res = null;
   if (typeof window !== 'undefined' && roomId) {
-    res = `${window.location.href.replace(/\?.*/, '')}?d=${new Date().getTime()}`;
+    res = `${window.location.href.replace(/\?.*/, '')}?uid=${new Date().getTime()}`;
   }
   return res;
 };

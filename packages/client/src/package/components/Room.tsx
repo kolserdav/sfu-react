@@ -12,17 +12,26 @@ import React, { useMemo, useContext, useRef } from 'react';
 import { getTarget, log } from '../utils/lib';
 import s from './Room.module.scss';
 import { RoomProps } from '../types/index';
-import { useConnection, useVideoDimensions, useOnclickClose, usePressEscape } from './Room.hooks';
+import {
+  useConnection,
+  useVideoDimensions,
+  useOnclickClose,
+  usePressEscape,
+  useShareScreen,
+} from './Room.hooks';
 import ThemeContext from '../Theme.context';
 import { getRoomLink, getPathname, onClickVideo } from './Room.lib';
 import CloseButton from './ui/CloseButton';
+import ScreenIcon from '../Icons/ScreeenIcon';
+import IconButton from './ui/IconButton';
 
 function Room({ id }: RoomProps) {
   const pathname = getPathname();
   const container = useRef<HTMLDivElement>(null);
   const roomId = useMemo(() => getTarget(pathname || ''), [pathname]);
   const roomLink = useMemo(() => getRoomLink(roomId), [roomId]);
-  const { streams, lenght, lostStreamHandler } = useConnection({ id, roomId });
+  const { screenShare, shareScreen } = useShareScreen();
+  const { streams, lenght, lostStreamHandler } = useConnection({ id, roomId, shareScreen });
   const theme = useContext(ThemeContext);
   const setVideoDimensions = useVideoDimensions({
     container: container.current,
@@ -58,8 +67,23 @@ function Room({ id }: RoomProps) {
                 const { target }: { target: HTMLVideoElement } = e as any;
                 target.play();
               }}
+              onEmptied={(e) => {
+                log('warn', 'Empty video data', { active: item.stream.active, id: item.target });
+              }}
+              onSuspend={(e) => {
+                log('warn', 'Suspend video data', { active: item.stream.active, id: item.target });
+              }}
+              onStalled={(e) => {
+                log('warn', 'Stalled video data', { active: item.stream.active, id: item.target });
+              }}
+              onAbort={(e) => {
+                log('warn', 'Abort video data', { active: item.stream.active, id: item.target });
+              }}
+              onEnded={(e) => {
+                log('warn', 'End video data', { active: item.stream.active, id: item.target });
+              }}
               onWaiting={(e) => {
-                log('warn', 'Onload meta data', { active: item.stream.active, id: item.target });
+                log('warn', 'Waiting video data', { active: item.stream.active, id: item.target });
               }}
             />
           </div>
@@ -72,6 +96,9 @@ function Room({ id }: RoomProps) {
             {roomLink}
           </a>
         )}
+        <IconButton onClick={screenShare}>
+          <ScreenIcon color={theme.colors.text} />
+        </IconButton>
       </div>
     </div>
   );

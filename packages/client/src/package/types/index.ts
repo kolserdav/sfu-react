@@ -8,8 +8,11 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Tue Jun 21 2022 08:49:55 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
+import { Colors } from '../Theme';
+
 export interface RoomProps {
   id: number | string;
+  colors?: Colors;
 }
 
 export interface Stream {

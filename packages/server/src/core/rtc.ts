@@ -19,11 +19,7 @@ class RTC implements RTCInterface {
   public rooms: Record<string, (string | number)[]> = {};
   public roomCons: Record<string, number | string> = {};
   private ws: WS;
-  private streams: Record<string, MediaStream> = {};
-
-  public onAddTrack: RTCInterface['onAddTrack'] = () => {
-    /** */
-  };
+  public streams: Record<string, MediaStream> = {};
 
   constructor({ ws }: { ws: WS }) {
     this.ws = ws;
@@ -165,27 +161,38 @@ class RTC implements RTCInterface {
     };
     let s = 1;
     this.peerConnections[peerId]!.ontrack = (e) => {
-      const isRoom = peerId.split(delimiter)[2] === '0';
+      const _peer = peerId.split(delimiter);
+      const isRoom = _peer[2] === '0';
       if (isRoom) {
         const stream = e.streams[0];
-        log('info', 'ontrack', { peerId });
-        this.streams[peerId] = stream;
-        this.onAddTrack(userId, stream);
         if (s % 2 === 0) {
+          log('info', 'ontrack', { peerId });
+          const isNew = this.streams[peerId] === undefined;
+          this.streams[peerId] = stream;
           setTimeout(() => {
             const room = rooms[roomId];
-            // on connect notifications
             room.forEach((id) => {
-              ws.sendMessage({
-                type: MessageType.SET_CHANGE_ROOM_UNIT,
-                id,
-                data: {
-                  target: userId,
-                  eventName: 'add',
-                  roomLenght: rooms[roomId]?.length || 0,
-                },
-                connId,
-              });
+              if (isNew) {
+                ws.sendMessage({
+                  type: MessageType.SET_CHANGE_UNIT,
+                  id,
+                  data: {
+                    target: userId,
+                    eventName: 'add',
+                    roomLenght: rooms[roomId]?.length || 0,
+                  },
+                  connId,
+                });
+              } else if (id !== userId) {
+                ws.sendMessage({
+                  type: MessageType.SET_RECONNECT_UNIT,
+                  id,
+                  data: {
+                    target: userId,
+                  },
+                  connId,
+                });
+              }
             });
           }, 0);
         }
@@ -567,6 +574,39 @@ class RTC implements RTCInterface {
       }
     });
   }
+
+  public getTracksHandler = (msg: SendMessageArgs<MessageType.GET_TRACKS>) => {
+    const {
+      id,
+      connId,
+      data: { userId, roomId },
+    } = msg;
+    Object.keys(this.peerConnections).forEach((item) => {
+      const peerId = this.getPeerId(roomId, userId, id, connId);
+      const peer = item.split(this.delimiter);
+      if (peer[1] === id.toString() && peer[2] === '0') {
+        if (!this.streams[item]) {
+          log('warn', 'Add track without stream', { peer });
+        } else {
+          this.streams[item].getTracks().forEach((track) => {
+            if (!this.peerConnections[peerId]) {
+              log('warn', 'Add track without peer connection', { peerId });
+            } else {
+              const sender = this.peerConnections[peerId]!.getSenders().find(
+                (_item) => _item.track?.kind === track.kind
+              );
+              if (sender) {
+                this.peerConnections[peerId]!.removeTrack(sender);
+                this.peerConnections[peerId]!.addTrack(track, this.streams[item]);
+              } else {
+                log('warn', 'Get track without sender');
+              }
+            }
+          });
+        }
+      }
+    });
+  };
 }
 
 export default RTC;

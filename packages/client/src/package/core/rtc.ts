@@ -17,11 +17,13 @@ class RTC implements RTCInterface {
 
   public readonly delimiter = '_';
 
+  public shareScreen = false;
+
   public localTrackSettings: MediaTrackSettings | null = null;
 
   private ws: WS;
 
-  private localStream: MediaStream | null = null;
+  public localStream: MediaStream | null = null;
 
   public roomId: number | null = null;
 
@@ -45,15 +47,13 @@ class RTC implements RTCInterface {
   ) {
     if (target !== userId) {
       this.createRTC({ roomId, target, userId, connId });
-      this.onAddTrack = (addedUserId, stream) => {
-        if (addedUserId !== userId) {
-          log('info', '-> Added remote stream to room', { addedUserId, userId });
-          cb({ addedUserId, stream, connId });
-        } else {
-          /** self emty add track */
-        }
+      this.onAddTrack[this.getPeerId(roomId, target, connId)] = (addedUserId, stream) => {
+        cb({ addedUserId, stream, connId });
       };
       this.invite({ roomId, userId, target, connId });
+      this.setMedia({ roomId, userId, target, connId }, () => {
+        log('info', 'Connection created', { roomId, userId, target, connId });
+      });
     } else {
       log('warn', 'Attempt of duplicate peer connection');
     }
@@ -218,7 +218,7 @@ class RTC implements RTCInterface {
       });
       if (target) {
         if (s % 2 === 0) {
-          this.onAddTrack(target, stream);
+          this.onAddTrack[this.getPeerId(roomId, target, connId)](target, stream);
         }
         s++;
       }
@@ -237,17 +237,35 @@ class RTC implements RTCInterface {
     connId: string;
   }) {
     this.handleIceCandidate({ connId, roomId, userId, target });
+  }
+
+  public setMedia(
+    {
+      roomId,
+      userId,
+      target,
+      connId,
+    }: {
+      roomId: number | string;
+      userId: number | string;
+      target: number | string;
+      connId: string;
+    },
+    cb: (e: 1 | 0) => void
+  ) {
     const peerId = this.getPeerId(roomId, target, connId);
     if (!this.peerConnections[peerId]) {
       log('warn', 'Invite without peer connection', { peerId });
       return;
     }
+    const method: keyof typeof navigator.mediaDevices = this.shareScreen
+      ? 'getDisplayMedia'
+      : 'getUserMedia';
     if (!this.localStream) {
-      navigator.mediaDevices
-        .getUserMedia({
-          audio: true,
-          video: true,
-        })
+      navigator.mediaDevices[method]({
+        audio: true,
+        video: true,
+      })
         .then((localStream) => {
           this.localStream = localStream;
           log('info', '> Adding tracks to new local media stream', {
@@ -259,10 +277,12 @@ class RTC implements RTCInterface {
             }
             this.peerConnections[peerId]!.addTrack(track, localStream);
           });
-          this.onAddTrack(userId, localStream);
+          this.onAddTrack[this.getPeerId(roomId, target, connId)](userId, localStream);
+          cb(0);
         })
         .catch((err) => {
           log('error', 'Error get self user media', err);
+          cb(1);
         });
     } else {
       log('info', '> Adding tracks to current local media stream', {
@@ -273,14 +293,13 @@ class RTC implements RTCInterface {
           this.peerConnections[peerId]!.addTrack(track, this.localStream);
         }
       });
-      this.onAddTrack(userId, this.localStream);
+      this.onAddTrack[this.getPeerId(roomId, target, connId)](userId, this.localStream);
+      cb(0);
     }
   }
 
   // eslint-disable-next-line class-methods-use-this
-  public onAddTrack: RTCInterface['onAddTrack'] = () => {
-    /** */
-  };
+  public onAddTrack: Record<string, (target: number | string, stream: MediaStream) => void> = {};
 
   /**
    * handleNewICECandidateMsg
@@ -470,6 +489,10 @@ class RTC implements RTCInterface {
   // eslint-disable-next-line class-methods-use-this
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, target, connId }) => {
     const peerId = this.getPeerId(roomId, target, connId);
+    this.closeByPeer(peerId);
+  };
+
+  private closeByPeer = (peerId: string) => {
     if (!this.peerConnections[peerId]) {
       log('info', 'Close video call without peer connection', {
         peerId,
@@ -486,6 +509,7 @@ class RTC implements RTCInterface {
     this.peerConnections[peerId]!.ontrack = null;
     this.peerConnections[peerId]!.close();
     delete this.peerConnections[peerId];
+    delete this.onAddTrack[peerId];
   };
 
   private getRoom() {
@@ -497,6 +521,25 @@ class RTC implements RTCInterface {
   public onClosedCall: RTCInterface['onClosedCall'] = (args) => {
     log('log', 'Call is closed', { ...args });
   };
+
+  public closeAllConnections() {
+    this.ws.connection.close();
+    this.localStream = null;
+    Object.keys(this.peerConnections).forEach((item) => {
+      this.closeByPeer(item);
+    });
+  }
+
+  public parsePeerId({ target }: { target: string | number }) {
+    let peer: string[] = [];
+    Object.keys(this.peerConnections).forEach((item) => {
+      const _peer = item.split(this.delimiter);
+      if (_peer[1] === target.toString()) {
+        peer = _peer;
+      }
+    });
+    return peer;
+  }
 }
 
 export default RTC;
