@@ -45,7 +45,7 @@ const ChangeStreams: CaseReducer<State, PayloadAction<Action>> = (state, action)
         oldStreams.splice(index, 1);
         oldStreams.push(stream);
       } else {
-        log('warn', 'Unnecessary case add', { action, index, change });
+        log('info', 'Unnecessary case add', { action, index, change });
       }
       streams = oldStreams as Draft<Stream>[];
       break;

@@ -83,9 +83,6 @@ function createServer({ port = PORT }: { port?: number }) {
             connId,
           });
           break;
-        case MessageType.GET_TRACKS:
-          rtc.getTracksHandler(wss.getMessage(MessageType.GET_TRACKS, rawMessage));
-          break;
         default:
           wss.sendMessage(rawMessage);
       }

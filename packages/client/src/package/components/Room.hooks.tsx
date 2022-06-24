@@ -140,44 +140,6 @@ export const useConnection = ({
       log('info', 'Add stream', { _stream });
     };
 
-    const reconnectUnitHandler = ({
-      data: { target },
-    }: SendMessageArgs<MessageType.SET_RECONNECT_UNIT>) => {
-      const peer = rtc.parsePeerId({ target });
-      const stream = storeStreams.getState().streams.find((item) => item.target === target);
-      if (peer[2] && stream) {
-        storeStreams.dispatch(
-          changeStreams({
-            type: 'delete',
-            stream,
-          })
-        );
-        rtc.closeVideoCall({ roomId, userId: ws.userId, target, connId: peer[2] });
-        rtc.createPeerConnection(
-          { roomId, target, userId: id, connId: peer[2] },
-          ({ addedUserId, stream: _stream }) => {
-            log('warn', 'Added unit track', { addedUserId, s: _stream.id, connId: peer[2] });
-            addStream({ target: addedUserId, stream: _stream, connId: peer[2], change: true });
-            if (ws.userId !== addedUserId) {
-              setTimeout(() => {
-                ws.sendMessage({
-                  type: MessageType.GET_TRACKS,
-                  id: addedUserId,
-                  connId: peer[2],
-                  data: {
-                    userId: ws.userId,
-                    roomId,
-                  },
-                });
-              }, 500);
-            }
-          }
-        );
-      } else {
-        log('warn', 'Reconnect unit handler', { roomId, userId: ws.userId, target });
-      }
-    };
-
     const changeRoomUnitHandler = ({
       id: userId,
       data: { target, eventName, roomLenght },
@@ -200,7 +162,7 @@ export const useConnection = ({
             rtc.createPeerConnection(
               { roomId, target, userId: id, connId },
               ({ addedUserId, stream }) => {
-                log('warn', 'Added unit track', { addedUserId, s: stream.id, connId });
+                log('info', 'Added unit track', { addedUserId, s: stream.id, connId });
                 addStream({ target: addedUserId, stream, connId });
               }
             );
@@ -331,7 +293,7 @@ export const useConnection = ({
           rtc.createPeerConnection(
             { userId: ws.userId, target: 0, connId, roomId },
             ({ addedUserId, stream }) => {
-              log('warn', '-> Added local stream to room', { addedUserId, id });
+              log('info', '-> Added local stream to room', { addedUserId, id });
               addStream({ target: addedUserId, stream, connId, change: true });
               ws.sendMessage({
                 type: MessageType.GET_ROOM,
@@ -361,9 +323,6 @@ export const useConnection = ({
           break;
         case MessageType.SET_CHANGE_UNIT:
           changeRoomUnitHandler(ws.getMessage(MessageType.SET_CHANGE_UNIT, rawMessage));
-          break;
-        case MessageType.SET_RECONNECT_UNIT:
-          reconnectUnitHandler(ws.getMessage(MessageType.SET_RECONNECT_UNIT, rawMessage));
           break;
         case MessageType.SET_ERROR:
           const {

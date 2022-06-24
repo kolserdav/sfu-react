@@ -31,18 +31,12 @@ export enum MessageType {
   GET_ROOM_GUESTS = 'GET_ROOM_GUESTS',
   SET_ROOM_GUESTS = 'SET_ROOM_GUESTS',
   SET_CHANGE_UNIT = 'SET_CHANGE_UNIT',
-  SET_RECONNECT_UNIT = 'SET_RECONNECT_UNIT',
-  GET_TRACKS = 'GET_TRACKS',
 }
 
 export namespace DataTypes {
   export namespace MessageTypes {
     export type GetRoomGuests = {
       roomId: number | string;
-    };
-    export type GetTracks = {
-      userId: string | number;
-      roomId: string | number;
     };
     export type GetGuestId = {
       isRoom?: boolean;
@@ -51,9 +45,6 @@ export namespace DataTypes {
       target: number | string;
       eventName: 'delete' | 'add' | 'added';
       roomLenght: number;
-    };
-    export type SetReconnectUnit = {
-      target: number | string;
     };
     export type SetGuestId = undefined;
     export type GetRoom = {
@@ -91,8 +82,6 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.Answer
     : T extends MessageType.CANDIDATE
     ? DataTypes.MessageTypes.Candidate
-    : T extends MessageType.GET_TRACKS
-    ? DataTypes.MessageTypes.GetTracks
     : T extends MessageType.GET_USER_ID
     ? DataTypes.MessageTypes.GetGuestId
     : T extends MessageType.SET_USER_ID
@@ -107,8 +96,6 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetRoomGuests
     : T extends MessageType.SET_CHANGE_UNIT
     ? DataTypes.MessageTypes.SetChangeRoomUnit
-    : T extends MessageType.SET_RECONNECT_UNIT
-    ? DataTypes.MessageTypes.SetReconnectUnit
     : T extends MessageType.SET_ERROR
     ? DataTypes.MessageTypes.SetError
     : unknown;
