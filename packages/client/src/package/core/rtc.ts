@@ -260,7 +260,6 @@ class RTC implements RTCInterface {
     const method: keyof typeof navigator.mediaDevices = this.ws.shareScreen
       ? 'getDisplayMedia'
       : 'getUserMedia';
-    console.log(this.localStream);
     if (!this.localStream) {
       navigator.mediaDevices[method]({
         video: true,
@@ -271,13 +270,9 @@ class RTC implements RTCInterface {
           log('info', '> Adding tracks to new local media stream', {
             streamId: localStream.id,
           });
-          const _peerId = this.getPeerId(roomId, target, connId);
+          // FIXME target to twice direction
           localStream.getTracks().forEach((track) => {
-            if (!this.localTrackSettings) {
-              // TODO
-              this.localTrackSettings = track.getSettings();
-            }
-            this.peerConnections[_peerId]!.addTrack(track, localStream);
+            this.peerConnections[peerId]!.addTrack(track, localStream);
           });
           this.onAddTrack[peerId](userId, localStream);
           cb(0);
@@ -291,6 +286,7 @@ class RTC implements RTCInterface {
         streamId: this.localStream.id,
       });
       this.localStream.getTracks().forEach((track) => {
+        console.log(peerId);
         if (this.localStream) {
           this.peerConnections[peerId]!.addTrack(track, this.localStream);
         }

@@ -172,7 +172,7 @@ export const useConnection = ({
                 userId: id,
                 connId,
                 onTrack: ({ addedUserId, stream }) => {
-                  log('info', 'Added unit track', { addedUserId, s: stream.id, connId });
+                  log('warn', 'Added unit track', { addedUserId, s: stream.id, connId });
                   addStream({ target: addedUserId, stream, connId });
                 },
               },
@@ -321,7 +321,7 @@ export const useConnection = ({
               connId,
               roomId,
               onTrack: ({ addedUserId, stream }) => {
-                log('info', '-> Added local stream to room', { addedUserId, id });
+                log('warn', '-> Added local stream to room', { addedUserId, id });
                 addStream({ target: addedUserId, stream, connId });
               },
             },
