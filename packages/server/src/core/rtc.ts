@@ -162,11 +162,11 @@ class RTC implements RTCInterface {
     let s = 1;
     this.peerConnections[peerId]!.ontrack = (e) => {
       const isRoom = peerId.split(delimiter)[2] === '0';
-      log('warn', 'ontrack', { peerId });
       // TODO
       if (isRoom) {
         const stream = e.streams[0];
         const isNew = stream.id !== this.streams[peerId]?.id;
+        log('warn', 'ontrack', { peerId, si: stream.id, isNew, userId, target });
         if (s % 2 !== 0 && isNew) {
           setTimeout(() => {
             const room = rooms[roomId];

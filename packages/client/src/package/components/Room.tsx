@@ -12,13 +12,7 @@ import React, { useMemo, useContext, useRef } from 'react';
 import { getTarget, log } from '../utils/lib';
 import s from './Room.module.scss';
 import { RoomProps } from '../types/index';
-import {
-  useConnection,
-  useVideoDimensions,
-  useOnclickClose,
-  usePressEscape,
-  useShareScreen,
-} from './Room.hooks';
+import { useConnection, useVideoDimensions, useOnclickClose, usePressEscape } from './Room.hooks';
 import ThemeContext from '../Theme.context';
 import { getRoomLink, getPathname, onClickVideo } from './Room.lib';
 import CloseButton from './ui/CloseButton';
@@ -30,8 +24,7 @@ function Room({ id }: RoomProps) {
   const container = useRef<HTMLDivElement>(null);
   const roomId = useMemo(() => getTarget(pathname || ''), [pathname]);
   const roomLink = useMemo(() => getRoomLink(roomId), [roomId]);
-  const { screenShare, shareScreen } = useShareScreen();
-  const { streams, lenght, lostStreamHandler } = useConnection({ id, roomId, shareScreen });
+  const { streams, lenght, lostStreamHandler, screenShare } = useConnection({ id, roomId });
   const theme = useContext(ThemeContext);
   const setVideoDimensions = useVideoDimensions({
     container: container.current,
@@ -50,7 +43,7 @@ function Room({ id }: RoomProps) {
               muted={item.target === id}
               onTimeUpdate={(e) => {
                 if (item.stream.active === false) {
-                  log('log', 'Stream is not active', { uid: item.target, sid: item.stream.id });
+                  log('warn', 'Stream is not active', { uid: item.target, sid: item.stream.id });
                   lostStreamHandler({
                     video: e.target as HTMLVideoElement,
                     target: item.target,

@@ -24,13 +24,12 @@ import storeStreams, { changeStreams } from '../store/streams';
 export const useConnection = ({
   id,
   roomId,
-  shareScreen,
 }: {
   id: number | string;
   roomId: number | string | null;
-  shareScreen: boolean;
 }) => {
   const [streams, setStreams] = useState<Stream[]>([]);
+  const [shareScreen, setShareScreen] = useState<boolean>(false);
   const [localShareScreen, setLocalShareScreen] = useState<boolean>(false);
   const [selfStream, setSelfStream] = useState<Stream | null>(null);
   const [roomIsSaved, setRoomIsSaved] = useState<boolean>(false);
@@ -38,6 +37,12 @@ export const useConnection = ({
   const [connectionId, setConnectionId] = useState<string>('');
   const ws = useMemo(() => new WS({ shareScreen: localShareScreen }), [localShareScreen]);
   const rtc = useMemo(() => new RTC({ ws }), [ws]);
+  const screenShare = useMemo(
+    () => (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      setShareScreen(!shareScreen);
+    },
+    []
+  );
 
   const lostStreamHandler = ({
     target,
@@ -76,6 +81,7 @@ export const useConnection = ({
         rtc.closeAllConnections();
         ws.connection.close();
         setLocalShareScreen(shareScreen);
+        setRoomIsSaved(false);
         storeStreams.dispatch(changeStreams({ type: 'clean', stream: selfStream }));
         setLenght(0);
         setSelfStream(null);
@@ -99,7 +105,7 @@ export const useConnection = ({
   }, []);
 
   /**
-   * Connections handler
+   * Connections handlers
    */
   useEffect(() => {
     if (!roomId) {
@@ -147,6 +153,7 @@ export const useConnection = ({
       if (lenght !== roomLenght) {
         setLenght(roomLenght);
       }
+      //alert(`${eventName} ${target}`);
       switch (eventName) {
         case 'add':
         case 'added':
@@ -223,7 +230,7 @@ export const useConnection = ({
           const peerId = rtc.getPeerId(roomId, item, connId);
           const _isExists = _streams.filter((_item) => item === _item.target);
           if (!_isExists[0]) {
-            log('info', 'Check new user', { item });
+            log('warn', 'Check new user', { item });
             rtc.createPeerConnection(
               {
                 roomId,
@@ -395,14 +402,14 @@ export const useConnection = ({
             },
           });
         }
-      }, 1000);
+      }, 10000);
     }
     return () => {
       clearTimeout(interval);
     };
   }, [roomId, ws, lenght, streams, connectionId, id, shareScreen]);
 
-  return { streams, lenght, lostStreamHandler };
+  return { streams, lenght, lostStreamHandler, screenShare };
 };
 
 export const useVideoDimensions = ({
@@ -507,14 +514,6 @@ export const useOnclickClose =
       video.setAttribute('height', height.toString());
     }
   };
-
-export const useShareScreen = () => {
-  const [shareScreen, setShareScreen] = useState<boolean>(false);
-  const screenShare = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    setShareScreen(!shareScreen);
-  };
-  return { shareScreen, screenShare };
-};
 
 export const usePressEscape = () => (e: React.KeyboardEvent<HTMLDivElement>) => {
   /** TODO */

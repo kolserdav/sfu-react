@@ -50,17 +50,12 @@ class RTC implements RTCInterface {
     cb: (e: 0 | 1) => void
   ) {
     const peerId = this.getPeerId(roomId, target, connId);
-    if (this.peerConnections[peerId]) {
-      delete this.peerConnections[peerId];
-    }
-    if (target !== userId) {
-      this.createRTC({ roomId, target, userId, connId });
-      this.onAddTrack[peerId] = (addedUserId, stream) => {
-        onTrack({ addedUserId, stream, connId });
-      };
-      this.invite({ roomId, userId, target, connId });
-      this.setMedia({ roomId, userId, target, connId }, cb);
-    }
+    this.createRTC({ roomId, target, userId, connId });
+    this.onAddTrack[peerId] = (addedUserId, stream) => {
+      onTrack({ addedUserId, stream, connId });
+    };
+    this.invite({ roomId, userId, target, connId });
+    this.setMedia({ roomId, userId, target, connId }, cb);
   }
 
   public createRTC: RTCInterface['createRTC'] = ({ connId, roomId, target }) => {
@@ -106,7 +101,7 @@ class RTC implements RTCInterface {
         case 'closed':
         case 'disconnected':
         case 'failed':
-          log('log', 'Failed connection state', { cs: currentTarget.connectionState, peerId });
+          log('warn', 'Failed connection state', { cs: currentTarget.connectionState, peerId });
           break;
         default:
       }
@@ -265,6 +260,7 @@ class RTC implements RTCInterface {
     const method: keyof typeof navigator.mediaDevices = this.ws.shareScreen
       ? 'getDisplayMedia'
       : 'getUserMedia';
+    console.log(this.localStream);
     if (!this.localStream) {
       navigator.mediaDevices[method]({
         video: true,
