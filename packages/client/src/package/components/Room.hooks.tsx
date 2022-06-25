@@ -71,19 +71,17 @@ export const useConnection = ({
       return;
     }
     if (localShareScreen !== shareScreen) {
-      setTimeout(() => {
-        if (selfStream) {
-          rtc.localStream = null;
-          rtc.closeAllConnections();
-          ws.connection.close();
-          setLocalShareScreen(shareScreen);
-          storeStreams.dispatch(changeStreams({ type: 'clean', stream: selfStream }));
-          setLenght(0);
-          setSelfStream(null);
-        } else {
-          log('warn', 'Change media source. Self stream is:', selfStream);
-        }
-      }, 0);
+      if (selfStream) {
+        rtc.localStream = null;
+        rtc.closeAllConnections();
+        ws.connection.close();
+        setLocalShareScreen(shareScreen);
+        storeStreams.dispatch(changeStreams({ type: 'clean', stream: selfStream }));
+        setLenght(0);
+        setSelfStream(null);
+      } else {
+        log('warn', 'Change media source. Self stream is:', selfStream);
+      }
     }
   }, [shareScreen, localShareScreen, roomId, rtc, ws, selfStream]);
 
@@ -233,12 +231,11 @@ export const useConnection = ({
                 userId: id,
                 connId,
                 onTrack: ({ addedUserId, stream }) => {
-                  alert(1);
                   addStream({ target: addedUserId, stream, connId });
                 },
               },
               (e) => {
-                log('info', 'Change room guests connection', {
+                log('warn', 'Change room guests connection', {
                   roomId,
                   target: item,
                   userId: id,

@@ -166,7 +166,8 @@ class RTC implements RTCInterface {
       // TODO
       if (isRoom) {
         const stream = e.streams[0];
-        if (s % 2 !== 0 && stream.id !== this.streams[peerId]?.id) {
+        const isNew = stream.id !== this.streams[peerId]?.id;
+        if (s % 2 !== 0 && isNew) {
           setTimeout(() => {
             const room = rooms[roomId];
             room.forEach((id) => {
