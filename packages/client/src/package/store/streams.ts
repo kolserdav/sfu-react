@@ -17,7 +17,7 @@ interface State {
 }
 
 interface Action {
-  type: 'add' | 'delete';
+  type: 'add' | 'delete' | 'clean';
   stream: Stream;
   change?: boolean;
 }
@@ -51,6 +51,9 @@ const ChangeStreams: CaseReducer<State, PayloadAction<Action>> = (state, action)
       break;
     case 'delete':
       streams = oldStreams.filter((item) => item.target !== stream.target) as Draft<Stream>[];
+      break;
+    case 'clean':
+      streams = [];
       break;
   }
   // eslint-disable-next-line no-param-reassign

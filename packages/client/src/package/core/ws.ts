@@ -16,6 +16,8 @@ class WS implements Types.WSInterface {
 
   userId: number | string = 0;
 
+  public shareScreen: boolean;
+
   public setUserId(userId: number | string) {
     this.userId = userId;
   }
@@ -107,8 +109,9 @@ class WS implements Types.WSInterface {
     return this.connection;
   }
 
-  constructor() {
+  constructor({ shareScreen }: { shareScreen: boolean }) {
     this.connection = this.createConnection();
+    this.shareScreen = shareScreen;
   }
 }
 

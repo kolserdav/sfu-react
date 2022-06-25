@@ -36,7 +36,7 @@ export const useConnection = ({
   const [roomIsSaved, setRoomIsSaved] = useState<boolean>(false);
   const [lenght, setLenght] = useState<number>(streams.length);
   const [connectionId, setConnectionId] = useState<string>('');
-  const ws = useMemo(() => new WS(), []);
+  const ws = useMemo(() => new WS({ shareScreen: localShareScreen }), [localShareScreen]);
   const rtc = useMemo(() => new RTC({ ws }), [ws]);
 
   const lostStreamHandler = ({
@@ -71,19 +71,21 @@ export const useConnection = ({
       return;
     }
     if (localShareScreen !== shareScreen) {
-      rtc.localStream = null;
-      const peer = rtc.parsePeerId({ target: 0 });
-      if (peer[2]) {
-        rtc.shareScreen = shareScreen;
-        rtc.setMedia({ roomId, userId: ws.userId, target: 0, connId: peer[2] }, (e) => {
-          log('info', 'Change media', { roomId, userId: ws.userId, target: 0, connId: peer[2] });
-          setLocalShareScreen(true);
-        });
-      } else {
-        log('warn', 'Peer not parsed', { userId: ws.userId, target: 0, peer });
-      }
+      setTimeout(() => {
+        if (selfStream) {
+          rtc.localStream = null;
+          rtc.closeAllConnections();
+          ws.connection.close();
+          setLocalShareScreen(shareScreen);
+          storeStreams.dispatch(changeStreams({ type: 'clean', stream: selfStream }));
+          setLenght(0);
+          setSelfStream(null);
+        } else {
+          log('warn', 'Change media source. Self stream is:', selfStream);
+        }
+      }, 0);
     }
-  }, [shareScreen, localShareScreen, roomId, rtc, ws.userId]);
+  }, [shareScreen, localShareScreen, roomId, rtc, ws, selfStream]);
 
   /**
    * Set streams from store
@@ -110,7 +112,6 @@ export const useConnection = ({
     if (!ws.userId) {
       ws.setUserId(id);
     }
-    rtc.shareScreen = localShareScreen;
     const addStream = ({
       target,
       stream,
@@ -160,24 +161,33 @@ export const useConnection = ({
               eventName,
             });
             rtc.createPeerConnection(
-              { roomId, target, userId: id, connId },
-              ({ addedUserId, stream }) => {
-                log('info', 'Added unit track', { addedUserId, s: stream.id, connId });
-                addStream({ target: addedUserId, stream, connId });
+              {
+                roomId,
+                target,
+                userId: id,
+                connId,
+                onTrack: ({ addedUserId, stream }) => {
+                  log('info', 'Added unit track', { addedUserId, s: stream.id, connId });
+                  addStream({ target: addedUserId, stream, connId });
+                },
+              },
+              (e) => {
+                if (!e) {
+                  if (eventName !== 'added' && target !== userId) {
+                    ws.sendMessage({
+                      type: MessageType.SET_CHANGE_UNIT,
+                      id: target,
+                      connId,
+                      data: {
+                        target: userId,
+                        roomLenght,
+                        eventName: 'added',
+                      },
+                    });
+                  }
+                }
               }
             );
-            if (eventName !== 'added') {
-              ws.sendMessage({
-                type: MessageType.SET_CHANGE_UNIT,
-                id: target,
-                connId,
-                data: {
-                  target: userId,
-                  roomLenght,
-                  eventName: 'added',
-                },
-              });
-            }
           }
           break;
         case 'delete':
@@ -216,14 +226,24 @@ export const useConnection = ({
           const _isExists = _streams.filter((_item) => item === _item.target);
           if (!_isExists[0]) {
             log('info', 'Check new user', { item });
-            let second = 0;
             rtc.createPeerConnection(
-              { roomId, target: item, userId: id, connId },
-              ({ addedUserId, stream }) => {
-                if (!second) {
+              {
+                roomId,
+                target: item,
+                userId: id,
+                connId,
+                onTrack: ({ addedUserId, stream }) => {
+                  alert(1);
                   addStream({ target: addedUserId, stream, connId });
-                }
-                second++;
+                },
+              },
+              (e) => {
+                log('info', 'Change room guests connection', {
+                  roomId,
+                  target: item,
+                  userId: id,
+                  connId,
+                });
               }
             );
           } else if (rtc.peerConnections[peerId]) {
@@ -291,18 +311,27 @@ export const useConnection = ({
         case MessageType.SET_USER_ID:
           setConnectionId(connId);
           rtc.createPeerConnection(
-            { userId: ws.userId, target: 0, connId, roomId },
-            ({ addedUserId, stream }) => {
-              log('info', '-> Added local stream to room', { addedUserId, id });
-              addStream({ target: addedUserId, stream, connId, change: true });
-              ws.sendMessage({
-                type: MessageType.GET_ROOM,
-                id: roomId,
-                data: {
-                  userId: id,
-                },
-                connId,
-              });
+            {
+              userId: ws.userId,
+              target: 0,
+              connId,
+              roomId,
+              onTrack: ({ addedUserId, stream }) => {
+                log('info', '-> Added local stream to room', { addedUserId, id });
+                addStream({ target: addedUserId, stream, connId });
+              },
+            },
+            (e) => {
+              if (!e) {
+                ws.sendMessage({
+                  type: MessageType.GET_ROOM,
+                  id: roomId,
+                  data: {
+                    userId: id,
+                  },
+                  connId,
+                });
+              }
             }
           );
           break;
@@ -341,8 +370,11 @@ export const useConnection = ({
         /** */
       };
     };
-  }, [roomId, streams, ws, rtc, id, roomIsSaved, lenght, selfStream, localShareScreen]);
+  }, [roomId, streams, ws, rtc, id, roomIsSaved, lenght, selfStream]);
 
+  /**
+   * Check room list
+   */
   useEffect(() => {
     if (!roomId) {
       return () => {

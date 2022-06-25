@@ -162,14 +162,13 @@ class RTC implements RTCInterface {
     let s = 1;
     this.peerConnections[peerId]!.ontrack = (e) => {
       const isRoom = peerId.split(delimiter)[2] === '0';
+      log('warn', 'ontrack', { peerId });
+      // TODO
       if (isRoom) {
         const stream = e.streams[0];
-        log('info', 'ontrack', { peerId });
-        this.streams[peerId] = stream;
-        if (s % 2 === 0) {
+        if (s % 2 !== 0 && stream.id !== this.streams[peerId]?.id) {
           setTimeout(() => {
             const room = rooms[roomId];
-            // on connect notifications
             room.forEach((id) => {
               ws.sendMessage({
                 type: MessageType.SET_CHANGE_UNIT,
@@ -183,6 +182,7 @@ class RTC implements RTCInterface {
               });
             });
           }, 0);
+          this.streams[peerId] = stream;
         }
         s++;
       }

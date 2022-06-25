@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Tue Jun 21 2022 08:49:55 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import { RTCInterface, MessageType, SendMessageArgs } from '../types/interfaces';
+import { RTCInterface, MessageType } from '../types/interfaces';
 import { log } from '../utils/lib';
 import WS from './ws';
 
@@ -16,8 +16,6 @@ class RTC implements RTCInterface {
   public peerConnections: RTCInterface['peerConnections'] = {};
 
   public readonly delimiter = '_';
-
-  public shareScreen = false;
 
   public localTrackSettings: MediaTrackSettings | null = null;
 
@@ -37,25 +35,31 @@ class RTC implements RTCInterface {
       userId,
       target,
       connId,
+      onTrack,
     }: {
       roomId: string | number;
       userId: string | number;
       target: string | number;
       connId: string;
+      onTrack: (args: {
+        addedUserId: string | number;
+        stream: MediaStream;
+        connId: string;
+      }) => void;
     },
-    cb: (args: { addedUserId: string | number; stream: MediaStream; connId: string }) => void
+    cb: (e: 0 | 1) => void
   ) {
     if (target !== userId) {
       this.createRTC({ roomId, target, userId, connId });
-      this.onAddTrack[this.getPeerId(roomId, target, connId)] = (addedUserId, stream) => {
-        cb({ addedUserId, stream, connId });
+      const peerId = this.getPeerId(roomId, target, connId);
+      this.onAddTrack[peerId] = (addedUserId, stream) => {
+        onTrack({ addedUserId, stream, connId });
       };
       this.invite({ roomId, userId, target, connId });
-      this.setMedia({ roomId, userId, target, connId }, () => {
-        log('info', 'Connection created', { roomId, userId, target, connId });
-      });
+      this.setMedia({ roomId, userId, target, connId }, cb);
     } else {
       log('warn', 'Attempt of duplicate peer connection');
+      cb(1);
     }
   }
 
@@ -258,7 +262,7 @@ class RTC implements RTCInterface {
       log('warn', 'Set media without peer connection', { peerId });
       return;
     }
-    const method: keyof typeof navigator.mediaDevices = this.shareScreen
+    const method: keyof typeof navigator.mediaDevices = this.ws.shareScreen
       ? 'getDisplayMedia'
       : 'getUserMedia';
     if (!this.localStream) {
@@ -271,13 +275,15 @@ class RTC implements RTCInterface {
           log('info', '> Adding tracks to new local media stream', {
             streamId: localStream.id,
           });
+          const _peerId = this.getPeerId(roomId, target, connId);
           localStream.getTracks().forEach((track) => {
             if (!this.localTrackSettings) {
+              // TODO
               this.localTrackSettings = track.getSettings();
             }
-            this.peerConnections[peerId]!.addTrack(track, localStream);
+            this.peerConnections[_peerId]!.addTrack(track, localStream);
           });
-          this.onAddTrack[this.getPeerId(roomId, target, connId)](userId, localStream);
+          this.onAddTrack[peerId](userId, localStream);
           cb(0);
         })
         .catch((err) => {
