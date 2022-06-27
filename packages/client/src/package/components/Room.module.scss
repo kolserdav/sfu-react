@@ -23,6 +23,11 @@
   font-size: x-small;
 }
 
+.muted {
+  position: absolute;
+  z-index: 12;
+}
+
 .container {
   position: relative;
   width: 100%;

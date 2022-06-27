@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Tue Jun 21 2022 08:49:55 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import React, { useMemo, useContext, useRef, useState } from 'react';
+import React, { useMemo, useContext, useRef } from 'react';
 import { getTarget, log } from '../utils/lib';
 import s from './Room.module.scss';
 import { RoomProps } from '../types/index';
@@ -27,7 +27,16 @@ function Room({ id }: RoomProps) {
   const container = useRef<HTMLDivElement>(null);
   const roomId = useMemo(() => getTarget(pathname || ''), [pathname]);
   const roomLink = useMemo(() => getRoomLink(roomId), [roomId]);
-  const { streams, lenght, lostStreamHandler, screenShare, shareScreen } = useConnection({
+  const {
+    streams,
+    lenght,
+    lostStreamHandler,
+    screenShare,
+    shareScreen,
+    muted,
+    changeMuted,
+    muteds,
+  } = useConnection({
     id,
     roomId,
   });
@@ -39,20 +48,19 @@ function Room({ id }: RoomProps) {
   const onClickClose = useOnclickClose({ container: container.current, lenght });
   const onPressEscape = usePressEscape();
 
-  const [muted, setMuted] = useState<boolean>(false);
-
-  const changeMuted = () => {
-    setMuted(!muted);
-  };
-
   return (
     <div className={s.wrapper} style={theme.wrapper}>
       <div className={s.container} ref={container}>
         {streams.map((item, index) => (
           <div id={item.stream.id} key={item.target} className={s.video}>
             <CloseButton onClick={onClickClose} onKeyDown={onPressEscape} tabindex={index} />
+            <div className={s.muted}>
+              {muteds.indexOf(item.target.toString()) !== -1 && (
+                <MicrophoneOffIcon color={theme.colors.text} />
+              )}
+            </div>
             <video
-              muted={item.target === id}
+              muted={item.target === id || muteds.indexOf(item.target.toString()) !== -1}
               onTimeUpdate={(e) => {
                 if (item.stream.active === false) {
                   log('warn', 'Stream is not active', { uid: item.target, sid: item.stream.id });

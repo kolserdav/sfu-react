@@ -31,10 +31,16 @@ export enum MessageType {
   GET_ROOM_GUESTS = 'GET_ROOM_GUESTS',
   SET_ROOM_GUESTS = 'SET_ROOM_GUESTS',
   SET_CHANGE_UNIT = 'SET_CHANGE_UNIT',
+  GET_MUTE = 'GET_MUTE',
+  SET_MUTE = 'SET_MUTE',
 }
 
 export namespace DataTypes {
   export namespace MessageTypes {
+    export type GetMute = {
+      muted: boolean;
+      roomId: string | number;
+    };
     export type GetRoomGuests = {
       roomId: number | string;
     };
@@ -45,6 +51,7 @@ export namespace DataTypes {
       target: number | string;
       eventName: 'delete' | 'add' | 'added';
       roomLenght: number;
+      muteds: string[];
     };
     export type SetGuestId = undefined;
     export type GetRoom = {
@@ -52,11 +59,15 @@ export namespace DataTypes {
     };
     export type SetRoomGuests = {
       roomUsers: (number | string)[];
+      muteds: string[];
     };
     export type SetRoom = undefined;
     export type SetError = {
       message: string;
       context: SendMessageArgs<any>;
+    };
+    export type SetMute = {
+      muteds: string[];
     };
     export type Offer = {
       sdp: RTCSessionDescriptionInit;
@@ -82,6 +93,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.Answer
     : T extends MessageType.CANDIDATE
     ? DataTypes.MessageTypes.Candidate
+    : T extends MessageType.GET_MUTE
+    ? DataTypes.MessageTypes.GetMute
     : T extends MessageType.GET_USER_ID
     ? DataTypes.MessageTypes.GetGuestId
     : T extends MessageType.SET_USER_ID
@@ -96,6 +109,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetRoomGuests
     : T extends MessageType.SET_CHANGE_UNIT
     ? DataTypes.MessageTypes.SetChangeRoomUnit
+    : T extends MessageType.SET_MUTE
+    ? DataTypes.MessageTypes.SetMute
     : T extends MessageType.SET_ERROR
     ? DataTypes.MessageTypes.SetError
     : unknown;

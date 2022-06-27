@@ -34,6 +34,8 @@ export const useConnection = ({
   const [selfStream, setSelfStream] = useState<Stream | null>(null);
   const [roomIsSaved, setRoomIsSaved] = useState<boolean>(false);
   const [lenght, setLenght] = useState<number>(streams.length);
+  const [muted, setMuted] = useState<boolean>(false);
+  const [muteds, setMuteds] = useState<string[]>([]);
   const [connectionId, setConnectionId] = useState<string>('');
   const ws = useMemo(() => new WS({ shareScreen: localShareScreen }), [localShareScreen]);
   const rtc = useMemo(() => new RTC({ ws }), [ws]);
@@ -43,6 +45,22 @@ export const useConnection = ({
     },
     [shareScreen]
   );
+
+  const changeMuted = () => {
+    if (!roomId) {
+      return;
+    }
+    setMuted(!muted);
+    ws.sendMessage({
+      type: MessageType.GET_MUTE,
+      id: ws.userId,
+      connId: '',
+      data: {
+        muted: !muted,
+        roomId,
+      },
+    });
+  };
 
   const lostStreamHandler = ({
     target,
@@ -147,12 +165,13 @@ export const useConnection = ({
 
     const changeRoomUnitHandler = ({
       id: userId,
-      data: { target, eventName, roomLenght },
+      data: { target, eventName, roomLenght, muteds: _muteds },
       connId,
     }: SendMessageArgs<MessageType.SET_CHANGE_UNIT>) => {
       if (lenght !== roomLenght) {
         setLenght(roomLenght);
       }
+      setMuteds(_muteds);
       //alert(`${eventName} ${target}`);
       switch (eventName) {
         case 'add':
@@ -187,6 +206,7 @@ export const useConnection = ({
                         target: userId,
                         roomLenght,
                         eventName: 'added',
+                        muteds: _muteds,
                       },
                     });
                   }
@@ -212,15 +232,27 @@ export const useConnection = ({
       }
     };
 
+    const changeMuteHandler = (args: SendMessageArgs<MessageType.SET_MUTE>) => {
+      const {
+        data: { muteds: _muteds },
+      } = args;
+      setMuteds(_muteds);
+    };
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const changeRoomGuestsHandler = ({ rawMessage }: { rawMessage: SendMessageArgs<any> }) => {
+    const changeRoomGuestsHandler = ({
+      rawMessage,
+    }: {
+      rawMessage: SendMessageArgs<MessageType.SET_ROOM_GUESTS>;
+    }) => {
       if (!roomId) {
         return;
       }
       const {
-        data: { roomUsers },
+        data: { roomUsers, muteds: _muteds },
         connId,
       } = ws.getMessage(MessageType.SET_ROOM_GUESTS, rawMessage);
+      setMuteds(_muteds);
       const _streams: Stream[] = storeStreams.getState().streams as Stream[];
       log('info', 'onChangeRoomGuests', { roomUsers, id, st: _streams.map((i) => i.target) });
       // Add remote streams
@@ -348,6 +380,9 @@ export const useConnection = ({
         case MessageType.SET_ROOM_GUESTS:
           changeRoomGuestsHandler({ rawMessage });
           break;
+        case MessageType.SET_MUTE:
+          changeMuteHandler(ws.getMessage(MessageType.SET_MUTE, rawMessage));
+          break;
         case MessageType.ANSWER:
           rtc.handleVideoAnswerMsg(rawMessage);
           break;
@@ -409,7 +444,16 @@ export const useConnection = ({
     };
   }, [roomId, ws, lenght, streams, connectionId, id, shareScreen]);
 
-  return { streams, lenght, lostStreamHandler, screenShare, shareScreen };
+  return {
+    streams,
+    lenght,
+    lostStreamHandler,
+    screenShare,
+    shareScreen,
+    muted,
+    changeMuted,
+    muteds,
+  };
 };
 
 export const useVideoDimensions = ({

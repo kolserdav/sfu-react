@@ -69,14 +69,36 @@ function createServer({ port = PORT }: { port?: number }) {
           });
           break;
         case MessageType.GET_ROOM_GUESTS:
+          const _roomId = wss.getMessage(MessageType.GET_ROOM_GUESTS, rawMessage).data.roomId;
           wss.sendMessage({
             type: MessageType.SET_ROOM_GUESTS,
             id,
             data: {
-              roomUsers:
-                rtc.rooms[wss.getMessage(MessageType.GET_ROOM_GUESTS, rawMessage).data.roomId],
+              roomUsers: rtc.rooms[_roomId],
+              muteds: rtc.muteds[_roomId],
             },
             connId,
+          });
+          break;
+        case MessageType.GET_MUTE:
+          const { muted, roomId } = wss.getMessage(MessageType.GET_MUTE, rawMessage).data;
+          const index = rtc.muteds[roomId].indexOf(id.toString());
+          if (muted) {
+            if (index === -1) {
+              rtc.muteds[roomId].push(id.toString());
+            }
+          } else {
+            rtc.muteds[roomId].splice(index, 1);
+          }
+          rtc.rooms[roomId].forEach((item) => {
+            wss.sendMessage({
+              type: MessageType.SET_MUTE,
+              id: item,
+              connId: '',
+              data: {
+                muteds: rtc.muteds[roomId],
+              },
+            });
           });
           break;
         default:
@@ -103,6 +125,10 @@ function createServer({ port = PORT }: { port?: number }) {
             const keys = Object.keys(rtc.peerConnections);
             rtc.cleanConnections(item, userId.toString());
             rtc.rooms[item].splice(index, 1);
+            const mute = rtc.muteds[item].indexOf(userId.toString());
+            if (mute !== -1) {
+              rtc.muteds[item].splice(mute, 1);
+            }
             // Send user list of room
             rtc.rooms[item].forEach((_item) => {
               let _connId = connId;
@@ -128,6 +154,7 @@ function createServer({ port = PORT }: { port?: number }) {
                 id: _item,
                 data: {
                   roomLenght: rtc.rooms[item].length,
+                  muteds: rtc.muteds[item],
                   target: userId,
                   eventName: 'delete',
                 },
