@@ -261,21 +261,39 @@ class RTC implements RTCInterface {
       ? 'getDisplayMedia'
       : 'getUserMedia';
     if (!this.localStream) {
-      navigator.mediaDevices[method]({
-        video: true,
-        audio: true,
-      })
+      navigator.mediaDevices
+        .getUserMedia({
+          video: true,
+          audio: true,
+        })
         .then((localStream) => {
           this.localStream = localStream;
-          log('info', '> Adding tracks to new local media stream', {
-            streamId: localStream.id,
-          });
-          // FIXME target to twice direction
-          localStream.getTracks().forEach((track) => {
-            this.peerConnections[peerId]!.addTrack(track, localStream);
-          });
-          this.onAddTrack[peerId](userId, localStream);
-          cb(0);
+          if (!this.ws.shareScreen) {
+            log('info', '> Adding tracks to new local media stream', {
+              streamId: localStream.id,
+            });
+            // FIXME target to twice direction
+            localStream.getTracks().forEach((track) => {
+              this.peerConnections[peerId]!.addTrack(track, localStream);
+            });
+            this.onAddTrack[peerId](userId, localStream);
+            cb(0);
+          } else {
+            navigator.mediaDevices.getDisplayMedia({ video: true }).then((videoStream) => {
+              localStream.getTracks().forEach((track) => {
+                if (track.kind === 'audio') {
+                  this.peerConnections[peerId]!.addTrack(track, videoStream);
+                }
+              });
+              videoStream.getTracks().forEach((track) => {
+                if (track.kind === 'video') {
+                  this.peerConnections[peerId]!.addTrack(track, videoStream);
+                }
+              });
+              this.onAddTrack[peerId](userId, videoStream);
+              cb(0);
+            });
+          }
         })
         .catch((err) => {
           log('error', 'Error get self user media', err);
@@ -286,7 +304,6 @@ class RTC implements RTCInterface {
         streamId: this.localStream.id,
       });
       this.localStream.getTracks().forEach((track) => {
-        console.log(peerId);
         if (this.localStream) {
           this.peerConnections[peerId]!.addTrack(track, this.localStream);
         }

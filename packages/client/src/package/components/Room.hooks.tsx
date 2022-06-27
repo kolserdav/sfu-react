@@ -41,7 +41,7 @@ export const useConnection = ({
     () => (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       setShareScreen(!shareScreen);
     },
-    []
+    [shareScreen]
   );
 
   const lostStreamHandler = ({
@@ -172,7 +172,7 @@ export const useConnection = ({
                 userId: id,
                 connId,
                 onTrack: ({ addedUserId, stream }) => {
-                  log('warn', 'Added unit track', { addedUserId, s: stream.id, connId });
+                  log('info', 'Added unit track', { addedUserId, s: stream.id, connId });
                   addStream({ target: addedUserId, stream, connId });
                 },
               },
@@ -321,7 +321,7 @@ export const useConnection = ({
               connId,
               roomId,
               onTrack: ({ addedUserId, stream }) => {
-                log('warn', '-> Added local stream to room', { addedUserId, id });
+                log('info', '-> Added local stream to room', { addedUserId, id });
                 addStream({ target: addedUserId, stream, connId });
               },
             },
