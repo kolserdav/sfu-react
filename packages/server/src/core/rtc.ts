@@ -17,7 +17,7 @@ class RTC implements RTCInterface {
   public peerConnections: RTCInterface['peerConnections'] = {};
   public readonly delimiter = '_';
   public rooms: Record<string, (string | number)[]> = {};
-  public roomCons: Record<string, number | string> = {};
+  public muteds: Record<string, (string | number)[]> = {};
   private ws: WS;
   public streams: Record<string, MediaStream> = {};
 
@@ -476,6 +476,7 @@ class RTC implements RTCInterface {
   public addUserToRoom({ userId, roomId }: { userId: number | string; roomId: number | string }) {
     if (!this.rooms[roomId]) {
       this.rooms[roomId] = [userId];
+      this.muteds[roomId] = [];
     } else if (this.rooms[roomId].indexOf(userId) === -1) {
       this.rooms[roomId].push(userId);
     }

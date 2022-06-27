@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Tue Jun 21 2022 08:49:55 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import React, { useMemo, useContext, useRef } from 'react';
+import React, { useMemo, useContext, useRef, useState } from 'react';
 import { getTarget, log } from '../utils/lib';
 import s from './Room.module.scss';
 import { RoomProps } from '../types/index';
@@ -18,13 +18,19 @@ import { getRoomLink, getPathname, onClickVideo } from './Room.lib';
 import CloseButton from './ui/CloseButton';
 import ScreenIcon from '../Icons/ScreeenIcon';
 import IconButton from './ui/IconButton';
+import CameraIcon from '../Icons/CameraIcon';
+import MicrophoneIcon from '../Icons/MicrophoneIcon';
+import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
 
 function Room({ id }: RoomProps) {
   const pathname = getPathname();
   const container = useRef<HTMLDivElement>(null);
   const roomId = useMemo(() => getTarget(pathname || ''), [pathname]);
   const roomLink = useMemo(() => getRoomLink(roomId), [roomId]);
-  const { streams, lenght, lostStreamHandler, screenShare } = useConnection({ id, roomId });
+  const { streams, lenght, lostStreamHandler, screenShare, shareScreen } = useConnection({
+    id,
+    roomId,
+  });
   const theme = useContext(ThemeContext);
   const setVideoDimensions = useVideoDimensions({
     container: container.current,
@@ -32,6 +38,12 @@ function Room({ id }: RoomProps) {
   });
   const onClickClose = useOnclickClose({ container: container.current, lenght });
   const onPressEscape = usePressEscape();
+
+  const [muted, setMuted] = useState<boolean>(false);
+
+  const changeMuted = () => {
+    setMuted(!muted);
+  };
 
   return (
     <div className={s.wrapper} style={theme.wrapper}>
@@ -90,7 +102,18 @@ function Room({ id }: RoomProps) {
           </a>
         )}
         <IconButton onClick={screenShare}>
-          <ScreenIcon color={theme.colors.text} />
+          {shareScreen ? (
+            <CameraIcon color={theme.colors.text} />
+          ) : (
+            <ScreenIcon color={theme.colors.text} />
+          )}
+        </IconButton>
+        <IconButton onClick={changeMuted}>
+          {muted ? (
+            <MicrophoneOffIcon color={theme.colors.text} />
+          ) : (
+            <MicrophoneIcon color={theme.colors.text} />
+          )}
         </IconButton>
       </div>
     </div>

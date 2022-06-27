@@ -409,7 +409,7 @@ export const useConnection = ({
     };
   }, [roomId, ws, lenght, streams, connectionId, id, shareScreen]);
 
-  return { streams, lenght, lostStreamHandler, screenShare };
+  return { streams, lenght, lostStreamHandler, screenShare, shareScreen };
 };
 
 export const useVideoDimensions = ({

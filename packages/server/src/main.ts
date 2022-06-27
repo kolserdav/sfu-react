@@ -54,10 +54,6 @@ function createServer({ port = PORT }: { port?: number }) {
       switch (type) {
         case MessageType.GET_USER_ID:
           const { isRoom } = wss.getMessage(MessageType.GET_USER_ID, rawMessage).data;
-          // TODO fixed isRoom problem
-          if (isRoom) {
-            rtc.roomCons[connId] = id;
-          }
           wss.setSocket({ id, ws, connId, isRoom });
           wss.sendMessage({
             type: MessageType.SET_USER_ID,
@@ -140,6 +136,7 @@ function createServer({ port = PORT }: { port?: number }) {
             });
             if (rtc.rooms[item].length === 0) {
               delete rtc.rooms[item];
+              delete rtc.muteds[item];
             }
           }
           delete wss.sockets[connId];
