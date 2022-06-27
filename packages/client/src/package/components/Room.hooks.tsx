@@ -36,6 +36,7 @@ export const useConnection = ({
   const [lenght, setLenght] = useState<number>(streams.length);
   const [muted, setMuted] = useState<boolean>(false);
   const [muteds, setMuteds] = useState<string[]>([]);
+  const [video, setVideo] = useState<boolean>(true);
   const [connectionId, setConnectionId] = useState<string>('');
   const ws = useMemo(() => new WS({ shareScreen: localShareScreen }), [localShareScreen]);
   const rtc = useMemo(() => new RTC({ ws }), [ws]);
@@ -50,7 +51,8 @@ export const useConnection = ({
     if (!roomId) {
       return;
     }
-    setMuted(!muted);
+    const _muted = !muted;
+    setMuted(_muted);
     ws.sendMessage({
       type: MessageType.GET_MUTE,
       id: ws.userId,
@@ -60,17 +62,20 @@ export const useConnection = ({
         roomId,
       },
     });
+    if (rtc.localStream) {
+      rtc.localStream.getAudioTracks()[0].enabled = !_muted;
+    }
   };
 
-  const lostStreamHandler = ({
-    target,
-    connId,
-    video,
-  }: {
-    target: number | string;
-    connId: string;
-    video: HTMLVideoElement;
-  }) => {
+  const changeVideo = () => {
+    if (rtc.localStream) {
+      const _video = !video;
+      setVideo(_video);
+      rtc.localStream.getVideoTracks()[0].enabled = _video;
+    }
+  };
+
+  const lostStreamHandler = ({ target, connId }: { target: number | string; connId: string }) => {
     if (!roomId) {
       return;
     }
@@ -453,6 +458,8 @@ export const useConnection = ({
     muted,
     changeMuted,
     muteds,
+    video,
+    changeVideo,
   };
 };
 
@@ -501,7 +508,6 @@ export const useVideoDimensions = ({
                   `grid-template-columns: repeat(${cols}, auto);
                   grid-template-rows: repeat(${rows}, auto);`
                 );
-
                 item
                   .applyConstraints({ width: _width, height: _height })
                   .then(() => {

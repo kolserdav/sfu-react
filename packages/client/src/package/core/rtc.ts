@@ -257,9 +257,6 @@ class RTC implements RTCInterface {
       log('warn', 'Set media without peer connection', { peerId });
       return;
     }
-    const method: keyof typeof navigator.mediaDevices = this.ws.shareScreen
-      ? 'getDisplayMedia'
-      : 'getUserMedia';
     if (!this.localStream) {
       navigator.mediaDevices
         .getUserMedia({
@@ -272,22 +269,31 @@ class RTC implements RTCInterface {
             log('info', '> Adding tracks to new local media stream', {
               streamId: localStream.id,
             });
-            // FIXME target to twice direction
             localStream.getTracks().forEach((track) => {
               this.peerConnections[peerId]!.addTrack(track, localStream);
             });
-            this.onAddTrack[peerId](userId, localStream);
+            this.onAddTrack[peerId](userId, this.localStream);
             cb(0);
           } else {
             navigator.mediaDevices.getDisplayMedia({ video: true }).then((videoStream) => {
+              this.localStream = new MediaStream();
               localStream.getTracks().forEach((track) => {
                 if (track.kind === 'audio') {
                   this.peerConnections[peerId]!.addTrack(track, videoStream);
+                  this.localStream?.addTrack(track);
+                } else {
+                  const sender = this.peerConnections[peerId]!.getSenders().find(
+                    (item) => item.track?.kind === 'video'
+                  );
+                  if (sender) {
+                    this.peerConnections[peerId]!.removeTrack(sender);
+                  }
                 }
               });
               videoStream.getTracks().forEach((track) => {
                 if (track.kind === 'video') {
                   this.peerConnections[peerId]!.addTrack(track, videoStream);
+                  this.localStream?.addTrack(track);
                 }
               });
               this.onAddTrack[peerId](userId, videoStream);

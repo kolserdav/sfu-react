@@ -21,6 +21,8 @@ import IconButton from './ui/IconButton';
 import CameraIcon from '../Icons/CameraIcon';
 import MicrophoneIcon from '../Icons/MicrophoneIcon';
 import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
+import CameraOutlineOffIcon from '../Icons/CameraOutlineOffIcon';
+import CameraOutlineIcon from '../Icons/CameraOutlineIcon';
 
 function Room({ id }: RoomProps) {
   const pathname = getPathname();
@@ -36,6 +38,8 @@ function Room({ id }: RoomProps) {
     muted,
     changeMuted,
     muteds,
+    video,
+    changeVideo,
   } = useConnection({
     id,
     roomId,
@@ -47,7 +51,6 @@ function Room({ id }: RoomProps) {
   });
   const onClickClose = useOnclickClose({ container: container.current, lenght });
   const onPressEscape = usePressEscape();
-
   return (
     <div className={s.wrapper} style={theme.wrapper}>
       <div className={s.container} ref={container}>
@@ -55,9 +58,7 @@ function Room({ id }: RoomProps) {
           <div id={item.stream.id} key={item.target} className={s.video}>
             <CloseButton onClick={onClickClose} onKeyDown={onPressEscape} tabindex={index} />
             <div className={s.muted}>
-              {muteds.indexOf(item.target.toString()) !== -1 && (
-                <MicrophoneOffIcon color={theme.colors.text} />
-              )}
+              {muteds.indexOf(item.target.toString()) !== -1 && <MicrophoneOffIcon color="#fff" />}
             </div>
             <video
               muted={item.target === id || muteds.indexOf(item.target.toString()) !== -1}
@@ -65,7 +66,6 @@ function Room({ id }: RoomProps) {
                 if (item.stream.active === false) {
                   log('warn', 'Stream is not active', { uid: item.target, sid: item.stream.id });
                   lostStreamHandler({
-                    video: e.target as HTMLVideoElement,
                     target: item.target,
                     connId: item.connId,
                   });
@@ -121,6 +121,13 @@ function Room({ id }: RoomProps) {
             <MicrophoneOffIcon color={theme.colors.text} />
           ) : (
             <MicrophoneIcon color={theme.colors.text} />
+          )}
+        </IconButton>
+        <IconButton onClick={changeVideo}>
+          {video ? (
+            <CameraOutlineIcon color={theme.colors.text} />
+          ) : (
+            <CameraOutlineOffIcon color={theme.colors.text} />
           )}
         </IconButton>
       </div>
