@@ -515,8 +515,7 @@ class RTC implements RTCInterface {
 
   public closeByPeer = (peerId: string) => {
     if (!this.peerConnections[peerId]) {
-      log('warn', 'Close video call without peer connection', {
-        peerId,
+      log('info', `Close video call without peer connection ${peerId}`, {
         r: Object.keys(this.peerConnections),
       });
       return;
