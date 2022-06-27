@@ -443,18 +443,14 @@ export const useVideoDimensions = ({
             stream.getVideoTracks().forEach((item) => {
               const oldWidth = item.getConstraints().width;
               if (oldWidth !== width) {
-                let _width = 0;
-                let _height = 0;
+                let _width = width;
+                let _height = width;
                 if (videoHeight < videoWidth) {
-                  _width = width;
                   _height = Math.floor(width / coeff);
-                  target.setAttribute('width', _width.toString());
                   target.setAttribute('height', _height.toString());
                 } else {
                   _width = Math.floor(width * coeff);
-                  _height = width;
                   target.setAttribute('width', _width.toString());
-                  target.setAttribute('height', _height.toString());
                 }
                 target.parentElement?.parentElement?.setAttribute(
                   'style',
