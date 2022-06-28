@@ -46,6 +46,7 @@
     "dev:server": "cd packages/server && npm run dev",
     "dev:install": "cd packages/server/node-webrtc && SKIP_DOWNLOAD=true npm install",
     "dev:client": "cd packages/client && npm start",
+    "start": "cd packages/server && npm start",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "bin": "node bin/uyem.js",
     "test": "node tests/rooms.js"
