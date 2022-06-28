@@ -10,5 +10,5 @@
  ******************************************************************************************/
 export const LOG_LEVEL = process.env.NODE_ENV === 'production' ? 3 : 2;
 
-export const DEFAULT_PORT = 3001;
-export const PORT = parseInt(process.env.PORT || `${DEFAULT_PORT}`, 10);
+export const DEFAULT_PORT = '3001';
+export const PORT = parseInt(process.env.PORT || DEFAULT_PORT, 10);

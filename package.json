@@ -39,7 +39,7 @@
   "main": "index.js",
   "scripts": {
     "build:server": "cd packages/server && npm run build",
-    "build:client": "cd packages/client && npm run compile",
+    "build:client": "cd packages/client && npm run build && npm run compile",
     "build": "npm run build:server && npm run build:client",
     "copy-interfaces": "node scripts/create-interfaces-symlink.js",
     "preinstall": "npm run copy-interfaces",
