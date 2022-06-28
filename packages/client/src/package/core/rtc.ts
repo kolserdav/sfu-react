@@ -541,7 +541,7 @@ class RTC implements RTCInterface {
 
   // eslint-disable-next-line class-methods-use-this
   public onClosedCall: RTCInterface['onClosedCall'] = (args) => {
-    log('log', 'Call is closed', { ...args });
+    log('warn', 'Call is closed', { ...args });
   };
 
   public closeAllConnections() {
