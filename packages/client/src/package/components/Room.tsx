@@ -84,7 +84,7 @@ function Room({ id }: RoomProps) {
                 log('warn', 'Empty video data', { active: item.stream.active, id: item.target });
               }}
               onSuspend={(e) => {
-                log('warn', 'Suspend video data', { active: item.stream.active, id: item.target });
+                log('info', 'Suspend video data', { active: item.stream.active, id: item.target });
               }}
               onStalled={(e) => {
                 log('warn', 'Stalled video data', { active: item.stream.active, id: item.target });
