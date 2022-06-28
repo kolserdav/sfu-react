@@ -1,0 +1,21 @@
+[Unit]
+Description=uyem server
+After=nginx.service
+[Service]
+Restart=always
+RestartSec=5
+StandardOutput=syslog
+TimeoutSec=90
+User=root
+Group=root
+Environment=PATH=/usr/bin:/usr/local/bin:/home/user/.nvm/versions/node/v16.13.0/bin
+Environment=NODE_ENV=production
+Environment=PORT=3001
+WorkingDirectory=/usr/local/share/applications/uyem
+ExecStart=/home/user/.nvm/versions/node/v16.13.0/bin/npm run start
+SyslogIdentifier=uyem
+LimitNOFILE=4096
+IgnoreSIGPIPE=false
+KillMode=process
+[Install]
+WantedBy=multi-user.target
