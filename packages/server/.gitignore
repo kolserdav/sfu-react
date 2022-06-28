@@ -10,3 +10,5 @@ cloud/*
 !cloud/.gitkeep
 
 src/types/interfaces.ts
+
+node-stun.ini

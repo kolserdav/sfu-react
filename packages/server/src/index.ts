@@ -18,7 +18,6 @@ import Server from './main';
 import { name, version } from '../../../package.json';
 
 log('info', `${name}@${version} started`, '...', true);
-console.log('\n');
 
 const argv: { port: string } = yargs(hideBin(process.argv)).argv as any;
 

@@ -39,16 +39,17 @@
   "main": "index.js",
   "scripts": {
     "build:server": "cd packages/server && npm run build",
-    "build:client": "cd packages/client && npm run build && npm run compile",
+    "prebuild:client": "cd packages/client && npm run build",
+    "build:client": "npm run prebuild:client && npm run compile",
     "build": "npm run build:server && npm run build:client",
     "copy-interfaces": "node scripts/create-interfaces-symlink.js",
+    "stun": "cd packages/server && node-stun-server",
     "preinstall": "npm run copy-interfaces",
     "dev:server": "cd packages/server && npm run dev",
     "dev:install": "cd packages/server/node-webrtc && SKIP_DOWNLOAD=true npm install",
     "dev:client": "cd packages/client && npm start",
     "start": "cd packages/server && npm start",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "bin": "node bin/uyem.js",
     "test": "node tests/rooms.js"
   },
   "dependencies": {
@@ -87,6 +88,7 @@
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.0.0",
     "microbundle": "^0.15.0",
+    "node-stun": "^0.1.2",
     "prettier": "^2.6.2",
     "puppeteer": "^14.4.1",
     "react-scripts": "5.0.1",

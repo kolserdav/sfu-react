@@ -27,7 +27,7 @@ process.on('unhandledRejection', (err: Error) => {
  * Create SFU WebRTC server
  */
 function createServer({ port = PORT }: { port?: number }) {
-  log('info', 'Server listen at port:', port);
+  log('info', 'Server listen at port:', port, true);
   const getConnectionId = (): string => {
     const connId = v4();
     if (wss.sockets[connId]) {
