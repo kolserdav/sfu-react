@@ -65,14 +65,9 @@ class RTC implements RTCInterface {
     this.peerConnections[this.getPeerId(roomId, target, connId)] = new RTCPeerConnection({
       iceServers: [
         {
-          urls: process.env.REACT_APP_STUN_SERVERS?.split(',') || [],
-        },
-      ],
-    });
-    console.log({
-      iceServers: [
-        {
-          urls: process.env.REACT_APP_STUN_SERVERS?.split(',') || [],
+          urls: ['turn:localhost:3478'],
+          username: 'admin',
+          credential: 'admin',
         },
       ],
     });

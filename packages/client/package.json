@@ -7,8 +7,8 @@
     "start": "react-scripts start",
     "compile:main": "microbundle --format es -i src/package/Main.tsx -o dist/Main.js",
     "compile:room": "microbundle --format es src/package/components/Room.tsx -o dist/components/Room.js",
-    "compile": "npm run compile:main && npm run compile:room",
-    "build": "react-scripts build && node -e \"fs.rmSync('packages/client/dist', { recursive: true, force: true })\"",
+    "compile": "node -e \"fs.rmSync('packages/client/dist', { recursive: true, force: true })\" && npm run compile:main && npm run compile:room",
+    "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
