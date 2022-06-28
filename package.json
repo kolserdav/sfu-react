@@ -40,7 +40,7 @@
   "scripts": {
     "build:server": "cd packages/server && npm run build",
     "prebuild:client": "cd packages/client && npm run build",
-    "build:client": "npm run prebuild:client && npm run compile",
+    "build:client": "npm run prebuild:client && cd packages/client && npm run compile",
     "build": "npm run build:server && npm run build:client",
     "copy-interfaces": "node scripts/create-interfaces-symlink.js",
     "stun": "cd packages/server && node-stun-server",
