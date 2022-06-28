@@ -63,14 +63,7 @@ class RTC implements RTCInterface {
       log('warn', 'Connection id is: ', { connId });
     }
     this.peerConnections[this.getPeerId(roomId, target, connId)] = new RTCPeerConnection({
-      iceServers:
-        process.env.NODE_ENV === 'production'
-          ? [
-              {
-                urls: ['stun:stun.l.google.com:19302'],
-              },
-            ]
-          : [],
+      iceServers: [],
     });
     return this.peerConnections;
   };
