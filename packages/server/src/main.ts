@@ -118,6 +118,7 @@ function createServer({ port = PORT }: { port?: number }) {
       });
       // Remove user from room
       if (userId) {
+        log('warn', 'User disconnected', userId);
         const roomKeys = Object.keys(rtc.rooms);
         roomKeys.forEach((item) => {
           const index = rtc.rooms[item].indexOf(userId);
