@@ -406,11 +406,23 @@ export const useConnection = ({
         default:
       }
     };
+    ws.onError = (e) => {
+      log('error', 'Ws error', e);
+    };
+    ws.onClose = (e) => {
+      log('warn', 'Ws close', e);
+    };
     return () => {
       ws.onOpen = () => {
         /** */
       };
       ws.onMessage = () => {
+        /** */
+      };
+      ws.onError = () => {
+        /** */
+      };
+      ws.onClose = () => {
         /** */
       };
     };
