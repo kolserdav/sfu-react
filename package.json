@@ -1,6 +1,6 @@
 {
   "name": "uyem",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "repository": "https://github.com/kolserdav/uyem.git",
   "description": "Selective Forwarding Unit (SFU) server side of which written on Node and client side on ReactJS",
   "keywords": [
@@ -18,11 +18,11 @@
   "bugs": "https://github.com/kolserdav/uyem/issues",
   "license": "BSD-2-Clause",
   "files": [
-    "dist",
+    "packages/client/dist",
+    "packages/server/dist",
     "bin",
-    "index.js",
-    "index.d.ts",
-    "jsconfig.json",
+    "server.js",
+    "clent.js",
     "scripts",
     "THIRD_PARTY_LICENSES.md",
     "LICENSE"
@@ -38,9 +38,8 @@
     "build:server": "cd packages/server && npm run build",
     "prebuild:client": "cd packages/client && npm run build",
     "build:client": "npm run prebuild:client && cd packages/client && npm run compile",
-    "build": "npm run build:server && npm run build:client && npm run rmdist && tsc -p .",
+    "build": "npm run build:server && npm run build:client",
     "copy-interfaces": "node scripts/create-interfaces-symlink.js",
-    "rmdist": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\"",
     "stun": "cd packages/server && node-stun-server",
     "preinstall": "npm run copy-interfaces",
     "dev:server": "cd packages/server && npm run dev",

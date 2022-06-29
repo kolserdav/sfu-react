@@ -9,8 +9,8 @@
  * Create Date: Tue Jun 21 2022 08:49:55 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import React from 'react';
-import Main from './package/Main';
-// import { client } from 'uyem';
+// import Main from './package/Main';
+import Main from 'uyem/dist/packages/client/dist/Main.esm';
 import './App.scss';
 
 const createRoom = () => {
