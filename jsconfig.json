@@ -1,8 +1,0 @@
-{
-  "compilerOptions": {
-    "module": "esnext",
-    "moduleResolution": "node",
-    "resolveJsonModule": true
-  },
-  "exclude": ["packages", "packages/server/node-webrtc"]
-}

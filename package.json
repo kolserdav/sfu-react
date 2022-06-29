@@ -1,6 +1,6 @@
 {
   "name": "uyem",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "repository": "https://github.com/kolserdav/uyem.git",
   "description": "Selective Forwarding Unit (SFU) server side of which written on Node and client side on ReactJS",
   "keywords": [
@@ -18,8 +18,7 @@
   "bugs": "https://github.com/kolserdav/uyem/issues",
   "license": "BSD-2-Clause",
   "files": [
-    "packages/server/dist",
-    "packages/client/dist",
+    "dist",
     "bin",
     "index.js",
     "index.d.ts",
@@ -34,13 +33,14 @@
   "bin": {
     "uyem": "bin/uyem.js"
   },
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "build:server": "cd packages/server && npm run build",
     "prebuild:client": "cd packages/client && npm run build",
     "build:client": "npm run prebuild:client && cd packages/client && npm run compile",
-    "build": "npm run build:server && npm run build:client",
+    "build": "npm run build:server && npm run build:client && npm run rmdist && tsc -p .",
     "copy-interfaces": "node scripts/create-interfaces-symlink.js",
+    "rmdist": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\"",
     "stun": "cd packages/server && node-stun-server",
     "preinstall": "npm run copy-interfaces",
     "dev:server": "cd packages/server && npm run dev",
@@ -67,6 +67,8 @@
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^13.5.0",
+    "@types/eslint": "^8.4.3",
+    "@types/estree": "^0.0.52",
     "@types/html-to-text": "^8.1.0",
     "@types/jest": "^27.5.2",
     "@types/jsonwebtoken": "^8.5.8",

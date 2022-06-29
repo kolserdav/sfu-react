@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "module": "esnext",
+    "target": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "outDir": "./dist",
+    "rootDir": "./",
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "declarationMap": true,
+    "allowSyntheticDefaultImports": true,
+    "jsx": "react-jsx",
+    "jsxFactory": "",
+    "jsxFragmentFactory": ""
+  },
+  "exclude": [
+    "packages/server/node-webrtc",
+    "packages/server/declarations.d.ts",
+    "packages/client/build",
+    "tmp"
+  ]
+}

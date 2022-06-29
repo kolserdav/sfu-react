@@ -1,3 +1,5 @@
 node_modules
 tmp
 tests/rooms.json
+dist
+declarations.d.ts

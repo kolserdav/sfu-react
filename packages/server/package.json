@@ -7,8 +7,9 @@
     "watch": "tsc -p . -w",
     "dev:start": "nodemon dist/main.js",
     "start": "node dist/main.js",
+    "rmdist": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\"",
     "dev": "concurrently \"npm run watch\" \"npm run dev:start\"",
-    "build": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\" && tsc -p ."
+    "build": "npm run rmdist && tsc -p ."
   },
   "nodemonConfig": {
     "ignore": [
