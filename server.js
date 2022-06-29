@@ -1,4 +1,5 @@
-const createServer = require('./packages/server/dist/packages/server/src/main').default;
+// @ts-check
+const createServer = require('./packages/server/dist/main').default;
 
 module.exports = {
   createServer,

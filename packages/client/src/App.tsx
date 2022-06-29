@@ -9,8 +9,8 @@
  * Create Date: Tue Jun 21 2022 08:49:55 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import React from 'react';
-import Main from './package/Main';
-// import { Room } from 'uyem/client';
+//import Main from './package/Main';
+import { Room } from 'uyem/client';
 import './App.scss';
 
 const createRoom = () => {
@@ -27,7 +27,7 @@ function App() {
           Create room
         </button>
       ) : (
-        <Main id={window.location.search.replace(/\?uid=/, '')} />
+        <Room id={window.location.search.replace(/\?uid=/, '')} />
       )}
     </div>
   );

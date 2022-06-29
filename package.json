@@ -10,6 +10,7 @@
     "p2p",
     "peer"
   ],
+  "homepage": "https://uyem.ru",
   "author": {
     "name": "Sergey Kolmiller",
     "email": "uyem.ru@gmail.com"
@@ -26,6 +27,7 @@
     "server.d.ts",
     "index.js",
     "index.d.ts",
+    "jsconfig.json",
     "scripts",
     "THIRD_PARTY_LICENSES.md",
     "LICENSE"
