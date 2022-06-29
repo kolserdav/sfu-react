@@ -10,7 +10,7 @@
  ******************************************************************************************/
 import React from 'react';
 // import Main from './package/Main';
-import Main from 'uyem/server';
+import { Hall } from 'uyem/client';
 import './App.scss';
 
 const createRoom = () => {
@@ -27,7 +27,7 @@ function App() {
           Create room
         </button>
       ) : (
-        <Main id={window.location.search.replace(/\?uid=/, '')} />
+        <Hall id={window.location.search.replace(/\?uid=/, '')} />
       )}
     </div>
   );
