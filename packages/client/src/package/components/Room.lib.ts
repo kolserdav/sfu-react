@@ -110,3 +110,10 @@ export const onClickVideo = (e: React.MouseEvent<HTMLVideoElement, MouseEvent>) 
   target.setAttribute('width', outerWidth.toString());
   target.setAttribute('height', height.toString());
 };
+
+export const copyLink = (link: string) => {
+  navigator.clipboard.writeText(link);
+};
+
+export const supportDisplayMedia = () =>
+  typeof navigator.mediaDevices.getDisplayMedia !== 'undefined';

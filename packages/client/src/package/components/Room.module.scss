@@ -66,7 +66,23 @@
 .actions {
   position: relative;
   display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
   height: 10vh;
   width: 100%;
   background-image: rgba($color: gray, $alpha: 5%);
+}
+
+.link__input {
+  position: relative;
+  height: 2rem;
+  width: 100%;
+}
+
+.link__container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 25%;
 }

@@ -372,6 +372,18 @@ export const useConnection = ({
                   },
                   connId,
                 });
+              } else if (localShareScreen) {
+                ws.shareScreen = false;
+                setLocalShareScreen(false);
+                setShareScreen(false);
+                ws.onOpen = () => {
+                  ws.sendMessage({
+                    type: MessageType.GET_USER_ID,
+                    id,
+                    data: {},
+                    connId: '',
+                  });
+                };
               }
             }
           );

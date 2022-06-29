@@ -14,7 +14,7 @@ import s from './Room.module.scss';
 import { RoomProps } from '../types/index';
 import { useConnection, useVideoDimensions, useOnclickClose, usePressEscape } from './Room.hooks';
 import ThemeContext from '../Theme.context';
-import { getRoomLink, getPathname, onClickVideo } from './Room.lib';
+import { getRoomLink, getPathname, onClickVideo, copyLink, supportDisplayMedia } from './Room.lib';
 import CloseButton from './ui/CloseButton';
 import ScreenIcon from '../Icons/ScreeenIcon';
 import IconButton from './ui/IconButton';
@@ -23,6 +23,7 @@ import MicrophoneIcon from '../Icons/MicrophoneIcon';
 import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
 import CameraOutlineOffIcon from '../Icons/CameraOutlineOffIcon';
 import CameraOutlineIcon from '../Icons/CameraOutlineIcon';
+import CopyIcon from '../Icons/CopyIcon';
 
 function Room({ id }: RoomProps) {
   const pathname = getPathname();
@@ -51,6 +52,8 @@ function Room({ id }: RoomProps) {
   });
   const onClickClose = useOnclickClose({ container: container.current, lenght });
   const onPressEscape = usePressEscape();
+  const displayMediaSupported = useMemo(() => supportDisplayMedia(), []);
+
   return (
     <div className={s.wrapper} style={theme.wrapper}>
       <div className={s.container} ref={container}>
@@ -103,19 +106,23 @@ function Room({ id }: RoomProps) {
         ))}
       </div>
       <div className={s.actions}>
-        <div>{id}</div>
         {roomLink && (
-          <a style={theme.link} className={s.room__link} href={roomLink}>
-            {roomLink}
-          </a>
+          <div className={s.link__container}>
+            <input disabled className={s.link__input} value={roomLink} />
+            <IconButton onClick={() => copyLink(roomLink)}>
+              <CopyIcon color={theme.colors.text} />
+            </IconButton>
+          </div>
         )}
-        <IconButton onClick={screenShare}>
-          {shareScreen ? (
-            <CameraIcon color={theme.colors.text} />
-          ) : (
-            <ScreenIcon color={theme.colors.text} />
-          )}
-        </IconButton>
+        {displayMediaSupported && (
+          <IconButton onClick={screenShare}>
+            {shareScreen ? (
+              <CameraIcon color={theme.colors.text} />
+            ) : (
+              <ScreenIcon color={theme.colors.text} />
+            )}
+          </IconButton>
+        )}
         <IconButton onClick={changeMuted}>
           {muted ? (
             <MicrophoneOffIcon color={theme.colors.text} />

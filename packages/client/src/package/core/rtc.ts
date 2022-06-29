@@ -277,30 +277,35 @@ class RTC implements RTCInterface {
             this.onAddTrack[peerId](userId, this.localStream);
             cb(0);
           } else {
-            navigator.mediaDevices.getDisplayMedia({ video: true }).then((videoStream) => {
-              this.localStream = new MediaStream();
-              localStream.getTracks().forEach((track) => {
-                if (track.kind === 'audio') {
-                  this.peerConnections[peerId]!.addTrack(track, videoStream);
-                  this.localStream?.addTrack(track);
-                } else {
-                  const sender = this.peerConnections[peerId]!.getSenders().find(
-                    (item) => item.track?.kind === 'video'
-                  );
-                  if (sender) {
-                    this.peerConnections[peerId]!.removeTrack(sender);
+            navigator.mediaDevices
+              .getDisplayMedia({ video: true })
+              .then((videoStream) => {
+                this.localStream = new MediaStream();
+                localStream.getTracks().forEach((track) => {
+                  if (track.kind === 'audio') {
+                    this.peerConnections[peerId]!.addTrack(track, videoStream);
+                    this.localStream?.addTrack(track);
+                  } else {
+                    const sender = this.peerConnections[peerId]!.getSenders().find(
+                      (item) => item.track?.kind === 'video'
+                    );
+                    if (sender) {
+                      this.peerConnections[peerId]!.removeTrack(sender);
+                    }
                   }
-                }
+                });
+                videoStream.getTracks().forEach((track) => {
+                  if (track.kind === 'video') {
+                    this.peerConnections[peerId]!.addTrack(track, videoStream);
+                    this.localStream?.addTrack(track);
+                  }
+                });
+                this.onAddTrack[peerId](userId, videoStream);
+                cb(0);
+              })
+              .catch(() => {
+                cb(1);
               });
-              videoStream.getTracks().forEach((track) => {
-                if (track.kind === 'video') {
-                  this.peerConnections[peerId]!.addTrack(track, videoStream);
-                  this.localStream?.addTrack(track);
-                }
-              });
-              this.onAddTrack[peerId](userId, videoStream);
-              cb(0);
-            });
           }
         })
         .catch((err) => {
