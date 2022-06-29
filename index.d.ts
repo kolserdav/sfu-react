@@ -1,9 +1,15 @@
 import { createServer } from './packages/server/src/main';
-import Room from './packages/client/dist/package/Main';
+import Main from './packages/client/dist/package/Main';
+import Room from './packages/client/dist/package/components/Room';
 
 interface Uyem {
-  createServer: typeof createServer;
-  Room: Room;
+  server: {
+    createServer: typeof createServer;
+  };
+  client: {
+    Main: Main;
+    Room: Room;
+  };
 }
 
 export default Uyem;
