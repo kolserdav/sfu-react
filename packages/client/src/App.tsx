@@ -10,7 +10,7 @@
  ******************************************************************************************/
 import React from 'react';
 // import Main from './package/Main';
-import Main from 'uyem/dist/packages/client/dist/Main.esm';
+import Main from 'uyem/server';
 import './App.scss';
 
 const createRoom = () => {

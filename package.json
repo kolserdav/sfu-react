@@ -1,6 +1,6 @@
 {
   "name": "uyem",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "repository": "https://github.com/kolserdav/uyem.git",
   "description": "Selective Forwarding Unit (SFU) server side of which written on Node and client side on ReactJS",
   "keywords": [
@@ -22,7 +22,7 @@
     "packages/server/dist",
     "bin",
     "server.js",
-    "clent.js",
+    "client.js",
     "scripts",
     "THIRD_PARTY_LICENSES.md",
     "LICENSE"
@@ -33,7 +33,6 @@
   "bin": {
     "uyem": "bin/uyem.js"
   },
-  "main": "dist/index.js",
   "scripts": {
     "build:server": "cd packages/server && npm run build",
     "prebuild:client": "cd packages/client && npm run build",
