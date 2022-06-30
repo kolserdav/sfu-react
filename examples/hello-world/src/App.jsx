@@ -1,7 +1,7 @@
 // @ts-check
 
 import React from 'react';
-import { Uyem } from 'uyem/client';
+import { UyemHall } from 'uyem/client';
 import './App.css';
 
 const createRoom = () => {
