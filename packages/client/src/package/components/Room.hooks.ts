@@ -516,28 +516,26 @@ export const useVideoDimensions = ({
             });
             // Change track constraints
             stream.getVideoTracks().forEach((item) => {
-		    const oldWidth = item.getConstraints().width;
-		    const oldHeight = item.getConstraints().height;
-		    console.log(oldHeight, oldWidth as number * coeff, width, coeff,{width, id: item.id, lenght, oldWidth, oldHeight})
-		    if (oldWidth !== width) {
+              const oldWidth = item.getConstraints().width;
+              if (oldWidth !== width) {
                 let _width = width;
                 let _height = width;
                 if (videoHeight < videoWidth) {
-			_height = Math.floor(width / coeff);
-			target.setAttribute('width', _width.toString());
+                  _height = Math.floor(width / coeff);
+                  target.setAttribute('width', _width.toString());
                   target.setAttribute('height', _height.toString());
                 } else {
-			_width = Math.floor(width * coeff);
-			target.setAttribute('width', _width.toString());
-			target.setAttribute('height', _height.toString());
+                  _width = Math.floor(width * coeff);
+                  target.setAttribute('width', _width.toString());
+                  target.setAttribute('height', _height.toString());
                 }
                 target.parentElement?.parentElement?.setAttribute(
                   'style',
                   `grid-template-columns: repeat(${cols}, auto);
                   grid-template-rows: repeat(${rows}, auto);`
-		);
+                );
                 item
-				    .applyConstraints(coeff < 1 ?{height: _height }: {width: _width})
+                  .applyConstraints(coeff < 1 ? { height: _height } : { width: _width })
                   .then(() => {
                     log('log', 'Constraints changed', {
                       width,
