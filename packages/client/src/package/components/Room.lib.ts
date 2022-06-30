@@ -53,7 +53,8 @@ export const getWidthOfItem = ({
     cols: 1,
     rows: 1,
   };
-  const { offsetWidth: width, offsetHeight: height } = container;
+	
+	const { offsetWidth: width, offsetHeight: height } = container;
   const _lenght = checkVideoFixed(container) ? 1 : lenght;
   if (_lenght) {
     const horizontal = width > height;
