@@ -1,6 +1,6 @@
 {
   "name": "uyem",
-  "version": "0.1.10",
+  "version": "0.1.12",
   "repository": "https://github.com/kolserdav/uyem.git",
   "description": "Selective Forwarding Unit (SFU) server side of which written on Node and client side on ReactJS",
   "keywords": [
@@ -23,6 +23,8 @@
     "bin",
     "server.js",
     "client.js",
+    "client.d.ts",
+    "server.d.ts",
     "scripts",
     "THIRD_PARTY_LICENSES.md",
     "LICENSE"
