@@ -60,9 +60,6 @@ function Room({ id }: RoomProps) {
         {streams.map((item, index) => (
           <div id={item.stream.id} key={item.target} className={s.video}>
             <CloseButton onClick={onClickClose} onKeyDown={onPressEscape} tabindex={index} />
-            <div className={s.muted}>
-              {muteds.indexOf(item.target.toString()) !== -1 && <MicrophoneOffIcon color="#fff" />}
-            </div>
             <video
               muted={item.target === id || muteds.indexOf(item.target.toString()) !== -1}
               onTimeUpdate={(e) => {
@@ -102,6 +99,9 @@ function Room({ id }: RoomProps) {
                 log('warn', 'Waiting video data', { active: item.stream.active, id: item.target });
               }}
             />
+            <div className={s.muted}>
+              {muteds.indexOf(item.target.toString()) !== -1 && <MicrophoneOffIcon color="#fff" />}
+            </div>
           </div>
         ))}
       </div>
