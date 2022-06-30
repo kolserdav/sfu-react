@@ -75,7 +75,7 @@ class WS implements Types.WSInterface {
   private newConnection({ local = false }: { local?: boolean }): WebSocket {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let connection: any;
-    if (typeof window !== 'undefined') {
+	  if (typeof window !== 'undefined') {
       connection = new WebSocket(
         `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${
           process.env.REACT_APP_SERVER

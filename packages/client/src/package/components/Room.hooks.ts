@@ -524,14 +524,15 @@ export const useVideoDimensions = ({
                   _height = Math.floor(width / coeff);
                   target.setAttribute('height', _height.toString());
                 } else {
-                  _width = Math.floor(width / coeff);
+                  _width = Math.floor(width * coeff);
                   target.setAttribute('width', _width.toString());
                 }
                 target.parentElement?.parentElement?.setAttribute(
                   'style',
                   `grid-template-columns: repeat(${cols}, auto);
                   grid-template-rows: repeat(${rows}, auto);`
-                );
+		);
+		      console.log({_width, _height, id: item.id, lenght	})
                 item
                   .applyConstraints({ width: _width, height: _height })
                   .then(() => {
