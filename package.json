@@ -86,7 +86,6 @@
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.0.0",
     "microbundle": "^0.15.0",
-    "node-stun": "^0.1.2",
     "prettier": "^2.6.2",
     "puppeteer": "^14.4.1",
     "react-scripts": "5.0.1",
