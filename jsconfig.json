@@ -4,5 +4,5 @@
     "moduleResolution": "node",
     "resolveJsonModule": true
   },
-  "exclude": ["packages", "packages/server/node-webrtc"]
+  "exclude": ["packages", "packages/server/node-webrtc", "examples"]
 }
