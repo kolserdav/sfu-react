@@ -9,7 +9,7 @@
     "compile:room": "microbundle --format es src/package/components/Room.tsx -o dist/components/Room.js",
     "compile:hall": "microbundle --format es src/package/components/Hall.tsx -o dist/components/Hall.js",
     "rmdist": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\"",
-    "compile": "npm run rmdist && npm run compile:main && npm run compile:room",
+    "compile": "npm run rmdist && npm run compile:main && npm run compile:room && npm run compile:hall",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
