@@ -3,11 +3,14 @@
   "version": "0.1.0",
   "private": false,
   "type": "module",
+  "source": "src/package/Main.tsx",
+  "main": "dist/Main.cjs",
+  "module": "dist/Main.esm.js",
   "scripts": {
     "start": "react-scripts start",
-    "compile:main": "microbundle --format es -i src/package/Main.tsx -o dist/Main.js",
+    "bundle": "microbundle",
     "rmdist": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\"",
-    "compile": "npm run rmdist && npm run compile:main",
+    "compile": "npm run rmdist && npm run bundle",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
