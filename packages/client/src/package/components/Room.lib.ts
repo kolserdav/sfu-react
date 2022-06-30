@@ -48,13 +48,12 @@ export const getWidthOfItem = ({
   coeff: number;
 }) => {
   let a = 0;
-  let vertical = false;
   let dims = {
     cols: 1,
     rows: 1,
   };
 	
-  const { offsetWidth: width, offsetHeight: height } = container;
+	const { offsetWidth: width, offsetHeight: height } = container;
   const _lenght = checkVideoFixed(container) ? 1 : lenght;
   if (_lenght) {
     const horizontal = width > height;
@@ -82,22 +81,12 @@ export const getWidthOfItem = ({
     }
     const w = width / dims.cols;
     const h = height / dims.rows;
-    vertical = dims.cols > dims.rows;
-    a = vertical ? w : h;
-    a = dims.cols === dims.rows && horizontal ? h : dims.cols === dims.rows && !horizontal ? w : a;
-    if (_lenght === 1 && horizontal && a * coeff <= width) {
-      a *= coeff;
-    } 
-	  else if (_lenght === 1 && !horizontal && a * coeff <= width) {
-		  a /=coeff;
-	  }
-	  else if (a * coeff <= width && _lenght === 1) {
-	    a /= coeff;
-    }
+	  a = coeff < 1 ? h : w;
+	  a = a > width ? width : a;
+	  a = a > height ? height : a;
   }
   return {
     width: Math.floor(a),
-    vertical,
     cols: dims.cols,
     rows: dims.rows,
   };
