@@ -524,7 +524,7 @@ export const useVideoDimensions = ({
                   _height = Math.floor(width / coeff);
                   target.setAttribute('height', _height.toString());
                 } else {
-                  _width = Math.floor(width * coeff);
+                  _width = Math.floor(width / coeff);
                   target.setAttribute('width', _width.toString());
                 }
                 target.parentElement?.parentElement?.setAttribute(

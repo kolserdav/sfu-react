@@ -87,7 +87,7 @@ export const getWidthOfItem = ({
     if (_lenght === 1 && horizontal && a * coeff <= width) {
       a *= coeff;
     } else if (a * coeff <= width && _lenght === 1) {
-      a = width / coeff;
+      a /= coeff;
     }
   }
   return {
