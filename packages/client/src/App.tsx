@@ -9,7 +9,8 @@
  * Create Date: Tue Jun 21 2022 08:49:55 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import React from 'react';
-import Main from './package/Main';
+//import Main from './package/Main';
+import Main from './dist/Main';
 import './App.scss';
 
 const createRoom = () => {

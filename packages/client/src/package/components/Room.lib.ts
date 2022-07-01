@@ -87,6 +87,7 @@ export const getWidthOfItem = ({
     a = a * dims.rows > height ? height / dims.rows : a;
     a = a * dims.cols > width ? width / dims.cols : a;
   }
+
   return {
     width: Math.floor(a),
     cols: dims.cols,
