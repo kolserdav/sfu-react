@@ -11,7 +11,7 @@ module.exports = (env) => {
     context: __dirname,
     entry: './src/package/Main.tsx',
     output: {
-      path: path.resolve(__dirname, 'src/dist'),
+      path: path.resolve(__dirname, 'dist'),
       filename: 'Main.js',
       libraryTarget: 'commonjs',
     },

@@ -8,7 +8,7 @@ const createRoom = () => {
   // Do not use the symbol "_" in room address
   window.location.href = `room-${new Date().getTime()}?uid=1`;
 };
-console.log(Uyem);
+
 function App() {
   const isHall = window.location.pathname === '/';
   return (

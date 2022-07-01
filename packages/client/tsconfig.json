@@ -11,7 +11,7 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "module": "esnext",
-    "outDir": "./src/dist",
+    "outDir": "./dist",
     "rootDir": "./src/package",
     "moduleResolution": "node",
     "resolveJsonModule": true,
@@ -19,8 +19,7 @@
     "noEmit": false,
     "jsx": "react-jsx",
     "jsxFactory": "",
-    "jsxFragmentFactory": "",
-    "removeComments": true
+    "jsxFragmentFactory": ""
   },
   "exclude": ["node_modules"],
   "include": ["src/package", "src/types/*.ts", "declarations.d.ts"]

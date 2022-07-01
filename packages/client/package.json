@@ -8,9 +8,8 @@
   "types": "src/dist/index.d.ts",
   "scripts": {
     "start": "react-scripts start",
-    "bundle": "microbundle",
     "rmdist": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\"",
-    "compile": "NODE_ENV=production webpack",
+    "compile": "webpack --env NODE_ENV=production",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
