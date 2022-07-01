@@ -153,7 +153,7 @@ export namespace Connection {
       roomId: number | string;
       userId: number | string;
       target: string | number;
-      iceServers: RTCConfiguration['iceServers'];
+      iceServers?: RTCConfiguration['iceServers'];
     }): Record<number, RTCPeerConnection | undefined>;
 
     public abstract handleIceCandidate({

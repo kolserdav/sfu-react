@@ -9,7 +9,7 @@
  * Create Date: Tue Jun 21 2022 08:49:55 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import React, { useMemo, useContext, useRef } from 'react';
-import { getTarget, log } from '../utils/lib';
+import { getRoomId, log } from '../utils/lib';
 import s from './Room.module.scss';
 import { RoomProps } from '../types/index';
 import { useConnection, useVideoDimensions, useOnclickClose, usePressEscape } from './Room.hooks';
@@ -28,7 +28,8 @@ import CopyIcon from '../Icons/CopyIcon';
 function Room({ id, iceServers, server, port }: RoomProps) {
   const pathname = getPathname();
   const container = useRef<HTMLDivElement>(null);
-  const roomId = useMemo(() => getTarget(pathname || ''), [pathname]);
+  const roomId = useMemo(() => getRoomId(pathname || ''), [pathname]);
+  console.log(roomId);
   const roomLink = useMemo(() => getRoomLink(roomId), [roomId]);
   const {
     streams,

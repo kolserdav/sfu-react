@@ -25,7 +25,11 @@ export const log = (type: keyof typeof LogLevel, text: string, data?: any) => {
   }
 };
 
-export const getTarget = (pathname: string) => pathname.replace(/^\//, '');
+export const getRoomId = (pathname: string) => {
+  const lastSection = pathname.match(/\/[a-zA-Z0-9_-]+$/);
+  const roomId = lastSection ? lastSection[0] : '';
+  return roomId.replace(/^\//, '');
+};
 
 export const parseMessage = (message: string): object => {
   let result = {};
