@@ -1,23 +1,54 @@
-## Required global dependencies
-
-- node-pre-gyp
-
-```shell
-npm i -g node-pre-gyp
-```
-
 ## Installation
 
-- Install source as global:
+- Install source:
 
 ```sh
-npm i -g uyem
+npm i uyem --omit=optional
 ```
 
-- Link library for import:
+## Settings
+
+- To be able to create connections on a host other than localhost, you need to connect SSL certificates.
+
+---
+
+Sample setup SSL certificates from Let's Encrypt for client and for server together with `Nginx` [./SSL.md](./SSL.md)
+
+---
+
+- To remote access between units using valid `iceServers` is required:
+
+---
+
+```javascript
+const iceServers = [
+  {
+    urls: ['stun:127.0.0.1:3478'],
+  },
+  {
+    urls: ['turn:127.0.0.2:3478'],
+    username: 'username',
+    credential: 'password',
+  },
+];
+```
+
+See [docs/COTURN.md](docs/COTURN.md) for more details.
+
+---
+
+## Run server
+
+- Add the script to `package.json` of project:
+
+```json
+"server": "uyem --port 3002",
+```
+
+- Run uyem server:
 
 ```sh
-npm link uyem
+npm run server
 ```
 
 ## Examples
