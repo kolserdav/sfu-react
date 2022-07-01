@@ -1,3 +1,7 @@
+# uyem
+
+Selective Forwarding Unit (SFU) web application library, server side of which written on Node and client side on ReactJS.
+
 ## Installation
 
 - Install source:
@@ -12,7 +16,7 @@ npm i uyem --omit=optional
 
 ---
 
-Sample setup SSL certificates from Let's Encrypt for client and for server together with `Nginx` [./SSL.md](./SSL.md)
+Sample setup SSL certificates from Let's Encrypt for client and for server together with `nginx` [SSL.md](./SSL.md)
 
 ---
 
@@ -39,19 +43,19 @@ See [docs/COTURN.md](docs/COTURN.md) for more details.
 
 ## Run server
 
-- Add the script to `package.json` of project:
+- Add property `server` to the `scripts` block of `package.json`:
 
 ```json
-"server": "uyem --port 3002",
+"server": "uyem --port 3001",
 ```
 
-- Run uyem server:
+- Run server:
 
 ```sh
 npm run server
 ```
 
-## Examples
+## Include examples
 
-- [Client](examples/hello-world/src/App.jsx)
-- [include server](examples/server/index.js)
+- [Client Hello World](examples/hello-world/src/App.jsx)
+- [Server](examples/server/index.js)
