@@ -6,7 +6,7 @@
  * License: BSD-2-Clause
  * License text: Binary distributions of this software include 'wrtc' and other third-party libraries.
  * Copyright: kolserdav, All rights reserved (c)
- * Create Date: Tue Jun 21 2022 08:50:18 GMT+0700 (Krasnoyarsk Standard Time)
+ * Create Date: Fri Jul 01 2022 17:09:44 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 declare global {
   type LogLevel = 'info' | 'warn' | 'error';

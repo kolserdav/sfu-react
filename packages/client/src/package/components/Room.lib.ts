@@ -4,9 +4,9 @@
  * Author: Sergey Kolmiller
  * Email: <uyem.ru@gmail.com>
  * License: BSD-2-Clause
- * License text: Binary distributions of this software include WebRTC and other third-party libraries.
+ * License text: Binary distributions of this software include 'wrtc' and other third-party libraries.
  * Copyright: kolserdav, All rights reserved (c)
- * Create Date: Sun Jun 19 2022 01:44:53 GMT+0700 (Krasnoyarsk Standard Time)
+ * Create Date: Fri Jul 01 2022 17:09:44 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import s from './Room.module.scss';
 import c from './ui/CloseButton.module.scss';

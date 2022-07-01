@@ -1,7 +1,19 @@
+/******************************************************************************************
+ * Repository: https://github.com/kolserdav/uyem.git
+ * File name: webpack.config.js
+ * Author: Sergey Kolmiller
+ * Email: <uyem.ru@gmail.com>
+ * License: BSD-2-Clause
+ * License text: Binary distributions of this software include 'wrtc' and other third-party libraries.
+ * Copyright: kolserdav, All rights reserved (c)
+ * Create Date: Fri Jul 01 2022 17:09:44 GMT+0700 (Krasnoyarsk Standard Time)
+ ******************************************************************************************/
 /* eslint-disable @typescript-eslint/no-var-requires */
 // @ts-check
 
+const webpack = require('webpack');
 const path = require('path');
+const fs = require('fs');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 module.exports = (env) => {
@@ -22,7 +34,10 @@ module.exports = (env) => {
         react: path.resolve(__dirname, '../../node_modules/react'),
       },
     },
-    plugins: [new CleanWebpackPlugin()],
+    plugins: [
+      new CleanWebpackPlugin(),
+      new webpack.BannerPlugin(fs.readFileSync(path.resolve(__dirname, '../../LICENSE'), 'utf8')),
+    ],
     module: {
       rules: [
         { test: /\.tsx?$/, loader: 'ts-loader' },

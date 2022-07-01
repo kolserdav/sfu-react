@@ -6,7 +6,7 @@
  * License: BSD-2-Clause
  * License text: Binary distributions of this software include 'wrtc' and other third-party libraries.
  * Copyright: kolserdav, All rights reserved (c)
- * Create Date: Tue Jun 21 2022 08:49:55 GMT+0700 (Krasnoyarsk Standard Time)
+ * Create Date: Fri Jul 01 2022 17:09:44 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import React, { useMemo, useContext, useRef } from 'react';
 import { getRoomId, log } from '../utils/lib';
@@ -29,7 +29,6 @@ function Room({ id, iceServers, server, port }: RoomProps) {
   const pathname = getPathname();
   const container = useRef<HTMLDivElement>(null);
   const roomId = useMemo(() => getRoomId(pathname || ''), [pathname]);
-  console.log(roomId);
   const roomLink = useMemo(() => getRoomLink(roomId), [roomId]);
   const {
     streams,

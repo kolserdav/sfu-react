@@ -1,8 +1,8 @@
 {
   "name": "uyem",
-  "version": "0.1.26",
+  "version": "0.1.27",
   "repository": "https://github.com/kolserdav/uyem.git",
-  "description": "Selective Forwarding Unit (SFU) server side of which written on Node and client side on ReactJS",
+  "description": "Selective Forwarding Unit (SFU) web application, server side of which written on Node and client side on ReactJS",
   "keywords": [
     "node",
     "react",
@@ -15,6 +15,12 @@
     "name": "Sergey Kolmiller",
     "email": "uyem.ru@gmail.com"
   },
+  "maintainers": [
+    "Sergey Kolmiller <uyem.ru@gmail.com>"
+  ],
+  "contributors": [
+    "Sergey Kolmiller <uyem.ru@gmail.com>"
+  ],
   "bugs": "https://github.com/kolserdav/uyem/issues",
   "license": "BSD-2-Clause",
   "main": "packages/client/dist/Main.js",
@@ -99,17 +105,17 @@
     "webpack-cli": "^4.10.0"
   },
   "fhead": {
-    "root": "packages/server",
+    "root": "packages",
     "repository": "https://github.com/kolserdav/uyem.git",
     "patterns": [
       ".js",
       ".ts",
-      ".tsx",
-      ".scss"
+      ".tsx"
     ],
     "exclude": [
       "node-webrtc",
-      "dist"
+      "dist",
+      "build"
     ],
     "name": "Sergey Kolmiller",
     "email": "uyem.ru@gmail.com",

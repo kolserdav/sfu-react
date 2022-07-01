@@ -2,7 +2,8 @@ The following license applies to all parts of this software except as documented
 below.
 
 ```
-Copyright (c) 2019 The node-webrtc project authors. All rights reserved.
+License BSD-2-Clause
+Copyright (c) 2022 The 'uyem' project author and another contributors. All rights reserved.
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 1. Redistributions of source code must retain the above copyright notice, this
@@ -22,6 +23,6 @@ TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
-Binary distributions of this software include WebRTC and other third-party
+Binary distributions of this software include 'wrtc' and other third-party
 libraries. These libraries and licenses are documented in
-THIRD_PARTY_LICENSES.md.
+https://github.com/kolserdav/uyem/blob/master/THIRD_PARTY_LICENSES.md .
