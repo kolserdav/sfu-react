@@ -12,6 +12,8 @@ import { Colors } from '../Theme';
 
 export interface RoomProps {
   id: number | string;
+  server: string;
+  port: number;
   colors?: Colors;
   iceServers?: RTCConfiguration['iceServers'];
 }

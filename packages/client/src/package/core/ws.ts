@@ -72,14 +72,20 @@ class WS implements Types.WSInterface {
   // eslint-disable-next-line class-methods-use-this
   public getMessage: Types.WSInterface['getMessage'] = (type, data) => data as any;
 
-  private newConnection({ local = false }: { local?: boolean }): WebSocket {
+  private newConnection({
+    server,
+    port,
+    local = false,
+  }: {
+    server: string;
+    port: string;
+    local?: boolean;
+  }): WebSocket {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let connection: any;
-	  if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
       connection = new WebSocket(
-        `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${
-          process.env.REACT_APP_SERVER
-        }:${process.env.REACT_APP_PORT}`,
+        `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${server}:${port}`,
         'json'
       );
     }
@@ -89,8 +95,8 @@ class WS implements Types.WSInterface {
     return connection;
   }
 
-  public createConnection() {
-    this.newConnection({});
+  public createConnection({ server, port }: { server: string; port: string }) {
+    this.newConnection({ server, port });
     this.connection.onopen = (ev: Event) => {
       log('log', 'onOpen', ev);
       this.onOpen(ev);
@@ -109,8 +115,16 @@ class WS implements Types.WSInterface {
     return this.connection;
   }
 
-  constructor({ shareScreen }: { shareScreen: boolean }) {
-    this.connection = this.createConnection();
+  constructor({
+    shareScreen,
+    server,
+    port,
+  }: {
+    shareScreen: boolean;
+    server: string;
+    port: string;
+  }) {
+    this.connection = this.createConnection({ server, port });
     this.shareScreen = shareScreen;
   }
 }

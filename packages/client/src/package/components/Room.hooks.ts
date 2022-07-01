@@ -25,10 +25,14 @@ export const useConnection = ({
   id,
   roomId,
   iceServers,
+  server,
+  port,
 }: {
   id: number | string;
   roomId: number | string | null;
   iceServers: RTCConfiguration['iceServers'];
+  server: string;
+  port: string;
 }) => {
   const [streams, setStreams] = useState<Stream[]>([]);
   const [shareScreen, setShareScreen] = useState<boolean>(false);
@@ -40,7 +44,10 @@ export const useConnection = ({
   const [muteds, setMuteds] = useState<string[]>([]);
   const [video, setVideo] = useState<boolean>(true);
   const [connectionId, setConnectionId] = useState<string>('');
-  const ws = useMemo(() => new WS({ shareScreen: localShareScreen }), [localShareScreen]);
+  const ws = useMemo(
+    () => new WS({ shareScreen: localShareScreen, server, port }),
+    [localShareScreen, server, port]
+  );
   const rtc = useMemo(() => new RTC({ ws }), [ws]);
   const screenShare = useMemo(
     () => (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {

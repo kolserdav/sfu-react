@@ -28,6 +28,8 @@ function App() {
       ) : (
         <Main
           room={{
+            server: process.env.REACT_APP_SERVER,
+            port: parseInt(process.env.REACT_APP_PORT, 10),
             iceServers: [
               {
                 urls: [process.env.REACT_APP_STUN_SERVER],
