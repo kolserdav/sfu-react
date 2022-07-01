@@ -8,7 +8,6 @@
   "types": "src/dist/index.d.ts",
   "scripts": {
     "start": "react-scripts start",
-    "rmdist": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\"",
     "compile": "webpack --env NODE_ENV=production",
     "build": "react-scripts build",
     "test": "react-scripts test",
