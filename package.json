@@ -1,6 +1,6 @@
 {
   "name": "uyem",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "repository": "https://github.com/kolserdav/uyem.git",
   "description": "Selective Forwarding Unit (SFU) server side of which written on Node and client side on ReactJS",
   "keywords": [
@@ -17,12 +17,10 @@
   },
   "bugs": "https://github.com/kolserdav/uyem/issues",
   "license": "BSD-2-Clause",
-  "source": "packages/client/src/package/Main.tsx",
-  "module": "packages/client/dist/Main.esm.js",
-  "main": "packages/client/dist/Main.cjs",
-  "types": "packages/client/dist/package/Main.d.ts",
+  "main": "packages/client/src/dist/Main.js",
+  "types": "packages/client/src/dist/Main.d.ts",
   "files": [
-    "packages/client/dist",
+    "packages/client/src/dist",
     "packages/server/dist",
     "bin",
     "server.js",

@@ -5,6 +5,7 @@
   "source": "src/package/components/Room.tsx",
   "main": "src/dist/Room.cjs",
   "module": "src/dist/Room.esm.js",
+  "types": "src/dist/index.d.ts",
   "scripts": {
     "start": "react-scripts start",
     "bundle": "microbundle",

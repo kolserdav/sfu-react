@@ -11,7 +11,7 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "module": "esnext",
-    "outDir": "./dist",
+    "outDir": "./src/dist",
     "rootDir": "./src/package",
     "moduleResolution": "node",
     "resolveJsonModule": true,
@@ -19,8 +19,9 @@
     "noEmit": false,
     "jsx": "react-jsx",
     "jsxFactory": "",
-    "jsxFragmentFactory": ""
+    "jsxFragmentFactory": "",
+    "removeComments": true
   },
-  "exclude": ["node_modules", "webpack.config.js"],
+  "exclude": ["node_modules"],
   "include": ["src/package", "src/types/*.ts", "declarations.d.ts"]
 }
