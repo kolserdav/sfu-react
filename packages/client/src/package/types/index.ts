@@ -13,6 +13,7 @@ import { Colors } from '../Theme';
 export interface RoomProps {
   id: number | string;
   colors?: Colors;
+  iceServers?: RTCConfiguration['iceServers'];
 }
 
 export interface Stream {

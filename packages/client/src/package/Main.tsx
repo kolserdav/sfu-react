@@ -24,7 +24,8 @@ import IconButton from './components/ui/IconButton';
 import storeTheme from './store/theme';
 
 // TODO theme provider
-function Main({ id, colors }: RoomProps) {
+function Main({ room }: { room: RoomProps }) {
+  const { colors } = room;
   const [currentTheme, setCurrentTheme] = useState<keyof Themes>('light');
   const _themes = useMemo(() => changeColors({ colors, themes }), [colors]);
   const [theme, setTheme] = useState<Themes['dark' | 'light']>(_themes.light);
@@ -50,7 +51,7 @@ function Main({ id, colors }: RoomProps) {
 
   return (
     <ThemeContext.Provider value={theme}>
-      <Room id={id} />
+      <Room {...room} />
       <div
         className={clsx(s.button, hallOpen ? s.active : '')}
         role="button"

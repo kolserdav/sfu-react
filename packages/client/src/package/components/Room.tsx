@@ -25,7 +25,7 @@ import CameraOutlineOffIcon from '../Icons/CameraOutlineOffIcon';
 import CameraOutlineIcon from '../Icons/CameraOutlineIcon';
 import CopyIcon from '../Icons/CopyIcon';
 
-function Room({ id }: RoomProps) {
+function Room({ id, iceServers }: RoomProps) {
   const pathname = getPathname();
   const container = useRef<HTMLDivElement>(null);
   const roomId = useMemo(() => getTarget(pathname || ''), [pathname]);
@@ -44,6 +44,7 @@ function Room({ id }: RoomProps) {
   } = useConnection({
     id,
     roomId,
+    iceServers,
   });
   const theme = useContext(ThemeContext);
   const setVideoDimensions = useVideoDimensions({

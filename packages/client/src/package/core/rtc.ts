@@ -36,6 +36,7 @@ class RTC implements RTCInterface {
       target,
       connId,
       onTrack,
+      iceServers,
     }: {
       roomId: string | number;
       userId: string | number;
@@ -46,11 +47,12 @@ class RTC implements RTCInterface {
         stream: MediaStream;
         connId: string;
       }) => void;
+      iceServers: RTCConfiguration['iceServers'];
     },
     cb: (e: 0 | 1) => void
   ) {
     const peerId = this.getPeerId(roomId, target, connId);
-    this.createRTC({ roomId, target, userId, connId });
+    this.createRTC({ roomId, target, userId, connId, iceServers });
     this.onAddTrack[peerId] = (addedUserId, stream) => {
       onTrack({ addedUserId, stream, connId });
     };
@@ -58,21 +60,12 @@ class RTC implements RTCInterface {
     this.setMedia({ roomId, userId, target, connId }, cb);
   }
 
-  public createRTC: RTCInterface['createRTC'] = ({ connId, roomId, target }) => {
+  public createRTC: RTCInterface['createRTC'] = ({ connId, roomId, target, iceServers = [] }) => {
     if (!connId) {
       log('warn', 'Connection id is: ', { connId });
     }
     this.peerConnections[this.getPeerId(roomId, target, connId)] = new RTCPeerConnection({
-      iceServers: [
-        {
-          urls: process.env.REACT_APP_STUN_SERVER ? [process.env.REACT_APP_STUN_SERVER] : [],
-        },
-        {
-          urls: process.env.REACT_APP_TURN_SERVER ? [process.env.REACT_APP_TURN_SERVER] : [],
-          username: process.env.REACT_APP_TURN_SERVER_USER,
-          credential: process.env.REACT_APP_TURN_SERVER_PASSWORD,
-        },
-      ],
+      iceServers,
     });
     return this.peerConnections;
   };

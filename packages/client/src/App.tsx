@@ -26,7 +26,21 @@ function App() {
           Create room
         </button>
       ) : (
-        <Main id={window.location.search.replace(/\?uid=/, '')} />
+        <Main
+          room={{
+            iceServers: [
+              {
+                urls: [process.env.REACT_APP_STUN_SERVER],
+              },
+              {
+                urls: [process.env.REACT_APP_TURN_SERVER],
+                username: process.env.REACT_APP_TURN_SERVER_USER,
+                credential: process.env.REACT_APP_TURN_SERVER_PASSWORD,
+              },
+            ],
+            id: window.location.search.replace(/\?uid=/, ''),
+          }}
+        />
       )}
     </div>
   );

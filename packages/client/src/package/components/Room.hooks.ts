@@ -24,9 +24,11 @@ import storeStreams, { changeStreams } from '../store/streams';
 export const useConnection = ({
   id,
   roomId,
+  iceServers,
 }: {
   id: number | string;
   roomId: number | string | null;
+  iceServers: RTCConfiguration['iceServers'];
 }) => {
   const [streams, setStreams] = useState<Stream[]>([]);
   const [shareScreen, setShareScreen] = useState<boolean>(false);
@@ -199,6 +201,7 @@ export const useConnection = ({
                   log('info', 'Added unit track', { addedUserId, s: stream.id, connId });
                   addStream({ target: addedUserId, stream, connId });
                 },
+                iceServers,
               },
               (e) => {
                 if (!e) {
@@ -277,6 +280,7 @@ export const useConnection = ({
                 onTrack: ({ addedUserId, stream }) => {
                   addStream({ target: addedUserId, stream, connId });
                 },
+                iceServers,
               },
               (e) => {
                 log('warn', 'Change room guests connection', {
@@ -361,6 +365,7 @@ export const useConnection = ({
                 log('info', '-> Added local stream to room', { addedUserId, id });
                 addStream({ target: addedUserId, stream, connId });
               },
+              iceServers,
             },
             (e) => {
               if (!e) {
