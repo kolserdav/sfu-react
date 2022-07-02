@@ -1,7 +1,7 @@
 # uyem
 
 Selective Forwarding Unit (SFU) web application library, server side of which written on Node and client side on ReactJS.
-![sfu scheme](./docs/resources/sfu.png)
+![sfu scheme](./docs/resources/sfu1.png)
 
 ## Installation
 
