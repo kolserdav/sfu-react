@@ -1,6 +1,7 @@
 # uyem
 
 Selective Forwarding Unit (SFU) web application library, server side of which written on Node and client side on ReactJS.
+![sfu scheme](./docs/resources/sfu.png)
 
 ## Installation
 
@@ -16,7 +17,7 @@ npm i uyem --omit=optional
 
 ---
 
-Sample setup SSL certificates from Let's Encrypt for client and for server together with `nginx` [SSL.md](./SSL.md)
+Sample setup SSL certificates from Let's Encrypt for client and for server together with `nginx` see [docs/SSL.md](./docs.SSL.md)
 
 ---
 
