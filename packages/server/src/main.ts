@@ -26,7 +26,7 @@ process.on('unhandledRejection', (err: Error) => {
 /**
  * Create SFU WebRTC server
  */
-function createServer({ port = PORT }: { port?: number }) {
+function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string }) {
   log('info', 'Server listen at port:', port, true);
   const getConnectionId = (): string => {
     const connId = v4();
@@ -39,7 +39,14 @@ function createServer({ port = PORT }: { port?: number }) {
   const wss = new WS({ port });
   const rtc: RTC | null = new RTC({ ws: wss });
 
-  wss.connection.on('connection', function connection(ws) {
+  wss.connection.on('connection', function connection(ws, req) {
+    const { origin } = req.headers;
+    const notAllowed = cors.split(',').indexOf(origin || '') === -1;
+    if (cors && notAllowed) {
+      ws.close();
+      log('warn', 'Block CORS attempt', { headers: req.headers });
+      return;
+    }
     const connId = getConnectionId();
     ws.on('message', async function message(message) {
       let _data = '';
@@ -66,6 +73,7 @@ function createServer({ port = PORT }: { port?: number }) {
           rtc.handleGetRoomMessage({
             message: wss.getMessage(MessageType.GET_ROOM, rawMessage),
             port,
+            cors,
           });
           break;
         case MessageType.GET_ROOM_GUESTS:
@@ -177,5 +185,5 @@ function createServer({ port = PORT }: { port?: number }) {
 export default createServer;
 
 if (require.main === module) {
-  createServer({ port: PORT });
+  createServer({ port: PORT, cors: 'http://localhost:3000' });
 }

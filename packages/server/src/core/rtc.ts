@@ -486,9 +486,11 @@ class RTC implements RTCInterface {
   public handleGetRoomMessage({
     message,
     port,
+    cors,
   }: {
     message: SendMessageArgs<MessageType.GET_ROOM>;
     port: number;
+    cors: string;
   }) {
     const {
       data: { userId: uid },
@@ -496,7 +498,11 @@ class RTC implements RTCInterface {
       connId,
     } = message;
     // Room creatting counter local connection with every user
-    const connection = new this.ws.websocket(`ws://localhost:${port}`);
+    const connection = new this.ws.websocket(`ws://localhost:${port}`, {
+      headers: {
+        origin: cors.split(',')[0],
+      },
+    });
     this.addUserToRoom({
       roomId: id,
       userId: uid,

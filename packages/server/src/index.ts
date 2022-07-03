@@ -25,6 +25,7 @@ const args = Object.keys(argv);
 
 const ARGS = {
   port: 'Server websocket port',
+  cors: 'Allowed origins',
   version: 'Show installed version',
 };
 
