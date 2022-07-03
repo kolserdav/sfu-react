@@ -25,6 +25,9 @@
   "license": "BSD-2-Clause",
   "main": "packages/client/dist/Main.js",
   "types": "packages/client/dist/Main.d.ts",
+  "prisma": {
+    "schema": "orm/schema.prisma"
+  },
   "files": [
     "packages/client/dist",
     "packages/server/dist",
@@ -33,6 +36,7 @@
     "server.d.ts",
     "examples/hello-world/src/App.jsx",
     "examples/server/index.js",
+    "orm",
     "scripts",
     "docs",
     "README.md",
