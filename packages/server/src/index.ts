@@ -19,7 +19,7 @@ import { name, version } from '../../../package.json';
 
 log('info', `${name}@${version} started`, '...', true);
 
-const argv: { port: string } = yargs(hideBin(process.argv)).argv as any;
+const argv: { port: string; cors: string } = yargs(hideBin(process.argv)).argv as any;
 
 const args = Object.keys(argv);
 
@@ -48,6 +48,7 @@ if (skipedReq.length) {
 }
 
 let port = 3000;
+let cors = '';
 let code = 0;
 
 for (let n = 0; args[n]; n++) {
@@ -60,6 +61,10 @@ for (let n = 0; args[n]; n++) {
         code = 1;
         break;
       }
+      break;
+    case 'cors':
+      log('info', 'Set up Simple-CORS defence:', argv.cors);
+      cors = argv.cors;
       break;
     case 'help':
       log('info', ``, ARGS, true);
@@ -82,5 +87,5 @@ for (let n = 0; args[n]; n++) {
 if (code) {
   log('warn', 'Script end with code:', code, true);
 } else {
-  Server({ port });
+  Server({ port, cors });
 }
