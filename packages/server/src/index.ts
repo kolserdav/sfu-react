@@ -10,8 +10,6 @@
  ******************************************************************************************/
 /* eslint-disable no-case-declarations */
 import { log } from './utils/lib';
-import yargs from 'yargs/yargs';
-import { hideBin } from 'yargs/helpers';
 import Server from './main';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 //@ts-ignore
@@ -19,15 +17,24 @@ import { name, version } from '../../../package.json';
 
 log('info', `${name}@${version} started`, '...', true);
 
-const argv: { port: string; cors: string } = yargs(hideBin(process.argv)).argv as any;
-
-const args = Object.keys(argv);
-
+const processArgs = process.argv;
 const ARGS = {
   port: 'Server websocket port',
   cors: 'Allowed origins',
   version: 'Show installed version',
 };
+const DEFAULT_PARAMS = { port: '3001', cors: '' };
+const argv: Partial<typeof ARGS> & Record<string, string> = DEFAULT_PARAMS;
+processArgs
+  .map((item, index) => {
+    if (/^-{1,2}\w+/.test(item)) {
+      argv[item.replace(/-/g, '')] = process.argv[index + 1];
+    }
+  })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  .filter((item) => item !== undefined) as any;
+
+const args = Object.keys(argv);
 
 const REQUIRED: (keyof typeof ARGS)[] = [];
 
@@ -55,7 +62,7 @@ for (let n = 0; args[n]; n++) {
   const arg: string = args[n];
   switch (arg) {
     case 'port':
-      port = parseInt(argv.port, 10);
+      port = parseInt(argv.port || DEFAULT_PARAMS.port, 10);
       if (Number.isNaN(port)) {
         log('warn', 'Required number type of port, received:', port, true);
         code = 1;
@@ -64,7 +71,7 @@ for (let n = 0; args[n]; n++) {
       break;
     case 'cors':
       log('info', 'Set up Simple-CORS defence:', argv.cors);
-      cors = argv.cors;
+      cors = argv.cors || DEFAULT_PARAMS.cors;
       break;
     case 'help':
       log('info', ``, ARGS, true);
