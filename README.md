@@ -1,6 +1,6 @@
 # uyem
 
-Selective Forwarding Unit (SFU) web application library, server side of which written on Node and client side on ReactJS.
+Selective Forwarding Unit (SFU) is a WebRTC web application library, the server part of which is written in Node, and the client part is a ReactJS shared component.
 ![sfu scheme](./docs/resources/sfu1.png)
 
 ## Installation
