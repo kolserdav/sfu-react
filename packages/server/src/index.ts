@@ -18,12 +18,17 @@ import { name, version } from '../../../package.json';
 log('info', `${name}@${version} started`, '...', true);
 
 const processArgs = process.argv;
+const DEFAULT_PARAMS = {
+  port: '3001',
+  cors: '',
+  db: 'mysql://user:password@127.0.0.1:3306/uyem_db',
+};
 const ARGS = {
   port: 'Server websocket port',
   cors: 'Allowed origins',
+  db: `Database url ${DEFAULT_PARAMS.db}`,
   version: 'Show installed version',
 };
-const DEFAULT_PARAMS = { port: '3001', cors: '' };
 const argv: Partial<typeof ARGS> & Record<string, string> = DEFAULT_PARAMS;
 processArgs
   .map((item, index) => {
@@ -72,6 +77,10 @@ for (let n = 0; args[n]; n++) {
     case 'cors':
       log('info', 'Set up Simple-CORS defence:', argv.cors);
       cors = argv.cors || DEFAULT_PARAMS.cors;
+      break;
+    case 'db':
+      log('info', 'Set up database url:', argv.db);
+      cors = argv.db || DEFAULT_PARAMS.db;
       break;
     case 'help':
       log('info', ``, ARGS, true);

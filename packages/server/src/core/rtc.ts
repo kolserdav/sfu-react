@@ -12,11 +12,14 @@ import wrtc from 'wrtc';
 import { RTCInterface, MessageType, SendMessageArgs } from '../types/interfaces';
 import { log } from '../utils/lib';
 import WS from './ws';
+import DB from './db';
+
+const db = new DB();
 
 class RTC implements RTCInterface {
   public peerConnections: RTCInterface['peerConnections'] = {};
   public readonly delimiter = '_';
-  public rooms: Record<string, (string | number)[]> = {};
+  public rooms: Record<string | number, (string | number)[]> = {};
   public muteds: Record<string, string[]> = {};
   private ws: WS;
   public streams: Record<string, MediaStream> = {};
@@ -84,7 +87,7 @@ class RTC implements RTCInterface {
         });
       }
     };
-    const { ws, rooms, delimiter } = this;
+    const { ws, delimiter, rooms } = this;
     this.peerConnections[peerId]!.oniceconnectionstatechange =
       function handleICEConnectionStateChangeEvent() {
         log(
@@ -162,7 +165,6 @@ class RTC implements RTCInterface {
     let s = 1;
     this.peerConnections[peerId]!.ontrack = (e) => {
       const isRoom = peerId.split(delimiter)[2] === '0';
-      // TODO
       if (isRoom) {
         const stream = e.streams[0];
         const isNew = stream.id !== this.streams[peerId]?.id;
@@ -367,7 +369,6 @@ class RTC implements RTCInterface {
               connId,
               k: Object.keys(this.peerConnections).length,
               s: Object.keys(this.streams).length,
-              r: this.rooms[id].length,
             });
             return;
           }
@@ -381,7 +382,6 @@ class RTC implements RTCInterface {
                 connId,
                 k: Object.keys(this.peerConnections).length,
                 s: Object.keys(this.streams).length,
-                r: this.rooms[id].length,
                 is: this.peerConnections[peerId]?.iceConnectionState,
                 cs: this.peerConnections[peerId]?.connectionState,
                 ss: this.peerConnections[peerId]?.signalingState,
@@ -474,16 +474,107 @@ class RTC implements RTCInterface {
     delete this.peerConnections[peerId];
   };
 
-  public addUserToRoom({ userId, roomId }: { userId: number | string; roomId: number | string }) {
+  public async addUserToRoom({
+    userId,
+    roomId,
+  }: {
+    userId: number | string;
+    roomId: number | string;
+  }): Promise<1 | 0> {
+    const room = await db.roomFindFirst({
+      where: {
+        id: roomId.toString(),
+      },
+    });
+    if (!room) {
+      const authorId = userId.toString();
+      db.roomCreate({
+        data: {
+          id: roomId.toString(),
+          authorId,
+          Guests: {
+            create: {
+              unitId: authorId,
+            },
+          },
+        },
+      });
+    } else {
+      if (room.archive) {
+        if (room.authorId !== userId.toString()) {
+          this.ws.sendMessage({
+            type: MessageType.SET_ERROR,
+            id: userId,
+            connId: '',
+            data: {
+              message: 'Room is inactive',
+              context: {
+                id: userId,
+                type: MessageType.SET_ROOM,
+                connId: '',
+                data: {
+                  roomId,
+                },
+              },
+            },
+          });
+          if (!this.rooms[roomId]) {
+            this.rooms[roomId] = [];
+            this.muteds[roomId] = [];
+          }
+          return 1;
+        } else {
+          await db.roomUpdate({
+            where: {
+              id: room.id,
+            },
+            data: {
+              archive: false,
+              updated: new Date(),
+            },
+          });
+        }
+      }
+
+      db.unitFindFirst({
+        where: {
+          id: userId.toString(),
+        },
+        select: {
+          IGuest: {
+            select: {
+              unitId: true,
+              roomId: true,
+            },
+          },
+        },
+      }).then((g) => {
+        if (!g?.IGuest[0]) {
+          db.roomUpdate({
+            where: {
+              id: roomId.toString(),
+            },
+            data: {
+              Guests: {
+                create: {
+                  unitId: userId.toString(),
+                },
+              },
+            },
+          });
+        }
+      });
+    }
     if (!this.rooms[roomId]) {
       this.rooms[roomId] = [userId];
       this.muteds[roomId] = [];
     } else if (this.rooms[roomId].indexOf(userId) === -1) {
       this.rooms[roomId].push(userId);
     }
+    return 0;
   }
 
-  public handleGetRoomMessage({
+  public async handleGetRoomMessage({
     message,
     port,
     cors,
@@ -503,10 +594,20 @@ class RTC implements RTCInterface {
         origin: cors.split(',')[0],
       },
     });
-    this.addUserToRoom({
+    const error = await this.addUserToRoom({
       roomId: id,
       userId: uid,
     });
+    if (error) {
+      this.ws.sendMessage({
+        type: MessageType.SET_ROOM,
+        id: uid,
+        data: undefined,
+        connId,
+      });
+      log('warn', 'Can not add user to room', { id, uid });
+      return;
+    }
     this.createRTC({ roomId: id, userId: uid, target: 0, connId });
     connection.onopen = () => {
       // FIXME to sendMEssage

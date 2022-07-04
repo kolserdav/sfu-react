@@ -12,10 +12,12 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 /* eslint-disable max-classes-per-file */
 /* eslint-disable no-unused-vars */
+import { Prisma, Room, Unit, Message } from './prisma';
 
 export type SendMessageArgs<T> = Signaling.SendMessageArgs<T>;
 export type WSInterface = Signaling.WSInterface;
 export type RTCInterface = Connection.RTCInterface;
+export type DBInterface = Data.DBInterface;
 
 export enum MessageType {
   GET_USER_ID = 'GET_USER_ID',
@@ -208,6 +210,40 @@ export namespace Connection {
       msg: Signaling.SendMessageArgs<MessageType.ANSWER>,
       cb?: (res: 1 | 0) => any
     ): void;
+  }
+}
+
+export namespace Data {
+  export abstract class DBInterface {
+    public abstract roomCreate<T extends Prisma.RoomCreateArgs>(
+      args: Prisma.SelectSubset<T, Prisma.RoomCreateArgs>,
+      _connection?: WebSocket
+    ): Promise<Prisma.CheckSelect<T, Room, Prisma.RoomGetPayload<T>> | null>;
+
+    public abstract roomFindFirst<T extends Prisma.RoomFindFirstArgs>(
+      args: Prisma.SelectSubset<T, Prisma.RoomFindFirstArgs>,
+      _connection?: WebSocket
+    ): Promise<Prisma.CheckSelect<T, Room, Prisma.RoomGetPayload<T>> | null>;
+
+    public abstract roomUpdate<T extends Prisma.RoomUpdateArgs>(
+      args: Prisma.SelectSubset<T, Prisma.RoomUpdateArgs>,
+      _connection?: WebSocket
+    ): Promise<Prisma.CheckSelect<T, Room, Prisma.RoomGetPayload<T>> | null>;
+
+    public abstract unitUpdate<T extends Prisma.UnitUpdateArgs>(
+      args: Prisma.SelectSubset<T, Prisma.UnitUpdateArgs>,
+      _connection?: WebSocket
+    ): Promise<Prisma.CheckSelect<T, Unit, Prisma.UnitGetPayload<T>> | null>;
+
+    public abstract unitCreate<T extends Prisma.UnitCreateArgs>(
+      args: Prisma.SelectSubset<T, Prisma.UnitCreateArgs>,
+      _connection?: WebSocket
+    ): Promise<Prisma.CheckSelect<T, Unit, Prisma.UnitGetPayload<T>> | null>;
+
+    public abstract unitFindFirst<T extends Prisma.UnitFindFirstArgs>(
+      args: Prisma.SelectSubset<T, Prisma.UnitFindFirstArgs>,
+      _connection?: WebSocket
+    ): Promise<Prisma.CheckSelect<T, Unit, Prisma.UnitGetPayload<T>> | null>;
   }
 }
 

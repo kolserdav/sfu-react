@@ -10,11 +10,16 @@
  ******************************************************************************************/
 /* eslint-disable no-case-declarations */
 import { v4 } from 'uuid';
+import dotenv from 'dotenv';
+dotenv.config();
 import WS from './core/ws';
 import RTC from './core/rtc';
 import { MessageType } from './types/interfaces';
 import { log } from './utils/lib';
-import { PORT } from './utils/constants';
+import { PORT, DATABASE_URL } from './utils/constants';
+import DB from './core/db';
+
+const db = new DB();
 
 process.on('uncaughtException', (err: Error) => {
   log('error', 'uncaughtException', err);
@@ -26,7 +31,7 @@ process.on('unhandledRejection', (err: Error) => {
 /**
  * Create SFU WebRTC server
  */
-function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string }) {
+function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string; db?: string }) {
   log('info', 'Server listen at port:', port, true);
   const getConnectionId = (): string => {
     const connId = v4();
@@ -61,7 +66,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
       switch (type) {
         case MessageType.GET_USER_ID:
           const { isRoom } = wss.getMessage(MessageType.GET_USER_ID, rawMessage).data;
-          wss.setSocket({ id, ws, connId, isRoom });
+          await wss.setSocket({ id, ws, connId, isRoom });
           wss.sendMessage({
             type: MessageType.SET_USER_ID,
             id,
@@ -172,10 +177,45 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
             });
             if (rtc.rooms[item].length === 0) {
               delete rtc.rooms[item];
+              db.roomUpdate({
+                where: {
+                  id: item.toString(),
+                },
+                data: {
+                  archive: true,
+                  updated: new Date(),
+                },
+              });
               delete rtc.muteds[item];
             }
           }
           delete wss.sockets[connId];
+          db.unitFindFirst({
+            where: {
+              id: userId.toString(),
+            },
+            select: {
+              IGuest: true,
+            },
+          }).then((g) => {
+            if (g?.IGuest[0]) {
+              db.roomUpdate({
+                where: {
+                  id: item.toString(),
+                },
+                data: {
+                  Guests: {
+                    connect: {
+                      id: g.IGuest[0].id,
+                    },
+                    delete: {
+                      id: g.IGuest[0].id,
+                    },
+                  },
+                },
+              });
+            }
+          });
           delete wss.users[userId];
         });
       }
@@ -185,5 +225,5 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
 export default createServer;
 
 if (require.main === module) {
-  createServer({ port: PORT, cors: 'http://localhost:3000' });
+  createServer({ port: PORT, cors: 'http://localhost:3000', db: DATABASE_URL });
 }

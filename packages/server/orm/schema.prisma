@@ -1,0 +1,51 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Unit {
+  id      String    @id
+  name    String?   @default("Anon")
+  updated DateTime  @default(now())
+  created DateTime  @default(now())
+  MyRooms Room[]
+  IGuest  Guest[]
+  Message Message[]
+}
+
+model Room {
+  id       String    @id
+  authorId String
+  Unit     Unit      @relation(fields: [authorId], references: [id])
+  archive  Boolean   @default(false)
+  updated  DateTime  @default(now())
+  created  DateTime  @default(now())
+  Guests   Guest[]
+  Message  Message[]
+}
+
+model Guest {
+  id      Int      @id @default(autoincrement())
+  unitId  String
+  roomId  String
+  Unit    Unit     @relation(fields: [unitId], references: [id])
+  Room    Room     @relation(fields: [roomId], references: [id])
+  created DateTime @default(now())
+
+  @@unique([unitId, roomId])
+}
+
+model Message {
+  id      Int      @id @default(autoincrement())
+  text    String   @db.MediumText
+  unitId  String
+  roomId  String
+  Unit    Unit     @relation(fields: [unitId], references: [id])
+  Room    Room     @relation(fields: [roomId], references: [id])
+  updated DateTime @default(now())
+  created DateTime @default(now())
+}
