@@ -83,7 +83,8 @@ for (let n = 0; args[n]; n++) {
       cors = argv.db || DEFAULT_PARAMS.db;
       break;
     case 'help':
-      log('info', ``, ARGS, true);
+      log('info', `$ uyem [option] [value] > options:`, ARGS, true);
+      code = 0;
       break;
     default:
       if (arg === '$0' || arg === '_') {
@@ -100,7 +101,7 @@ for (let n = 0; args[n]; n++) {
       code = 1;
   }
 }
-if (code) {
+if (code !== undefined) {
   log('warn', 'Script end with code:', code, true);
 } else {
   Server({ port, cors });

@@ -19,6 +19,8 @@ export interface Color {
   paper: string;
   text: string;
   active: string;
+  red: string;
+  yellow: string;
 }
 
 export interface Colors {
@@ -40,8 +42,12 @@ const colors: Colors = {
     paper: '#36413e',
     text: '#d7d6d6',
     active: '#beb2c8',
+    red: 'red',
+    yellow: 'yellow',
   },
   light: {
+    red: 'red',
+    yellow: 'orange',
     paper: '#fff',
     text: '#5d5e60',
     active: '#8d8d92',

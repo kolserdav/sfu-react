@@ -24,6 +24,7 @@ import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
 import CameraOutlineOffIcon from '../Icons/CameraOutlineOffIcon';
 import CameraOutlineIcon from '../Icons/CameraOutlineIcon';
 import CopyIcon from '../Icons/CopyIcon';
+import WarningIcon from '../Icons/ErrorIcon';
 
 function Room({ id, iceServers, server, port }: RoomProps) {
   const pathname = getPathname();
@@ -41,6 +42,7 @@ function Room({ id, iceServers, server, port }: RoomProps) {
     muteds,
     video,
     changeVideo,
+    error,
   } = useConnection({
     id,
     roomId,
@@ -109,6 +111,12 @@ function Room({ id, iceServers, server, port }: RoomProps) {
             </div>
           </div>
         ))}
+        {error && (
+          <div className={s.error}>
+            <WarningIcon color={theme.colors.yellow} />
+            {error}
+          </div>
+        )}
       </div>
       <div className={s.actions}>
         {roomLink && (

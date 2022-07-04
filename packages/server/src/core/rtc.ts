@@ -543,13 +543,14 @@ class RTC implements RTCInterface {
         select: {
           IGuest: {
             select: {
-              unitId: true,
-              roomId: true,
+              id: true,
             },
           },
         },
       }).then((g) => {
-        if (!g?.IGuest[0]) {
+        if (!g) {
+          log('warn', 'Unit not found', { id: userId.toString() });
+        } else if (!g?.IGuest[0]) {
           db.roomUpdate({
             where: {
               id: roomId.toString(),
@@ -561,7 +562,13 @@ class RTC implements RTCInterface {
                 },
               },
             },
+          }).then((r) => {
+            if (!r) {
+              log('warn', 'Room not updated', { roomId });
+            }
           });
+        } else {
+          log('warn', 'Need room update', { g });
         }
       });
     }

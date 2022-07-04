@@ -28,6 +28,45 @@ process.on('unhandledRejection', (err: Error) => {
   log('error', 'unhandledRejection', err);
 });
 
+const deleteGuest = ({ userId, roomId }: { userId: string | number; roomId: string | number }) => {
+  return new Promise((resolve) => {
+    db.unitFindFirst({
+      where: {
+        id: userId.toString(),
+      },
+      select: {
+        IGuest: true,
+      },
+    }).then((g) => {
+      if (!g) {
+        log('warn', 'Can not unitFindFirst', { userId });
+        resolve(0);
+        return;
+      }
+      db.roomUpdate({
+        where: {
+          id: roomId.toString(),
+        },
+        data: {
+          Guests: {
+            delete: {
+              id: g.IGuest[0]?.id,
+            },
+          },
+          updated: new Date(),
+        },
+      }).then((r) => {
+        if (!r) {
+          log('warn', 'Room not delete guest', { roomId, id: g.IGuest[0]?.id });
+          resolve(1);
+        }
+        log('info', 'Guest deleted', { roomId, id: g.IGuest[0]?.id });
+        resolve(0);
+      });
+    });
+  });
+};
+
 /**
  * Create SFU WebRTC server
  */
@@ -119,7 +158,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
       }
     });
 
-    ws.onclose = () => {
+    ws.onclose = async () => {
       // Get deleted userId
       let userId: number | string = 0;
       const keys = Object.keys(wss.users);
@@ -155,14 +194,6 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
                   _connId = peer[3];
                 }
               });
-              log('info', 'Needed delete user', {
-                _item,
-                d: keys,
-                connId,
-                userId,
-                c: wss.users[userId],
-                _connId,
-              });
               wss.sendMessage({
                 type: MessageType.SET_CHANGE_UNIT,
                 id: _item,
@@ -188,36 +219,11 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
               });
               delete rtc.muteds[item];
             }
+            deleteGuest({ userId, roomId: item });
           }
           delete wss.sockets[connId];
-          db.unitFindFirst({
-            where: {
-              id: userId.toString(),
-            },
-            select: {
-              IGuest: true,
-            },
-          }).then((g) => {
-            if (g?.IGuest[0]) {
-              db.roomUpdate({
-                where: {
-                  id: item.toString(),
-                },
-                data: {
-                  Guests: {
-                    connect: {
-                      id: g.IGuest[0].id,
-                    },
-                    delete: {
-                      id: g.IGuest[0].id,
-                    },
-                  },
-                },
-              });
-            }
-          });
-          delete wss.users[userId];
         });
+        delete wss.users[userId];
       }
     };
   });

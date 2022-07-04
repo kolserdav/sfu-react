@@ -17,6 +17,7 @@ const VIEWPORT = {
   height: 480,
 };
 const EXIT_DELAY = 1000;
+const DELAY = 1200;
 
 /**
  *
@@ -81,6 +82,9 @@ async function evaluateRoom(evalPage, last = false) {
       if (Boolean(video.played) !== true) {
         log('warn', 'Video not played', { room, uid, id: video.getAttribute('id') }, true);
       }
+      /**
+       * @type {any}
+       */
       const { id } = video.parentElement;
       if (streamIds.indexOf(id) !== -1) {
         console.log(`Non unique stream: ${id} for uid: ${_uid}`);
@@ -177,7 +181,7 @@ async function reloadPage(page) {
       });
     }
   }
-  let time = getTime(startTime) + USERS * ROOMS * 500;
+  let time = getTime(startTime) + USERS * ROOMS * DELAY;
   let seconds = Math.ceil(time / 1000);
   log('log', 'Wait for evaluate:', `${seconds} seconds ...`, true);
   let timeout = stdoutWrite(seconds);
@@ -192,7 +196,9 @@ async function reloadPage(page) {
     if (!pages[i + 1]) {
       startTime = new Date().getTime();
     }
-    await reloadPage(pages[i].page);
+    if (i !== 0) {
+      await reloadPage(pages[i].page);
+    }
   }
   time = getTime(startTime);
   seconds = Math.ceil(time / 1000);

@@ -43,6 +43,7 @@ export const useConnection = ({
   const [muted, setMuted] = useState<boolean>(false);
   const [muteds, setMuteds] = useState<string[]>([]);
   const [video, setVideo] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [connectionId, setConnectionId] = useState<string>('');
   const ws = useMemo(
     () => new WS({ shareScreen: localShareScreen, server, port }),
@@ -425,6 +426,7 @@ export const useConnection = ({
           const {
             data: { message },
           } = ws.getMessage(MessageType.SET_ERROR, rawMessage);
+          setError(message);
           log('warn', 'error', message);
           break;
         default:
@@ -496,6 +498,7 @@ export const useConnection = ({
     muteds,
     video,
     changeVideo,
+    error,
   };
 };
 
