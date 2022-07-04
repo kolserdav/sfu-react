@@ -62,9 +62,17 @@
     "dev:client": "cd packages/client && npm start",
     "start": "cd packages/server && npm start",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "test": "node tests/rooms.js"
+    "test": "node tests/rooms.js",
+    "dev:migrate": "npm run format && npm run generate && prisma migrate dev --preview-feature",
+    "migrate": "prisma migrate deploy --preview-feature && npm run generate",
+    "migrate:reset": "prisma migrate reset --preview-feature",
+    "migrate:status": "prisma migrate status --preview-feature",
+    "studio": "prisma studio",
+    "generate": "prisma generate",
+    "format": "prisma format"
   },
   "dependencies": {
+    "@prisma/client": "^4.0.0",
     "@reduxjs/toolkit": "^1.8.2",
     "clsx": "^1.1.1",
     "react": "^18.2.0",
@@ -79,7 +87,8 @@
     "@types/react": "^18.0.14",
     "@types/react-dom": "^18.0.5",
     "@types/uuid": "^8.3.4",
-    "@types/ws": "^8.5.3"
+    "@types/ws": "^8.5.3",
+    "prisma": "^4.0.0"
   },
   "optionalDependencies": {
     "@testing-library/jest-dom": "^5.16.4",

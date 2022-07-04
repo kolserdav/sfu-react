@@ -8,20 +8,30 @@ generator client {
 }
 
 model Unit {
-  id        Int       @id @default(autoincrement())
-  userId String @unique
-  guestInRoom Int? @default(null)
-  Room Room @relations(fields: [guestInRoom] relation:[id])
-  updated   DateTime  @default(now())
-  created   DateTime  @default(now())
-  Rooms  Room[]
+  id      String   @id @unique
+  roomId  Int
+  updated DateTime @default(now())
+  created DateTime @default(now())
+  MyRooms Room[]
+  IGuest  Guest[]
 }
 
 model Room {
-  id        Int       @id @default(autoincrement())
-  authorId Int
-  Author Unit @relations(fields: [authorId], relation: [id])
-  Guests User[]
-  updated   DateTime  @default(now())
-  created   DateTime  @default(now())
+  id       String   @id @unique
+  authorId String
+  Unit     Unit     @relation(fields: [authorId], references: [id])
+  updated  DateTime @default(now())
+  created  DateTime @default(now())
+  Guests   Guest[]
+}
+
+model Guest {
+  id      Int      @id @default(autoincrement())
+  unitId  String
+  roomId  String
+  Unit    Unit     @relation(fields: [unitId], references: [id])
+  Room    Room     @relation(fields: [roomId], references: [id])
+  created DateTime @default(now())
+
+  @@unique([unitId, roomId])
 }
