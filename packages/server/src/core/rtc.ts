@@ -326,47 +326,7 @@ class RTC implements RTCInterface {
         log('info', '-> Local video stream obtained', { peerId });
         // If a user creates a new connection with a room to get another user's stream
         if (target) {
-          let _connId = connId;
-          const keysStreams = Object.keys(this.streams);
-          keysStreams.forEach((element) => {
-            const str = element.split(this.delimiter);
-            if (str[1] === target.toString() && str[2] === '0') {
-              _connId = str[3];
-            }
-          });
-          const _peerId = this.getPeerId(id, target, 0, _connId);
-
-          const stream = this.streams[_peerId];
-          if (!stream) {
-            log('warn', 'Skiping add track', {
-              roomId: id,
-              userId,
-              target,
-              connId,
-              _peerId,
-              _connId,
-              k: Object.keys(this.streams),
-            });
-            return;
-          }
-          const tracks = stream.getTracks();
-          tracks.forEach((track) => {
-            if (this.peerConnections[peerId]) {
-              const sender = this.peerConnections[peerId]
-                ?.getSenders()
-                .find((item) => item.track?.kind === track.kind);
-              if (sender?.track?.id !== track.id) {
-                this.peerConnections[peerId]!.addTrack(track, stream);
-              } else {
-                log('warn', 'Skiping add track', { peerId });
-              }
-            } else {
-              log('warn', 'Add track without peer connection', {
-                peerId,
-                k: Object.keys(this.peerConnections),
-              });
-            }
-          });
+          this.addTracks({ id, peerId, connId, target, userId });
         }
       })
       .then(() => {
@@ -480,6 +440,71 @@ class RTC implements RTCInterface {
           cb(1);
         }
       });
+  };
+
+  public addTracks = ({
+    id,
+    connId,
+    userId,
+    peerId,
+    target,
+  }: {
+    id: number | string;
+    connId: string;
+    peerId: string;
+    userId: number | string;
+    target: number | string;
+  }) => {
+    let _connId = connId;
+    const keysStreams = Object.keys(this.streams);
+    keysStreams.forEach((element) => {
+      const str = element.split(this.delimiter);
+      if (str[1] === userId.toString() && str[2] === '0') {
+        _connId = str[3];
+      }
+    });
+    let _peerId = this.getPeerId(id, userId, 0, _connId);
+    if (!this.streams[_peerId]) {
+      const keysStreams = Object.keys(this.streams);
+      keysStreams.forEach((element) => {
+        const str = element.split(this.delimiter);
+        if (str[1] === target.toString() && str[2] === '0') {
+          _connId = str[3];
+        }
+      });
+      _peerId = this.getPeerId(id, target, 0, _connId);
+    }
+    const stream = this.streams[_peerId];
+    if (!stream) {
+      log('warn', 'Skiping add track', {
+        roomId: id,
+        userId,
+        target,
+        connId,
+        _peerId,
+        _connId,
+        k: Object.keys(this.streams),
+      });
+      return;
+    }
+    const tracks = stream.getTracks();
+    tracks.forEach((track) => {
+      if (this.peerConnections[peerId]) {
+        const sender = this.peerConnections[peerId]
+          ?.getSenders()
+          .find((item) => item.track?.kind === track.kind);
+        if (sender?.track?.id !== track.id) {
+          this.peerConnections[peerId]!.addTrack(track, stream);
+        } else {
+          log('warn', 'Skiping add track', { peerId });
+        }
+      } else {
+        log('warn', 'Add track without peer connection', {
+          peerId,
+          k: Object.keys(this.peerConnections),
+        });
+      }
+    });
   };
 
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, userId, target, connId }) => {
