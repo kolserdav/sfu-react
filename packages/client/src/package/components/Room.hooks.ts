@@ -358,6 +358,9 @@ export const useConnection = ({
       const { type, connId } = rawMessage;
       switch (type) {
         case MessageType.SET_USER_ID:
+          /**
+           * Connect to room
+           */
           setConnectionId(connId);
           rtc.createPeerConnection({
             userId: ws.userId,

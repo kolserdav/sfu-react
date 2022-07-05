@@ -240,7 +240,12 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
             deleteGuest({ userId, roomId: item });
             delete wss.users[userId];
           }
-          delete wss.sockets[wss.getSocketId(userId, connId)];
+          const socketId = wss.findSocketId(userId.toString());
+          if (socketId) {
+            delete wss.sockets[socketId];
+          } else {
+            log('warn', 'No deleted socket', { socketId, s: Object.keys(wss.sockets) });
+          }
         });
       }
     };

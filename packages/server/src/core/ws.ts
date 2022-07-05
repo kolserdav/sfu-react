@@ -81,6 +81,10 @@ class WS implements WSInterface {
     return `${id}${this.delimiter}${connId}`;
   }
 
+  public findSocketId(id: string) {
+    return Object.keys(this.sockets).find((item) => item.split(this.delimiter)[0] === id) || null;
+  }
+
   public createConnection = (args: ServerOptions | undefined) => {
     this.connection = new WebSocketServer(args);
     return this.connection;
@@ -115,9 +119,8 @@ class WS implements WSInterface {
           resolve(1);
         }
         const { id } = args;
-        const socketId = Object.keys(this.sockets).find((item) => {
-          return item.split(this.delimiter)[0] === id.toString();
-        });
+        const socketId = this.findSocketId(id.toString());
+        console.log(socketId);
         if (socketId) {
           this.sockets[socketId].send(res);
         } else {
