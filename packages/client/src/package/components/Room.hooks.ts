@@ -268,7 +268,6 @@ export const useConnection = ({
         data: { roomUsers, muteds: _muteds },
         connId,
       } = ws.getMessage(MessageType.SET_ROOM_GUESTS, rawMessage);
-      console.log(1, `${JSON.stringify(roomUsers)}`);
       setMuteds(_muteds);
       const _streams: Stream[] = storeStreams.getState().streams as Stream[];
       log('info', 'onChangeRoomGuests', { roomUsers, id, st: _streams.map((i) => i.target) });

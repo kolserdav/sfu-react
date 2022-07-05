@@ -83,6 +83,7 @@ function Room({ id, iceServers, server, port }: RoomProps) {
               onClick={onClickVideo}
               ref={item.ref}
               title={item.target.toString()}
+              id={item.target.toString()}
               onLoadedData={(e) => {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const { target }: { target: HTMLVideoElement } = e as any;
@@ -92,7 +93,7 @@ function Room({ id, iceServers, server, port }: RoomProps) {
                 log('warn', 'Empty video data', { active: item.stream.active, id: item.target });
               }}
               onSuspend={(e) => {
-                log('info', 'Suspend video data', { active: item.stream.active, id: item.target });
+                log('warn', 'Suspend video data', { active: item.stream.active, id: item.target });
               }}
               onStalled={(e) => {
                 log('warn', 'Stalled video data', { active: item.stream.active, id: item.target });

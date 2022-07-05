@@ -168,6 +168,9 @@ class RTC implements RTCInterface {
       if (isRoom) {
         const stream = e.streams[0];
         const isNew = stream.id !== this.streams[peerId]?.id;
+        if (isNew) {
+          this.streams[peerId] = stream;
+        }
         log('info', 'ontrack', { peerId, si: stream.id, isNew, userId, target });
         if (s % 2 !== 0 && isNew) {
           setTimeout(() => {
@@ -186,24 +189,33 @@ class RTC implements RTCInterface {
               });
             });
           }, 0);
-          this.streams[peerId] = stream;
         }
         s++;
       }
     };
   };
 
-  public handleCandidateMessage: RTCInterface['handleCandidateMessage'] = (msg, cb) => {
+  public handleCandidateMessage: RTCInterface['handleCandidateMessage'] = async (msg, cb) => {
     const {
       id,
       connId,
       data: { candidate, userId, target },
     } = msg;
-
-    const peerId = this.getPeerId(id, userId, target, connId);
+    let peerId = this.getPeerId(id, userId, target, connId);
+    let _connId = connId;
+    if (!this.peerConnections?.[peerId]) {
+      const peer = Object.keys(this.peerConnections).find((p) => {
+        const pe = p.split(this.delimiter);
+        return (
+          pe[0] === id.toString() && pe[1] === userId.toString() && pe[2] === target.toString()
+        );
+      });
+      _connId = peer?.split(this.delimiter)[3] || connId;
+      peerId = this.getPeerId(id, userId, target, _connId);
+    }
     const cand = new wrtc.RTCIceCandidate(candidate);
 
-    log('log', 'Trying to add ice candidate', {
+    log('log', 'Trying to add ice candidate:', {
       peerId,
       d: Object.keys(this.peerConnections).length,
       connId,
@@ -211,7 +223,16 @@ class RTC implements RTCInterface {
       userId,
       target,
     });
-
+    if (this.peerConnections[peerId]?.connectionState === 'new') {
+      await new Promise((resolve) => {
+        const t = setInterval(() => {
+          if (this.peerConnections[peerId]?.connectionState !== 'new') {
+            clearInterval(t);
+            resolve(0);
+          }
+        }, 500);
+      });
+    }
     if (
       !this.peerConnections[peerId] ||
       this.peerConnections[peerId]?.connectionState === 'closed' ||
@@ -220,7 +241,9 @@ class RTC implements RTCInterface {
       log('info', 'Skiping add ice candidate', {
         connId,
         id,
+        d: Object.keys(this.peerConnections),
         userId,
+        peerId,
         target,
         state: this.peerConnections[peerId]?.connectionState,
         ice: this.peerConnections[peerId]?.iceConnectionState,
@@ -240,7 +263,7 @@ class RTC implements RTCInterface {
       })
       .catch((e) => {
         log('error', 'Set candidate error', {
-          error: e.message,
+          error: e,
           connId,
           id,
           userId,
@@ -312,13 +335,15 @@ class RTC implements RTCInterface {
             }
           });
           const _peerId = this.getPeerId(id, target, 0, _connId);
+
           const stream = this.streams[_peerId];
           if (!stream) {
-            log('info', 'Skiping add track', {
+            log('warn', 'Skiping add track', {
               roomId: id,
               userId,
               target,
               connId,
+              _peerId,
               _connId,
               k: Object.keys(this.streams),
             });

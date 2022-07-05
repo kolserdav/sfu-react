@@ -81,10 +81,9 @@ async function evaluateRoom(evalPage, last = false) {
   const { page, room, uid } = evalPage;
   const videos = await page.$$('video');
   const coeff = (USERS + ROOMS) / 1000;
-  const d = Math.ceil(delay >= 1000 ? delay * coeff : 1000 * coeff);
-  log('log', 'Wait for page evaluate:', `${d} seconds ...`, true);
+  const d = Math.ceil(delay >= 1000 ? delay * coeff : (1000 * coeff) / 2);
+  log('log', 'Maybe wait for page evaluate:', `${d} seconds ...`, true);
   const t = stdoutWrite(d);
-  await page.waitForTimeout(d * 1000);
   timeupdate = await page.evaluate(
     async (_uid, _delay, users) => {
       /**
@@ -93,6 +92,11 @@ async function evaluateRoom(evalPage, last = false) {
       let _timeupdate = {};
       const _videos = document.querySelectorAll('video');
       _videos[0].parentElement?.parentElement?.focus();
+      await new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(0);
+        }, _delay);
+      });
       let check = false;
       const streamIds = [];
       for (let i = 0; _videos[i]; i++) {
@@ -104,21 +108,21 @@ async function evaluateRoom(evalPage, last = false) {
          * @type {any}
          */
         const { id } = video.parentElement;
-        _timeupdate[id] = await new Promise((resolve) => {
+        const { id: _id } = video;
+        _timeupdate[_id] = await new Promise((resolve) => {
           video.ontimeupdate = () => {
             resolve(true);
           };
           setTimeout(() => {
             resolve(false);
-          }, _delay * 2);
+          }, _delay * 1000);
         });
         video.ontimeupdate = () => {};
         if (streamIds.indexOf(id) !== -1) {
           console.log(`Non unique stream: ${id} for uid: ${_uid}`);
         }
         streamIds.push(id);
-        const title = video.getAttribute('title');
-        if (title === _uid) {
+        if (_id === _uid) {
           check = true;
         }
       }
@@ -128,7 +132,7 @@ async function evaluateRoom(evalPage, last = false) {
       return _timeupdate;
     },
     uid,
-    delay,
+    d,
     USERS
   );
   clearInterval(t);
@@ -138,7 +142,7 @@ async function evaluateRoom(evalPage, last = false) {
   if (tUval.length) {
     warnings++;
   }
-  log(tUval.length === 0 ? 'info' : 'warn', 'Timeupdate', timeupdate, true);
+  log(tUval.length === 0 ? 'info' : 'warn', `Timeupdate ${evalPage.uid}`, timeupdate, true);
   const { length } = videos;
   count++;
   if (length < USERS) {
@@ -165,7 +169,7 @@ async function evaluateRoom(evalPage, last = false) {
  */
 function getTime(startTime) {
   const delay = Math.ceil(new Date().getTime() - startTime);
-  return delay * ROOMS * USERS + ROOMS * USERS * delay * 2;
+  return delay * ROOMS * USERS + ROOMS * USERS * delay * 4;
 }
 
 /**

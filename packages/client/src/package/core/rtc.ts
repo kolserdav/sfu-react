@@ -474,7 +474,7 @@ class RTC implements RTCInterface {
       !this.peerConnections[peerId] ||
       this.peerConnections[peerId]?.iceConnectionState === 'connected'
     ) {
-      log('info', 'Skiping set remote desc for answer', {
+      log('warn', 'Skiping set remote desc for answer', {
         id,
         userId,
         target,
