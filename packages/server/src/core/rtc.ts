@@ -610,7 +610,7 @@ class RTC implements RTCInterface {
               log('warn', 'Room not updated', { roomId });
             }
           });
-        } else {
+        } else if (g.IGuest[0].id) {
           db.roomUpdate({
             where: {
               id,
@@ -628,6 +628,8 @@ class RTC implements RTCInterface {
               },
             },
           });
+        } else {
+          log('warn', 'Room not saved', { g: g.IGuest[0]?.id, id });
         }
       });
     }
@@ -636,6 +638,8 @@ class RTC implements RTCInterface {
       this.muteds[roomId] = [];
     } else if (this.rooms[roomId].indexOf(userId) === -1) {
       this.rooms[roomId].push(userId);
+    } else {
+      log('info', 'Room exists and user added before.', { roomId, userId });
     }
     return 0;
   }

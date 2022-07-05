@@ -22,10 +22,6 @@ class WS implements WSInterface {
 
   public readonly delimiter = '_';
 
-  /**
-   * FIXME use socket id instead
-   * @deprecated
-   */
   public users: Record<number | string, string> = {};
   public rooms: Record<number | string, string> = {};
 
@@ -46,7 +42,7 @@ class WS implements WSInterface {
     connId: string;
     isRoom?: boolean;
   }) {
-    this.sockets[this.getSocketId(_id, connId)] = ws;
+    this.sockets[this.getSocketId(_id.toString(), connId)] = ws;
     const id = _id.toString();
     if (!isRoom) {
       db.unitFindFirst({
@@ -119,15 +115,16 @@ class WS implements WSInterface {
           resolve(1);
         }
         const { id } = args;
-        const socketId = this.findSocketId(id.toString());
-        console.log(socketId);
-        if (socketId) {
-          this.sockets[socketId].send(res);
+        if (this.users[id] && this.sockets[this.getSocketId(id, this.users[id])]) {
+          this.sockets[this.getSocketId(id, this.users[id])].send(res);
+        } else if (this.rooms[id] && this.sockets[this.getSocketId(id, this.rooms[id])]) {
+          this.sockets[this.getSocketId(id, this.rooms[id])].send(res);
         } else {
           log('warn', 'Send message without conected socket', {
             args,
             k: Object.keys(this.sockets),
-            socketId,
+            u: this.users,
+            r: this.rooms,
           });
         }
         resolve(0);

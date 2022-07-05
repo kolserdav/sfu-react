@@ -21,8 +21,9 @@ class DB implements DBInterface {
     let result: any = null;
     try {
       result = await prisma.room.update(args);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      log('error', 'DB Error update room', { args, err });
+      log('error', 'DB Error update room', { where: args.where, data: args.data, err });
     }
     return result;
   };

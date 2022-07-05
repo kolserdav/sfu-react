@@ -158,10 +158,6 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
       }
     });
 
-    /**
-     * FIXME rewrite to get socket id
-     * @deprecated
-     */
     const getUserId = () => {
       let userId: number | string = 0;
       const keys = Object.keys(wss.users);
@@ -240,11 +236,10 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
             deleteGuest({ userId, roomId: item });
             delete wss.users[userId];
           }
-          const socketId = wss.findSocketId(userId.toString());
-          if (socketId) {
-            delete wss.sockets[socketId];
+          if (wss.sockets[connId]) {
+            delete wss.sockets[connId];
           } else {
-            log('warn', 'No deleted socket', { socketId, s: Object.keys(wss.sockets) });
+            log('warn', 'No deleted socket', { s: Object.keys(wss.sockets) });
           }
         });
       }
