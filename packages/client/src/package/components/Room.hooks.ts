@@ -199,36 +199,34 @@ export const useConnection = ({
               connId,
               eventName,
             });
-            rtc.createPeerConnection(
-              {
-                roomId,
-                target,
-                userId: id,
-                connId,
-                onTrack: ({ addedUserId, stream }) => {
-                  log('info', 'Added unit track', { addedUserId, s: stream.id, connId });
-                  addStream({ target: addedUserId, stream, connId });
-                },
-                iceServers,
+            rtc.createPeerConnection({
+              roomId,
+              target,
+              userId: id,
+              connId,
+              onTrack: ({ addedUserId, stream }) => {
+                log('info', 'Added unit track', { addedUserId, s: stream.id, connId });
+                addStream({ target: addedUserId, stream, connId });
               },
-              (e) => {
-                if (!e) {
-                  if (eventName !== 'added' && target !== userId) {
-                    ws.sendMessage({
-                      type: MessageType.SET_CHANGE_UNIT,
-                      id: target,
-                      connId,
-                      data: {
-                        target: userId,
-                        roomLenght,
-                        eventName: 'added',
-                        muteds: _muteds,
-                      },
-                    });
-                  }
+              iceServers,
+            });
+            rtc.addTracks({ id: roomId, userId, target, connId }, (e) => {
+              if (!e) {
+                if (eventName !== 'added' && target !== userId) {
+                  ws.sendMessage({
+                    type: MessageType.SET_CHANGE_UNIT,
+                    id: target,
+                    connId,
+                    data: {
+                      target: userId,
+                      roomLenght,
+                      eventName: 'added',
+                      muteds: _muteds,
+                    },
+                  });
                 }
               }
-            );
+            });
           }
           break;
         case 'delete':
@@ -279,26 +277,24 @@ export const useConnection = ({
           const _isExists = _streams.filter((_item) => item === _item.target);
           if (!_isExists[0]) {
             log('warn', 'Check new user', { item });
-            rtc.createPeerConnection(
-              {
+            rtc.createPeerConnection({
+              roomId,
+              target: item,
+              userId: id,
+              connId,
+              onTrack: ({ addedUserId, stream }) => {
+                addStream({ target: addedUserId, stream, connId });
+              },
+              iceServers,
+            });
+            rtc.addTracks({ id: roomId, userId: id, target: item, connId }, (e) => {
+              log('warn', 'Change room guests connection', {
                 roomId,
                 target: item,
                 userId: id,
                 connId,
-                onTrack: ({ addedUserId, stream }) => {
-                  addStream({ target: addedUserId, stream, connId });
-                },
-                iceServers,
-              },
-              (e) => {
-                log('warn', 'Change room guests connection', {
-                  roomId,
-                  target: item,
-                  userId: id,
-                  connId,
-                });
-              }
-            );
+              });
+            });
           } else if (rtc.peerConnections[peerId]) {
             const { connectionState } = rtc.peerConnections[peerId]!;
             switch (connectionState) {
@@ -363,43 +359,41 @@ export const useConnection = ({
       switch (type) {
         case MessageType.SET_USER_ID:
           setConnectionId(connId);
-          rtc.createPeerConnection(
-            {
-              userId: ws.userId,
-              target: 0,
-              connId,
-              roomId,
-              onTrack: ({ addedUserId, stream }) => {
-                log('info', '-> Added local stream to room', { addedUserId, id });
-                addStream({ target: addedUserId, stream, connId });
-              },
-              iceServers,
+          rtc.createPeerConnection({
+            userId: ws.userId,
+            target: 0,
+            connId,
+            roomId,
+            onTrack: ({ addedUserId, stream }) => {
+              log('info', '-> Added local stream to room', { addedUserId, id });
+              addStream({ target: addedUserId, stream, connId });
             },
-            (e) => {
-              if (!e) {
+            iceServers,
+          });
+          rtc.addTracks({ userId: ws.userId, id: roomId, connId, target: 0 }, (e) => {
+            if (!e) {
+              ws.sendMessage({
+                type: MessageType.GET_ROOM,
+                id: roomId,
+                data: {
+                  userId: id,
+                },
+                connId,
+              });
+            } else if (localShareScreen) {
+              ws.shareScreen = false;
+              setLocalShareScreen(false);
+              setShareScreen(false);
+              ws.onOpen = () => {
                 ws.sendMessage({
-                  type: MessageType.GET_ROOM,
-                  id: roomId,
-                  data: {
-                    userId: id,
-                  },
-                  connId,
+                  type: MessageType.GET_USER_ID,
+                  id,
+                  data: {},
+                  connId: '',
                 });
-              } else if (localShareScreen) {
-                ws.shareScreen = false;
-                setLocalShareScreen(false);
-                setShareScreen(false);
-                ws.onOpen = () => {
-                  ws.sendMessage({
-                    type: MessageType.GET_USER_ID,
-                    id,
-                    data: {},
-                    connId: '',
-                  });
-                };
-              }
+              };
             }
-          );
+          });
           break;
         case MessageType.OFFER:
           rtc.handleOfferMessage(rawMessage);

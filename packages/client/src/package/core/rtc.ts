@@ -29,35 +29,27 @@ class RTC implements RTCInterface {
     this.ws = ws;
   }
 
-  public createPeerConnection(
-    {
-      roomId,
-      userId,
-      target,
-      connId,
-      onTrack,
-      iceServers,
-    }: {
-      roomId: string | number;
-      userId: string | number;
-      target: string | number;
-      connId: string;
-      onTrack: (args: {
-        addedUserId: string | number;
-        stream: MediaStream;
-        connId: string;
-      }) => void;
-      iceServers: RTCConfiguration['iceServers'];
-    },
-    cb: (e: 0 | 1) => void
-  ) {
+  public createPeerConnection({
+    roomId,
+    userId,
+    target,
+    connId,
+    onTrack,
+    iceServers,
+  }: {
+    roomId: string | number;
+    userId: string | number;
+    target: string | number;
+    connId: string;
+    onTrack: (args: { addedUserId: string | number; stream: MediaStream; connId: string }) => void;
+    iceServers: RTCConfiguration['iceServers'];
+  }) {
     const peerId = this.getPeerId(roomId, target, connId);
     this.createRTC({ roomId, target, userId, connId, iceServers });
     this.onAddTrack[peerId] = (addedUserId, stream) => {
       onTrack({ addedUserId, stream, connId });
     };
     this.invite({ roomId, userId, target, connId });
-    this.setMedia({ roomId, userId, target, connId }, cb);
   }
 
   public createRTC: RTCInterface['createRTC'] = ({ connId, roomId, target, iceServers = [] }) => {
@@ -233,21 +225,8 @@ class RTC implements RTCInterface {
     this.handleIceCandidate({ connId, roomId, userId, target });
   }
 
-  public setMedia(
-    {
-      roomId,
-      userId,
-      target,
-      connId,
-    }: {
-      roomId: number | string;
-      userId: number | string;
-      target: number | string;
-      connId: string;
-    },
-    cb: (e: 1 | 0) => void
-  ) {
-    const peerId = this.getPeerId(roomId, target, connId);
+  public addTracks: RTCInterface['addTracks'] = ({ id, userId, target, connId }, cb) => {
+    const peerId = this.getPeerId(id, target, connId);
     if (!this.peerConnections[peerId]) {
       log('warn', 'Set media without peer connection', { peerId });
       return;
@@ -314,10 +293,10 @@ class RTC implements RTCInterface {
           this.peerConnections[peerId]!.addTrack(track, this.localStream);
         }
       });
-      this.onAddTrack[this.getPeerId(roomId, target, connId)](userId, this.localStream);
+      this.onAddTrack[this.getPeerId(id, target, connId)](userId, this.localStream);
       cb(0);
     }
-  }
+  };
 
   // eslint-disable-next-line class-methods-use-this
   public onAddTrack: Record<string, (target: number | string, stream: MediaStream) => void> = {};

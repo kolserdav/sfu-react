@@ -35,6 +35,7 @@ export enum MessageType {
   SET_CHANGE_UNIT = 'SET_CHANGE_UNIT',
   GET_MUTE = 'GET_MUTE',
   SET_MUTE = 'SET_MUTE',
+  GET_TRACKS = 'GET_TRACKS',
 }
 
 export namespace DataTypes {
@@ -43,6 +44,7 @@ export namespace DataTypes {
       muted: boolean;
       roomId: string | number;
     };
+    export type GetTracks = undefined;
     export type GetRoomGuests = {
       roomId: number | string;
     };
@@ -97,6 +99,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.Candidate
     : T extends MessageType.GET_MUTE
     ? DataTypes.MessageTypes.GetMute
+    : T extends MessageType.GET_TRACKS
+    ? DataTypes.MessageTypes.GetTracks
     : T extends MessageType.GET_USER_ID
     ? DataTypes.MessageTypes.GetGuestId
     : T extends MessageType.SET_USER_ID
@@ -158,12 +162,7 @@ export namespace Connection {
       iceServers?: RTCConfiguration['iceServers'];
     }): Record<number, RTCPeerConnection | undefined>;
 
-    public abstract handleIceCandidate({
-      connId,
-      roomId,
-      userId,
-      target,
-    }: {
+    public abstract handleIceCandidate(args: {
       connId: string;
       roomId: number | string;
       userId: number | string;
@@ -172,24 +171,14 @@ export namespace Connection {
 
     public abstract getPeerId(...args: (number | string)[]): string;
 
-    public abstract closeVideoCall({
-      connId,
-      roomId,
-      userId,
-      target,
-    }: {
+    public abstract closeVideoCall(args: {
       connId: string;
       roomId: number | string;
       userId: number | string;
       target: string | number;
     }): void;
 
-    public abstract onClosedCall({
-      connId,
-      roomId,
-      userId,
-      target,
-    }: {
+    public abstract onClosedCall(args: {
       connId: string;
       roomId: number | string;
       userId: number | string;
@@ -209,6 +198,17 @@ export namespace Connection {
     public abstract handleVideoAnswerMsg(
       msg: Signaling.SendMessageArgs<MessageType.ANSWER>,
       cb?: (res: 1 | 0) => any
+    ): void;
+
+    public abstract addTracks(
+      args: {
+        id: number | string;
+        connId: string;
+        userId: number | string;
+        target: number | string;
+        peerId?: string;
+      },
+      cb: (e: 1 | 0) => void
     ): void;
   }
 }
