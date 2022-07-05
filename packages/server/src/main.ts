@@ -170,6 +170,16 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
       });
       // Remove user from room
       if (userId) {
+        // set user offline
+        db.unitUpdate({
+          where: {
+            id: userId.toString(),
+          },
+          data: {
+            online: false,
+            updated: new Date(),
+          },
+        });
         log('info', 'User disconnected', userId);
         const roomKeys = Object.keys(rtc.rooms);
         roomKeys.forEach((item) => {
@@ -208,6 +218,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
             });
             if (rtc.rooms[item].length === 0) {
               delete rtc.rooms[item];
+              // set room is archive
               db.roomUpdate({
                 where: {
                   id: item.toString(),
@@ -220,10 +231,10 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
               delete rtc.muteds[item];
             }
             deleteGuest({ userId, roomId: item });
+            delete wss.users[userId];
           }
           delete wss.sockets[connId];
         });
-        delete wss.users[userId];
       }
     };
   });

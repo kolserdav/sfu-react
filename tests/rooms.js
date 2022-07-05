@@ -3,7 +3,7 @@ const puppeteer = require('puppeteer');
 const { log } = require('../packages/server/dist/utils/lib');
 const { v4 } = require('uuid');
 const { stdout } = require('process');
-const { rooms, users, headless, singleRoom, url } = require('./rooms.json');
+const { rooms, users, headless, singleRoom, url, delay } = require('./rooms.json');
 
 process.setMaxListeners(0);
 
@@ -17,7 +17,6 @@ const VIEWPORT = {
   height: 480,
 };
 const EXIT_DELAY = 1000;
-const DELAY = 1200;
 
 /**
  *
@@ -66,6 +65,14 @@ async function openRoom(room, uid) {
 }
 
 /**
+ * @typedef {Record<string, boolean>} Timeupdate
+ */
+
+/**
+ * @type {Timeupdate}
+ */
+let timeupdate = {};
+/**
  *
  * @param {EvalPage} evalPage
  * @param {boolean} last
@@ -73,32 +80,65 @@ async function openRoom(room, uid) {
 async function evaluateRoom(evalPage, last = false) {
   const { page, room, uid } = evalPage;
   const videos = await page.$$('video');
-  await page.evaluate((_uid) => {
-    const _videos = document.querySelectorAll('video');
-    let check = false;
-    const streamIds = [];
-    for (let i = 0; _videos[i]; i++) {
-      const video = _videos[i];
-      if (Boolean(video.played) !== true) {
-        log('warn', 'Video not played', { room, uid, id: video.getAttribute('id') }, true);
-      }
+  const coeff = (USERS + ROOMS) / 1000;
+  const d = Math.ceil(delay >= 1000 ? delay * coeff : 1000 * coeff);
+  log('log', 'Wait for page evaluate:', `${d} seconds ...`, true);
+  const t = stdoutWrite(d);
+  await page.waitForTimeout(d * 1000);
+  timeupdate = await page.evaluate(
+    async (_uid, _delay, users) => {
       /**
-       * @type {any}
+       * @type {Timeupdate}
        */
-      const { id } = video.parentElement;
-      if (streamIds.indexOf(id) !== -1) {
-        console.log(`Non unique stream: ${id} for uid: ${_uid}`);
+      let _timeupdate = {};
+      const _videos = document.querySelectorAll('video');
+      _videos[0].parentElement?.parentElement?.focus();
+      let check = false;
+      const streamIds = [];
+      for (let i = 0; _videos[i]; i++) {
+        const video = _videos[i];
+        if (Boolean(video.played) !== true) {
+          log('warn', 'Video not played', { room, uid, id: video.getAttribute('id') }, true);
+        }
+        /**
+         * @type {any}
+         */
+        const { id } = video.parentElement;
+        _timeupdate[id] = await new Promise((resolve) => {
+          video.ontimeupdate = () => {
+            resolve(true);
+          };
+          setTimeout(() => {
+            resolve(false);
+          }, _delay * 2);
+        });
+        video.ontimeupdate = () => {};
+        if (streamIds.indexOf(id) !== -1) {
+          console.log(`Non unique stream: ${id} for uid: ${_uid}`);
+        }
+        streamIds.push(id);
+        const title = video.getAttribute('title');
+        if (title === _uid) {
+          check = true;
+        }
       }
-      streamIds.push(id);
-      const title = video.getAttribute('title');
-      if (title === _uid) {
-        check = true;
+      if (!check) {
+        console.log(`Self stream not defined uid: ${_uid}`);
       }
-    }
-    if (!check) {
-      console.log(`Self stream not defined uid: ${_uid}`);
-    }
-  }, uid);
+      return _timeupdate;
+    },
+    uid,
+    delay,
+    USERS
+  );
+  clearInterval(t);
+  // stdoutClean();
+  const k = Object.keys(timeupdate);
+  const tUval = k.filter((item) => timeupdate[item] === false);
+  if (tUval.length) {
+    warnings++;
+  }
+  log(tUval.length === 0 ? 'info' : 'warn', 'Timeupdate', timeupdate, true);
   const { length } = videos;
   count++;
   if (length < USERS) {
@@ -125,7 +165,7 @@ async function evaluateRoom(evalPage, last = false) {
  */
 function getTime(startTime) {
   const delay = Math.ceil(new Date().getTime() - startTime);
-  return delay * ROOMS * USERS;
+  return delay * ROOMS * USERS + ROOMS * USERS * delay * 2;
 }
 
 /**
@@ -181,9 +221,9 @@ async function reloadPage(page) {
       });
     }
   }
-  let time = getTime(startTime) + USERS * ROOMS * DELAY;
+  let time = getTime(startTime);
   let seconds = Math.ceil(time / 1000);
-  log('log', 'Wait for evaluate:', `${seconds} seconds ...`, true);
+  log('log', 'Wait for browser load:', `${seconds} seconds ...`, true);
   let timeout = stdoutWrite(seconds);
   await pages[0].page.waitForTimeout(time);
   stdoutClean();

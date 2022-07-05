@@ -10,10 +10,11 @@ generator client {
 model Unit {
   id      String    @id
   name    String?   @default("Anon")
+  online  Boolean   @default(true)
   updated DateTime  @default(now())
   created DateTime  @default(now())
   MyRooms Room[]
-  IGuest  Guest[]   
+  IGuest  Guest[]
   Message Message[]
 }
 
@@ -34,6 +35,7 @@ model Guest {
   roomId  String
   Unit    Unit     @relation(fields: [unitId], references: [id])
   Room    Room     @relation(fields: [roomId], references: [id])
+  updated DateTime @default(now())
   created DateTime @default(now())
 
   @@unique([unitId, roomId])

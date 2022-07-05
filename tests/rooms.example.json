@@ -3,5 +3,6 @@
   "headless": true,
   "rooms": 3,
   "users": 3,
-  "singleRoom": "string-or-false-or-null-or-undefined"
+  "singleRoom": "string-or-false-or-null-or-undefined",
+  "delay": 1500
 }

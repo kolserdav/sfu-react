@@ -214,7 +214,8 @@ class RTC implements RTCInterface {
 
     if (
       !this.peerConnections[peerId] ||
-      this.peerConnections[peerId]?.connectionState === 'closed'
+      this.peerConnections[peerId]?.connectionState === 'closed' ||
+      this.peerConnections[peerId]?.iceConnectionState === 'closed'
     ) {
       log('info', 'Skiping add ice candidate', {
         connId,
@@ -326,9 +327,9 @@ class RTC implements RTCInterface {
           const tracks = stream.getTracks();
           tracks.forEach((track) => {
             if (this.peerConnections[peerId]) {
-              const sender = this.peerConnections[peerId]!.getSenders().find(
-                (item) => item.track?.kind === track.kind
-              );
+              const sender = this.peerConnections[peerId]
+                ?.getSenders()
+                .find((item) => item.track?.kind === track.kind);
               if (sender?.track?.id !== track.id) {
                 this.peerConnections[peerId]!.addTrack(track, stream);
               } else {
@@ -548,12 +549,13 @@ class RTC implements RTCInterface {
           },
         },
       }).then((g) => {
+        const id = roomId.toString();
         if (!g) {
           log('warn', 'Unit not found', { id: userId.toString() });
         } else if (!g?.IGuest[0]) {
           db.roomUpdate({
             where: {
-              id: roomId.toString(),
+              id,
             },
             data: {
               Guests: {
@@ -561,6 +563,7 @@ class RTC implements RTCInterface {
                   unitId: userId.toString(),
                 },
               },
+              updated: new Date(),
             },
           }).then((r) => {
             if (!r) {
@@ -568,7 +571,23 @@ class RTC implements RTCInterface {
             }
           });
         } else {
-          log('warn', 'Need room update', { g });
+          db.roomUpdate({
+            where: {
+              id,
+            },
+            data: {
+              Guests: {
+                update: {
+                  where: {
+                    id: g.IGuest[0].id,
+                  },
+                  data: {
+                    updated: new Date(),
+                  },
+                },
+              },
+            },
+          });
         }
       });
     }
@@ -655,7 +674,7 @@ class RTC implements RTCInterface {
   }
 
   public onClosedCall: RTCInterface['onClosedCall'] = (args) => {
-    log('log', 'Call is closed', { ...args });
+    log('warn', 'Call is closed', { ...args });
   };
 
   public cleanConnections(roomId: string, userId: string) {

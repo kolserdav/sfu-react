@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Mon Jul 04 2022 10:58:51 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import React, { useMemo, useContext, useRef } from 'react';
+import React, { useMemo, useContext, useRef, useEffect, useState } from 'react';
 import { getRoomId, log } from '../utils/lib';
 import s from './Room.module.scss';
 import { RoomProps } from '../types/index';
@@ -84,6 +84,7 @@ function Room({ id, iceServers, server, port }: RoomProps) {
               ref={item.ref}
               title={item.target.toString()}
               onLoadedData={(e) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const { target }: { target: HTMLVideoElement } = e as any;
                 target.play();
               }}
