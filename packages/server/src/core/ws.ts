@@ -20,6 +20,12 @@ class WS implements WSInterface {
 
   public sockets: Record<string, WebSocket> = {};
 
+  public readonly delimiter = '_';
+
+  /**
+   * FIXME use socket id instead
+   * @deprecated
+   */
   public users: Record<number | string, string> = {};
   public rooms: Record<number | string, string> = {};
 
@@ -40,7 +46,7 @@ class WS implements WSInterface {
     connId: string;
     isRoom?: boolean;
   }) {
-    this.sockets[connId] = ws;
+    this.sockets[this.getSocketId(_id, connId)] = ws;
     const id = _id.toString();
     if (!isRoom) {
       db.unitFindFirst({
@@ -69,6 +75,10 @@ class WS implements WSInterface {
     } else {
       this.rooms[id] = connId;
     }
+  }
+
+  public getSocketId(id: string | number, connId: string) {
+    return `${id}${this.delimiter}${connId}`;
   }
 
   public createConnection = (args: ServerOptions | undefined) => {
@@ -105,10 +115,17 @@ class WS implements WSInterface {
           resolve(1);
         }
         const { id } = args;
-        if (this.users[id]) {
-          this.sockets[this.users[id]].send(res);
-        } else if (this.rooms[id]) {
-          this.sockets[this.rooms[id]].send(res);
+        const socketId = Object.keys(this.sockets).find((item) => {
+          return item.split(this.delimiter)[0] === id.toString();
+        });
+        if (socketId) {
+          this.sockets[socketId].send(res);
+        } else {
+          log('warn', 'Send message without conected socket', {
+            args,
+            k: Object.keys(this.sockets),
+            socketId,
+          });
         }
         resolve(0);
       }, 100);

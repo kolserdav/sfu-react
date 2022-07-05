@@ -459,24 +459,14 @@ class RTC implements RTCInterface {
     const keysStreams = Object.keys(this.streams);
     keysStreams.forEach((element) => {
       const str = element.split(this.delimiter);
-      if (str[1] === userId.toString() && str[2] === '0') {
+      if (str[1] === target.toString() && str[2] === '0') {
         _connId = str[3];
       }
     });
-    let _peerId = this.getPeerId(id, userId, 0, _connId);
-    if (!this.streams[_peerId]) {
-      const keysStreams = Object.keys(this.streams);
-      keysStreams.forEach((element) => {
-        const str = element.split(this.delimiter);
-        if (str[1] === target.toString() && str[2] === '0') {
-          _connId = str[3];
-        }
-      });
-      _peerId = this.getPeerId(id, target, 0, _connId);
-    }
+    const _peerId = this.getPeerId(id, target, 0, _connId);
     const stream = this.streams[_peerId];
     if (!stream) {
-      log('warn', 'Skiping add track', {
+      log('info', 'Skiping add track', {
         roomId: id,
         userId,
         target,

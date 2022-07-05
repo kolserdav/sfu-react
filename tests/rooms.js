@@ -1,11 +1,12 @@
 // @ts-check
 const puppeteer = require('puppeteer');
 const { log } = require('../packages/server/dist/utils/lib');
-const { v4 } = require('uuid');
 const { stdout } = require('process');
 const { rooms, users, headless, singleRoom, url, delay } = require('./rooms.json');
 
 process.setMaxListeners(0);
+
+let id = 0;
 
 // Settings
 const ROOMS = singleRoom ? 1 : rooms;
@@ -211,12 +212,12 @@ async function reloadPage(page) {
   const pages = [];
   let startTime = new Date().getTime();
   for (let i = 0; i < ROOMS; i++) {
-    const room = typeof singleRoom === 'string' ? singleRoom : v4();
+    const room = typeof singleRoom === 'string' ? singleRoom : (++id).toString();
     for (let n = 0; n < USERS; n++) {
       if (n + 1 === USERS && i + 1 === ROOMS) {
         startTime = new Date().getTime();
       }
-      const uid = v4();
+      const uid = (++id).toString();
       const page = await openRoom(room, uid);
       pages.push({
         page,

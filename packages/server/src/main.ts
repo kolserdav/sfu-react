@@ -158,8 +158,11 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
       }
     });
 
-    ws.onclose = async () => {
-      // Get deleted userId
+    /**
+     * FIXME rewrite to get socket id
+     * @deprecated
+     */
+    const getUserId = () => {
       let userId: number | string = 0;
       const keys = Object.keys(wss.users);
       keys.forEach((item) => {
@@ -168,9 +171,13 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
           userId = item;
         }
       });
-      // Remove user from room
+      return userId;
+    };
+
+    // Remove user from room
+    ws.onclose = async () => {
+      const userId = getUserId();
       if (userId) {
-        // set user offline
         db.unitUpdate({
           where: {
             id: userId.toString(),
@@ -198,8 +205,8 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
               keys.forEach((i) => {
                 const peer = i.split(rtc.delimiter);
                 if (
-                  (peer[1] === _item && peer[2] === userId) ||
-                  (peer[1] === userId && peer[2] === _item)
+                  (peer[1] === _item && peer[2] === userId.toString()) ||
+                  (peer[1] === userId.toString() && peer[2] === _item)
                 ) {
                   _connId = peer[3];
                 }
@@ -233,7 +240,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
             deleteGuest({ userId, roomId: item });
             delete wss.users[userId];
           }
-          delete wss.sockets[connId];
+          delete wss.sockets[wss.getSocketId(userId, connId)];
         });
       }
     };

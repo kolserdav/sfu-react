@@ -133,6 +133,8 @@ export namespace Signaling {
   export abstract class WSInterface {
     public abstract connection: any;
 
+    public readonly delimiter = '_';
+
     public abstract createConnection(args: any): any;
 
     public abstract parseMessage(text: string): SendMessageArgs<any> | null;
