@@ -593,14 +593,14 @@ class RTC implements RTCInterface {
         if (!g) {
           log('warn', 'Unit not found', { id: userId.toString() });
         } else if (!g?.IGuest[0]) {
-          db.roomUpdate({
+          db.unitUpdate({
             where: {
-              id,
+              id: userId.toString(),
             },
             data: {
-              Guests: {
+              IGuest: {
                 create: {
-                  unitId: userId.toString(),
+                  roomId: id,
                 },
               },
               updated: new Date(),
@@ -611,12 +611,12 @@ class RTC implements RTCInterface {
             }
           });
         } else if (g.IGuest[0].id) {
-          db.roomUpdate({
+          db.unitUpdate({
             where: {
-              id,
+              id: userId.toString(),
             },
             data: {
-              Guests: {
+              IGuest: {
                 update: {
                   where: {
                     id: g.IGuest[0].id,

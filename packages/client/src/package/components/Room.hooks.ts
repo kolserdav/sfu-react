@@ -13,7 +13,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import WS from '../core/ws';
 import RTC from '../core/rtc';
 import { log } from '../utils/lib';
-import { getWidthOfItem, checkVideosPlayed } from './Room.lib';
+import { getWidthOfItem } from './Room.lib';
 import { MessageType, SendMessageArgs } from '../types/interfaces';
 import { Stream } from '../types';
 import s from './Room.module.scss';
@@ -604,16 +604,40 @@ export const usePressEscape = () => (e: React.KeyboardEvent<HTMLDivElement>) => 
   /** TODO */
 };
 
-export const useVideoStarted = ({ container }: { container: React.RefObject<HTMLDivElement> }) => {
-  const [videosNPlayed, setVideosNPlayed] = useState<Record<string, any>>({});
+export const useVideoStarted = ({ streams }: { streams: Stream[] }) => {
+  const [played, setPlayed] = useState<Record<string, boolean>>({});
+  const [timeStart, setTimeStart] = useState<boolean>(false);
+
   useEffect(() => {
-    const t = setInterval(() => {
-      const _videosNPlayed = checkVideosPlayed(container.current as HTMLDivElement);
-      setVideosNPlayed(_videosNPlayed);
-    }, 2000);
+    if (timeStart) {
+      setTimeStart(false);
+      const _played = { ...played };
+      streams.forEach((item) => {
+        _played[item.target] = false;
+      });
+      setPlayed(_played);
+    }
+  }, [streams, timeStart, played]);
+
+  useEffect(() => {
+    const timeout = setInterval(() => {
+      if (Object.keys(played).length === streams.length) {
+        streams.forEach((item) => {
+          if (played[item.target]) {
+            setTimeout(() => {
+              log('info', 'Stream is played', { id: item.target });
+            }, 0);
+          } else {
+            log('warn', 'Need update stream', { id: item.target });
+            setTimeStart(true);
+          }
+        });
+      }
+    }, 1500);
     return () => {
-      clearInterval(t);
+      clearInterval(timeout);
     };
-  }, [container]);
-  return videosNPlayed;
+  }, [played, streams]);
+
+  return { played, setPlayed };
 };

@@ -63,9 +63,8 @@ function Room({ id, iceServers, server, port }: RoomProps) {
   });
   const onClickClose = useOnclickClose({ container: container.current, lenght });
   const onPressEscape = usePressEscape();
-  const videoStarted = useVideoStarted({ container });
+  const { played, setPlayed } = useVideoStarted({ streams });
   const displayMediaSupported = useMemo(() => supportDisplayMedia(), []);
-  console.log(videoStarted);
   return (
     <div className={s.wrapper} style={theme.wrapper}>
       <div className={s.container} ref={container}>
@@ -95,6 +94,11 @@ function Room({ id, iceServers, server, port }: RoomProps) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const { target }: { target: HTMLVideoElement } = e as any;
                 target.play();
+                if (!played[item.target]) {
+                  const _played = { ...played };
+                  _played[item.target] = true;
+                  setPlayed(_played);
+                }
               }}
               onEmptied={(e) => {
                 log('warn', 'Empty video data', { active: item.stream.active, id: item.target });
