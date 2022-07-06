@@ -12,7 +12,13 @@ import React, { useMemo, useContext, useRef } from 'react';
 import { getRoomId, log } from '../utils/lib';
 import s from './Room.module.scss';
 import { RoomProps } from '../types/index';
-import { useConnection, useVideoDimensions, useOnclickClose, usePressEscape } from './Room.hooks';
+import {
+  useConnection,
+  useVideoDimensions,
+  useOnclickClose,
+  usePressEscape,
+  useVideoStarted,
+} from './Room.hooks';
 import ThemeContext from '../Theme.context';
 import { getRoomLink, getPathname, onClickVideo, copyLink, supportDisplayMedia } from './Room.lib';
 import CloseButton from './ui/CloseButton';
@@ -57,8 +63,9 @@ function Room({ id, iceServers, server, port }: RoomProps) {
   });
   const onClickClose = useOnclickClose({ container: container.current, lenght });
   const onPressEscape = usePressEscape();
+  const videoStarted = useVideoStarted({ container });
   const displayMediaSupported = useMemo(() => supportDisplayMedia(), []);
-
+  console.log(videoStarted);
   return (
     <div className={s.wrapper} style={theme.wrapper}>
       <div className={s.container} ref={container}>

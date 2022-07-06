@@ -10,6 +10,7 @@
  ******************************************************************************************/
 import s from './Room.module.scss';
 import c from './ui/CloseButton.module.scss';
+import { log } from '../utils/lib';
 
 export const getRoomLink = (roomId: number | string | null): string | null => {
   let res = null;
@@ -114,3 +115,20 @@ export const copyLink = (link: string) => {
 
 export const supportDisplayMedia = () =>
   typeof navigator.mediaDevices.getDisplayMedia !== 'undefined';
+
+export const checkVideosPlayed = (container: HTMLDivElement) => {
+  const { children } = container;
+  const result: Record<string, HTMLVideoElement> = {};
+  for (let i = 0; children[i]; i++) {
+    const child = children[i];
+    if (child.nodeName.toLowerCase() === 'div') {
+      const video: HTMLVideoElement | null =
+        i !== 0 ? (child.firstChild as HTMLVideoElement) : null;
+      if (video) {
+        const { id } = video;
+        result[id] = video;
+      }
+    }
+  }
+  return result;
+};

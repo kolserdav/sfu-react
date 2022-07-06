@@ -13,7 +13,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import WS from '../core/ws';
 import RTC from '../core/rtc';
 import { log } from '../utils/lib';
-import { getWidthOfItem } from './Room.lib';
+import { getWidthOfItem, checkVideosPlayed } from './Room.lib';
 import { MessageType, SendMessageArgs } from '../types/interfaces';
 import { Stream } from '../types';
 import s from './Room.module.scss';
@@ -602,4 +602,18 @@ export const useOnclickClose =
 
 export const usePressEscape = () => (e: React.KeyboardEvent<HTMLDivElement>) => {
   /** TODO */
+};
+
+export const useVideoStarted = ({ container }: { container: React.RefObject<HTMLDivElement> }) => {
+  const [videosNPlayed, setVideosNPlayed] = useState<Record<string, any>>({});
+  useEffect(() => {
+    const t = setInterval(() => {
+      const _videosNPlayed = checkVideosPlayed(container.current as HTMLDivElement);
+      setVideosNPlayed(_videosNPlayed);
+    }, 2000);
+    return () => {
+      clearInterval(t);
+    };
+  }, [container]);
+  return videosNPlayed;
 };

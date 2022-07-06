@@ -718,7 +718,7 @@ class RTC implements RTCInterface {
   }
 
   public onClosedCall: RTCInterface['onClosedCall'] = (args) => {
-    log('warn', 'Call is closed', { ...args });
+    log('info', 'Call is closed', { ...args });
   };
 
   public cleanConnections(roomId: string, userId: string) {

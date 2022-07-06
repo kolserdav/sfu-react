@@ -24,6 +24,7 @@
   "plugins": ["@typescript-eslint", "react", "prettier", "eslint-plugin-prettier"],
   "ignorePatterns": ["dist", "src/package/types/prisma.d.ts"],
   "rules": {
+    "react-hooks/rules-of-hooks": 1,
     "react/jsx-props-no-spreading": 0,
     "import/no-extraneous-dependencies": 0,
     "spaced-comment": 0,
