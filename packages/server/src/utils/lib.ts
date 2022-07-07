@@ -32,7 +32,6 @@ export const log = (type: keyof typeof LogLevel, text: string, data?: any, cons?
   } else {
     if (LogLevel[type] >= LOG_LEVEL) {
       console[type](
-        new Date(),
         type === 'error' ? Red : type === 'warn' ? Yellow : Bright,
         type,
         Reset,

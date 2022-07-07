@@ -30,12 +30,16 @@ process.on('unhandledRejection', (err: Error) => {
 
 const deleteGuest = ({ userId, roomId }: { userId: string | number; roomId: string | number }) => {
   return new Promise((resolve) => {
-    db.unitFindFirst({
+    db.roomFindFirst({
       where: {
-        id: userId.toString(),
+        id: roomId.toString(),
       },
       select: {
-        IGuest: true,
+        Guests: {
+          where: {
+            unitId: userId.toString(),
+          },
+        },
       },
     }).then((g) => {
       if (!g) {
@@ -49,18 +53,20 @@ const deleteGuest = ({ userId, roomId }: { userId: string | number; roomId: stri
         },
         data: {
           Guests: {
-            delete: {
-              id: g.IGuest[0]?.id,
-            },
+            delete: g.Guests[0]?.id
+              ? {
+                  id: g.Guests[0]?.id,
+                }
+              : undefined,
           },
           updated: new Date(),
         },
       }).then((r) => {
         if (!r) {
-          log('warn', 'Room not delete guest', { roomId, id: g.IGuest[0]?.id });
+          log('warn', 'Room not delete guest', { roomId, id: g.Guests[0]?.id });
           resolve(1);
         }
-        log('info', 'Guest deleted', { roomId, id: g.IGuest[0]?.id });
+        log('info', 'Guest deleted', { roomId, id: g.Guests[0]?.id });
         resolve(0);
       });
     });
@@ -160,11 +166,11 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
 
     const getUserId = () => {
       let userId: number | string = 0;
-      const keys = Object.keys(wss.users);
+      const keys = Object.keys(wss.sockets);
       keys.forEach((item) => {
-        const _connId = wss.users[item];
-        if (wss.sockets[connId] && _connId === connId) {
-          userId = item;
+        const sock = item.split(rtc.delimiter);
+        if (sock[1] === connId) {
+          userId = sock[0];
         }
       });
       return userId;
@@ -236,8 +242,8 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
             deleteGuest({ userId, roomId: item });
             delete wss.users[userId];
           }
-          if (wss.sockets[connId]) {
-            delete wss.sockets[connId];
+          if (wss.sockets[wss.getSocketId(userId, connId)]) {
+            delete wss.sockets[wss.getSocketId(userId, connId)];
           } else {
             log('warn', 'No deleted socket', { s: Object.keys(wss.sockets) });
           }

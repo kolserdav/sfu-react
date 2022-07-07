@@ -175,19 +175,23 @@ class RTC implements RTCInterface {
         if (s % 2 !== 0 && isNew) {
           setTimeout(() => {
             const room = rooms[roomId];
-            room.forEach((id) => {
-              ws.sendMessage({
-                type: MessageType.SET_CHANGE_UNIT,
-                id,
-                data: {
-                  target: userId,
-                  eventName: 'add',
-                  roomLenght: rooms[roomId]?.length || 0,
-                  muteds: this.muteds[roomId],
-                },
-                connId,
+            if (room) {
+              room.forEach((id) => {
+                ws.sendMessage({
+                  type: MessageType.SET_CHANGE_UNIT,
+                  id,
+                  data: {
+                    target: userId,
+                    eventName: 'add',
+                    roomLenght: rooms[roomId]?.length || 0,
+                    muteds: this.muteds[roomId],
+                  },
+                  connId,
+                });
               });
-            });
+            } else {
+              log('warn', 'Room missing in memory', { roomId });
+            }
           }, 0);
         }
         s++;

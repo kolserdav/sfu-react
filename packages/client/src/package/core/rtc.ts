@@ -47,6 +47,7 @@ class RTC implements RTCInterface {
     const peerId = this.getPeerId(roomId, target, connId);
     this.createRTC({ roomId, target, userId, connId, iceServers });
     this.onAddTrack[peerId] = (addedUserId, stream) => {
+      console.log('add track', addedUserId);
       onTrack({ addedUserId, stream, connId });
     };
     this.invite({ roomId, userId, target, connId });
@@ -290,6 +291,12 @@ class RTC implements RTCInterface {
       });
       this.localStream.getTracks().forEach((track) => {
         if (this.localStream) {
+          const sender = this.peerConnections[peerId]!.getSenders().find(
+            (item) => item.track?.kind === track.kind
+          );
+          if (sender) {
+            this.peerConnections[peerId]!.removeTrack(sender);
+          }
           this.peerConnections[peerId]!.addTrack(track, this.localStream);
         }
       });
@@ -449,10 +456,7 @@ class RTC implements RTCInterface {
       is: this.peerConnections[peerId]?.iceConnectionState,
     });
     const desc = new RTCSessionDescription(sdp);
-    if (
-      !this.peerConnections[peerId] ||
-      this.peerConnections[peerId]?.iceConnectionState === 'connected'
-    ) {
+    if (!this.peerConnections[peerId]) {
       log('warn', 'Skiping set remote desc for answer', {
         id,
         userId,

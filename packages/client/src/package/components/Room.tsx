@@ -47,6 +47,8 @@ function Room({ id, iceServers, server, port }: RoomProps) {
     changeMuted,
     muteds,
     video,
+    ws,
+    rtc,
     changeVideo,
     error,
   } = useConnection({
@@ -63,7 +65,7 @@ function Room({ id, iceServers, server, port }: RoomProps) {
   });
   const onClickClose = useOnclickClose({ container: container.current, lenght });
   const onPressEscape = usePressEscape();
-  const { played, setPlayed } = useVideoStarted({ streams });
+  const { played, setPlayed } = useVideoStarted({ streams, ws, rtc });
   const displayMediaSupported = useMemo(() => supportDisplayMedia(), []);
   return (
     <div className={s.wrapper} style={theme.wrapper}>

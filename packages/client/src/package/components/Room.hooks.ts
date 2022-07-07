@@ -178,6 +178,14 @@ export const useConnection = ({
       log('info', 'Add stream', { _stream });
     };
 
+    const getTracksMessageHandler = (
+      { id: uid, data: { userId }, connId }: SendMessageArgs<MessageType.GET_TRACKS>,
+      cb: (e: 1 | 0) => void
+    ) => {
+      console.log('getTrackHandler', { id: roomId, userId: uid, target: userId, connId });
+      rtc.addTracks({ id: roomId, userId: uid, target: userId, connId }, cb);
+    };
+
     const changeRoomUnitHandler = ({
       id: userId,
       data: { target, eventName, roomLenght, muteds: _muteds },
@@ -413,6 +421,11 @@ export const useConnection = ({
         case MessageType.ANSWER:
           rtc.handleVideoAnswerMsg(rawMessage);
           break;
+        case MessageType.GET_TRACKS:
+          getTracksMessageHandler(ws.getMessage(MessageType.GET_TRACKS, rawMessage), () => {
+            /** */
+          });
+          break;
         case MessageType.SET_ROOM:
           setRoomIsSaved(true);
           break;
@@ -487,6 +500,8 @@ export const useConnection = ({
   return {
     streams,
     lenght,
+    ws,
+    rtc,
     lostStreamHandler,
     screenShare,
     shareScreen,
@@ -604,7 +619,7 @@ export const usePressEscape = () => (e: React.KeyboardEvent<HTMLDivElement>) => 
   /** TODO */
 };
 
-export const useVideoStarted = ({ streams }: { streams: Stream[] }) => {
+export const useVideoStarted = ({ streams, ws, rtc }: { streams: Stream[]; ws: WS; rtc: RTC }) => {
   const [played, setPlayed] = useState<Record<string, boolean>>({});
   const [timeStart, setTimeStart] = useState<boolean>(false);
 
@@ -621,23 +636,39 @@ export const useVideoStarted = ({ streams }: { streams: Stream[] }) => {
 
   useEffect(() => {
     const timeout = setInterval(() => {
-      if (Object.keys(played).length === streams.length) {
+      if (Object.keys(played).length !== streams.length) {
+        const diffs: Stream[] = [];
         streams.forEach((item) => {
-          if (played[item.target]) {
-            setTimeout(() => {
-              log('info', 'Stream is played', { id: item.target });
-            }, 0);
-          } else {
-            log('warn', 'Need update stream', { id: item.target });
-            setTimeStart(true);
+          const that = Object.keys(played).find((_item) => _item === item.target.toString());
+          if (!that) {
+            diffs.push(item);
           }
+          setTimeStart(true);
+        });
+        diffs.forEach((item) => {
+          let connId = '';
+          Object.keys(rtc.peerConnections).forEach((_item) => {
+            const peer = _item.split(rtc.delimiter);
+            if (peer[1] === item.target.toString()) {
+              // eslint-disable-next-line prefer-destructuring
+              connId = peer[2];
+            }
+          });
+          ws.sendMessage({
+            type: MessageType.GET_TRACKS,
+            connId,
+            id: item.target,
+            data: {
+              userId: ws.userId,
+            },
+          });
         });
       }
     }, 1500);
     return () => {
       clearInterval(timeout);
     };
-  }, [played, streams]);
+  }, [played, streams, rtc, ws]);
 
   return { played, setPlayed };
 };

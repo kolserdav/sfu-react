@@ -44,7 +44,9 @@ export namespace DataTypes {
       muted: boolean;
       roomId: string | number;
     };
-    export type GetTracks = undefined;
+    export type GetTracks = {
+      userId: string | number;
+    };
     export type GetRoomGuests = {
       roomId: number | string;
     };
