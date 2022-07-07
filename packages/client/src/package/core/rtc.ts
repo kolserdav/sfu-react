@@ -47,7 +47,6 @@ class RTC implements RTCInterface {
     const peerId = this.getPeerId(roomId, target, connId);
     this.createRTC({ roomId, target, userId, connId, iceServers });
     this.onAddTrack[peerId] = (addedUserId, stream) => {
-      console.log('add track', addedUserId);
       onTrack({ addedUserId, stream, connId });
     };
     this.invite({ roomId, userId, target, connId });
@@ -440,7 +439,7 @@ class RTC implements RTCInterface {
       });
   };
 
-  public handleVideoAnswerMsg: RTCInterface['handleVideoAnswerMsg'] = (msg, cb) => {
+  public handleVideoAnswerMsg: RTCInterface['handleVideoAnswerMsg'] = async (msg, cb) => {
     const {
       id,
       connId,
@@ -457,6 +456,13 @@ class RTC implements RTCInterface {
     });
     const desc = new RTCSessionDescription(sdp);
     if (!this.peerConnections[peerId]) {
+      await new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(0);
+        }, 1000);
+      });
+    }
+    if (!this.peerConnections[peerId]) {
       log('warn', 'Skiping set remote desc for answer', {
         id,
         userId,
@@ -464,9 +470,6 @@ class RTC implements RTCInterface {
         peerId,
         peer: this.peerConnections[peerId],
       });
-      setTimeout(() => {
-        // this.invite({ roomId: id, userId, target, connId });
-      }, 1000);
       return;
     }
     this.peerConnections[peerId]!.setRemoteDescription(desc)

@@ -42,6 +42,15 @@ class WS implements WSInterface {
     connId: string;
     isRoom?: boolean;
   }) {
+    const oldSock = Object.keys(this.sockets).find((item) => {
+      const sock = item.split(this.delimiter);
+      return sock[0] === _id.toString();
+    });
+    if (oldSock) {
+      if (this.sockets[oldSock]) {
+        delete this.sockets[oldSock];
+      }
+    }
     this.sockets[this.getSocketId(_id.toString(), connId)] = ws;
     const id = _id.toString();
     if (!isRoom) {
@@ -120,7 +129,7 @@ class WS implements WSInterface {
         } else if (this.rooms[id] && this.sockets[this.getSocketId(id, this.rooms[id])]) {
           this.sockets[this.getSocketId(id, this.rooms[id])].send(res);
         } else {
-          log('warn', 'Send message without conected socket', {
+          log('info', 'Send message without conected socket', {
             args,
             k: Object.keys(this.sockets),
             u: this.users,

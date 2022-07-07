@@ -173,26 +173,24 @@ class RTC implements RTCInterface {
         }
         log('info', 'ontrack', { peerId, si: stream.id, isNew, userId, target });
         if (s % 2 !== 0 && isNew) {
-          setTimeout(() => {
-            const room = rooms[roomId];
-            if (room) {
-              room.forEach((id) => {
-                ws.sendMessage({
-                  type: MessageType.SET_CHANGE_UNIT,
-                  id,
-                  data: {
-                    target: userId,
-                    eventName: 'add',
-                    roomLenght: rooms[roomId]?.length || 0,
-                    muteds: this.muteds[roomId],
-                  },
-                  connId,
-                });
+          const room = rooms[roomId];
+          if (room) {
+            room.forEach((id) => {
+              ws.sendMessage({
+                type: MessageType.SET_CHANGE_UNIT,
+                id,
+                data: {
+                  target: userId,
+                  eventName: 'add',
+                  roomLenght: rooms[roomId]?.length || 0,
+                  muteds: this.muteds[roomId],
+                },
+                connId,
               });
-            } else {
-              log('warn', 'Room missing in memory', { roomId });
-            }
-          }, 0);
+            });
+          } else {
+            log('warn', 'Room missing in memory', { roomId });
+          }
         }
         s++;
       }
@@ -416,19 +414,36 @@ class RTC implements RTCInterface {
       });
   };
 
-  public handleVideoAnswerMsg: RTCInterface['handleVideoAnswerMsg'] = (msg, cb) => {
+  public handleVideoAnswerMsg: RTCInterface['handleVideoAnswerMsg'] = async (msg, cb) => {
     const {
       id,
       connId,
       data: { sdp, userId, target },
     } = msg;
     const peerId = this.getPeerId(userId, id, target, connId);
-    log('info', '----> Call recipient has accepted our call', { userId, target });
-    if (
-      !this.peerConnections[peerId] ||
-      this.peerConnections[peerId]?.signalingState === 'stable'
-    ) {
-      log('warn', 'Skiping video answer', { peerId });
+    log('info', '----> Call recipient has accepted our call', {
+      id,
+      userId,
+      target,
+      peerId,
+      s: this.peerConnections[peerId]?.connectionState,
+      is: this.peerConnections[peerId]?.iceConnectionState,
+    });
+    if (!this.peerConnections[peerId]) {
+      await new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(0);
+        }, 1000);
+      });
+    }
+    if (!this.peerConnections[peerId]) {
+      log('warn', 'Skiping set remote desc for answer', {
+        id,
+        userId,
+        target,
+        peerId,
+        peer: this.peerConnections[peerId],
+      });
       return;
     }
     const desc = new wrtc.RTCSessionDescription(sdp);

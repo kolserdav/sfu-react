@@ -182,10 +182,13 @@ export const useConnection = ({
       { id: uid, data: { userId }, connId }: SendMessageArgs<MessageType.GET_TRACKS>,
       cb: (e: 1 | 0) => void
     ) => {
-      console.log('getTrackHandler', { id: roomId, userId: uid, target: userId, connId });
+      log('info', 'getTrackHandler', { id: roomId, userId: uid, target: userId, connId });
       rtc.addTracks({ id: roomId, userId: uid, target: userId, connId }, cb);
     };
 
+    /**
+     * 'add' send server/main.js and 'added' listen on Room.hooks.ts
+     */
     const changeRoomUnitHandler = ({
       id: userId,
       data: { target, eventName, roomLenght, muteds: _muteds },

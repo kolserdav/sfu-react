@@ -180,6 +180,14 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
     ws.onclose = async () => {
       const userId = getUserId();
       if (userId) {
+        const socketId = wss.getSocketId(userId, connId);
+        if (wss.sockets[socketId]) {
+          log('log', 'Delete socket', { userId, connId });
+          delete wss.sockets[socketId];
+        } else {
+          log('warn', 'No socket delete', { s: Object.keys(wss.sockets) });
+        }
+
         db.unitUpdate({
           where: {
             id: userId.toString(),
@@ -241,11 +249,6 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
             }
             deleteGuest({ userId, roomId: item });
             delete wss.users[userId];
-          }
-          if (wss.sockets[wss.getSocketId(userId, connId)]) {
-            delete wss.sockets[wss.getSocketId(userId, connId)];
-          } else {
-            log('warn', 'No deleted socket', { s: Object.keys(wss.sockets) });
           }
         });
       }
