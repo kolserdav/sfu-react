@@ -80,7 +80,6 @@ let timeupdate = {};
  */
 async function evaluateRoom(evalPage, last = false) {
   const { page, room, uid } = evalPage;
-  const videos = await page.$$('video');
   const coeff = (USERS + ROOMS) / 1000;
   const d = Math.ceil(delay >= 1000 ? delay * coeff : (1000 * coeff) / 2);
   log('log', 'Maybe wait for page evaluate:', `${d} seconds ...`, true);
@@ -144,8 +143,13 @@ async function evaluateRoom(evalPage, last = false) {
     warnings++;
   }
   log(tUval.length === 0 ? 'info' : 'warn', `Timeupdate ${evalPage.uid}`, timeupdate, true);
+
+  const videos = await page.$$('video');
   const { length } = videos;
   count++;
+  if (length < USERS) {
+    await page.waitForTimeout(((USERS * ROOMS) / 2) * 1000);
+  }
   if (length < USERS) {
     log('error', 'Failed test', { length, USERS, count, room, uid, url: page.url() }, true);
     errors++;

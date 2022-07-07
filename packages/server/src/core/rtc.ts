@@ -74,14 +74,20 @@ class RTC implements RTCInterface {
       event: RTCPeerConnectionIceEvent
     ) {
       if (event.candidate) {
-        log('log', '* Outgoing ICE candidate:', { roomId, userId, target });
+        log('info', '* Outgoing ICE candidate:', {
+          roomId,
+          userId,
+          target,
+          connId,
+          d: Object.keys(core.peerConnections),
+        });
         core.ws.sendMessage({
           type: MessageType.CANDIDATE,
           id: roomId,
           data: {
             candidate: event.candidate,
             userId,
-            target: 0,
+            target,
           },
           connId,
         });
@@ -105,6 +111,10 @@ class RTC implements RTCInterface {
       };
     this.peerConnections[peerId]!.onicegatheringstatechange =
       function handleICEGatheringStateChangeEvent(ev: Event) {
+        if (!core.peerConnections[peerId]) {
+          log('warn', 'On ice gathering state whitout peer connection', { peerId });
+          return;
+        }
         log(
           'log',
           `*** ICE gathering state changed to: ${core.peerConnections[peerId]!.iceGatheringState}`,
@@ -113,6 +123,10 @@ class RTC implements RTCInterface {
       };
     this.peerConnections[peerId]!.onsignalingstatechange =
       function handleSignalingStateChangeEvent() {
+        if (!core.peerConnections[peerId]) {
+          log('warn', 'On signalling state change without peer connection', { peerId });
+          return;
+        }
         log(
           'info',
           '! WebRTC signaling state changed to:',
@@ -125,6 +139,10 @@ class RTC implements RTCInterface {
         }
       };
     this.peerConnections[peerId]!.onnegotiationneeded = function handleNegotiationNeededEvent() {
+      if (!core.peerConnections[peerId]) {
+        log('warn', 'On negotiation needed without peer connection', { peerId });
+        return;
+      }
       log('info', '--> Creating offer', {
         roomId,
         userId,
@@ -142,7 +160,11 @@ class RTC implements RTCInterface {
             return 1;
           }
           return core.peerConnections[peerId]!.setLocalDescription(offer).catch((err) => {
-            log('error', 'Error create local description', err);
+            log('error', 'Error create local description', {
+              err,
+              peerId,
+              peer: core.peerConnections[peerId],
+            });
           });
         })
         .then(() => {
@@ -155,7 +177,7 @@ class RTC implements RTCInterface {
               data: {
                 sdp: localDescription,
                 userId,
-                target: 0,
+                target,
               },
               connId,
             });
@@ -175,19 +197,21 @@ class RTC implements RTCInterface {
         if (s % 2 !== 0 && isNew) {
           const room = rooms[roomId];
           if (room) {
-            room.forEach((id) => {
-              ws.sendMessage({
-                type: MessageType.SET_CHANGE_UNIT,
-                id,
-                data: {
-                  target: userId,
-                  eventName: 'add',
-                  roomLenght: rooms[roomId]?.length || 0,
-                  muteds: this.muteds[roomId],
-                },
-                connId,
+            setTimeout(() => {
+              room.forEach((id) => {
+                ws.sendMessage({
+                  type: MessageType.SET_CHANGE_UNIT,
+                  id,
+                  data: {
+                    target: userId,
+                    eventName: 'add',
+                    roomLenght: rooms[roomId]?.length || 0,
+                    muteds: this.muteds[roomId],
+                  },
+                  connId,
+                });
               });
-            });
+            }, 0);
           } else {
             log('warn', 'Room missing in memory', { roomId });
           }
@@ -264,7 +288,7 @@ class RTC implements RTCInterface {
         }
       })
       .catch((e) => {
-        log('error', 'Set candidate error', {
+        log('error', 'Set ice candidate error', {
           error: e,
           connId,
           id,

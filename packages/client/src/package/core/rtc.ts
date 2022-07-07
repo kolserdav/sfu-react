@@ -36,6 +36,7 @@ class RTC implements RTCInterface {
     connId,
     onTrack,
     iceServers,
+    eventName,
   }: {
     roomId: string | number;
     userId: string | number;
@@ -43,10 +44,12 @@ class RTC implements RTCInterface {
     connId: string;
     onTrack: (args: { addedUserId: string | number; stream: MediaStream; connId: string }) => void;
     iceServers: RTCConfiguration['iceServers'];
+    eventName: 'first' | 'check' | 'back';
   }) {
     const peerId = this.getPeerId(roomId, target, connId);
     this.createRTC({ roomId, target, userId, connId, iceServers });
     this.onAddTrack[peerId] = (addedUserId, stream) => {
+      log('info', 'On track peer', { userId, target, connId, eventName });
       onTrack({ addedUserId, stream, connId });
     };
     this.invite({ roomId, userId, target, connId });
@@ -133,27 +136,38 @@ class RTC implements RTCInterface {
       };
     this.peerConnections[peerId]!.onicegatheringstatechange =
       function handleICEGatheringStateChangeEvent(ev: Event) {
+        if (!core.peerConnections[peerId]) {
+          log('warn', 'On ice gathering state without peer connection', { peerId });
+          return;
+        }
         log(
           'log',
           `*** ICE gathering state changed to: ${core.peerConnections[peerId]!.iceGatheringState}`,
           { peerId }
         );
       };
-    this.peerConnections[peerId]!.onsignalingstatechange = function handleSignalingStateChangeEvent(
-      ev: Event
-    ) {
-      log(
-        'info',
-        '! WebRTC signaling state changed to:',
-        core.peerConnections[peerId]!.signalingState
-      );
-      switch (core.peerConnections[peerId]!.signalingState) {
-        case 'closed':
-          core.onClosedCall({ roomId, userId, target, connId });
-          break;
-      }
-    };
+    this.peerConnections[peerId]!.onsignalingstatechange =
+      function handleSignalingStateChangeEvent() {
+        if (!core.peerConnections[peerId]) {
+          log('warn', 'On signalling state change without peer connection', { peerId });
+          return;
+        }
+        log(
+          'info',
+          '! WebRTC signaling state changed to:',
+          core.peerConnections[peerId]!.signalingState
+        );
+        switch (core.peerConnections[peerId]!.signalingState) {
+          case 'closed':
+            core.onClosedCall({ roomId, userId, target, connId });
+            break;
+        }
+      };
     this.peerConnections[peerId]!.onnegotiationneeded = function handleNegotiationNeededEvent() {
+      if (!core.peerConnections[peerId]) {
+        log('warn', 'On negotiation needed without peer connection', { peerId });
+        return;
+      }
       log('info', '--> Creating offer', {
         roomId,
         userId,

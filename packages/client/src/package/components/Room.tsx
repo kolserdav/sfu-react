@@ -65,7 +65,14 @@ function Room({ id, iceServers, server, port }: RoomProps) {
   });
   const onClickClose = useOnclickClose({ container: container.current, lenght });
   const onPressEscape = usePressEscape();
-  const { played, setPlayed } = useVideoStarted({ streams, ws, rtc });
+  const { played, setPlayed } = useVideoStarted({
+    streams,
+    ws,
+    rtc,
+    container: container.current,
+    roomId,
+    lostStreamHandler,
+  });
   const displayMediaSupported = useMemo(() => supportDisplayMedia(), []);
   return (
     <div className={s.wrapper} style={theme.wrapper}>
@@ -118,7 +125,11 @@ function Room({ id, iceServers, server, port }: RoomProps) {
                 log('warn', 'End video data', { active: item.stream.active, id: item.target });
               }}
               onWaiting={(e) => {
-                log('warn', 'Waiting video data', { active: item.stream.active, id: item.target });
+                log('warn', 'Waiting video data', {
+                  active: item.stream.active,
+                  id: item.target,
+                  t: (e.target as HTMLVideoElement).played,
+                });
               }}
             />
             <div className={s.muted}>

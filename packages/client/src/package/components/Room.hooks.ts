@@ -178,14 +178,6 @@ export const useConnection = ({
       log('info', 'Add stream', { _stream });
     };
 
-    const getTracksMessageHandler = (
-      { id: uid, data: { userId }, connId }: SendMessageArgs<MessageType.GET_TRACKS>,
-      cb: (e: 1 | 0) => void
-    ) => {
-      log('info', 'getTrackHandler', { id: roomId, userId: uid, target: userId, connId });
-      rtc.addTracks({ id: roomId, userId: uid, target: userId, connId }, cb);
-    };
-
     /**
      * 'add' send server/main.js and 'added' listen on Room.hooks.ts
      */
@@ -220,6 +212,7 @@ export const useConnection = ({
                 addStream({ target: addedUserId, stream, connId });
               },
               iceServers,
+              eventName: 'back',
             });
             rtc.addTracks({ id: roomId, userId, target, connId }, (e) => {
               if (!e) {
@@ -287,7 +280,7 @@ export const useConnection = ({
           const peerId = rtc.getPeerId(roomId, item, connId);
           const _isExists = _streams.filter((_item) => item === _item.target);
           if (!_isExists[0]) {
-            log('warn', 'Check new user', { item });
+            log('info', 'Check new user', { item });
             rtc.createPeerConnection({
               roomId,
               target: item,
@@ -297,9 +290,10 @@ export const useConnection = ({
                 addStream({ target: addedUserId, stream, connId });
               },
               iceServers,
+              eventName: 'check',
             });
             rtc.addTracks({ id: roomId, userId: id, target: item, connId }, (e) => {
-              log('warn', 'Change room guests connection', {
+              log('info', 'Change room guests connection', {
                 roomId,
                 target: item,
                 userId: id,
@@ -383,6 +377,7 @@ export const useConnection = ({
               addStream({ target: addedUserId, stream, connId });
             },
             iceServers,
+            eventName: 'first',
           });
           rtc.addTracks({ userId: ws.userId, id: roomId, connId, target: 0 }, (e) => {
             if (!e) {
@@ -423,11 +418,6 @@ export const useConnection = ({
           break;
         case MessageType.ANSWER:
           rtc.handleVideoAnswerMsg(rawMessage);
-          break;
-        case MessageType.GET_TRACKS:
-          getTracksMessageHandler(ws.getMessage(MessageType.GET_TRACKS, rawMessage), () => {
-            /** */
-          });
           break;
         case MessageType.SET_ROOM:
           setRoomIsSaved(true);
@@ -480,21 +470,20 @@ export const useConnection = ({
       //
     });
     let _streams: Stream[] = storeStreams.getState().streams as Stream[];
-    if (_streams.length !== streams.length && !shareScreen) {
-      interval = setInterval(() => {
-        _streams = storeStreams.getState().streams as Stream[];
-        if (_streams.length !== streams.length) {
-          ws.sendMessage({
-            type: MessageType.GET_ROOM_GUESTS,
-            id,
-            connId: connectionId,
-            data: {
-              roomId,
-            },
-          });
-        }
-      }, 10000);
-    }
+    interval = setInterval(() => {
+      _streams = storeStreams.getState().streams as Stream[];
+      if (_streams.length !== lenght) {
+        ws.sendMessage({
+          type: MessageType.GET_ROOM_GUESTS,
+          id,
+          connId: connectionId,
+          data: {
+            roomId,
+          },
+        });
+      }
+    }, 1000);
+
     return () => {
       clearTimeout(interval);
     };
@@ -622,7 +611,21 @@ export const usePressEscape = () => (e: React.KeyboardEvent<HTMLDivElement>) => 
   /** TODO */
 };
 
-export const useVideoStarted = ({ streams, ws, rtc }: { streams: Stream[]; ws: WS; rtc: RTC }) => {
+export const useVideoStarted = ({
+  roomId,
+  streams,
+  ws,
+  rtc,
+  container,
+  lostStreamHandler,
+}: {
+  roomId: string | number;
+  streams: Stream[];
+  ws: WS;
+  rtc: RTC;
+  container: HTMLDivElement | null;
+  lostStreamHandler: (args: { target: string | number; connId: string }) => void;
+}) => {
   const [played, setPlayed] = useState<Record<string, boolean>>({});
   const [timeStart, setTimeStart] = useState<boolean>(false);
 
@@ -649,29 +652,17 @@ export const useVideoStarted = ({ streams, ws, rtc }: { streams: Stream[]; ws: W
           setTimeStart(true);
         });
         diffs.forEach((item) => {
-          let connId = '';
-          Object.keys(rtc.peerConnections).forEach((_item) => {
-            const peer = _item.split(rtc.delimiter);
-            if (peer[1] === item.target.toString()) {
-              // eslint-disable-next-line prefer-destructuring
-              connId = peer[2];
-            }
-          });
-          ws.sendMessage({
-            type: MessageType.GET_TRACKS,
-            connId,
-            id: item.target,
-            data: {
-              userId: ws.userId,
-            },
+          lostStreamHandler({
+            target: item.target,
+            connId: item.connId,
           });
         });
       }
-    }, 1500);
+    }, 1000);
     return () => {
       clearInterval(timeout);
     };
-  }, [played, streams, rtc, ws]);
+  }, [played, streams, lostStreamHandler]);
 
   return { played, setPlayed };
 };
