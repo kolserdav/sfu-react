@@ -35,6 +35,7 @@ export enum MessageType {
   SET_CHANGE_UNIT = 'SET_CHANGE_UNIT',
   GET_MUTE = 'GET_MUTE',
   SET_MUTE = 'SET_MUTE',
+  GET_NEED_RECONNECT = 'GET_NEED_RECONNECT',
 }
 
 export namespace DataTypes {
@@ -42,6 +43,9 @@ export namespace DataTypes {
     export type GetMute = {
       muted: boolean;
       roomId: string | number;
+    };
+    export type GetNeedReconnect = {
+      userId: string | number;
     };
     export type GetRoomGuests = {
       roomId: number | string;
@@ -97,6 +101,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.Candidate
     : T extends MessageType.GET_MUTE
     ? DataTypes.MessageTypes.GetMute
+    : T extends MessageType.GET_NEED_RECONNECT
+    ? DataTypes.MessageTypes.GetNeedReconnect
     : T extends MessageType.GET_USER_ID
     ? DataTypes.MessageTypes.GetGuestId
     : T extends MessageType.SET_USER_ID

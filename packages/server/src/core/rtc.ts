@@ -430,7 +430,7 @@ class RTC implements RTCInterface {
           userId,
           target,
           connId,
-          desc,
+          desc: desc !== undefined,
         });
         if (cb) {
           cb(null);

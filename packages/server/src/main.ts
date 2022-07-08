@@ -198,6 +198,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
           },
         });
         log('info', 'User disconnected', userId);
+
         const roomKeys = Object.keys(rtc.rooms);
         roomKeys.forEach((item) => {
           const index = rtc.rooms[item].indexOf(userId);

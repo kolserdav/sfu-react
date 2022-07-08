@@ -93,6 +93,11 @@ function Room({ id, iceServers, server, port }: RoomProps) {
                   });
                 } else {
                   setVideoDimensions(e, item.stream);
+                  if (!played[item.target]) {
+                    const _played = { ...played };
+                    _played[item.target] = true;
+                    setPlayed(_played);
+                  }
                 }
               }}
               onClick={onClickVideo}

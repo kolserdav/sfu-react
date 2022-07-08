@@ -8,6 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Mon Jul 04 2022 10:58:51 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
+import 'webrtc-adapter';
 import { RTCInterface, MessageType } from '../types/interfaces';
 import { log } from '../utils/lib';
 import WS from './ws';
@@ -18,6 +19,11 @@ class RTC implements RTCInterface {
   public readonly delimiter = '_';
 
   public localTrackSettings: MediaTrackSettings | null = null;
+
+  // eslint-disable-next-line class-methods-use-this
+  public lostStreamHandler: (args: { target: number | string; connId: string }) => void = () => {
+    /** */
+  };
 
   private ws: WS;
 
@@ -91,6 +97,10 @@ class RTC implements RTCInterface {
         case 'closed':
         case 'disconnected':
         case 'failed':
+          this.lostStreamHandler({
+            target: peerId.split(this.delimiter)[1],
+            connId: peerId.split(this.delimiter)[2],
+          });
           log('warn', 'Failed connection state', { cs: currentTarget.connectionState, peerId });
           break;
         default:

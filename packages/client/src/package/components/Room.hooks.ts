@@ -89,17 +89,27 @@ export const useConnection = ({
     if (!roomId) {
       return;
     }
-    const peerId = rtc.getPeerId(roomId, target, connId);
+    let _connId = connId;
+    Object.keys(rtc.peerConnections).forEach((item) => {
+      const peer = item.split(rtc.delimiter);
+      if (peer[1] === target.toString()) {
+        // eslint-disable-next-line prefer-destructuring
+        _connId = peer[2];
+      }
+    });
+    const peerId = rtc.getPeerId(roomId, target, _connId);
     if (!rtc.peerConnections[peerId]) {
       log('info', 'Lost stream handler without peer connection', { peerId });
       return;
     }
-    rtc.closeVideoCall({ roomId, userId: ws.userId, target, connId });
+    rtc.closeVideoCall({ roomId, userId: ws.userId, target, connId: _connId });
     const _stream = streams.find((item) => item.target === target);
     if (_stream) {
       storeStreams.dispatch(changeStreams({ type: 'delete', stream: _stream }));
     }
   };
+
+  rtc.lostStreamHandler = lostStreamHandler;
 
   /**
    * Change media source
@@ -255,6 +265,16 @@ export const useConnection = ({
         data: { muteds: _muteds },
       } = args;
       setMuteds(_muteds);
+    };
+
+    const needReconnectHandler = ({
+      data: { userId },
+      connId,
+    }: SendMessageArgs<MessageType.GET_NEED_RECONNECT>) => {
+      lostStreamHandler({
+        connId,
+        target: userId,
+      });
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -421,6 +441,9 @@ export const useConnection = ({
           break;
         case MessageType.SET_ROOM:
           setRoomIsSaved(true);
+          break;
+        case MessageType.GET_NEED_RECONNECT:
+          needReconnectHandler(rawMessage);
           break;
         case MessageType.SET_CHANGE_UNIT:
           changeRoomUnitHandler(ws.getMessage(MessageType.SET_CHANGE_UNIT, rawMessage));
@@ -628,10 +651,11 @@ export const useVideoStarted = ({
 }) => {
   const [played, setPlayed] = useState<Record<string, boolean>>({});
   const [timeStart, setTimeStart] = useState<boolean>(false);
+  const [attempts, setAttempts] = useState<Record<string | number, number>>({});
 
   useEffect(() => {
-    if (timeStart) {
-      setTimeStart(false);
+    if (!timeStart) {
+      setTimeStart(true);
       const _played = { ...played };
       streams.forEach((item) => {
         _played[item.target] = false;
@@ -642,27 +666,54 @@ export const useVideoStarted = ({
 
   useEffect(() => {
     const timeout = setInterval(() => {
-      if (Object.keys(played).length !== streams.length) {
+      if (timeStart) {
         const diffs: Stream[] = [];
-        streams.forEach((item) => {
-          const that = Object.keys(played).find((_item) => _item === item.target.toString());
-          if (!that) {
-            diffs.push(item);
-          }
-          setTimeStart(true);
-        });
-        diffs.forEach((item) => {
-          lostStreamHandler({
-            target: item.target,
-            connId: item.connId,
+        if (Object.keys(played).length === streams.length) {
+          streams.forEach((item) => {
+            const that = Object.keys(played).find(
+              (_item) => _item === item.target.toString() && !played[_item]
+            );
+            if (that) {
+              diffs.push(item);
+            }
           });
+        } else {
+          streams.forEach((item) => {
+            const that = Object.keys(played).find((_item) => _item === item.target.toString());
+            if (!that) {
+              diffs.push(item);
+            }
+          });
+        }
+        diffs.forEach((item) => {
+          const _attempts = { ...attempts };
+          if (_attempts[item.target] <= diffs.length * 2) {
+            lostStreamHandler({
+              target: item.target,
+              connId: item.connId,
+            });
+          } else {
+            _attempts[item.target] = 0;
+            ws.sendMessage({
+              type: MessageType.GET_NEED_RECONNECT,
+              id: item.target,
+              connId: item.connId,
+              data: { userId: ws.userId },
+            });
+          }
+          if (_attempts[item.target] !== undefined) {
+            _attempts[item.target] += 1;
+          } else {
+            _attempts[item.target] = 1;
+          }
+          setAttempts(_attempts);
         });
       }
     }, 1000);
     return () => {
       clearInterval(timeout);
     };
-  }, [played, streams, lostStreamHandler]);
+  }, [played, streams, lostStreamHandler, attempts, ws, timeStart]);
 
   return { played, setPlayed };
 };
