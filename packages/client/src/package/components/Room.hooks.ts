@@ -126,6 +126,7 @@ export const useConnection = ({
         setLocalShareScreen(shareScreen);
         setRoomIsSaved(false);
         storeStreams.dispatch(changeStreams({ type: 'clean', stream: selfStream }));
+        rtc.roomLength = 0;
         setLenght(0);
         setSelfStream(null);
       } else {
@@ -199,6 +200,7 @@ export const useConnection = ({
       if (lenght !== roomLenght) {
         setLenght(roomLenght);
       }
+      rtc.muteds = _muteds;
       setMuteds(_muteds);
       //alert(`${eventName} ${target}`);
       switch (eventName) {
@@ -264,6 +266,7 @@ export const useConnection = ({
       const {
         data: { muteds: _muteds },
       } = args;
+      rtc.muteds = _muteds;
       setMuteds(_muteds);
     };
 
@@ -290,10 +293,12 @@ export const useConnection = ({
         data: { roomUsers, muteds: _muteds },
         connId,
       } = ws.getMessage(MessageType.SET_ROOM_GUESTS, rawMessage);
+      rtc.muteds = _muteds;
       setMuteds(_muteds);
       const _streams: Stream[] = storeStreams.getState().streams as Stream[];
       log('info', 'onChangeRoomGuests', { roomUsers, id, st: _streams.map((i) => i.target) });
       // Add remote streams
+      rtc.roomLength = roomUsers.length;
       setLenght(roomUsers.length);
       roomUsers.forEach((item) => {
         if (item !== id) {
@@ -685,29 +690,48 @@ export const useVideoStarted = ({
             }
           });
         }
+        const _attempts = { ...attempts };
         diffs.forEach((item) => {
-          const _attempts = { ...attempts };
-          if (_attempts[item.target] <= diffs.length * 2) {
-            lostStreamHandler({
-              target: item.target,
-              connId: item.connId,
-            });
-          } else {
+          if (!_attempts[item.target]) {
             _attempts[item.target] = 0;
-            ws.sendMessage({
-              type: MessageType.GET_NEED_RECONNECT,
-              id: item.target,
-              connId: item.connId,
-              data: { userId: ws.userId },
-            });
+          }
+          if (_attempts[item.target] <= rtc.roomLength) {
+            if (!played[item.target]) {
+              ws.sendMessage({
+                type: MessageType.SET_CHANGE_UNIT,
+                id: ws.userId,
+                connId: item.connId,
+                data: {
+                  target: item.target,
+                  roomLenght: rtc.roomLength,
+                  muteds: rtc.muteds,
+                  eventName: 'delete',
+                },
+              });
+            }
+          } else {
+            log('info', `${_attempts[item.target]} attempts of restart:`, { target: item.target });
+            if (!played[item.target]) {
+              ws.sendMessage({
+                type: MessageType.SET_CHANGE_UNIT,
+                id: item.target,
+                connId: item.connId,
+                data: {
+                  target: ws.userId,
+                  roomLenght: rtc.roomLength,
+                  muteds: rtc.muteds,
+                  eventName: 'delete',
+                },
+              });
+            }
           }
           if (_attempts[item.target] !== undefined) {
             _attempts[item.target] += 1;
           } else {
             _attempts[item.target] = 1;
           }
-          setAttempts(_attempts);
         });
+        setAttempts(_attempts);
       }
     }, 1000);
     return () => {

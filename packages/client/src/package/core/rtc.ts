@@ -18,6 +18,10 @@ class RTC implements RTCInterface {
 
   public readonly delimiter = '_';
 
+  public roomLength = 0;
+
+  public muteds: string[] = [];
+
   public localTrackSettings: MediaTrackSettings | null = null;
 
   // eslint-disable-next-line class-methods-use-this
