@@ -41,3 +41,13 @@ declare module 'wrtc' {
     nonstandard,
   };
 }
+
+declare module '../../node-webrtc/lib/index' {
+  export {
+    RTCPeerConnection,
+    RTCSessionDescription,
+    MediaStream,
+    MediaStreamTrack,
+    RTCIceCandidate,
+  };
+}

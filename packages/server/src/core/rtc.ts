@@ -298,15 +298,6 @@ class RTC implements RTCInterface {
           ice: this.peerConnections[peerId]?.iceConnectionState,
           ss: this.peerConnections[peerId]?.signalingState,
         });
-        this.ws.sendMessage({
-          type: MessageType.SET_ERROR,
-          id: userId,
-          connId,
-          data: {
-            message: 'Set candidate error',
-            context: { id, type: MessageType.SET_ERROR, data: { userId, target }, connId },
-          },
-        });
         if (cb) {
           cb(null);
         }
@@ -548,14 +539,16 @@ class RTC implements RTCInterface {
       return;
     }
     log('info', '| Closing the call', { peerId, k: Object.keys(this.peerConnections).length });
-    this.peerConnections[peerId]!.onicecandidate = null;
-    this.peerConnections[peerId]!.oniceconnectionstatechange = null;
-    this.peerConnections[peerId]!.onicegatheringstatechange = null;
-    this.peerConnections[peerId]!.onsignalingstatechange = null;
-    this.peerConnections[peerId]!.onnegotiationneeded = null;
-    this.peerConnections[peerId]!.ontrack = null;
-    this.peerConnections[peerId]!.close();
-    delete this.peerConnections[peerId];
+    setTimeout(() => {
+      this.peerConnections[peerId]!.onicecandidate = null;
+      this.peerConnections[peerId]!.oniceconnectionstatechange = null;
+      this.peerConnections[peerId]!.onicegatheringstatechange = null;
+      this.peerConnections[peerId]!.onsignalingstatechange = null;
+      this.peerConnections[peerId]!.onnegotiationneeded = null;
+      this.peerConnections[peerId]!.ontrack = null;
+      this.peerConnections[peerId]!.close();
+      delete this.peerConnections[peerId];
+    }, 1000);
   };
 
   public async addUserToRoom({

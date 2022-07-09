@@ -223,18 +223,15 @@ class RTC implements RTCInterface {
           }
         });
     };
-    let s = 1;
     this.peerConnections[peerId]!.ontrack = (e) => {
       const stream = e.streams[0];
       log('info', 'On add remote stream', {
         target,
         streamId: stream.id,
+        tracks: stream.getTracks(),
       });
-      if (target) {
-        if (s % 2 !== 0) {
-          this.onAddTrack[this.getPeerId(roomId, target, connId)](target, stream);
-        }
-        s++;
+      if (target.toString() !== '0') {
+        this.onAddTrack[this.getPeerId(roomId, target, connId)](target, stream);
       }
     };
   };

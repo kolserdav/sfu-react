@@ -19,6 +19,7 @@ type UnwrapTuple<Tuple extends readonly unknown[]> = {
 export type Unit = {
   id: string
   name: string | null
+  online: boolean
   updated: Date
   created: Date
 }
@@ -43,6 +44,7 @@ export type Guest = {
   id: number
   unitId: string
   roomId: string
+  updated: Date
   created: Date
 }
 
@@ -990,6 +992,7 @@ export namespace Prisma {
   export type UnitMinAggregateOutputType = {
     id: string | null
     name: string | null
+    online: boolean | null
     updated: Date | null
     created: Date | null
   }
@@ -997,6 +1000,7 @@ export namespace Prisma {
   export type UnitMaxAggregateOutputType = {
     id: string | null
     name: string | null
+    online: boolean | null
     updated: Date | null
     created: Date | null
   }
@@ -1004,6 +1008,7 @@ export namespace Prisma {
   export type UnitCountAggregateOutputType = {
     id: number
     name: number
+    online: number
     updated: number
     created: number
     _all: number
@@ -1013,6 +1018,7 @@ export namespace Prisma {
   export type UnitMinAggregateInputType = {
     id?: true
     name?: true
+    online?: true
     updated?: true
     created?: true
   }
@@ -1020,6 +1026,7 @@ export namespace Prisma {
   export type UnitMaxAggregateInputType = {
     id?: true
     name?: true
+    online?: true
     updated?: true
     created?: true
   }
@@ -1027,6 +1034,7 @@ export namespace Prisma {
   export type UnitCountAggregateInputType = {
     id?: true
     name?: true
+    online?: true
     updated?: true
     created?: true
     _all?: true
@@ -1113,6 +1121,7 @@ export namespace Prisma {
   export type UnitGroupByOutputType = {
     id: string
     name: string | null
+    online: boolean
     updated: Date
     created: Date
     _count: UnitCountAggregateOutputType | null
@@ -1137,6 +1146,7 @@ export namespace Prisma {
   export type UnitSelect = {
     id?: boolean
     name?: boolean
+    online?: boolean
     updated?: boolean
     created?: boolean
     MyRooms?: boolean | RoomFindManyArgs
@@ -2869,6 +2879,7 @@ export namespace Prisma {
     id: number | null
     unitId: string | null
     roomId: string | null
+    updated: Date | null
     created: Date | null
   }
 
@@ -2876,6 +2887,7 @@ export namespace Prisma {
     id: number | null
     unitId: string | null
     roomId: string | null
+    updated: Date | null
     created: Date | null
   }
 
@@ -2883,6 +2895,7 @@ export namespace Prisma {
     id: number
     unitId: number
     roomId: number
+    updated: number
     created: number
     _all: number
   }
@@ -2900,6 +2913,7 @@ export namespace Prisma {
     id?: true
     unitId?: true
     roomId?: true
+    updated?: true
     created?: true
   }
 
@@ -2907,6 +2921,7 @@ export namespace Prisma {
     id?: true
     unitId?: true
     roomId?: true
+    updated?: true
     created?: true
   }
 
@@ -2914,6 +2929,7 @@ export namespace Prisma {
     id?: true
     unitId?: true
     roomId?: true
+    updated?: true
     created?: true
     _all?: true
   }
@@ -3014,6 +3030,7 @@ export namespace Prisma {
     id: number
     unitId: string
     roomId: string
+    updated: Date
     created: Date
     _count: GuestCountAggregateOutputType | null
     _avg: GuestAvgAggregateOutputType | null
@@ -3042,6 +3059,7 @@ export namespace Prisma {
     roomId?: boolean
     Unit?: boolean | UnitArgs
     Room?: boolean | RoomArgs
+    updated?: boolean
     created?: boolean
   }
 
@@ -4778,6 +4796,7 @@ export namespace Prisma {
   export const UnitScalarFieldEnum: {
     id: 'id',
     name: 'name',
+    online: 'online',
     updated: 'updated',
     created: 'created'
   };
@@ -4800,6 +4819,7 @@ export namespace Prisma {
     id: 'id',
     unitId: 'unitId',
     roomId: 'roomId',
+    updated: 'updated',
     created: 'created'
   };
 
@@ -4837,6 +4857,7 @@ export namespace Prisma {
     NOT?: Enumerable<UnitWhereInput>
     id?: StringFilter | string
     name?: StringNullableFilter | string | null
+    online?: BoolFilter | boolean
     updated?: DateTimeFilter | Date | string
     created?: DateTimeFilter | Date | string
     MyRooms?: RoomListRelationFilter
@@ -4847,6 +4868,7 @@ export namespace Prisma {
   export type UnitOrderByWithRelationInput = {
     id?: SortOrder
     name?: SortOrder
+    online?: SortOrder
     updated?: SortOrder
     created?: SortOrder
     MyRooms?: RoomOrderByRelationAggregateInput
@@ -4861,6 +4883,7 @@ export namespace Prisma {
   export type UnitOrderByWithAggregationInput = {
     id?: SortOrder
     name?: SortOrder
+    online?: SortOrder
     updated?: SortOrder
     created?: SortOrder
     _count?: UnitCountOrderByAggregateInput
@@ -4874,6 +4897,7 @@ export namespace Prisma {
     NOT?: Enumerable<UnitScalarWhereWithAggregatesInput>
     id?: StringWithAggregatesFilter | string
     name?: StringNullableWithAggregatesFilter | string | null
+    online?: BoolWithAggregatesFilter | boolean
     updated?: DateTimeWithAggregatesFilter | Date | string
     created?: DateTimeWithAggregatesFilter | Date | string
   }
@@ -4938,6 +4962,7 @@ export namespace Prisma {
     roomId?: StringFilter | string
     Unit?: XOR<UnitRelationFilter, UnitWhereInput>
     Room?: XOR<RoomRelationFilter, RoomWhereInput>
+    updated?: DateTimeFilter | Date | string
     created?: DateTimeFilter | Date | string
   }
 
@@ -4947,6 +4972,7 @@ export namespace Prisma {
     roomId?: SortOrder
     Unit?: UnitOrderByWithRelationInput
     Room?: RoomOrderByWithRelationInput
+    updated?: SortOrder
     created?: SortOrder
   }
 
@@ -4959,6 +4985,7 @@ export namespace Prisma {
     id?: SortOrder
     unitId?: SortOrder
     roomId?: SortOrder
+    updated?: SortOrder
     created?: SortOrder
     _count?: GuestCountOrderByAggregateInput
     _avg?: GuestAvgOrderByAggregateInput
@@ -4974,6 +5001,7 @@ export namespace Prisma {
     id?: IntWithAggregatesFilter | number
     unitId?: StringWithAggregatesFilter | string
     roomId?: StringWithAggregatesFilter | string
+    updated?: DateTimeWithAggregatesFilter | Date | string
     created?: DateTimeWithAggregatesFilter | Date | string
   }
 
@@ -5035,6 +5063,7 @@ export namespace Prisma {
   export type UnitCreateInput = {
     id: string
     name?: string | null
+    online?: boolean
     updated?: Date | string
     created?: Date | string
     MyRooms?: RoomCreateNestedManyWithoutUnitInput
@@ -5045,6 +5074,7 @@ export namespace Prisma {
   export type UnitUncheckedCreateInput = {
     id: string
     name?: string | null
+    online?: boolean
     updated?: Date | string
     created?: Date | string
     MyRooms?: RoomUncheckedCreateNestedManyWithoutUnitInput
@@ -5055,6 +5085,7 @@ export namespace Prisma {
   export type UnitUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
+    online?: BoolFieldUpdateOperationsInput | boolean
     updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
     MyRooms?: RoomUpdateManyWithoutUnitNestedInput
@@ -5065,6 +5096,7 @@ export namespace Prisma {
   export type UnitUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
+    online?: BoolFieldUpdateOperationsInput | boolean
     updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
     MyRooms?: RoomUncheckedUpdateManyWithoutUnitNestedInput
@@ -5075,6 +5107,7 @@ export namespace Prisma {
   export type UnitCreateManyInput = {
     id: string
     name?: string | null
+    online?: boolean
     updated?: Date | string
     created?: Date | string
   }
@@ -5082,6 +5115,7 @@ export namespace Prisma {
   export type UnitUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
+    online?: BoolFieldUpdateOperationsInput | boolean
     updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -5089,6 +5123,7 @@ export namespace Prisma {
   export type UnitUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
+    online?: BoolFieldUpdateOperationsInput | boolean
     updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -5159,6 +5194,7 @@ export namespace Prisma {
   export type GuestCreateInput = {
     Unit: UnitCreateNestedOneWithoutIGuestInput
     Room: RoomCreateNestedOneWithoutGuestsInput
+    updated?: Date | string
     created?: Date | string
   }
 
@@ -5166,12 +5202,14 @@ export namespace Prisma {
     id?: number
     unitId: string
     roomId: string
+    updated?: Date | string
     created?: Date | string
   }
 
   export type GuestUpdateInput = {
     Unit?: UnitUpdateOneRequiredWithoutIGuestNestedInput
     Room?: RoomUpdateOneRequiredWithoutGuestsNestedInput
+    updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -5179,6 +5217,7 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     unitId?: StringFieldUpdateOperationsInput | string
     roomId?: StringFieldUpdateOperationsInput | string
+    updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -5186,10 +5225,12 @@ export namespace Prisma {
     id?: number
     unitId: string
     roomId: string
+    updated?: Date | string
     created?: Date | string
   }
 
   export type GuestUpdateManyMutationInput = {
+    updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -5197,6 +5238,7 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     unitId?: StringFieldUpdateOperationsInput | string
     roomId?: StringFieldUpdateOperationsInput | string
+    updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -5286,6 +5328,11 @@ export namespace Prisma {
     not?: NestedStringNullableFilter | string | null
   }
 
+  export type BoolFilter = {
+    equals?: boolean
+    not?: NestedBoolFilter | boolean
+  }
+
   export type DateTimeFilter = {
     equals?: Date | string
     in?: Enumerable<Date> | Enumerable<string>
@@ -5330,6 +5377,7 @@ export namespace Prisma {
   export type UnitCountOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
+    online?: SortOrder
     updated?: SortOrder
     created?: SortOrder
   }
@@ -5337,6 +5385,7 @@ export namespace Prisma {
   export type UnitMaxOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
+    online?: SortOrder
     updated?: SortOrder
     created?: SortOrder
   }
@@ -5344,6 +5393,7 @@ export namespace Prisma {
   export type UnitMinOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
+    online?: SortOrder
     updated?: SortOrder
     created?: SortOrder
   }
@@ -5382,6 +5432,14 @@ export namespace Prisma {
     _max?: NestedStringNullableFilter
   }
 
+  export type BoolWithAggregatesFilter = {
+    equals?: boolean
+    not?: NestedBoolWithAggregatesFilter | boolean
+    _count?: NestedIntFilter
+    _min?: NestedBoolFilter
+    _max?: NestedBoolFilter
+  }
+
   export type DateTimeWithAggregatesFilter = {
     equals?: Date | string
     in?: Enumerable<Date> | Enumerable<string>
@@ -5399,11 +5457,6 @@ export namespace Prisma {
   export type UnitRelationFilter = {
     is?: UnitWhereInput
     isNot?: UnitWhereInput
-  }
-
-  export type BoolFilter = {
-    equals?: boolean
-    not?: NestedBoolFilter | boolean
   }
 
   export type RoomCountOrderByAggregateInput = {
@@ -5428,14 +5481,6 @@ export namespace Prisma {
     archive?: SortOrder
     updated?: SortOrder
     created?: SortOrder
-  }
-
-  export type BoolWithAggregatesFilter = {
-    equals?: boolean
-    not?: NestedBoolWithAggregatesFilter | boolean
-    _count?: NestedIntFilter
-    _min?: NestedBoolFilter
-    _max?: NestedBoolFilter
   }
 
   export type IntFilter = {
@@ -5463,6 +5508,7 @@ export namespace Prisma {
     id?: SortOrder
     unitId?: SortOrder
     roomId?: SortOrder
+    updated?: SortOrder
     created?: SortOrder
   }
 
@@ -5474,6 +5520,7 @@ export namespace Prisma {
     id?: SortOrder
     unitId?: SortOrder
     roomId?: SortOrder
+    updated?: SortOrder
     created?: SortOrder
   }
 
@@ -5481,6 +5528,7 @@ export namespace Prisma {
     id?: SortOrder
     unitId?: SortOrder
     roomId?: SortOrder
+    updated?: SortOrder
     created?: SortOrder
   }
 
@@ -5587,6 +5635,10 @@ export namespace Prisma {
 
   export type NullableStringFieldUpdateOperationsInput = {
     set?: string | null
+  }
+
+  export type BoolFieldUpdateOperationsInput = {
+    set?: boolean
   }
 
   export type DateTimeFieldUpdateOperationsInput = {
@@ -5717,10 +5769,6 @@ export namespace Prisma {
     upsert?: UnitUpsertWithoutMyRoomsInput
     connect?: UnitWhereUniqueInput
     update?: XOR<UnitUpdateWithoutMyRoomsInput, UnitUncheckedUpdateWithoutMyRoomsInput>
-  }
-
-  export type BoolFieldUpdateOperationsInput = {
-    set?: boolean
   }
 
   export type GuestUpdateManyWithoutRoomNestedInput = {
@@ -5871,6 +5919,11 @@ export namespace Prisma {
     not?: NestedStringNullableFilter | string | null
   }
 
+  export type NestedBoolFilter = {
+    equals?: boolean
+    not?: NestedBoolFilter | boolean
+  }
+
   export type NestedDateTimeFilter = {
     equals?: Date | string
     in?: Enumerable<Date> | Enumerable<string>
@@ -5938,6 +5991,14 @@ export namespace Prisma {
     not?: NestedIntNullableFilter | number | null
   }
 
+  export type NestedBoolWithAggregatesFilter = {
+    equals?: boolean
+    not?: NestedBoolWithAggregatesFilter | boolean
+    _count?: NestedIntFilter
+    _min?: NestedBoolFilter
+    _max?: NestedBoolFilter
+  }
+
   export type NestedDateTimeWithAggregatesFilter = {
     equals?: Date | string
     in?: Enumerable<Date> | Enumerable<string>
@@ -5950,19 +6011,6 @@ export namespace Prisma {
     _count?: NestedIntFilter
     _min?: NestedDateTimeFilter
     _max?: NestedDateTimeFilter
-  }
-
-  export type NestedBoolFilter = {
-    equals?: boolean
-    not?: NestedBoolFilter | boolean
-  }
-
-  export type NestedBoolWithAggregatesFilter = {
-    equals?: boolean
-    not?: NestedBoolWithAggregatesFilter | boolean
-    _count?: NestedIntFilter
-    _min?: NestedBoolFilter
-    _max?: NestedBoolFilter
   }
 
   export type NestedIntWithAggregatesFilter = {
@@ -6022,12 +6070,14 @@ export namespace Prisma {
 
   export type GuestCreateWithoutUnitInput = {
     Room: RoomCreateNestedOneWithoutGuestsInput
+    updated?: Date | string
     created?: Date | string
   }
 
   export type GuestUncheckedCreateWithoutUnitInput = {
     id?: number
     roomId: string
+    updated?: Date | string
     created?: Date | string
   }
 
@@ -6116,6 +6166,7 @@ export namespace Prisma {
     id?: IntFilter | number
     unitId?: StringFilter | string
     roomId?: StringFilter | string
+    updated?: DateTimeFilter | Date | string
     created?: DateTimeFilter | Date | string
   }
 
@@ -6150,6 +6201,7 @@ export namespace Prisma {
   export type UnitCreateWithoutMyRoomsInput = {
     id: string
     name?: string | null
+    online?: boolean
     updated?: Date | string
     created?: Date | string
     IGuest?: GuestCreateNestedManyWithoutUnitInput
@@ -6159,6 +6211,7 @@ export namespace Prisma {
   export type UnitUncheckedCreateWithoutMyRoomsInput = {
     id: string
     name?: string | null
+    online?: boolean
     updated?: Date | string
     created?: Date | string
     IGuest?: GuestUncheckedCreateNestedManyWithoutUnitInput
@@ -6172,12 +6225,14 @@ export namespace Prisma {
 
   export type GuestCreateWithoutRoomInput = {
     Unit: UnitCreateNestedOneWithoutIGuestInput
+    updated?: Date | string
     created?: Date | string
   }
 
   export type GuestUncheckedCreateWithoutRoomInput = {
     id?: number
     unitId: string
+    updated?: Date | string
     created?: Date | string
   }
 
@@ -6224,6 +6279,7 @@ export namespace Prisma {
   export type UnitUpdateWithoutMyRoomsInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
+    online?: BoolFieldUpdateOperationsInput | boolean
     updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
     IGuest?: GuestUpdateManyWithoutUnitNestedInput
@@ -6233,6 +6289,7 @@ export namespace Prisma {
   export type UnitUncheckedUpdateWithoutMyRoomsInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
+    online?: BoolFieldUpdateOperationsInput | boolean
     updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
     IGuest?: GuestUncheckedUpdateManyWithoutUnitNestedInput
@@ -6274,6 +6331,7 @@ export namespace Prisma {
   export type UnitCreateWithoutIGuestInput = {
     id: string
     name?: string | null
+    online?: boolean
     updated?: Date | string
     created?: Date | string
     MyRooms?: RoomCreateNestedManyWithoutUnitInput
@@ -6283,6 +6341,7 @@ export namespace Prisma {
   export type UnitUncheckedCreateWithoutIGuestInput = {
     id: string
     name?: string | null
+    online?: boolean
     updated?: Date | string
     created?: Date | string
     MyRooms?: RoomUncheckedCreateNestedManyWithoutUnitInput
@@ -6325,6 +6384,7 @@ export namespace Prisma {
   export type UnitUpdateWithoutIGuestInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
+    online?: BoolFieldUpdateOperationsInput | boolean
     updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
     MyRooms?: RoomUpdateManyWithoutUnitNestedInput
@@ -6334,6 +6394,7 @@ export namespace Prisma {
   export type UnitUncheckedUpdateWithoutIGuestInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
+    online?: BoolFieldUpdateOperationsInput | boolean
     updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
     MyRooms?: RoomUncheckedUpdateManyWithoutUnitNestedInput
@@ -6366,6 +6427,7 @@ export namespace Prisma {
   export type UnitCreateWithoutMessageInput = {
     id: string
     name?: string | null
+    online?: boolean
     updated?: Date | string
     created?: Date | string
     MyRooms?: RoomCreateNestedManyWithoutUnitInput
@@ -6375,6 +6437,7 @@ export namespace Prisma {
   export type UnitUncheckedCreateWithoutMessageInput = {
     id: string
     name?: string | null
+    online?: boolean
     updated?: Date | string
     created?: Date | string
     MyRooms?: RoomUncheckedCreateNestedManyWithoutUnitInput
@@ -6417,6 +6480,7 @@ export namespace Prisma {
   export type UnitUpdateWithoutMessageInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
+    online?: BoolFieldUpdateOperationsInput | boolean
     updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
     MyRooms?: RoomUpdateManyWithoutUnitNestedInput
@@ -6426,6 +6490,7 @@ export namespace Prisma {
   export type UnitUncheckedUpdateWithoutMessageInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
+    online?: BoolFieldUpdateOperationsInput | boolean
     updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
     MyRooms?: RoomUncheckedUpdateManyWithoutUnitNestedInput
@@ -6465,6 +6530,7 @@ export namespace Prisma {
   export type GuestCreateManyUnitInput = {
     id?: number
     roomId: string
+    updated?: Date | string
     created?: Date | string
   }
 
@@ -6503,18 +6569,21 @@ export namespace Prisma {
 
   export type GuestUpdateWithoutUnitInput = {
     Room?: RoomUpdateOneRequiredWithoutGuestsNestedInput
+    updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type GuestUncheckedUpdateWithoutUnitInput = {
     id?: IntFieldUpdateOperationsInput | number
     roomId?: StringFieldUpdateOperationsInput | string
+    updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type GuestUncheckedUpdateManyWithoutIGuestInput = {
     id?: IntFieldUpdateOperationsInput | number
     roomId?: StringFieldUpdateOperationsInput | string
+    updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -6544,6 +6613,7 @@ export namespace Prisma {
   export type GuestCreateManyRoomInput = {
     id?: number
     unitId: string
+    updated?: Date | string
     created?: Date | string
   }
 
@@ -6557,18 +6627,21 @@ export namespace Prisma {
 
   export type GuestUpdateWithoutRoomInput = {
     Unit?: UnitUpdateOneRequiredWithoutIGuestNestedInput
+    updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type GuestUncheckedUpdateWithoutRoomInput = {
     id?: IntFieldUpdateOperationsInput | number
     unitId?: StringFieldUpdateOperationsInput | string
+    updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type GuestUncheckedUpdateManyWithoutGuestsInput = {
     id?: IntFieldUpdateOperationsInput | number
     unitId?: StringFieldUpdateOperationsInput | string
+    updated?: DateTimeFieldUpdateOperationsInput | Date | string
     created?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

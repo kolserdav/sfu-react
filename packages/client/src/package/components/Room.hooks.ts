@@ -670,6 +670,7 @@ export const useVideoStarted = ({
   }, [streams, timeStart, played]);
 
   useEffect(() => {
+    let mounted = true;
     const timeout = setInterval(() => {
       if (timeStart) {
         const diffs: Stream[] = [];
@@ -695,23 +696,15 @@ export const useVideoStarted = ({
           if (!_attempts[item.target]) {
             _attempts[item.target] = 0;
           }
-          if (_attempts[item.target] <= rtc.roomLength) {
-            if (!played[item.target]) {
-              ws.sendMessage({
-                type: MessageType.SET_CHANGE_UNIT,
-                id: ws.userId,
-                connId: item.connId,
-                data: {
-                  target: item.target,
-                  roomLenght: rtc.roomLength,
-                  muteds: rtc.muteds,
-                  eventName: 'delete',
-                },
-              });
+          if (_attempts[item.target] === 1) {
+            if (!played[item.target] && mounted) {
+              //lostStreamHandler(item);
             }
           } else {
             log('info', `${_attempts[item.target]} attempts of restart:`, { target: item.target });
-            if (!played[item.target]) {
+            _attempts[item.target] = 0;
+            if (!played[item.target] && mounted) {
+              lostStreamHandler(item);
               ws.sendMessage({
                 type: MessageType.SET_CHANGE_UNIT,
                 id: item.target,
@@ -725,6 +718,7 @@ export const useVideoStarted = ({
               });
             }
           }
+
           if (_attempts[item.target] !== undefined) {
             _attempts[item.target] += 1;
           } else {
@@ -736,6 +730,7 @@ export const useVideoStarted = ({
     }, 1000);
     return () => {
       clearInterval(timeout);
+      mounted = false;
     };
   }, [played, streams, lostStreamHandler, attempts, ws, timeStart]);
 
