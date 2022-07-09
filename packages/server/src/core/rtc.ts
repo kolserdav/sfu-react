@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Mon Jul 04 2022 10:58:51 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import wrtc from 'wrtc';
+import wrtc from '../../node-webrtc/lib/index';
 import { RTCInterface, MessageType, SendMessageArgs } from '../types/interfaces';
 import { log } from '../utils/lib';
 import WS from './ws';
@@ -540,14 +540,16 @@ class RTC implements RTCInterface {
     }
     log('info', '| Closing the call', { peerId, k: Object.keys(this.peerConnections).length });
     setTimeout(() => {
-      this.peerConnections[peerId]!.onicecandidate = null;
-      this.peerConnections[peerId]!.oniceconnectionstatechange = null;
-      this.peerConnections[peerId]!.onicegatheringstatechange = null;
-      this.peerConnections[peerId]!.onsignalingstatechange = null;
-      this.peerConnections[peerId]!.onnegotiationneeded = null;
-      this.peerConnections[peerId]!.ontrack = null;
-      this.peerConnections[peerId]!.close();
-      delete this.peerConnections[peerId];
+      if (this.peerConnections[peerId]) {
+        this.peerConnections[peerId]!.onicecandidate = null;
+        this.peerConnections[peerId]!.oniceconnectionstatechange = null;
+        this.peerConnections[peerId]!.onicegatheringstatechange = null;
+        this.peerConnections[peerId]!.onsignalingstatechange = null;
+        this.peerConnections[peerId]!.onnegotiationneeded = null;
+        this.peerConnections[peerId]!.ontrack = null;
+        this.peerConnections[peerId]!.close();
+        delete this.peerConnections[peerId];
+      }
     }, 1000);
   };
 

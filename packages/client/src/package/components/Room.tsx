@@ -119,6 +119,10 @@ function Room({ id, iceServers, server, port }: RoomProps) {
               }}
               onSuspend={(e) => {
                 log('warn', 'Suspend video data', { active: item.stream.active, id: item.target });
+                lostStreamHandler({
+                  target: item.target,
+                  connId: item.connId,
+                });
               }}
               onStalled={(e) => {
                 log('warn', 'Stalled video data', { active: item.stream.active, id: item.target });

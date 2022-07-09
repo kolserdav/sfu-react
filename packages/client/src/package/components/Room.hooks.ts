@@ -392,6 +392,7 @@ export const useConnection = ({
            * Connect to room
            */
           setConnectionId(connId);
+          rtc.connId = connId;
           rtc.createPeerConnection({
             userId: ws.userId,
             target: 0,
@@ -483,7 +484,19 @@ export const useConnection = ({
         /** */
       };
     };
-  }, [roomId, streams, ws, rtc, id, roomIsSaved, lenght, selfStream, iceServers, localShareScreen]);
+  }, [
+    roomId,
+    streams,
+    ws,
+    rtc,
+    id,
+    roomIsSaved,
+    lenght,
+    selfStream,
+    iceServers,
+    localShareScreen,
+    lostStreamHandler,
+  ]);
 
   /**
    * Check room list
@@ -698,12 +711,6 @@ export const useVideoStarted = ({
           }
           if (_attempts[item.target] === 1) {
             if (!played[item.target] && mounted) {
-              //lostStreamHandler(item);
-            }
-          } else {
-            log('info', `${_attempts[item.target]} attempts of restart:`, { target: item.target });
-            _attempts[item.target] = 0;
-            if (!played[item.target] && mounted) {
               lostStreamHandler(item);
               ws.sendMessage({
                 type: MessageType.SET_CHANGE_UNIT,
@@ -716,6 +723,11 @@ export const useVideoStarted = ({
                   eventName: 'delete',
                 },
               });
+            }
+          } else {
+            log('info', `${_attempts[item.target]} attempts of restart:`, { target: item.target });
+            if (_attempts[item.target] === 20) {
+              _attempts[item.target] = 0;
             }
           }
 

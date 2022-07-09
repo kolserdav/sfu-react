@@ -20,6 +20,8 @@ class RTC implements RTCInterface {
 
   public roomLength = 0;
 
+  public connId = '';
+
   public muteds: string[] = [];
 
   public localTrackSettings: MediaTrackSettings | null = null;
