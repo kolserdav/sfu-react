@@ -43,7 +43,7 @@ export const useConnection = ({
   const [muted, setMuted] = useState<boolean>(false);
   const [muteds, setMuteds] = useState<string[]>([]);
   const [video, setVideo] = useState<boolean>(true);
-  const [isRoom, setIsRoom] = useState<boolean>(false);
+  const [isRoom, setIsRoom] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [connectionId, setConnectionId] = useState<string>('');
   const ws = useMemo(
@@ -92,9 +92,11 @@ export const useConnection = ({
   useEffect(() => {
     const qS = parseQueryString(window.location.search);
     if (qS?.room === '1') {
-      setIsRoom(true);
       rtc.isRoom = true;
+    } else {
+      rtc.isRoom = false;
     }
+    setIsRoom(rtc.isRoom);
   }, [rtc]);
 
   /**
@@ -138,16 +140,16 @@ export const useConnection = ({
    * Connections handlers
    */
   useEffect(() => {
-    if (!roomId) {
+    if (!roomId || isRoom === null) {
       return () => {
         /** */
       };
     }
     if (!ws.userId) {
-      ws.setUserId(id);
+      ws.setUserId(isRoom ? roomId : id);
     }
 
-    const lostStreamHandler = ({ target, connId }: { target: number | string; connId: string }) => {
+    rtc.lostStreamHandler = ({ target, connId }: { target: number | string; connId: string }) => {
       if (!roomId) {
         return;
       }
@@ -170,8 +172,6 @@ export const useConnection = ({
         storeStreams.dispatch(changeStreams({ type: 'delete', stream: _stream }));
       }
     };
-
-    rtc.lostStreamHandler = lostStreamHandler;
 
     const addStream = ({
       target,
@@ -287,7 +287,7 @@ export const useConnection = ({
       data: { userId },
       connId,
     }: SendMessageArgs<MessageType.GET_NEED_RECONNECT>) => {
-      lostStreamHandler({
+      rtc.lostStreamHandler({
         connId,
         target: userId,
       });
@@ -313,6 +313,7 @@ export const useConnection = ({
       // Add remote streams
       rtc.roomLength = roomUsers.length;
       setLenght(roomUsers.length);
+      rtc.room = roomUsers;
       roomUsers.forEach((item) => {
         if (item !== id) {
           const peerId = rtc.getPeerId(roomId, item, connId);
@@ -387,8 +388,10 @@ export const useConnection = ({
     ws.onOpen = () => {
       ws.sendMessage({
         type: MessageType.GET_USER_ID,
-        id,
-        data: {},
+        id: isRoom ? roomId : id,
+        data: {
+          isRoom,
+        },
         connId: '',
       });
     };
@@ -406,6 +409,20 @@ export const useConnection = ({
            */
           setConnectionId(connId);
           rtc.connId = connId;
+
+          if (isRoom) {
+            const {
+              connId: _connId,
+              data: { userId },
+            } = ws.getMessage(MessageType.SET_USER_ID, rawMessage);
+            ws.sendMessage({
+              type: MessageType.SET_ROOM_LOAD,
+              id: userId,
+              connId: _connId,
+              data: undefined,
+            });
+            break;
+          }
           rtc.createPeerConnection({
             userId: ws.userId,
             target: 0,
@@ -476,6 +493,9 @@ export const useConnection = ({
           } = ws.getMessage(MessageType.SET_ERROR, rawMessage);
           setError(message);
           log('warn', 'error', message);
+          break;
+        case MessageType.SET_ROOM_LOAD:
+          console.log(3323);
           break;
         default:
       }

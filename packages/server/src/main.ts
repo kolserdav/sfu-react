@@ -70,7 +70,11 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
           wss.sendMessage({
             type: MessageType.SET_USER_ID,
             id,
-            data: undefined,
+            data: {
+              userId: isRoom
+                ? rtc.rooms[Object.keys(rtc.rooms).find((item) => item === id.toString()) || 0][0]
+                : id,
+            },
             connId,
           });
           break;

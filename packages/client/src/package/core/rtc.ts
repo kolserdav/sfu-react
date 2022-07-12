@@ -20,7 +20,11 @@ class RTC implements RTCInterface {
 
   public roomLength = 0;
 
+  public streams: Record<string, MediaStream> = {};
+
   public connId = '';
+
+  public room: (string | number)[] = [];
 
   public isRoom = false;
 
@@ -227,6 +231,7 @@ class RTC implements RTCInterface {
           }
         });
     };
+    let s = 1;
     this.peerConnections[peerId]!.ontrack = (e) => {
       const stream = e.streams[0];
       log('info', 'On add remote stream', {
@@ -236,6 +241,34 @@ class RTC implements RTCInterface {
       });
       if (target.toString() !== '0') {
         this.onAddTrack[this.getPeerId(roomId, target, connId)](target, stream);
+      }
+      const isRoom = peerId.split(this.delimiter)[2] === '0';
+      if (isRoom) {
+        const _stream = e.streams[0];
+        const isNew = _stream.id !== this.streams[peerId]?.id;
+        if (isNew) {
+          this.streams[peerId] = _stream;
+        }
+        log('info', 'ontrack', { peerId, si: stream.id, isNew, userId, target });
+        if (s % 2 !== 0 && isNew) {
+          const { room } = this;
+          setTimeout(() => {
+            room.forEach((id) => {
+              this.ws.sendMessage({
+                type: MessageType.SET_CHANGE_UNIT,
+                id,
+                data: {
+                  target: userId,
+                  eventName: 'add',
+                  roomLenght: room.length || 0,
+                  muteds: this.muteds,
+                },
+                connId,
+              });
+            });
+          }, 0);
+        }
+        s++;
       }
     };
   };
@@ -258,6 +291,50 @@ class RTC implements RTCInterface {
     const peerId = this.getPeerId(id, target, connId);
     if (!this.peerConnections[peerId]) {
       log('warn', 'Set media without peer connection', { peerId });
+      return;
+    }
+    if (this.isRoom) {
+      let _connId = connId;
+      const keysStreams = Object.keys(this.streams);
+      keysStreams.forEach((element) => {
+        const str = element.split(this.delimiter);
+        if (str[1] === target.toString() && str[2] === '0') {
+          // eslint-disable-next-line prefer-destructuring
+          _connId = str[3];
+        }
+      });
+      const _peerId = this.getPeerId(id, 0, _connId);
+      const stream = this.streams[_peerId];
+      if (!stream) {
+        log('info', 'Skiping add track', {
+          roomId: id,
+          userId,
+          target,
+          connId,
+          _peerId,
+          _connId,
+          k: Object.keys(this.streams),
+        });
+        return;
+      }
+      const tracks = stream.getTracks();
+      tracks.forEach((track) => {
+        if (this.peerConnections[peerId]) {
+          const sender = this.peerConnections[peerId]
+            ?.getSenders()
+            .find((item) => item.track?.kind === track.kind);
+          if (sender?.track?.id !== track.id) {
+            this.peerConnections[peerId]!.addTrack(track, stream);
+          } else {
+            log('warn', 'Skiping add track', { peerId });
+          }
+        } else {
+          log('warn', 'Add track without peer connection', {
+            peerId,
+            k: Object.keys(this.peerConnections),
+          });
+        }
+      });
       return;
     }
     if (!this.localStream) {
