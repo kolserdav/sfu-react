@@ -69,6 +69,7 @@
     "@reduxjs/toolkit": "^1.8.2",
     "clsx": "^1.1.1",
     "dotenv": "^16.0.1",
+    "puppeteer-screen-recorder": "^2.0.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "uuid": "^8.3.2",

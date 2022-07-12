@@ -28,51 +28,6 @@ process.on('unhandledRejection', (err: Error) => {
   log('error', 'unhandledRejection', err);
 });
 
-const deleteGuest = ({ userId, roomId }: { userId: string | number; roomId: string | number }) => {
-  return new Promise((resolve) => {
-    db.roomFindFirst({
-      where: {
-        id: roomId.toString(),
-      },
-      select: {
-        Guests: {
-          where: {
-            unitId: userId.toString(),
-          },
-        },
-      },
-    }).then((g) => {
-      if (!g) {
-        log('warn', 'Can not unitFindFirst', { userId });
-        resolve(0);
-        return;
-      }
-      db.roomUpdate({
-        where: {
-          id: roomId.toString(),
-        },
-        data: {
-          Guests: {
-            delete: g.Guests[0]?.id
-              ? {
-                  id: g.Guests[0]?.id,
-                }
-              : undefined,
-          },
-          updated: new Date(),
-        },
-      }).then((r) => {
-        if (!r) {
-          log('warn', 'Room not delete guest', { roomId, id: g.Guests[0]?.id });
-          resolve(1);
-        }
-        log('info', 'Guest deleted', { roomId, id: g.Guests[0]?.id });
-        resolve(0);
-      });
-    });
-  });
-};
-
 /**
  * Create SFU WebRTC server
  */
@@ -122,8 +77,6 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
         case MessageType.GET_ROOM:
           rtc.handleGetRoomMessage({
             message: wss.getMessage(MessageType.GET_ROOM, rawMessage),
-            port,
-            cors,
           });
           break;
         case MessageType.GET_ROOM_GUESTS:
@@ -187,7 +140,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
         } else {
           log('warn', 'No socket delete', { s: Object.keys(wss.sockets) });
         }
-
+        // set unit offline
         db.unitUpdate({
           where: {
             id: userId.toString(),
@@ -198,13 +151,11 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
           },
         });
         log('info', 'User disconnected', userId);
-
         const roomKeys = Object.keys(rtc.rooms);
         roomKeys.forEach((item) => {
           const index = rtc.rooms[item].indexOf(userId);
           if (index !== -1) {
             const keys = Object.keys(rtc.peerConnections);
-            rtc.cleanConnections(item, userId.toString());
             rtc.rooms[item].splice(index, 1);
             const mute = rtc.muteds[item].indexOf(userId.toString());
             if (mute !== -1) {
@@ -236,7 +187,9 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
             });
             if (rtc.rooms[item].length === 0) {
               delete rtc.rooms[item];
-              // set room is archive
+              rtc.pages[item].close().then(() => {
+                delete rtc.pages[item];
+              });
               db.roomUpdate({
                 where: {
                   id: item.toString(),
@@ -248,7 +201,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
               });
               delete rtc.muteds[item];
             }
-            deleteGuest({ userId, roomId: item });
+            db.deleteGuest({ userId, roomId: item });
             delete wss.users[userId];
           }
         });
@@ -256,6 +209,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
     };
   });
 }
+
 export default createServer;
 
 if (require.main === module) {

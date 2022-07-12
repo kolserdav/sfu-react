@@ -8,11 +8,13 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Mon Jul 04 2022 10:58:51 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
+import { Page } from 'puppeteer';
 import wrtc from '../../node-webrtc/lib/index';
 import { RTCInterface, MessageType, SendMessageArgs } from '../types/interfaces';
 import { log } from '../utils/lib';
 import WS from './ws';
 import DB from './db';
+import { createRoom } from './room';
 
 const db = new DB();
 
@@ -20,6 +22,7 @@ class RTC implements RTCInterface {
   public peerConnections: RTCInterface['peerConnections'] = {};
   public readonly delimiter = '_';
   public rooms: Record<string | number, (string | number)[]> = {};
+  public pages: Record<string | number, Page> = {};
   public muteds: Record<string, string[]> = {};
   private ws: WS;
   public streams: Record<string, MediaStream> = {};
@@ -684,24 +687,14 @@ class RTC implements RTCInterface {
 
   public async handleGetRoomMessage({
     message,
-    port,
-    cors,
   }: {
     message: SendMessageArgs<MessageType.GET_ROOM>;
-    port: number;
-    cors: string;
   }) {
     const {
       data: { userId: uid },
       id,
       connId,
     } = message;
-    // Room creatting counter local connection with every user
-    const connection = new this.ws.websocket(`ws://localhost:${port}`, {
-      headers: {
-        origin: cors.split(',')[0],
-      },
-    });
     const error = await this.addUserToRoom({
       roomId: id,
       userId: uid,
@@ -716,37 +709,8 @@ class RTC implements RTCInterface {
       log('warn', 'Can not add user to room', { id, uid });
       return;
     }
-    this.createRTC({ roomId: id, userId: uid, target: 0, connId });
-    connection.onopen = () => {
-      // FIXME to sendMEssage
-      connection.send(
-        JSON.stringify({
-          type: MessageType.GET_USER_ID,
-          id,
-          data: {
-            isRoom: true,
-          },
-          connId: '',
-        })
-      );
-      connection.onmessage = (mess) => {
-        const msg = this.ws.parseMessage(mess.data as string);
-        if (msg) {
-          const { type } = msg;
-          switch (type) {
-            case MessageType.OFFER:
-              this.handleOfferMessage(msg);
-              break;
-            case MessageType.ANSWER:
-              this.handleVideoAnswerMsg(msg);
-              break;
-            case MessageType.CANDIDATE:
-              this.handleCandidateMessage(msg);
-              break;
-          }
-        }
-      };
-    };
+    const { page } = await createRoom({ roomId: id.toString(), recordVideo: false });
+    this.pages[id] = page;
     this.ws.sendMessage({
       type: MessageType.SET_ROOM,
       id,

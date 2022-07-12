@@ -71,6 +71,51 @@ class DB implements DBInterface {
     }
     return result;
   };
+
+  public deleteGuest({ userId, roomId }: { userId: string | number; roomId: string | number }) {
+    return new Promise((resolve) => {
+      this.roomFindFirst({
+        where: {
+          id: roomId.toString(),
+        },
+        select: {
+          Guests: {
+            where: {
+              unitId: userId.toString(),
+            },
+          },
+        },
+      }).then((g) => {
+        if (!g) {
+          log('warn', 'Can not unitFindFirst', { userId });
+          resolve(0);
+          return;
+        }
+        this.roomUpdate({
+          where: {
+            id: roomId.toString(),
+          },
+          data: {
+            Guests: {
+              delete: g.Guests[0]?.id
+                ? {
+                    id: g.Guests[0]?.id,
+                  }
+                : undefined,
+            },
+            updated: new Date(),
+          },
+        }).then((r) => {
+          if (!r) {
+            log('warn', 'Room not delete guest', { roomId, id: g.Guests[0]?.id });
+            resolve(1);
+          }
+          log('info', 'Guest deleted', { roomId, id: g.Guests[0]?.id });
+          resolve(0);
+        });
+      });
+    });
+  }
 }
 
 export default DB;

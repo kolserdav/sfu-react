@@ -12,7 +12,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import WS from '../core/ws';
 import RTC from '../core/rtc';
-import { log } from '../utils/lib';
+import { log, parseQueryString } from '../utils/lib';
 import { getWidthOfItem } from './Room.lib';
 import { MessageType, SendMessageArgs } from '../types/interfaces';
 import { Stream } from '../types';
@@ -43,6 +43,7 @@ export const useConnection = ({
   const [muted, setMuted] = useState<boolean>(false);
   const [muteds, setMuteds] = useState<string[]>([]);
   const [video, setVideo] = useState<boolean>(true);
+  const [isRoom, setIsRoom] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [connectionId, setConnectionId] = useState<string>('');
   const ws = useMemo(
@@ -85,31 +86,16 @@ export const useConnection = ({
     }
   };
 
-  const lostStreamHandler = ({ target, connId }: { target: number | string; connId: string }) => {
-    if (!roomId) {
-      return;
+  /**
+   * Set is room
+   */
+  useEffect(() => {
+    const qS = parseQueryString(window.location.search);
+    if (qS?.room === '1') {
+      setIsRoom(true);
+      rtc.isRoom = true;
     }
-    let _connId = connId;
-    Object.keys(rtc.peerConnections).forEach((item) => {
-      const peer = item.split(rtc.delimiter);
-      if (peer[1] === target.toString()) {
-        // eslint-disable-next-line prefer-destructuring
-        _connId = peer[2];
-      }
-    });
-    const peerId = rtc.getPeerId(roomId, target, _connId);
-    if (!rtc.peerConnections[peerId]) {
-      log('info', 'Lost stream handler without peer connection', { peerId });
-      return;
-    }
-    rtc.closeVideoCall({ roomId, userId: ws.userId, target, connId: _connId });
-    const _stream = streams.find((item) => item.target === target);
-    if (_stream) {
-      storeStreams.dispatch(changeStreams({ type: 'delete', stream: _stream }));
-    }
-  };
-
-  rtc.lostStreamHandler = lostStreamHandler;
+  }, [rtc]);
 
   /**
    * Change media source
@@ -160,6 +146,33 @@ export const useConnection = ({
     if (!ws.userId) {
       ws.setUserId(id);
     }
+
+    const lostStreamHandler = ({ target, connId }: { target: number | string; connId: string }) => {
+      if (!roomId) {
+        return;
+      }
+      let _connId = connId;
+      Object.keys(rtc.peerConnections).forEach((item) => {
+        const peer = item.split(rtc.delimiter);
+        if (peer[1] === target.toString()) {
+          // eslint-disable-next-line prefer-destructuring
+          _connId = peer[2];
+        }
+      });
+      const peerId = rtc.getPeerId(roomId, target, _connId);
+      if (!rtc.peerConnections[peerId]) {
+        log('info', 'Lost stream handler without peer connection', { peerId });
+        return;
+      }
+      rtc.closeVideoCall({ roomId, userId: ws.userId, target, connId: _connId });
+      const _stream = streams.find((item) => item.target === target);
+      if (_stream) {
+        storeStreams.dispatch(changeStreams({ type: 'delete', stream: _stream }));
+      }
+    };
+
+    rtc.lostStreamHandler = lostStreamHandler;
+
     const addStream = ({
       target,
       stream,
@@ -407,14 +420,16 @@ export const useConnection = ({
           });
           rtc.addTracks({ userId: ws.userId, id: roomId, connId, target: 0 }, (e) => {
             if (!e) {
-              ws.sendMessage({
-                type: MessageType.GET_ROOM,
-                id: roomId,
-                data: {
-                  userId: id,
-                },
-                connId,
-              });
+              if (!isRoom) {
+                ws.sendMessage({
+                  type: MessageType.GET_ROOM,
+                  id: roomId,
+                  data: {
+                    userId: id,
+                  },
+                  connId,
+                });
+              }
             } else if (localShareScreen) {
               ws.shareScreen = false;
               setLocalShareScreen(false);
@@ -495,7 +510,8 @@ export const useConnection = ({
     selfStream,
     iceServers,
     localShareScreen,
-    lostStreamHandler,
+    rtc.lostStreamHandler,
+    isRoom,
   ]);
 
   /**
@@ -535,7 +551,7 @@ export const useConnection = ({
     lenght,
     ws,
     rtc,
-    lostStreamHandler,
+    lostStreamHandler: rtc.lostStreamHandler,
     screenShare,
     shareScreen,
     muted,
