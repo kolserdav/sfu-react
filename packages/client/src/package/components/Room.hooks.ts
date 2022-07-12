@@ -426,6 +426,7 @@ export const useConnection = ({
                   id: roomId,
                   data: {
                     userId: id,
+                    isRoom,
                   },
                   connId,
                 });

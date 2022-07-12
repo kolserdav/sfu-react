@@ -155,7 +155,6 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
         roomKeys.forEach((item) => {
           const index = rtc.rooms[item].indexOf(userId);
           if (index !== -1) {
-            const keys = Object.keys(rtc.peerConnections);
             rtc.rooms[item].splice(index, 1);
             const mute = rtc.muteds[item].indexOf(userId.toString());
             if (mute !== -1) {
@@ -163,16 +162,6 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
             }
             // Send user list of room
             rtc.rooms[item].forEach((_item) => {
-              let _connId = connId;
-              keys.forEach((i) => {
-                const peer = i.split(rtc.delimiter);
-                if (
-                  (peer[1] === _item && peer[2] === userId.toString()) ||
-                  (peer[1] === userId.toString() && peer[2] === _item)
-                ) {
-                  _connId = peer[3];
-                }
-              });
               wss.sendMessage({
                 type: MessageType.SET_CHANGE_UNIT,
                 id: _item,
@@ -182,14 +171,11 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
                   target: userId,
                   eventName: 'delete',
                 },
-                connId: _connId,
+                connId: connId,
               });
             });
             if (rtc.rooms[item].length === 0) {
               delete rtc.rooms[item];
-              rtc.pages[item].close().then(() => {
-                delete rtc.pages[item];
-              });
               db.roomUpdate({
                 where: {
                   id: item.toString(),
@@ -200,6 +186,9 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
                 },
               });
               delete rtc.muteds[item];
+              rtc.pages[item].close().then(() => {
+                delete rtc.pages[item];
+              });
             }
             db.deleteGuest({ userId, roomId: item });
             delete wss.users[userId];

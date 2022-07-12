@@ -62,6 +62,7 @@ export namespace DataTypes {
     export type SetGuestId = undefined;
     export type GetRoom = {
       userId: number | string;
+      isRoom: boolean;
     };
     export type SetRoomGuests = {
       roomUsers: (number | string)[];
