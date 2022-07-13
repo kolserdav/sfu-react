@@ -189,11 +189,14 @@ class RTC {
       userId: uid,
       isRoom,
     });
+    console.log(this.rooms[id]);
     if (error) {
       this.ws.sendMessage({
         type: MessageType.SET_ROOM,
         id: uid,
-        data: undefined,
+        data: {
+          roomUsers: this.rooms[id],
+        },
         connId,
       });
       log('warn', 'Can not add user to room', { id, uid });
@@ -202,7 +205,9 @@ class RTC {
     this.ws.sendMessage({
       type: MessageType.SET_ROOM,
       id,
-      data: undefined,
+      data: {
+        roomUsers: this.rooms[id],
+      },
       connId,
     });
   }

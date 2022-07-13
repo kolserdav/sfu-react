@@ -85,6 +85,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
           break;
         case MessageType.GET_ROOM_GUESTS:
           const _roomId = wss.getMessage(MessageType.GET_ROOM_GUESTS, rawMessage).data.roomId;
+          /*
           wss.sendMessage({
             type: MessageType.SET_ROOM_GUESTS,
             id,
@@ -94,6 +95,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
             },
             connId,
           });
+          */
           break;
         case MessageType.GET_MUTE:
           const { muted, roomId } = wss.getMessage(MessageType.GET_MUTE, rawMessage).data;
@@ -190,9 +192,14 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
                 },
               });
               delete rtc.muteds[item];
-              rtc.pages[item].close().then(() => {
-                delete rtc.pages[item];
-              });
+              rtc.pages[item]
+                ?.close()
+                .then(() => {
+                  delete rtc.pages[item];
+                })
+                .catch(() => {
+                  delete rtc.pages[item];
+                });
             }
             db.deleteGuest({ userId, roomId: item });
             delete wss.users[userId];

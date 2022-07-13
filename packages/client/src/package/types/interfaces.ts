@@ -60,7 +60,7 @@ export namespace DataTypes {
       roomLenght: number;
       muteds: string[];
     };
-    export type SetGuestId = {
+    export type SetUserId = {
       userId: string | number;
     };
     export type GetRoom = {
@@ -71,7 +71,9 @@ export namespace DataTypes {
       roomUsers: (number | string)[];
       muteds: string[];
     };
-    export type SetRoom = undefined;
+    export type SetRoom = {
+      roomUsers: (string | number)[];
+    };
     export type SetError = {
       message: string;
       context: SendMessageArgs<any>;
@@ -111,7 +113,7 @@ export namespace DataTypes {
     : T extends MessageType.GET_USER_ID
     ? DataTypes.MessageTypes.GetGuestId
     : T extends MessageType.SET_USER_ID
-    ? DataTypes.MessageTypes.SetGuestId
+    ? DataTypes.MessageTypes.SetUserId
     : T extends MessageType.GET_ROOM
     ? DataTypes.MessageTypes.GetRoom
     : T extends MessageType.SET_ROOM

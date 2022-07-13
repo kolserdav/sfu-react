@@ -161,7 +161,7 @@ export const useConnection = ({
           _connId = peer[2];
         }
       });
-      const peerId = rtc.getPeerId(roomId, target, _connId);
+      const peerId = rtc.getPeerId(roomId, ws.userId, target, _connId);
       if (!rtc.peerConnections[peerId]) {
         log('info', 'Lost stream handler without peer connection', { peerId });
         return;
@@ -200,6 +200,56 @@ export const useConnection = ({
         setSelfStream(_stream);
       }
       log('info', 'Add stream', { _stream });
+    };
+
+    const startConnectionHandler = ({
+      connId,
+      userId,
+      target,
+    }: {
+      userId: string | number;
+      target: string | number;
+      connId: string;
+    }) => {
+      rtc.createPeerConnection({
+        userId,
+        target,
+        connId,
+        roomId,
+        onTrack: ({ addedUserId, stream }) => {
+          log('info', '-> Added local stream to room', { addedUserId, id });
+          addStream({ target: addedUserId, stream, connId });
+        },
+        iceServers,
+        eventName: 'first',
+      });
+      rtc.addTracks({ userId: ws.userId, id: roomId, connId, target: 0 }, (e) => {
+        if (!e) {
+          if (!isRoom) {
+            ws.sendMessage({
+              type: MessageType.GET_ROOM,
+              id: roomId,
+              data: {
+                userId: id,
+                isRoom,
+              },
+              connId,
+            });
+          }
+        } else if (localShareScreen) {
+          ws.shareScreen = false;
+          setLocalShareScreen(false);
+          setShareScreen(false);
+          ws.onOpen = () => {
+            ws.sendMessage({
+              type: MessageType.GET_USER_ID,
+              id,
+              data: {},
+              connId: '',
+            });
+          };
+        }
+      });
     };
 
     /**
@@ -316,7 +366,7 @@ export const useConnection = ({
       rtc.room = roomUsers;
       roomUsers.forEach((item) => {
         if (item !== id) {
-          const peerId = rtc.getPeerId(roomId, item, connId);
+          const peerId = rtc.getPeerId(roomId, ws.userId, item, connId);
           const _isExists = _streams.filter((_item) => item === _item.target);
           if (!_isExists[0]) {
             log('info', 'Check new user', { item });
@@ -423,44 +473,10 @@ export const useConnection = ({
             });
             break;
           }
-          rtc.createPeerConnection({
+          startConnectionHandler({
             userId: ws.userId,
             target: 0,
             connId,
-            roomId,
-            onTrack: ({ addedUserId, stream }) => {
-              log('info', '-> Added local stream to room', { addedUserId, id });
-              addStream({ target: addedUserId, stream, connId });
-            },
-            iceServers,
-            eventName: 'first',
-          });
-          rtc.addTracks({ userId: ws.userId, id: roomId, connId, target: 0 }, (e) => {
-            if (!e) {
-              if (!isRoom) {
-                ws.sendMessage({
-                  type: MessageType.GET_ROOM,
-                  id: roomId,
-                  data: {
-                    userId: id,
-                    isRoom,
-                  },
-                  connId,
-                });
-              }
-            } else if (localShareScreen) {
-              ws.shareScreen = false;
-              setLocalShareScreen(false);
-              setShareScreen(false);
-              ws.onOpen = () => {
-                ws.sendMessage({
-                  type: MessageType.GET_USER_ID,
-                  id,
-                  data: {},
-                  connId: '',
-                });
-              };
-            }
           });
           break;
         case MessageType.OFFER:
@@ -479,7 +495,13 @@ export const useConnection = ({
           rtc.handleVideoAnswerMsg(rawMessage);
           break;
         case MessageType.SET_ROOM:
-          setRoomIsSaved(true);
+          const {
+            data: { roomUsers },
+          } = ws.getMessage(MessageType.SET_ROOM, rawMessage);
+          setLenght(roomUsers.length);
+          console.log(roomUsers);
+          rtc.roomLength = roomUsers.length;
+          rtc.room = roomUsers;
           break;
         case MessageType.GET_NEED_RECONNECT:
           needReconnectHandler(rawMessage);
@@ -495,7 +517,11 @@ export const useConnection = ({
           log('warn', 'error', message);
           break;
         case MessageType.SET_ROOM_LOAD:
-          console.log(3323);
+          startConnectionHandler({
+            userId: ws.userId,
+            target: 0,
+            connId,
+          });
           break;
         default:
       }
@@ -539,11 +565,11 @@ export const useConnection = ({
    * Check room list
    */
   useEffect(() => {
-    if (!roomId) {
+    /*if (!roomId) {
       return () => {
         //
       };
-    }
+    } 
     let interval = setTimeout(() => {
       //
     });
@@ -564,7 +590,7 @@ export const useConnection = ({
 
     return () => {
       clearTimeout(interval);
-    };
+    };*/
   }, [roomId, ws, lenght, streams, connectionId, id, shareScreen]);
 
   return {
@@ -781,7 +807,7 @@ export const useVideoStarted = ({
       clearInterval(timeout);
       mounted = false;
     };
-  }, [played, streams, lostStreamHandler, attempts, ws, timeStart]);
+  }, [played, streams, lostStreamHandler, attempts, ws, timeStart, rtc]);
 
   return { played, setPlayed };
 };

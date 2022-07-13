@@ -64,7 +64,7 @@ class RTC implements RTCInterface {
     iceServers: RTCConfiguration['iceServers'];
     eventName: 'first' | 'check' | 'back';
   }) {
-    const peerId = this.getPeerId(roomId, target, connId);
+    const peerId = this.getPeerId(roomId, this.ws.userId, target, connId);
     this.createRTC({ roomId, target, userId, connId, iceServers });
     this.onAddTrack[peerId] = (addedUserId, stream) => {
       log('info', 'On track peer', { userId, target, connId, eventName });
@@ -77,14 +77,22 @@ class RTC implements RTCInterface {
     if (!connId) {
       log('warn', 'Connection id is: ', { connId });
     }
-    this.peerConnections[this.getPeerId(roomId, target, connId)] = new RTCPeerConnection({
-      iceServers,
-    });
+    this.peerConnections[this.getPeerId(roomId, this.ws.userId, target, connId)] =
+      new RTCPeerConnection({
+        iceServers,
+      });
     return this.peerConnections;
   };
 
-  public getPeerId(roomId: number | string, target: number | string, connId: string) {
-    return `${roomId}${this.delimiter}${target || 0}${this.delimiter}${connId}`;
+  public getPeerId(
+    roomId: number | string,
+    userId: number | string,
+    target: number | string,
+    connId: string
+  ) {
+    return `${roomId}${this.delimiter}${userId}${this.delimiter}${target || 0}${
+      this.delimiter
+    }${connId}`;
   }
 
   public handleIceCandidate: RTCInterface['handleIceCandidate'] = ({
@@ -93,9 +101,9 @@ class RTC implements RTCInterface {
     userId,
     target,
   }) => {
-    let peerId = this.getPeerId(roomId, target, connId);
+    let peerId = this.getPeerId(roomId, this.ws.userId, target, connId);
     if (!this.peerConnections[peerId]) {
-      peerId = this.getPeerId(roomId, target, connId);
+      peerId = this.getPeerId(roomId, this.ws.userId, target, connId);
     }
     if (!this.peerConnections[peerId]) {
       log('warn', 'Handle ice candidate without peerConnection', { peerId });
@@ -240,9 +248,9 @@ class RTC implements RTCInterface {
         tracks: stream.getTracks(),
       });
       if (target.toString() !== '0') {
-        this.onAddTrack[this.getPeerId(roomId, target, connId)](target, stream);
+        this.onAddTrack[this.getPeerId(roomId, this.ws.userId, target, connId)](target, stream);
       }
-      const isRoom = peerId.split(this.delimiter)[2] === '0';
+      const isRoom = peerId.split(this.delimiter)[1] === '0';
       if (isRoom) {
         const _stream = e.streams[0];
         const isNew = _stream.id !== this.streams[peerId]?.id;
@@ -288,7 +296,7 @@ class RTC implements RTCInterface {
   }
 
   public addTracks: RTCInterface['addTracks'] = ({ id, userId, target, connId }, cb) => {
-    const peerId = this.getPeerId(id, target, connId);
+    const peerId = this.getPeerId(id, this.ws.userId, target, connId);
     if (!this.peerConnections[peerId]) {
       log('warn', 'Set media without peer connection', { peerId });
       return;
@@ -303,7 +311,7 @@ class RTC implements RTCInterface {
           _connId = str[3];
         }
       });
-      const _peerId = this.getPeerId(id, 0, _connId);
+      const _peerId = this.getPeerId(id, this.ws.userId, 0, _connId);
       const stream = this.streams[_peerId];
       if (!stream) {
         log('info', 'Skiping add track', {
@@ -405,7 +413,7 @@ class RTC implements RTCInterface {
           this.peerConnections[peerId]!.addTrack(track, this.localStream);
         }
       });
-      this.onAddTrack[this.getPeerId(id, target, connId)](userId, this.localStream);
+      this.onAddTrack[this.getPeerId(id, this.ws.userId, target, connId)](userId, this.localStream);
       cb(0);
     }
   };
@@ -422,7 +430,7 @@ class RTC implements RTCInterface {
       connId,
       data: { candidate, target, userId },
     } = msg;
-    const peerId = this.getPeerId(id, target, connId);
+    const peerId = this.getPeerId(id, this.ws.userId, target, connId);
     if (!this.peerConnections[peerId]) {
       log('warn', 'Handle candidatte without peer connection', { peerId });
       return;
@@ -463,7 +471,7 @@ class RTC implements RTCInterface {
       }
       return;
     }
-    const peerId = this.getPeerId(id, target, connId);
+    const peerId = this.getPeerId(id, this.ws.userId, target, connId);
     if (!this.peerConnections[peerId]) {
       log('warn', 'Handle offer message without peer connection', { peerId });
       return;
@@ -551,7 +559,7 @@ class RTC implements RTCInterface {
       connId,
       data: { sdp, userId, target },
     } = msg;
-    const peerId = this.getPeerId(userId, target, connId);
+    const peerId = this.getPeerId(userId, this.ws.userId, target, connId);
     log('info', '----> Call recipient has accepted our call', {
       id,
       userId,
@@ -601,7 +609,7 @@ class RTC implements RTCInterface {
 
   // eslint-disable-next-line class-methods-use-this
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, target, connId }) => {
-    const peerId = this.getPeerId(roomId, target, connId);
+    const peerId = this.getPeerId(roomId, this.ws.userId, target, connId);
     this.closeByPeer(peerId);
   };
 
