@@ -430,7 +430,7 @@ class RTC implements RTCInterface {
       connId,
       data: { candidate, target, userId },
     } = msg;
-    const peerId = this.getPeerId(id, this.ws.userId, target, connId);
+    const peerId = this.getPeerId(id, this.isRoom ? userId : this.ws.userId, target, connId);
     if (!this.peerConnections[peerId]) {
       log('warn', 'Handle candidatte without peer connection', { peerId });
       return;
@@ -471,9 +471,27 @@ class RTC implements RTCInterface {
       }
       return;
     }
-    const peerId = this.getPeerId(id, this.ws.userId, target, connId);
+    const peerId = this.getPeerId(id, this.isRoom ? userId : this.ws.userId, target, connId);
+    this.createRTC({
+      roomId: id,
+      userId: this.isRoom ? userId : this.ws.userId,
+      target,
+      connId,
+    });
+    console.warn({
+      roomId: id,
+      userId: this.isRoom ? userId : this.ws.userId,
+      target,
+      connId,
+    });
     if (!this.peerConnections[peerId]) {
-      log('warn', 'Handle offer message without peer connection', { peerId });
+      log('warn', 'Handle offer message without peer connection', {
+        peerId,
+        r: this.isRoom,
+        userId,
+        uid: this.ws.userId,
+        k: Object.keys(this.peerConnections),
+      });
       return;
     }
 
@@ -559,12 +577,13 @@ class RTC implements RTCInterface {
       connId,
       data: { sdp, userId, target },
     } = msg;
-    const peerId = this.getPeerId(userId, this.ws.userId, target, connId);
-    log('info', '----> Call recipient has accepted our call', {
+    const peerId = this.getPeerId(id, userId, target, connId);
+    log('warn', '----> Call recipient has accepted our call', {
       id,
       userId,
       target,
       peerId,
+      uid: this.ws.userId,
       s: this.peerConnections[peerId]?.connectionState,
       is: this.peerConnections[peerId]?.iceConnectionState,
     });

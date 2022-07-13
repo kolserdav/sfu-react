@@ -459,22 +459,20 @@ export const useConnection = ({
            */
           setConnectionId(connId);
           rtc.connId = connId;
-
+          const {
+            connId: _connId,
+            data: { userId },
+          } = ws.getMessage(MessageType.SET_USER_ID, rawMessage);
           if (isRoom) {
-            const {
-              connId: _connId,
-              data: { userId },
-            } = ws.getMessage(MessageType.SET_USER_ID, rawMessage);
             ws.sendMessage({
               type: MessageType.SET_ROOM_LOAD,
               id: userId,
               connId: _connId,
               data: undefined,
             });
-            break;
           }
           startConnectionHandler({
-            userId: ws.userId,
+            userId: isRoom ? userId : ws.userId,
             target: 0,
             connId,
           });

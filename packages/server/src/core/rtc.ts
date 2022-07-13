@@ -189,7 +189,6 @@ class RTC {
       userId: uid,
       isRoom,
     });
-    console.log(this.rooms[id]);
     if (error) {
       this.ws.sendMessage({
         type: MessageType.SET_ROOM,
@@ -204,7 +203,7 @@ class RTC {
     }
     this.ws.sendMessage({
       type: MessageType.SET_ROOM,
-      id,
+      id: uid,
       data: {
         roomUsers: this.rooms[id],
       },

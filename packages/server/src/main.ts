@@ -66,6 +66,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
       switch (type) {
         case MessageType.GET_USER_ID:
           const { isRoom } = wss.getMessage(MessageType.GET_USER_ID, rawMessage).data;
+          console.log(isRoom, id);
           await wss.setSocket({ id, ws, connId, isRoom });
           wss.sendMessage({
             type: MessageType.SET_USER_ID,

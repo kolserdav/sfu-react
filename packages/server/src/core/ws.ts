@@ -124,6 +124,15 @@ class WS implements WSInterface {
           resolve(1);
         }
         const { id } = args;
+        log('log', 'Send message', {
+          id,
+          data: args.data,
+          type: args.type,
+          u: this.users[id],
+          s: Object.keys(this.sockets[this.getSocketId(id, this.users[id])] || {}).length,
+          r: this.rooms[id],
+          ss: Object.keys(this.sockets[this.getSocketId(id, this.rooms[id])] || {}).length,
+        });
         if (this.users[id] && this.sockets[this.getSocketId(id, this.users[id])]) {
           this.sockets[this.getSocketId(id, this.users[id])].send(res);
         } else if (this.rooms[id] && this.sockets[this.getSocketId(id, this.rooms[id])]) {

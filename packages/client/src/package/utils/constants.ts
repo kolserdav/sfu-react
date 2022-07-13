@@ -9,5 +9,5 @@
  * Create Date: Mon Jul 04 2022 10:58:51 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 export const WS_TTL = 1;
-export const LOG_LEVEL = process.env.NODE_ENV === 'production' ? 3 : 2;
+export const LOG_LEVEL = process.env.NODE_ENV === 'production' ? 3 : 0;
 export const START_DELAY = 999;
