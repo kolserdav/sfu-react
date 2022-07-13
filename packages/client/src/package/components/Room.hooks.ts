@@ -499,7 +499,6 @@ export const useConnection = ({
             data: { roomUsers },
           } = ws.getMessage(MessageType.SET_ROOM, rawMessage);
           setLenght(roomUsers.length);
-          console.log(roomUsers);
           rtc.roomLength = roomUsers.length;
           rtc.room = roomUsers;
           break;
