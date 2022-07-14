@@ -222,7 +222,6 @@ export const useConnection = ({
         },
         iceServers,
         eventName: 'first',
-        onlyAnswer: false,
       });
       rtc.addTracks({ userId, id: roomId, connId, target: 0 }, (e) => {
         if (!e) {
@@ -289,7 +288,6 @@ export const useConnection = ({
               },
               iceServers,
               eventName: 'back',
-              onlyAnswer: false,
             });
             rtc.addTracks({ id: roomId, userId, target, connId }, (e) => {
               if (!e) {
@@ -382,7 +380,6 @@ export const useConnection = ({
               },
               iceServers,
               eventName: 'check',
-              onlyAnswer: false,
             });
             rtc.addTracks({ id: roomId, userId: id, target: item, connId }, (e) => {
               log('info', 'Change room guests connection', {
@@ -484,13 +481,13 @@ export const useConnection = ({
             },
             connId,
           });
-          if (roomIsSaved) {
-            startConnectionHandler({
-              userId: ws.userId,
-              target: 0,
-              connId,
-            });
-          }
+
+          startConnectionHandler({
+            userId: ws.userId,
+            target: 0,
+            connId,
+          });
+
           break;
         case MessageType.OFFER:
           rtc.handleOfferMessage(rawMessage);
