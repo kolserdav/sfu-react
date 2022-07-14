@@ -40,9 +40,6 @@
     "THIRD_PARTY_LICENSES.md",
     "LICENSE"
   ],
-  "os": [
-    "linux"
-  ],
   "bin": {
     "uyem": "bin/uyem.js"
   },
