@@ -13,7 +13,6 @@ export const createRoom = async ({
   const browser = await puppeteer.launch({
     headless: HEADLESS,
     devtools: !HEADLESS,
-    dumpio: true,
     args: [
       '--allow-file-access-from-files',
       '--disable-gesture-requirement-for-media-playback',

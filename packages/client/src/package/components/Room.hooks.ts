@@ -222,8 +222,9 @@ export const useConnection = ({
         },
         iceServers,
         eventName: 'first',
+        onlyAnswer: false,
       });
-      rtc.addTracks({ userId: ws.userId, id: roomId, connId, target: 0 }, (e) => {
+      rtc.addTracks({ userId, id: roomId, connId, target: 0 }, (e) => {
         if (!e) {
           if (!isRoom) {
             ws.sendMessage({
@@ -288,6 +289,7 @@ export const useConnection = ({
               },
               iceServers,
               eventName: 'back',
+              onlyAnswer: false,
             });
             rtc.addTracks({ id: roomId, userId, target, connId }, (e) => {
               if (!e) {
@@ -380,6 +382,7 @@ export const useConnection = ({
               },
               iceServers,
               eventName: 'check',
+              onlyAnswer: false,
             });
             rtc.addTracks({ id: roomId, userId: id, target: item, connId }, (e) => {
               log('info', 'Change room guests connection', {
@@ -470,12 +473,24 @@ export const useConnection = ({
               connId: _connId,
               data: undefined,
             });
+            break;
           }
-          startConnectionHandler({
-            userId: isRoom ? userId : ws.userId,
-            target: 0,
+          ws.sendMessage({
+            type: MessageType.GET_ROOM,
+            id: roomId,
+            data: {
+              userId: id,
+              isRoom,
+            },
             connId,
           });
+          if (roomIsSaved) {
+            startConnectionHandler({
+              userId: ws.userId,
+              target: 0,
+              connId,
+            });
+          }
           break;
         case MessageType.OFFER:
           rtc.handleOfferMessage(rawMessage);
@@ -499,6 +514,7 @@ export const useConnection = ({
           setLenght(roomUsers.length);
           rtc.roomLength = roomUsers.length;
           rtc.room = roomUsers;
+          setRoomIsSaved(true);
           break;
         case MessageType.GET_NEED_RECONNECT:
           needReconnectHandler(rawMessage);

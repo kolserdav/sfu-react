@@ -55,6 +55,7 @@ class RTC implements RTCInterface {
     onTrack,
     iceServers,
     eventName,
+    onlyAnswer,
   }: {
     roomId: string | number;
     userId: string | number;
@@ -63,24 +64,30 @@ class RTC implements RTCInterface {
     onTrack: (args: { addedUserId: string | number; stream: MediaStream; connId: string }) => void;
     iceServers: RTCConfiguration['iceServers'];
     eventName: 'first' | 'check' | 'back';
+    onlyAnswer: boolean;
   }) {
-    const peerId = this.getPeerId(roomId, this.ws.userId, target, connId);
+    const peerId = this.getPeerId(roomId, userId, target, connId);
     this.createRTC({ roomId, target, userId, connId, iceServers });
     this.onAddTrack[peerId] = (addedUserId, stream) => {
       log('info', 'On track peer', { userId, target, connId, eventName });
       onTrack({ addedUserId, stream, connId });
     };
-    this.invite({ roomId, userId, target, connId });
+    this.invite({ roomId, userId, target, connId, onlyAnswer });
   }
 
-  public createRTC: RTCInterface['createRTC'] = ({ connId, roomId, target, iceServers = [] }) => {
+  public createRTC: RTCInterface['createRTC'] = ({
+    connId,
+    roomId,
+    target,
+    userId,
+    iceServers = [],
+  }) => {
     if (!connId) {
       log('warn', 'Connection id is: ', { connId });
     }
-    this.peerConnections[this.getPeerId(roomId, this.ws.userId, target, connId)] =
-      new RTCPeerConnection({
-        iceServers,
-      });
+    this.peerConnections[this.getPeerId(roomId, userId, target, connId)] = new RTCPeerConnection({
+      iceServers,
+    });
     return this.peerConnections;
   };
 
@@ -101,9 +108,9 @@ class RTC implements RTCInterface {
     userId,
     target,
   }) => {
-    let peerId = this.getPeerId(roomId, this.ws.userId, target, connId);
+    let peerId = this.getPeerId(roomId, userId, target, connId);
     if (!this.peerConnections[peerId]) {
-      peerId = this.getPeerId(roomId, this.ws.userId, target, connId);
+      peerId = this.getPeerId(roomId, userId, target, connId);
     }
     if (!this.peerConnections[peerId]) {
       log('warn', 'Handle ice candidate without peerConnection', { peerId });
@@ -286,11 +293,13 @@ class RTC implements RTCInterface {
     userId,
     target,
     connId,
+    onlyAnswer,
   }: {
     roomId: number | string;
     userId: number | string;
     target: number | string;
     connId: string;
+    onlyAnswer: boolean;
   }) {
     this.handleIceCandidate({ connId, roomId, userId, target });
   }
@@ -478,7 +487,7 @@ class RTC implements RTCInterface {
       target,
       connId,
     });
-    console.warn({
+    log('info', 'Handle offer message', {
       roomId: id,
       userId: this.isRoom ? userId : this.ws.userId,
       target,
@@ -541,7 +550,7 @@ class RTC implements RTCInterface {
                   type: MessageType.ANSWER,
                   data: {
                     sdp: localDescription,
-                    userId: this.ws.userId,
+                    userId,
                     target,
                   },
                   connId,
@@ -578,7 +587,7 @@ class RTC implements RTCInterface {
       data: { sdp, userId, target },
     } = msg;
     const peerId = this.getPeerId(id, userId, target, connId);
-    log('warn', '----> Call recipient has accepted our call', {
+    log('info', '----> Call recipient has accepted our call', {
       id,
       userId,
       target,
