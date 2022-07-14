@@ -107,61 +107,63 @@ class RTC {
           this.pages[roomId] = page;
         }
       }
-      db.unitFindFirst({
-        where: {
-          id: userId.toString(),
-        },
-        select: {
-          IGuest: {
-            select: {
-              id: true,
+      if (!isRoom) {
+        db.unitFindFirst({
+          where: {
+            id: userId.toString(),
+          },
+          select: {
+            IGuest: {
+              select: {
+                id: true,
+              },
             },
           },
-        },
-      }).then((g) => {
-        const id = roomId.toString();
-        if (!g) {
-          log('warn', 'Unit not found', { id: userId.toString() });
-        } else if (!g?.IGuest[0]) {
-          db.unitUpdate({
-            where: {
-              id: userId.toString(),
-            },
-            data: {
-              IGuest: {
-                create: {
-                  roomId: id,
-                },
+        }).then((g) => {
+          const id = roomId.toString();
+          if (!g) {
+            log('warn', 'Unit not found', { id: userId.toString() });
+          } else if (!g?.IGuest[0]) {
+            db.unitUpdate({
+              where: {
+                id: userId.toString(),
               },
-              updated: new Date(),
-            },
-          }).then((r) => {
-            if (!r) {
-              log('warn', 'Room not updated', { roomId });
-            }
-          });
-        } else if (g.IGuest[0].id) {
-          db.unitUpdate({
-            where: {
-              id: userId.toString(),
-            },
-            data: {
-              IGuest: {
-                update: {
-                  where: {
-                    id: g.IGuest[0].id,
-                  },
-                  data: {
-                    updated: new Date(),
+              data: {
+                IGuest: {
+                  create: {
+                    roomId: id,
                   },
                 },
+                updated: new Date(),
               },
-            },
-          });
-        } else {
-          log('warn', 'Room not saved', { g: g.IGuest[0]?.id, id });
-        }
-      });
+            }).then((r) => {
+              if (!r) {
+                log('warn', 'Room not updated', { roomId });
+              }
+            });
+          } else if (g.IGuest[0].id) {
+            db.unitUpdate({
+              where: {
+                id: userId.toString(),
+              },
+              data: {
+                IGuest: {
+                  update: {
+                    where: {
+                      id: g.IGuest[0].id,
+                    },
+                    data: {
+                      updated: new Date(),
+                    },
+                  },
+                },
+              },
+            });
+          } else {
+            log('warn', 'Room not saved', { g: g.IGuest[0]?.id, id });
+          }
+        });
+      }
     }
     if (!this.rooms[roomId]) {
       this.rooms[roomId] = [userId];

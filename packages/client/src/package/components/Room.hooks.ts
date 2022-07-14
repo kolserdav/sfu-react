@@ -225,17 +225,15 @@ export const useConnection = ({
       });
       rtc.addTracks({ userId, id: roomId, connId, target: 0 }, (e) => {
         if (!e) {
-          if (!isRoom) {
-            ws.sendMessage({
-              type: MessageType.GET_ROOM,
-              id: roomId,
-              data: {
-                userId: id,
-                isRoom,
-              },
-              connId,
-            });
-          }
+          ws.sendMessage({
+            type: MessageType.GET_ROOM,
+            id: roomId,
+            data: {
+              userId: id,
+              isRoom,
+            },
+            connId,
+          });
         } else if (localShareScreen) {
           ws.shareScreen = false;
           setLocalShareScreen(false);
@@ -289,6 +287,7 @@ export const useConnection = ({
               iceServers,
               eventName: 'back',
             });
+            console.warn(userId);
             rtc.addTracks({ id: roomId, userId, target, connId }, (e) => {
               if (!e) {
                 if (eventName !== 'added' && target !== userId) {
@@ -464,6 +463,15 @@ export const useConnection = ({
             data: { userId },
           } = ws.getMessage(MessageType.SET_USER_ID, rawMessage);
           if (isRoom) {
+            ws.sendMessage({
+              type: MessageType.GET_ROOM,
+              id: roomId,
+              data: {
+                userId: roomId,
+                isRoom,
+              },
+              connId,
+            });
             ws.sendMessage({
               type: MessageType.SET_ROOM_LOAD,
               id: userId,

@@ -256,19 +256,23 @@ class RTC implements RTCInterface {
         userId,
         streamId: stream.id,
         tracks: stream.getTracks(),
+        t: Object.keys(this.onAddTrack),
       });
-      if (target.toString() !== '0') {
-        this.onAddTrack[this.getPeerId(roomId, this.ws.userId, target, connId)](target, stream);
-      }
-      const isRoom = peerId.split(this.delimiter)[1] === '0';
+      const isRoom = peerId.split(this.delimiter)[2] === '0';
       if (this.isRoom && isRoom) {
         const _stream = e.streams[0];
         const isNew = _stream.id !== this.streams[peerId]?.id;
         if (isNew) {
           this.streams[peerId] = _stream;
         }
-        console.warn(Object.keys(this.streams));
-        log('info', 'ontrack  ', { peerId, si: stream.id, isNew, userId, target });
+        log('info', 'ontrack  ', {
+          peerId,
+          si: stream.id,
+          isNew,
+          userId,
+          target,
+          k: Object.keys(this.streams),
+        });
         if (s % 2 !== 0 && isNew) {
           const { room } = this;
           setTimeout(() => {
@@ -288,6 +292,10 @@ class RTC implements RTCInterface {
           }, 0);
         }
         s++;
+      } else if (target.toString() !== '0') {
+        this.onAddTrack[this.getPeerId(roomId, userId, target, connId)](target, stream);
+      } else {
+        log('warn', 'Unhandled ontrack', { peerId });
       }
     };
   };
@@ -307,10 +315,13 @@ class RTC implements RTCInterface {
   }
 
   public addTracks: RTCInterface['addTracks'] = ({ id, userId, target, connId }, cb) => {
-    const peerId = this.getPeerId(id, this.ws.userId, target, connId);
-    log('info', 'Add tracks', { peerId });
+    const peerId = this.getPeerId(id, userId, target, connId);
+    log('warn', 'Add tracks', { peerId });
     if (!this.peerConnections[peerId]) {
-      log('warn', 'Set media without peer connection', { peerId });
+      log('warn', 'Set media without peer connection', {
+        peerId,
+        k: Object.keys(this.peerConnections),
+      });
       return;
     }
     if (this.isRoom) {
@@ -423,7 +434,7 @@ class RTC implements RTCInterface {
           this.peerConnections[peerId]!.addTrack(track, this.localStream);
         }
       });
-      this.onAddTrack[this.getPeerId(id, this.ws.userId, target, connId)](userId, this.localStream);
+      this.onAddTrack[this.getPeerId(id, userId, target, connId)](userId, this.localStream);
       cb(0);
     }
   };

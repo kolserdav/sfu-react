@@ -66,7 +66,6 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
       switch (type) {
         case MessageType.GET_USER_ID:
           const { isRoom } = wss.getMessage(MessageType.GET_USER_ID, rawMessage).data;
-          console.log(isRoom, id);
           await wss.setSocket({ id, ws, connId, isRoom });
           wss.sendMessage({
             type: MessageType.SET_USER_ID,
@@ -148,14 +147,22 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
           log('warn', 'No socket delete', { s: Object.keys(wss.sockets) });
         }
         // set unit offline
-        db.unitUpdate({
+        db.unitFindFirst({
           where: {
             id: userId.toString(),
           },
-          data: {
-            online: false,
-            updated: new Date(),
-          },
+        }).then((d) => {
+          if (d) {
+            db.unitUpdate({
+              where: {
+                id: userId.toString(),
+              },
+              data: {
+                online: false,
+                updated: new Date(),
+              },
+            });
+          }
         });
         log('info', 'User disconnected', userId);
         const roomKeys = Object.keys(rtc.rooms);
@@ -181,7 +188,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
                 connId: connId,
               });
             });
-            if (rtc.rooms[item].length === 0) {
+            if (rtc.rooms[item].length === 1 && rtc.rooms[item][0] === item) {
               delete rtc.rooms[item];
               db.roomUpdate({
                 where: {
