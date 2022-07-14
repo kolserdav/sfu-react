@@ -3,10 +3,10 @@
  * File name: index.tsx
  * Author: Sergey Kolmiller
  * Email: <uyem.ru@gmail.com>
- * License: BSD-2-Clause
- * License text: Binary distributions of this software include 'wrtc' and other third-party libraries.
+ * License: MIT
+ * License text: 
  * Copyright: kolserdav, All rights reserved (c)
- * Create Date: Mon Jul 04 2022 10:58:51 GMT+0700 (Krasnoyarsk Standard Time)
+ * Create Date: Thu Jul 14 2022 16:24:49 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import React from 'react';
 import ReactDOM from 'react-dom/client';
