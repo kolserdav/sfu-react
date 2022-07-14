@@ -264,7 +264,6 @@ class RTC implements RTCInterface {
         const isNew = _stream.id !== this.streams[peerId]?.id;
         if (isNew) {
           this.streams[peerId] = _stream;
-          console.error(peerId);
         }
         log('info', 'ontrack  ', {
           peerId,
@@ -321,7 +320,11 @@ class RTC implements RTCInterface {
 
   public addTracks: RTCInterface['addTracks'] = ({ id, userId, target, connId }, cb) => {
     const peerId = this.getPeerId(id, userId, target, connId);
-    log('warn', 'Add tracks', { peerId });
+    log('warn', 'Add tracks', {
+      peerId,
+      isRoom: this.isRoom,
+      k: Object.keys(this.peerConnections),
+    });
     if (!this.peerConnections[peerId]) {
       log('warn', 'Set media without peer connection', {
         peerId,
