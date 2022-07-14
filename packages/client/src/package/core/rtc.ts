@@ -264,6 +264,7 @@ class RTC implements RTCInterface {
         const isNew = _stream.id !== this.streams[peerId]?.id;
         if (isNew) {
           this.streams[peerId] = _stream;
+          console.error(peerId);
         }
         log('info', 'ontrack  ', {
           peerId,
@@ -277,25 +278,29 @@ class RTC implements RTCInterface {
           const { room } = this;
           setTimeout(() => {
             room.forEach((id) => {
-              this.ws.sendMessage({
-                type: MessageType.SET_CHANGE_UNIT,
-                id,
-                data: {
-                  target: userId,
-                  eventName: 'add',
-                  roomLenght: room.length || 0,
-                  muteds: this.muteds,
-                },
-                connId,
-              });
+              if (id.toString() !== this.ws.userId.toString()) {
+                this.ws.sendMessage({
+                  type: MessageType.SET_CHANGE_UNIT,
+                  id,
+                  data: {
+                    target: userId,
+                    eventName: 'add',
+                    roomLenght: room.length || 0,
+                    muteds: this.muteds,
+                  },
+                  connId,
+                });
+              }
             });
           }, 0);
         }
         s++;
-      } else if (target.toString() !== '0') {
+      } else if (target.toString() !== '0' && !this.isRoom) {
         this.onAddTrack[this.getPeerId(roomId, userId, target, connId)](target, stream);
       } else {
-        log('warn', 'Unhandled ontrack', { peerId });
+        this.addTracks({ id: roomId, userId, target, connId }, () => {
+          log('warn', 'On add remote track', { peerId });
+        });
       }
     };
   };

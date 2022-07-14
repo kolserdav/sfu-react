@@ -287,7 +287,6 @@ export const useConnection = ({
               iceServers,
               eventName: 'back',
             });
-            console.warn(userId);
             rtc.addTracks({ id: roomId, userId, target, connId }, (e) => {
               if (!e) {
                 if (eventName !== 'added' && target !== userId) {
@@ -489,13 +488,6 @@ export const useConnection = ({
             },
             connId,
           });
-
-          startConnectionHandler({
-            userId: ws.userId,
-            target: 0,
-            connId,
-          });
-
           break;
         case MessageType.OFFER:
           rtc.handleOfferMessage(rawMessage);
@@ -519,6 +511,16 @@ export const useConnection = ({
           setLenght(roomUsers.length);
           rtc.roomLength = roomUsers.length;
           rtc.room = roomUsers;
+          if (
+            roomUsers.length > 2 &&
+            !rtc.peerConnections[rtc.getPeerId(roomId, ws.userId, 0, connId)]
+          ) {
+            startConnectionHandler({
+              userId: ws.userId,
+              target: 0,
+              connId,
+            });
+          }
           setRoomIsSaved(true);
           break;
         case MessageType.GET_NEED_RECONNECT:
