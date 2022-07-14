@@ -12,7 +12,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import WS from '../core/ws';
 import RTC from '../core/rtc';
-import { log, parseQueryString } from '../utils/lib';
+import { log } from '../utils/lib';
 import { getWidthOfItem } from './Room.lib';
 import { MessageType, SendMessageArgs } from '../types/interfaces';
 import { Stream } from '../types';
@@ -43,7 +43,6 @@ export const useConnection = ({
   const [muted, setMuted] = useState<boolean>(false);
   const [muteds, setMuteds] = useState<string[]>([]);
   const [video, setVideo] = useState<boolean>(true);
-  const [isRoom, setIsRoom] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [connectionId, setConnectionId] = useState<string>('');
   const ws = useMemo(
@@ -86,18 +85,31 @@ export const useConnection = ({
     }
   };
 
-  /**
-   * Set is room
-   */
-  useEffect(() => {
-    const qS = parseQueryString(window.location.search);
-    if (qS?.room === '1') {
-      rtc.isRoom = true;
-    } else {
-      rtc.isRoom = false;
+  const lostStreamHandler = ({ target, connId }: { target: number | string; connId: string }) => {
+    if (!roomId) {
+      return;
     }
-    setIsRoom(rtc.isRoom);
-  }, [rtc]);
+    let _connId = connId;
+    Object.keys(rtc.peerConnections).forEach((item) => {
+      const peer = item.split(rtc.delimiter);
+      if (peer[1] === target.toString()) {
+        // eslint-disable-next-line prefer-destructuring
+        _connId = peer[2];
+      }
+    });
+    const peerId = rtc.getPeerId(roomId, target, _connId);
+    if (!rtc.peerConnections[peerId]) {
+      log('info', 'Lost stream handler without peer connection', { peerId });
+      return;
+    }
+    rtc.closeVideoCall({ roomId, userId: ws.userId, target, connId: _connId });
+    const _stream = streams.find((item) => item.target === target);
+    if (_stream) {
+      storeStreams.dispatch(changeStreams({ type: 'delete', stream: _stream }));
+    }
+  };
+
+  rtc.lostStreamHandler = lostStreamHandler;
 
   /**
    * Change media source
@@ -140,39 +152,14 @@ export const useConnection = ({
    * Connections handlers
    */
   useEffect(() => {
-    if (!roomId || isRoom === null) {
+    if (!roomId) {
       return () => {
         /** */
       };
     }
     if (!ws.userId) {
-      ws.setUserId(isRoom ? roomId : id);
+      ws.setUserId(id);
     }
-
-    rtc.lostStreamHandler = ({ target, connId }: { target: number | string; connId: string }) => {
-      if (!roomId) {
-        return;
-      }
-      let _connId = connId;
-      Object.keys(rtc.peerConnections).forEach((item) => {
-        const peer = item.split(rtc.delimiter);
-        if (peer[1] === target.toString()) {
-          // eslint-disable-next-line prefer-destructuring
-          _connId = peer[2];
-        }
-      });
-      const peerId = rtc.getPeerId(roomId, ws.userId, target, _connId);
-      if (!rtc.peerConnections[peerId]) {
-        log('info', 'Lost stream handler without peer connection', { peerId });
-        return;
-      }
-      rtc.closeVideoCall({ roomId, userId: ws.userId, target, connId: _connId });
-      const _stream = streams.find((item) => item.target === target);
-      if (_stream) {
-        storeStreams.dispatch(changeStreams({ type: 'delete', stream: _stream }));
-      }
-    };
-
     const addStream = ({
       target,
       stream,
@@ -200,54 +187,6 @@ export const useConnection = ({
         setSelfStream(_stream);
       }
       log('info', 'Add stream', { _stream });
-    };
-
-    const startConnectionHandler = ({
-      connId,
-      userId,
-      target,
-    }: {
-      userId: string | number;
-      target: string | number;
-      connId: string;
-    }) => {
-      rtc.createPeerConnection({
-        userId,
-        target,
-        connId,
-        roomId,
-        onTrack: ({ addedUserId, stream }) => {
-          log('info', '-> Added local stream to room', { addedUserId, id });
-          addStream({ target: addedUserId, stream, connId });
-        },
-        iceServers,
-        eventName: 'first',
-      });
-      rtc.addTracks({ userId, id: roomId, connId, target: 0 }, (e) => {
-        if (!e) {
-          ws.sendMessage({
-            type: MessageType.GET_ROOM,
-            id: roomId,
-            data: {
-              userId: id,
-              isRoom,
-            },
-            connId,
-          });
-        } else if (localShareScreen) {
-          ws.shareScreen = false;
-          setLocalShareScreen(false);
-          setShareScreen(false);
-          ws.onOpen = () => {
-            ws.sendMessage({
-              type: MessageType.GET_USER_ID,
-              id,
-              data: {},
-              connId: '',
-            });
-          };
-        }
-      });
     };
 
     /**
@@ -335,7 +274,7 @@ export const useConnection = ({
       data: { userId },
       connId,
     }: SendMessageArgs<MessageType.GET_NEED_RECONNECT>) => {
-      rtc.lostStreamHandler({
+      lostStreamHandler({
         connId,
         target: userId,
       });
@@ -361,10 +300,9 @@ export const useConnection = ({
       // Add remote streams
       rtc.roomLength = roomUsers.length;
       setLenght(roomUsers.length);
-      rtc.room = roomUsers;
       roomUsers.forEach((item) => {
         if (item !== id) {
-          const peerId = rtc.getPeerId(roomId, ws.userId, item, connId);
+          const peerId = rtc.getPeerId(roomId, item, connId);
           const _isExists = _streams.filter((_item) => item === _item.target);
           if (!_isExists[0]) {
             log('info', 'Check new user', { item });
@@ -436,10 +374,8 @@ export const useConnection = ({
     ws.onOpen = () => {
       ws.sendMessage({
         type: MessageType.GET_USER_ID,
-        id: isRoom ? roomId : id,
-        data: {
-          isRoom,
-        },
+        id,
+        data: {},
         connId: '',
       });
     };
@@ -457,36 +393,41 @@ export const useConnection = ({
            */
           setConnectionId(connId);
           rtc.connId = connId;
-          const {
-            connId: _connId,
-            data: { userId },
-          } = ws.getMessage(MessageType.SET_USER_ID, rawMessage);
-          if (isRoom) {
-            ws.sendMessage({
-              type: MessageType.GET_ROOM,
-              id: roomId,
-              data: {
-                userId: roomId,
-                isRoom,
-              },
-              connId,
-            });
-            ws.sendMessage({
-              type: MessageType.SET_ROOM_LOAD,
-              id: userId,
-              connId: _connId,
-              data: undefined,
-            });
-            break;
-          }
-          ws.sendMessage({
-            type: MessageType.GET_ROOM,
-            id: roomId,
-            data: {
-              userId: id,
-              isRoom,
-            },
+          rtc.createPeerConnection({
+            userId: ws.userId,
+            target: 0,
             connId,
+            roomId,
+            onTrack: ({ addedUserId, stream }) => {
+              log('info', '-> Added local stream to room', { addedUserId, id });
+              addStream({ target: addedUserId, stream, connId });
+            },
+            iceServers,
+            eventName: 'first',
+          });
+          rtc.addTracks({ userId: ws.userId, id: roomId, connId, target: 0 }, (e) => {
+            if (!e) {
+              ws.sendMessage({
+                type: MessageType.GET_ROOM,
+                id: roomId,
+                data: {
+                  userId: id,
+                },
+                connId,
+              });
+            } else if (localShareScreen) {
+              ws.shareScreen = false;
+              setLocalShareScreen(false);
+              setShareScreen(false);
+              ws.onOpen = () => {
+                ws.sendMessage({
+                  type: MessageType.GET_USER_ID,
+                  id,
+                  data: {},
+                  connId: '',
+                });
+              };
+            }
           });
           break;
         case MessageType.OFFER:
@@ -505,22 +446,6 @@ export const useConnection = ({
           rtc.handleVideoAnswerMsg(rawMessage);
           break;
         case MessageType.SET_ROOM:
-          const {
-            data: { roomUsers },
-          } = ws.getMessage(MessageType.SET_ROOM, rawMessage);
-          setLenght(roomUsers.length);
-          rtc.roomLength = roomUsers.length;
-          rtc.room = roomUsers;
-          if (
-            roomUsers.length > 2 &&
-            !rtc.peerConnections[rtc.getPeerId(roomId, ws.userId, 0, connId)]
-          ) {
-            startConnectionHandler({
-              userId: ws.userId,
-              target: 0,
-              connId,
-            });
-          }
           setRoomIsSaved(true);
           break;
         case MessageType.GET_NEED_RECONNECT:
@@ -535,13 +460,6 @@ export const useConnection = ({
           } = ws.getMessage(MessageType.SET_ERROR, rawMessage);
           setError(message);
           log('warn', 'error', message);
-          break;
-        case MessageType.SET_ROOM_LOAD:
-          startConnectionHandler({
-            userId: ws.userId,
-            target: 0,
-            connId,
-          });
           break;
         default:
       }
@@ -577,19 +495,18 @@ export const useConnection = ({
     selfStream,
     iceServers,
     localShareScreen,
-    rtc.lostStreamHandler,
-    isRoom,
+    lostStreamHandler,
   ]);
 
   /**
    * Check room list
    */
   useEffect(() => {
-    /*if (!roomId) {
+    if (!roomId) {
       return () => {
         //
       };
-    } 
+    }
     let interval = setTimeout(() => {
       //
     });
@@ -610,7 +527,7 @@ export const useConnection = ({
 
     return () => {
       clearTimeout(interval);
-    };*/
+    };
   }, [roomId, ws, lenght, streams, connectionId, id, shareScreen]);
 
   return {
@@ -618,7 +535,7 @@ export const useConnection = ({
     lenght,
     ws,
     rtc,
-    lostStreamHandler: rtc.lostStreamHandler,
+    lostStreamHandler,
     screenShare,
     shareScreen,
     muted,
@@ -827,7 +744,7 @@ export const useVideoStarted = ({
       clearInterval(timeout);
       mounted = false;
     };
-  }, [played, streams, lostStreamHandler, attempts, ws, timeStart, rtc]);
+  }, [played, streams, lostStreamHandler, attempts, ws, timeStart]);
 
   return { played, setPlayed };
 };

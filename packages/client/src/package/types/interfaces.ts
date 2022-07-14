@@ -12,6 +12,7 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 /* eslint-disable max-classes-per-file */
 /* eslint-disable no-unused-vars */
+import { RTCPeerConnection as RTCPeerConnectionServer } from 'werift';
 import { Prisma, Room, Unit, Message } from './prisma';
 
 export type SendMessageArgs<T> = Signaling.SendMessageArgs<T>;
@@ -36,7 +37,6 @@ export enum MessageType {
   GET_MUTE = 'GET_MUTE',
   SET_MUTE = 'SET_MUTE',
   GET_NEED_RECONNECT = 'GET_NEED_RECONNECT',
-  SET_ROOM_LOAD = 'SET_ROOM_LOAD',
 }
 
 export namespace DataTypes {
@@ -60,20 +60,15 @@ export namespace DataTypes {
       roomLenght: number;
       muteds: string[];
     };
-    export type SetUserId = {
-      userId: string | number;
-    };
+    export type SetGuestId = undefined;
     export type GetRoom = {
       userId: number | string;
-      isRoom: boolean;
     };
     export type SetRoomGuests = {
       roomUsers: (number | string)[];
       muteds: string[];
     };
-    export type SetRoom = {
-      roomUsers: (string | number)[];
-    };
+    export type SetRoom = undefined;
     export type SetError = {
       message: string;
       context: SendMessageArgs<any>;
@@ -81,7 +76,6 @@ export namespace DataTypes {
     export type SetMute = {
       muteds: string[];
     };
-    export type SetRoomLoad = undefined;
     export type Offer = {
       sdp: RTCSessionDescriptionInit;
       userId: number | string;
@@ -113,7 +107,7 @@ export namespace DataTypes {
     : T extends MessageType.GET_USER_ID
     ? DataTypes.MessageTypes.GetGuestId
     : T extends MessageType.SET_USER_ID
-    ? DataTypes.MessageTypes.SetUserId
+    ? DataTypes.MessageTypes.SetGuestId
     : T extends MessageType.GET_ROOM
     ? DataTypes.MessageTypes.GetRoom
     : T extends MessageType.SET_ROOM
@@ -126,8 +120,6 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetChangeRoomUnit
     : T extends MessageType.SET_MUTE
     ? DataTypes.MessageTypes.SetMute
-    : T extends MessageType.SET_ROOM_LOAD
-    ? DataTypes.MessageTypes.SetRoomLoad
     : T extends MessageType.SET_ERROR
     ? DataTypes.MessageTypes.SetError
     : unknown;
@@ -165,6 +157,8 @@ export namespace Connection {
   export abstract class RTCInterface {
     public abstract peerConnections: Record<string, RTCPeerConnection | undefined>;
 
+    public abstract peerConnectionsServer: Record<string, RTCPeerConnectionServer | undefined>;
+
     public readonly delimiter = '_';
 
     public abstract createRTC(args: {
@@ -174,6 +168,14 @@ export namespace Connection {
       target: string | number;
       iceServers?: RTCConfiguration['iceServers'];
     }): Record<number, RTCPeerConnection | undefined>;
+
+    public abstract createRTCServer(args: {
+      connId: string;
+      roomId: number | string;
+      userId: number | string;
+      target: string | number;
+      iceServers?: RTCConfiguration['iceServers'];
+    }): Record<number, RTCPeerConnectionServer | undefined>;
 
     public abstract handleIceCandidate(args: {
       connId: string;
