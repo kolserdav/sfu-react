@@ -4,7 +4,7 @@
  * Author: Sergey Kolmiller
  * Email: <uyem.ru@gmail.com>
  * License: MIT
- * License text: 
+ * License text:
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Thu Jul 14 2022 16:24:49 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
@@ -93,6 +93,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
             break;
         }
       };
+    /*
     this.peerConnectionsServer[peerId]!.onnegotiationneeded =
       function handleNegotiationNeededEvent() {
         if (!core.peerConnectionsServer[peerId]) {
@@ -126,7 +127,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
           .then(() => {
             const { localDescription } = core.peerConnectionsServer[peerId]!;
             if (localDescription) {
-              log('info', '---> Sending offer to remote peer', { roomId, userId, target });
+              log('warn', '---> Sending offer to remote peer', { roomId, userId, target });
               core.ws.sendMessage({
                 id: roomId,
                 type: MessageType.OFFER,
@@ -140,6 +141,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
             }
           });
       };
+      */
     let s = 1;
     this.peerConnectionsServer[peerId]!.ontrack = (e) => {
       const isRoom = peerId.split(delimiter)[2] === '0';
