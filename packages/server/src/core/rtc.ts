@@ -145,13 +145,20 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     let s = 1;
     this.peerConnectionsServer[peerId]!.ontrack = (e) => {
       const isRoom = peerId.split(delimiter)[2] === '0';
+      const stream = e.streams[0];
+      const isNew = stream.id !== this.streams[peerId]?.id;
+      log('warn', 'ontrack', {
+        peerId,
+        si: stream.id,
+        isNew,
+        userId,
+        target,
+        tracks: stream.getTracks().map((item) => item.kind),
+      });
       if (isRoom) {
-        const stream = e.streams[0];
-        const isNew = stream.id !== this.streams[peerId]?.id;
         if (isNew) {
           this.streams[peerId] = stream;
         }
-        log('info', 'ontrack', { peerId, si: stream.id, isNew, userId, target });
         if (s % 2 !== 0 && isNew) {
           const room = rooms[roomId];
           if (room) {
@@ -299,7 +306,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     this.peerConnectionsServer[peerId]!.setRemoteDescription(desc)
       .then(() => {
         log('info', '-> Local video stream obtained', { peerId });
-        // If a user creates a new connection with a room to get another user's stream
         if (target) {
           this.addTracks({ id, peerId, connId, target, userId });
         }
@@ -457,6 +463,19 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     });
     const _peerId = this.getPeerId(id, target, 0, _connId);
     const stream = this.streams[_peerId];
+    const tracks = stream.getTracks();
+    log('warn', 'Add tracks', {
+      roomId: id,
+      userId,
+      target,
+      connId,
+      _peerId,
+      tracksL: tracks.length,
+      _connId,
+      id: stream.id,
+      tracks: stream.getTracks().map((item) => item.kind),
+      ss: Object.keys(this.streams),
+    });
     if (!stream) {
       log('info', 'Skiping add track', {
         roomId: id,
@@ -469,7 +488,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       });
       return;
     }
-    const tracks = stream.getTracks();
     tracks.forEach((track) => {
       if (this.peerConnectionsServer[peerId]) {
         const sender = this.peerConnectionsServer[peerId]
