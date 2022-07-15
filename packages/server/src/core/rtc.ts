@@ -144,7 +144,8 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       */
     let s = 1;
     this.peerConnectionsServer[peerId]!.ontrack = (e) => {
-      const isRoom = peerId.split(delimiter)[2] === '0';
+      const peer = peerId.split(delimiter);
+      const isRoom = peer[2] === '0';
       const stream = e.streams[0];
       const isNew = stream.id !== this.streams[peerId]?.id;
       log('warn', 'ontrack', {
@@ -182,6 +183,9 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
           }
         }
         s++;
+      } else {
+        const _peerId = peerId.replace(peer[2], '0').replace(peer[1], peer[2]);
+        console.log(_peerId);
       }
     };
   };
@@ -306,6 +310,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     this.peerConnectionsServer[peerId]!.setRemoteDescription(desc)
       .then(() => {
         log('info', '-> Local video stream obtained', { peerId });
+        // If a user creates a new connection with a room to get another user's stream
         if (target) {
           this.addTracks({ id, peerId, connId, target, userId });
         }
