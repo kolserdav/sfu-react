@@ -61,7 +61,8 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
     const peerId = this.getPeerId(roomId, target, connId);
     this.createRTC({ roomId, target, userId, connId, iceServers });
     this.onAddTrack[peerId] = (addedUserId, stream) => {
-      log('info', 'On track peer', { userId, target, connId, eventName });
+      log('warn', 'On track peer', { si: stream.id, userId, target, connId, eventName });
+      console.log(stream.getTracks());
       onTrack({ addedUserId, stream, connId });
     };
     this.invite({ roomId, userId, target, connId });
@@ -112,6 +113,7 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
         default:
       }
     };
+    const peerConnection = this.peerConnections[peerId];
     this.peerConnections[peerId]!.onicecandidate = function handleICECandidateEvent(
       event: RTCPeerConnectionIceEvent
     ) {
@@ -121,7 +123,11 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
           userId,
           target,
           connId,
+          c: event.candidate,
           d: Object.keys(core.peerConnections),
+          cs: peerConnection?.connectionState,
+          ics: peerConnection?.iceConnectionState,
+          ss: peerConnection?.signalingState,
         });
         core.ws.sendMessage({
           type: MessageType.CANDIDATE,

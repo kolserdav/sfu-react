@@ -7,7 +7,7 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: osago_rus
+      MYSQL_DATABASE: uyem_db
     ports:
       - "3306:3306"
     volumes:

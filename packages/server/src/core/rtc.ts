@@ -47,17 +47,44 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
   }) => {
     const peerId = this.getPeerId(roomId, userId, target, connId);
     this.peerConnectionsServer[peerId] = new werift.RTCPeerConnection({
-      iceServers:
-        process.env.NODE_ENV === 'production'
-          ? [
-              {
-                urls: 'stun:stun.l.google.com:19302',
-              },
-            ]
-          : [],
+      codecs: {
+        audio: [
+          new werift.RTCRtpCodecParameters({
+            mimeType: 'audio/opus',
+            clockRate: 48000,
+            channels: 2,
+          }),
+        ],
+        video: [
+          new werift.RTCRtpCodecParameters({
+            mimeType: 'video/VP8',
+            clockRate: 90000,
+            rtcpFeedback: [
+              { type: 'transport-cc' },
+              { type: 'ccm', parameter: 'fir' },
+              { type: 'nack' },
+              { type: 'nack', parameter: 'pli' },
+              { type: 'goog-remb' },
+            ],
+          }),
+        ],
+      },
+      iceTransportPolicy: 'all',
+      bundlePolicy: 'disable',
     });
     return this.peerConnectionsServer;
   };
+
+  public getRevPeerId(peerId: string) {
+    const peer = peerId.split(this.delimiter);
+    return {
+      peerId: `${peer[0]}${this.delimiter}${peer[2]}${this.delimiter}${peer[1]}${this.delimiter}${peer[3]}`,
+      userId: peer[2],
+      target: peer[1],
+      connId: peer[3],
+      id: peer[0],
+    };
+  }
 
   public handleIceCandidate: RTCInterface['handleIceCandidate'] = ({
     roomId,
@@ -159,6 +186,8 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       if (isRoom) {
         if (isNew) {
           this.streams[peerId] = stream;
+        } else {
+          this.streams[peerId].addTrack(stream.getTracks()[0]);
         }
         if (s % 2 !== 0 && isNew) {
           const room = rooms[roomId];
@@ -184,8 +213,8 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
         }
         s++;
       } else {
-        const _peerId = peerId.replace(peer[2], '0').replace(peer[1], peer[2]);
-        console.log(_peerId);
+        const track = this.getRevPeerId(peerId);
+        this.addTracks(track);
       }
     };
   };
@@ -310,7 +339,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     this.peerConnectionsServer[peerId]!.setRemoteDescription(desc)
       .then(() => {
         log('info', '-> Local video stream obtained', { peerId });
-        // If a user creates a new connection with a room to get another user's stream
         if (target) {
           this.addTracks({ id, peerId, connId, target, userId });
         }
@@ -495,19 +523,13 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     }
     tracks.forEach((track) => {
       if (this.peerConnectionsServer[peerId]) {
-        const sender = this.peerConnectionsServer[peerId]
-          ?.getSenders()
-          .find((item) => item.track?.kind === track.kind);
-        if (sender?.track?.id !== track.id) {
-          this.peerConnectionsServer[peerId]!.addTrack(track, stream);
-        } else {
-          log('warn', 'Skiping add track', { peerId });
+        const sender = this.peerConnectionsServer[peerId]!.getSenders().find(
+          (item) => item.kind === track.kind
+        );
+        if (sender && sender?.track?.id === track.id) {
+          this.peerConnectionsServer[peerId]?.removeTrack(sender);
         }
-      } else {
-        log('warn', 'Add track without peer connection', {
-          peerId,
-          k: Object.keys(this.peerConnectionsServer),
-        });
+        this.peerConnectionsServer[peerId]!.addTrack(track, stream);
       }
     });
   };
