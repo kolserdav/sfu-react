@@ -4,7 +4,7 @@
  * Author: Sergey Kolmiller
  * Email: <uyem.ru@gmail.com>
  * License: MIT
- * License text: 
+ * License text:
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Thu Jul 14 2022 16:24:49 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
@@ -13,7 +13,7 @@
 /* eslint-disable max-classes-per-file */
 /* eslint-disable no-unused-vars */
 import { RTCPeerConnection as RTCPeerConnectionServer } from 'werift';
-import { Prisma, Room, Unit, Message } from './prisma';
+import { Prisma, Room, Unit, Message } from '@prisma/client';
 
 export type SendMessageArgs<T> = Signaling.SendMessageArgs<T>;
 export type WSInterface = Signaling.WSInterface;
