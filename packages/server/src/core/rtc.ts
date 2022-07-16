@@ -340,7 +340,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       .then(() => {
         log('info', '-> Local video stream obtained', { peerId });
         if (target) {
-          this.addTracks({ id, peerId, connId, target, userId });
+          // this.addTracks({ id, peerId, connId, target, userId });
         }
       })
       .then(() => {

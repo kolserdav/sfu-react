@@ -502,6 +502,7 @@ export const useConnection = ({
    * Check room list
    */
   useEffect(() => {
+    /*
     if (!roomId) {
       return () => {
         //
@@ -528,6 +529,7 @@ export const useConnection = ({
     return () => {
       clearTimeout(interval);
     };
+    */
   }, [roomId, ws, lenght, streams, connectionId, id, shareScreen]);
 
   return {
