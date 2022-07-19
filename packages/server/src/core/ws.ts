@@ -4,7 +4,7 @@
  * Author: Sergey Kolmiller
  * Email: <uyem.ru@gmail.com>
  * License: MIT
- * License text: 
+ * License text:
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Thu Jul 14 2022 16:24:49 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
@@ -40,7 +40,7 @@ class WS implements WSInterface {
     id: number | string;
     ws: WebSocket;
     connId: string;
-    isRoom?: boolean;
+    isRoom: boolean;
   }) {
     const oldSock = Object.keys(this.sockets).find((item) => {
       const sock = item.split(this.delimiter);

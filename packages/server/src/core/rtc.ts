@@ -174,7 +174,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
                   sdp: localDescription,
                   userId,
                   target,
-                  mimeType: 'video/VP8',
+                  mimeType: 'video/webm',
                 },
                 connId,
               });
@@ -745,17 +745,15 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     }
     this.createRTCServer({ roomId: id, userId: uid, target: 0, connId, mimeType });
     connection.onopen = () => {
-      // FIXME to sendMEssage
-      connection.send(
-        JSON.stringify({
-          type: MessageType.GET_USER_ID,
-          id,
-          data: {
-            isRoom: true,
-          },
-          connId: '',
-        })
-      );
+      log('warn', 'On open room', { roomId: id, userId: uid, target: 0, connId, mimeType });
+      this.ws.sendMessage({
+        type: MessageType.GET_USER_ID,
+        id,
+        data: {
+          isRoom: true,
+        },
+        connId: '',
+      });
       connection.onmessage = (mess) => {
         const msg = this.ws.parseMessage(mess.data as string);
         if (msg) {

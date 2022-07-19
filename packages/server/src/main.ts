@@ -111,7 +111,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
       switch (type) {
         case MessageType.GET_USER_ID:
           const { isRoom } = wss.getMessage(MessageType.GET_USER_ID, rawMessage).data;
-          await wss.setSocket({ id, ws, connId, isRoom });
+          await wss.setSocket({ id, ws, connId, isRoom: isRoom || false });
           wss.sendMessage({
             type: MessageType.SET_USER_ID,
             id,
