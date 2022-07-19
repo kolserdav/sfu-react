@@ -19,6 +19,8 @@ export type SendMessageArgs<T> = Signaling.SendMessageArgs<T>;
 export type WSInterface = Signaling.WSInterface;
 export type RTCInterface = Connection.RTCInterface;
 export type DBInterface = Data.DBInterface;
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type ArgumentTypes<F extends Function> = F extends (args: infer A) => any ? A : never;
 
 export enum MessageType {
   GET_USER_ID = 'GET_USER_ID',
@@ -154,6 +156,13 @@ export namespace Signaling {
 }
 
 export namespace Connection {
+  export type AddTracksProps = {
+    roomId: number | string;
+    connId: string;
+    userId: number | string;
+    target: number | string;
+    peerId: string;
+  };
   export abstract class RTCInterface {
     public abstract peerConnections: Record<string, RTCPeerConnection | undefined>;
 
@@ -215,18 +224,11 @@ export namespace Connection {
       cb?: (res: 1 | 0) => any
     ): void;
 
-    public abstract addTracks(
-      args: {
-        id: number | string;
-        connId: string;
-        userId: number | string;
-        target: number | string;
-        peerId?: string;
-      },
-      cb: (e: 1 | 0) => void
-    ): void;
+    public abstract addTracks(args: AddTracksProps, cb: (e: 1 | 0) => void): void;
   }
 }
+
+export type AddTracksProps = Connection.AddTracksProps;
 
 export namespace Data {
   export abstract class DBInterface {

@@ -269,8 +269,8 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
     this.handleIceCandidate({ connId, roomId, userId, target });
   }
 
-  public addTracks: RTCInterface['addTracks'] = ({ id, userId, target, connId }, cb) => {
-    const peerId = this.getPeerId(id, target, connId);
+  public addTracks: RTCInterface['addTracks'] = ({ roomId, userId, target, connId }, cb) => {
+    const peerId = this.getPeerId(roomId, target, connId);
     if (!this.peerConnections[peerId]) {
       log('warn', 'Set media without peer connection', { peerId });
       return;
@@ -343,7 +343,7 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
           this.peerConnections[peerId]!.addTrack(track, this.localStream);
         }
       });
-      this.onAddTrack[this.getPeerId(id, target, connId)](userId, this.localStream);
+      this.onAddTrack[this.getPeerId(roomId, target, connId)](userId, this.localStream);
       cb(0);
     }
   };

@@ -139,7 +139,6 @@ export const useConnection = ({
       if (!roomId) {
         return;
       }
-      console.log(eventName);
       let _connId = connId;
       Object.keys(rtc.peerConnections).forEach((item) => {
         const peer = item.split(rtc.delimiter);
@@ -230,7 +229,7 @@ export const useConnection = ({
               iceServers,
               eventName: 'back',
             });
-            rtc.addTracks({ id: roomId, userId, target, connId }, (e) => {
+            rtc.addTracks({ roomId, userId, target, connId, peerId: '' }, (e) => {
               if (!e) {
                 if (eventName !== 'added' && target !== userId) {
                   ws.sendMessage({
@@ -322,7 +321,7 @@ export const useConnection = ({
               iceServers,
               eventName: 'check',
             });
-            rtc.addTracks({ id: roomId, userId: id, target: item, connId }, (e) => {
+            rtc.addTracks({ roomId, userId: id, target: item, connId, peerId: '' }, (e) => {
               log('info', 'Change room guests connection', {
                 roomId,
                 target: item,
@@ -410,7 +409,7 @@ export const useConnection = ({
             iceServers,
             eventName: 'first',
           });
-          rtc.addTracks({ userId: ws.userId, id: roomId, connId, target: 0 }, (e) => {
+          rtc.addTracks({ userId: ws.userId, roomId, connId, target: 0, peerId: '' }, (e) => {
             if (!e) {
               ws.sendMessage({
                 type: MessageType.GET_ROOM,
