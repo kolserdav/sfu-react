@@ -135,10 +135,11 @@ export const useConnection = ({
       ws.setUserId(id);
     }
 
-    const lostStreamHandler = ({ target, connId }: { target: number | string; connId: string }) => {
+    const lostStreamHandler: typeof rtc.lostStreamHandler = ({ connId, target, eventName }) => {
       if (!roomId) {
         return;
       }
+      console.log(eventName);
       let _connId = connId;
       Object.keys(rtc.peerConnections).forEach((item) => {
         const peer = item.split(rtc.delimiter);
@@ -280,6 +281,7 @@ export const useConnection = ({
       lostStreamHandler({
         connId,
         target: userId,
+        eventName: 'need-reconnect',
       });
     };
 
@@ -505,7 +507,6 @@ export const useConnection = ({
    * Check room list
    */
   useEffect(() => {
-    /*
     if (!roomId) {
       return () => {
         //
@@ -532,7 +533,6 @@ export const useConnection = ({
     return () => {
       clearTimeout(interval);
     };
-    */
   }, [roomId, ws, lenght, streams, connectionId, id, shareScreen]);
 
   return {
@@ -670,7 +670,7 @@ export const useVideoStarted = ({
   ws: WS;
   rtc: RTC;
   container: HTMLDivElement | null;
-  lostStreamHandler: (args: { target: string | number; connId: string }) => void;
+  lostStreamHandler: typeof rtc.lostStreamHandler;
 }) => {
   const [played, setPlayed] = useState<Record<string, boolean>>({});
   const [timeStart, setTimeStart] = useState<boolean>(false);
@@ -716,7 +716,12 @@ export const useVideoStarted = ({
           }
           if (_attempts[item.target] === 1) {
             if (!played[item.target] && mounted) {
-              lostStreamHandler(item);
+              lostStreamHandler({ ...item, eventName: 'not-played' });
+            }
+          } else {
+            log('info', `${_attempts[item.target]} attempts of restart:`, { target: item.target });
+            if (_attempts[item.target] === 5) {
+              _attempts[item.target] = 0;
               ws.sendMessage({
                 type: MessageType.SET_CHANGE_UNIT,
                 id: item.target,
@@ -728,11 +733,6 @@ export const useVideoStarted = ({
                   eventName: 'delete',
                 },
               });
-            }
-          } else {
-            log('info', `${_attempts[item.target]} attempts of restart:`, { target: item.target });
-            if (_attempts[item.target] === 20) {
-              _attempts[item.target] = 0;
             }
           }
 

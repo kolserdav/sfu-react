@@ -27,7 +27,11 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
   public localTrackSettings: MediaTrackSettings | null = null;
 
   // eslint-disable-next-line class-methods-use-this
-  public lostStreamHandler: (args: { target: number | string; connId: string }) => void = () => {
+  public lostStreamHandler: (args: {
+    target: number | string;
+    connId: string;
+    eventName: string;
+  }) => void = () => {
     /** */
   };
 
@@ -113,6 +117,7 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
           this.lostStreamHandler({
             target: peerId.split(this.delimiter)[1],
             connId: peerId.split(this.delimiter)[2],
+            eventName: 'disconnected-peer',
           });
           log('warn', 'Failed connection state', { cs: currentTarget.connectionState, peerId });
           break;

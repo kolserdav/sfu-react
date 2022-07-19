@@ -120,7 +120,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
             break;
         }
       };
-    /*
+
     this.peerConnectionsServer[peerId]!.onnegotiationneeded =
       function handleNegotiationNeededEvent() {
         if (!core.peerConnectionsServer[peerId]) {
@@ -181,9 +181,8 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
             }
           });
       };
-*/
+
     let s = 1;
-    console.log(2);
     this.peerConnectionsServer[peerId]!.ontrack = (e) => {
       const peer = peerId.split(delimiter);
       const isRoom = peer[2] === '0';

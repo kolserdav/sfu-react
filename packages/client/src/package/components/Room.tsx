@@ -90,6 +90,7 @@ function Room({ id, iceServers, server, port }: RoomProps) {
                   lostStreamHandler({
                     target: item.target,
                     connId: item.connId,
+                    eventName: 'stream-not-active',
                   });
                 } else {
                   setVideoDimensions(e, item.stream);
@@ -122,6 +123,7 @@ function Room({ id, iceServers, server, port }: RoomProps) {
                 lostStreamHandler({
                   target: item.target,
                   connId: item.connId,
+                  eventName: 'suspend-video-data',
                 });
               }}
               onStalled={(e) => {
