@@ -9,13 +9,7 @@
  * Create Date: Thu Jul 14 2022 16:24:49 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import * as werift from 'werift';
-import {
-  RTCInterface,
-  MessageType,
-  SendMessageArgs,
-  ArgumentTypes,
-  AddTracksProps,
-} from '../types/interfaces';
+import { RTCInterface, MessageType, SendMessageArgs, AddTracksProps } from '../types/interfaces';
 import { log } from '../utils/lib';
 import WS from './ws';
 import DB from './db';
@@ -50,6 +44,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     userId,
     target,
     connId,
+    mimeType,
   }) => {
     const peerId = this.getPeerId(roomId, userId, target, connId);
     this.peerConnectionsServer[peerId] = new werift.RTCPeerConnection({
@@ -63,7 +58,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
         ],
         video: [
           new werift.RTCRtpCodecParameters({
-            mimeType: 'video/VP8',
+            mimeType: `video/${mimeType}`,
             clockRate: 90000,
             rtcpFeedback: [
               { type: 'transport-cc' },
@@ -78,6 +73,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       iceTransportPolicy: 'all',
       bundlePolicy: 'disable',
     });
+
     return this.peerConnectionsServer;
   };
 
@@ -178,6 +174,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
                   sdp: localDescription,
                   userId,
                   target,
+                  mimeType: 'video/VP8',
                 },
                 connId,
               });
@@ -186,13 +183,13 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       };
 
     let s = 1;
-    console.log(4);
+    console.log(3232);
     this.peerConnectionsServer[peerId]!.ontrack = (e) => {
       const peer = peerId.split(delimiter);
       const isRoom = peer[2] === '0';
       const stream = e.streams[0];
       const isNew = stream.id !== this.streams[peerId]?.id;
-      log('info', 'ontrack', {
+      log('warn', 'ontrack', {
         peerId,
         isRoom,
         si: stream.id,
@@ -211,6 +208,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
           if (room) {
             setTimeout(() => {
               room.forEach((id) => {
+                console.log(1);
                 ws.sendMessage({
                   type: MessageType.SET_CHANGE_UNIT,
                   id,
@@ -256,6 +254,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       data: { candidate, userId, target },
     } = msg;
     let peerId = this.getPeerId(id, userId, target, connId);
+    console.log(peerId);
     let _connId = connId;
     if (!this.peerConnectionsServer?.[peerId]) {
       const peer = Object.keys(this.peerConnectionsServer).find((p) => {
@@ -292,7 +291,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       this.peerConnectionsServer[peerId]?.connectionState === 'closed' ||
       this.peerConnectionsServer[peerId]?.iceConnectionState === 'closed'
     ) {
-      log('info', 'Skiping add ice candidate', {
+      log('warn', 'Skiping add ice candidate', {
         connId,
         id,
         d: Object.keys(this.peerConnectionsServer),
@@ -336,7 +335,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     const {
       id,
       connId,
-      data: { sdp, userId, target },
+      data: { sdp, userId, target, mimeType },
     } = msg;
     if (!sdp) {
       log('warn', 'Message offer error because sdp is:', sdp);
@@ -352,13 +351,14 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       userId,
       target,
       connId,
+      mimeType,
     });
 
     if (!this.peerConnectionsServer[peerId]) {
       log('warn', 'Handle offer message without peer connection', { peerId });
       return;
     }
-
+    console.log(0);
     this.handleIceCandidate({
       roomId: id,
       userId,
@@ -368,7 +368,12 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     const desc = new werift.RTCSessionDescription(sdp.sdp as string, 'offer');
     this.peerConnectionsServer[peerId]!.setRemoteDescription(desc)
       .then(() => {
-        log('info', '-> Local video stream obtained', { peerId });
+        log('warn', '-> Local video stream obtained', { peerId });
+        if (target) {
+          this.addTracks({ roomId: id, peerId, connId, target, userId }, () => {
+            /** */
+          });
+        }
       })
       .then(() => {
         log('info', '--> Creating answer', {
@@ -714,7 +719,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     cors: string;
   }) {
     const {
-      data: { userId: uid },
+      data: { userId: uid, mimeType },
       id,
       connId,
     } = message;
@@ -738,7 +743,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       log('warn', 'Can not add user to room', { id, uid });
       return;
     }
-    this.createRTCServer({ roomId: id, userId: uid, target: 0, connId });
+    this.createRTCServer({ roomId: id, userId: uid, target: 0, connId, mimeType });
     connection.onopen = () => {
       // FIXME to sendMEssage
       connection.send(

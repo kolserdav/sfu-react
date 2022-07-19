@@ -12,13 +12,14 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import WS from '../core/ws';
 import RTC from '../core/rtc';
-import { log } from '../utils/lib';
+import { checkVideoPlugin, log } from '../utils/lib';
 import { getWidthOfItem } from './Room.lib';
 import { MessageType, SendMessageArgs } from '../types/interfaces';
 import { Stream } from '../types';
 import s from './Room.module.scss';
 import c from './ui/CloseButton.module.scss';
 import storeStreams, { changeStreams } from '../store/streams';
+import { START_DELAY } from '../utils/constants';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -376,12 +377,14 @@ export const useConnection = ({
       });
     };
     ws.onOpen = () => {
-      ws.sendMessage({
-        type: MessageType.GET_USER_ID,
-        id,
-        data: {},
-        connId: '',
-      });
+      setTimeout(() => {
+        ws.sendMessage({
+          type: MessageType.GET_USER_ID,
+          id,
+          data: {},
+          connId: '',
+        });
+      }, START_DELAY);
     };
     ws.onMessage = (ev) => {
       const { data } = ev;
@@ -411,14 +414,24 @@ export const useConnection = ({
           });
           rtc.addTracks({ userId: ws.userId, roomId, connId, target: 0, peerId: '' }, (e) => {
             if (!e) {
-              ws.sendMessage({
-                type: MessageType.GET_ROOM,
-                id: roomId,
-                data: {
-                  userId: id,
-                },
-                connId,
-              });
+              let pC = rtc.peerConnections[rtc.getPeerId(roomId, 0, connId)];
+              const cl = setInterval(() => {
+                pC = rtc.peerConnections[rtc.getPeerId(roomId, 0, connId)];
+                if (pC?.localDescription?.sdp) {
+                  ws.sendMessage({
+                    type: MessageType.GET_ROOM,
+                    id: roomId,
+                    data: {
+                      userId: id,
+                      mimeType: checkVideoPlugin(pC.localDescription.sdp),
+                    },
+                    connId,
+                  });
+                  clearInterval(cl);
+                } else {
+                  log('warn', 'Can not get room', { sdp: pC?.localDescription?.sdp });
+                }
+              }, 100);
             } else if (localShareScreen) {
               ws.shareScreen = false;
               setLocalShareScreen(false);

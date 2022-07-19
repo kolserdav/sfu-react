@@ -65,6 +65,7 @@ export namespace DataTypes {
     export type SetGuestId = undefined;
     export type GetRoom = {
       userId: number | string;
+      mimeType: string;
     };
     export type SetRoomGuests = {
       roomUsers: (number | string)[];
@@ -82,6 +83,7 @@ export namespace DataTypes {
       sdp: RTCSessionDescriptionInit;
       userId: number | string;
       target: number | string;
+      mimeType: string;
     };
     export type Candidate = {
       candidate: RTCIceCandidate;
@@ -183,6 +185,7 @@ export namespace Connection {
       roomId: number | string;
       userId: number | string;
       target: string | number;
+      mimeType: string;
       iceServers?: RTCConfiguration['iceServers'];
     }): Record<number, RTCPeerConnectionServer | undefined>;
 
