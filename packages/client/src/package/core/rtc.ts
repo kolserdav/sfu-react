@@ -61,8 +61,14 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
     const peerId = this.getPeerId(roomId, target, connId);
     this.createRTC({ roomId, target, userId, connId, iceServers });
     this.onAddTrack[peerId] = (addedUserId, stream) => {
-      log('warn', 'On track peer', { si: stream.id, userId, target, connId, eventName });
-      console.log(stream.getTracks());
+      log('info', 'On track peer', {
+        sid: stream.id,
+        userId,
+        target,
+        connId,
+        eventName,
+        tracks: stream.getTracks(),
+      });
       onTrack({ addedUserId, stream, connId });
     };
     this.invite({ roomId, userId, target, connId });

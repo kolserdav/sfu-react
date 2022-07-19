@@ -143,11 +143,24 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
               );
               return 1;
             }
+            if (
+              core.peerConnectionsServer[peerId]?.iceGatheringState === 'complete' ||
+              core.peerConnectionsServer[peerId]?.iceGatheringState === 'gathering'
+            ) {
+              log('info', 'Skipping on negotiation needed', {
+                peerId,
+                ig: core.peerConnectionsServer[peerId]?.iceGatheringState,
+                cs: core.peerConnectionsServer[peerId]?.connectionState,
+                ss: core.peerConnectionsServer[peerId]?.signalingState,
+              });
+              return;
+            }
             core.peerConnectionsServer[peerId]!.setLocalDescription(offer).catch((err) => {
               log('error', 'Error create local description', {
                 err,
                 peerId,
-                peer: core.peerConnectionsServer[peerId],
+                cs: core.peerConnectionsServer[peerId]?.connectionState,
+                ss: core.peerConnectionsServer[peerId]?.signalingState,
               });
             });
           })
@@ -168,15 +181,17 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
             }
           });
       };
-      */
+*/
     let s = 1;
+    console.log(2);
     this.peerConnectionsServer[peerId]!.ontrack = (e) => {
       const peer = peerId.split(delimiter);
       const isRoom = peer[2] === '0';
       const stream = e.streams[0];
       const isNew = stream.id !== this.streams[peerId]?.id;
-      log('warn', 'ontrack', {
+      log('info', 'ontrack', {
         peerId,
+        isRoom,
         si: stream.id,
         isNew,
         userId,
@@ -213,7 +228,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
         }
         s++;
       } else {
-        const track = this.getRevPeerId(peerId);
+        const track = this.getRevPeerId(this.getRevPeerId(peerId).peerId);
         this.addTracks(track);
       }
     };
@@ -339,12 +354,12 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     this.peerConnectionsServer[peerId]!.setRemoteDescription(desc)
       .then(() => {
         log('info', '-> Local video stream obtained', { peerId });
-        if (target) {
-          // this.addTracks({ id, peerId, connId, target, userId });
-        }
       })
       .then(() => {
-        log('info', '--> Creating answer', { peerId });
+        log('info', '--> Creating answer', {
+          peerId,
+          ss: this.peerConnectionsServer[peerId]?.signalingState,
+        });
         this.peerConnectionsServer[peerId]!.createAnswer().then((answ) => {
           if (!answ) {
             log('error', 'Failed set local description for answer.', {
@@ -497,7 +512,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     const _peerId = this.getPeerId(id, target, 0, _connId);
     const stream = this.streams[_peerId];
     const tracks = stream.getTracks();
-    log('warn', 'Add tracks', {
+    log('info', 'Add tracks', {
       roomId: id,
       userId,
       target,

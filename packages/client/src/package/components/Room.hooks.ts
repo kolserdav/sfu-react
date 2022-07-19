@@ -85,32 +85,6 @@ export const useConnection = ({
     }
   };
 
-  const lostStreamHandler = ({ target, connId }: { target: number | string; connId: string }) => {
-    if (!roomId) {
-      return;
-    }
-    let _connId = connId;
-    Object.keys(rtc.peerConnections).forEach((item) => {
-      const peer = item.split(rtc.delimiter);
-      if (peer[1] === target.toString()) {
-        // eslint-disable-next-line prefer-destructuring
-        _connId = peer[2];
-      }
-    });
-    const peerId = rtc.getPeerId(roomId, target, _connId);
-    if (!rtc.peerConnections[peerId]) {
-      log('info', 'Lost stream handler without peer connection', { peerId });
-      return;
-    }
-    rtc.closeVideoCall({ roomId, userId: ws.userId, target, connId: _connId });
-    const _stream = streams.find((item) => item.target === target);
-    if (_stream) {
-      storeStreams.dispatch(changeStreams({ type: 'delete', stream: _stream }));
-    }
-  };
-
-  rtc.lostStreamHandler = lostStreamHandler;
-
   /**
    * Change media source
    */
@@ -160,6 +134,33 @@ export const useConnection = ({
     if (!ws.userId) {
       ws.setUserId(id);
     }
+
+    const lostStreamHandler = ({ target, connId }: { target: number | string; connId: string }) => {
+      if (!roomId) {
+        return;
+      }
+      let _connId = connId;
+      Object.keys(rtc.peerConnections).forEach((item) => {
+        const peer = item.split(rtc.delimiter);
+        if (peer[1] === target.toString()) {
+          // eslint-disable-next-line prefer-destructuring
+          _connId = peer[2];
+        }
+      });
+      const peerId = rtc.getPeerId(roomId, target, _connId);
+      if (!rtc.peerConnections[peerId]) {
+        log('info', 'Lost stream handler without peer connection', { peerId });
+        return;
+      }
+      rtc.closeVideoCall({ roomId, userId: ws.userId, target, connId: _connId });
+      const _stream = streams.find((item) => item.target === target);
+      if (_stream) {
+        storeStreams.dispatch(changeStreams({ type: 'delete', stream: _stream }));
+      }
+    };
+
+    rtc.lostStreamHandler = lostStreamHandler;
+
     const addStream = ({
       target,
       stream,
@@ -182,6 +183,9 @@ export const useConnection = ({
           }
         },
       };
+      if (/-/.test(stream.id)) {
+        return;
+      }
       storeStreams.dispatch(changeStreams({ type: 'add', stream: _stream, change }));
       if (!selfStream && target === ws.userId) {
         setSelfStream(_stream);
@@ -202,7 +206,6 @@ export const useConnection = ({
       }
       rtc.muteds = _muteds;
       setMuteds(_muteds);
-      //alert(`${eventName} ${target}`);
       switch (eventName) {
         case 'add':
         case 'added':
@@ -495,7 +498,7 @@ export const useConnection = ({
     selfStream,
     iceServers,
     localShareScreen,
-    lostStreamHandler,
+    rtc.lostStreamHandler,
   ]);
 
   /**
@@ -537,7 +540,7 @@ export const useConnection = ({
     lenght,
     ws,
     rtc,
-    lostStreamHandler,
+    lostStreamHandler: rtc.lostStreamHandler,
     screenShare,
     shareScreen,
     muted,
@@ -746,7 +749,7 @@ export const useVideoStarted = ({
       clearInterval(timeout);
       mounted = false;
     };
-  }, [played, streams, lostStreamHandler, attempts, ws, timeStart]);
+  }, [played, streams, lostStreamHandler, attempts, ws, timeStart, rtc.muteds, rtc.roomLength]);
 
   return { played, setPlayed };
 };
