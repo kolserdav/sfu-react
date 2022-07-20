@@ -273,7 +273,11 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
   public addTracks: RTCInterface['addTracks'] = ({ roomId, userId, target, connId }, cb) => {
     const peerId = this.getPeerId(roomId, target, connId);
     if (!this.peerConnections[peerId]) {
-      log('warn', 'Set media without peer connection', { peerId });
+      log('warn', 'Set media without peer connection', {
+        peerId,
+        k: Object.keys(this.peerConnections),
+      });
+      cb(1);
       return;
     }
     if (!this.localStream) {

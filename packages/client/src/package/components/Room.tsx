@@ -74,13 +74,25 @@ function Room({ id, iceServers, server, port }: RoomProps) {
     lostStreamHandler,
   });
   const displayMediaSupported = useMemo(() => supportDisplayMedia(), []);
+
   return (
     <div className={s.wrapper} style={theme.wrapper}>
       <div className={s.container} ref={container}>
         {streams.map((item, index) => (
           <div id={item.stream.id} key={item.target} className={s.video}>
             {/** CloseButton is strong first child */}
-            <CloseButton onClick={onClickClose} onKeyDown={onPressEscape} tabindex={index} />
+            <CloseButton
+              onClick={(e) => {
+                lostStreamHandler({
+                  target: item.target,
+                  connId: item.connId,
+                  eventName: '',
+                });
+                onClickClose(e);
+              }}
+              onKeyDown={onPressEscape}
+              tabindex={index}
+            />
             {/** video is strong second child */}
             <video
               muted={item.target === id || muteds.indexOf(item.target.toString()) !== -1}

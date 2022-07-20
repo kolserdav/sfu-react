@@ -274,14 +274,17 @@ export const useConnection = ({
       setMuteds(_muteds);
     };
 
-    const needReconnectHandler = ({
+    const getTracksHandler = ({
       data: { userId },
       connId,
-    }: SendMessageArgs<MessageType.GET_NEED_RECONNECT>) => {
-      lostStreamHandler({
-        connId,
-        target: userId,
-        eventName: 'need-reconnect',
+    }: SendMessageArgs<MessageType.GET_TRACKS>) => {
+      rtc.addTracks({ roomId, userId: ws.userId, target: userId, connId, peerId: '' }, (e) => {
+        log('warn', 'Get tracks handler callback', {
+          roomId,
+          target: userId,
+          userId: ws.userId,
+          connId,
+        });
       });
     };
 
@@ -327,6 +330,13 @@ export const useConnection = ({
                 roomId,
                 target: item,
                 userId: id,
+                connId,
+              });
+              console.log(connId, Object.keys(rtc.peerConnections));
+              ws.sendMessage({
+                type: MessageType.GET_TRACKS,
+                id: item,
+                data: { userId: id },
                 connId,
               });
             });
@@ -457,8 +467,8 @@ export const useConnection = ({
             }
           });
           break;
-        case MessageType.GET_NEED_RECONNECT:
-          needReconnectHandler(rawMessage);
+        case MessageType.GET_TRACKS:
+          getTracksHandler(rawMessage);
           break;
         case MessageType.SET_CHANGE_UNIT:
           changeRoomUnitHandler(ws.getMessage(MessageType.SET_CHANGE_UNIT, rawMessage));
@@ -714,7 +724,7 @@ export const useVideoStarted = ({
             if (!played[item.target] && mounted) {
               lostStreamHandler({ ...item, eventName: 'not-played' });
               const str = streams.find((i) => i.target === item.target);
-              console.log(str?.stream.getTracks().length);
+              log('warn', 'Video not started', str?.stream.getTracks().length);
             }
           } else {
             log('info', `${_attempts[item.target]} attempts of restart:`, { target: item.target });

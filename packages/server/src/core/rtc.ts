@@ -451,9 +451,9 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       target,
       connId,
       _peerId,
-      tracksL: tracks.length,
+      tracksL: tracks?.length,
       _connId,
-      id: stream.id,
+      id: stream?.id,
       tracks: tracks?.map((item) => item.kind),
       ss: Object.keys(this.streams),
     });
