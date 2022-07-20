@@ -119,77 +119,13 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
             break;
         }
       };
-
-    this.peerConnectionsServer[peerId]!.onnegotiationneeded =
-      function handleNegotiationNeededEvent() {
-        if (!core.peerConnectionsServer[peerId]) {
-          log('warn', 'On negotiation needed without peer connection', { peerId });
-          return;
-        }
-        log('info', '--> Creating offer', {
-          roomId,
-          userId,
-          target,
-          state: core.peerConnectionsServer[peerId]!.signalingState,
-        });
-        core.peerConnectionsServer[peerId]!.createOffer()
-          .then((offer): 1 | void | PromiseLike<void> => {
-            if (!core.peerConnectionsServer[peerId]) {
-              log(
-                'warn',
-                'Can not set local description because peerConnection is',
-                core.peerConnectionsServer[peerId]
-              );
-              return 1;
-            }
-            if (
-              core.peerConnectionsServer[peerId]?.iceGatheringState === 'complete' ||
-              core.peerConnectionsServer[peerId]?.iceGatheringState === 'gathering'
-            ) {
-              log('info', 'Skipping on negotiation needed', {
-                peerId,
-                ig: core.peerConnectionsServer[peerId]?.iceGatheringState,
-                cs: core.peerConnectionsServer[peerId]?.connectionState,
-                ss: core.peerConnectionsServer[peerId]?.signalingState,
-              });
-              return;
-            }
-            core.peerConnectionsServer[peerId]!.setLocalDescription(offer).catch((err) => {
-              log('error', 'Error create local description', {
-                err,
-                peerId,
-                cs: core.peerConnectionsServer[peerId]?.connectionState,
-                ss: core.peerConnectionsServer[peerId]?.signalingState,
-              });
-            });
-          })
-          .then(() => {
-            const { localDescription } = core.peerConnectionsServer[peerId]!;
-            if (localDescription) {
-              log('info', '---> Sending offer to remote peer', { roomId, userId, target });
-              core.ws.sendMessage({
-                id: roomId,
-                type: MessageType.OFFER,
-                data: {
-                  sdp: localDescription,
-                  userId,
-                  target,
-                  mimeType: 'video/webm',
-                },
-                connId,
-              });
-            }
-          });
-      };
-
     let s = 1;
-    console.log(32);
     this.peerConnectionsServer[peerId]!.ontrack = (e) => {
       const peer = peerId.split(delimiter);
       const isRoom = peer[2] === '0';
       const stream = e.streams[0];
       const isNew = stream.id !== this.streams[peerId]?.id;
-      log('warn', 'ontrack', {
+      log('info', 'ontrack', {
         peerId,
         isRoom,
         si: stream.id,
@@ -199,7 +135,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
         tracks: stream.getTracks().map((item) => item.kind),
       });
       if (isRoom) {
-        if (isNew) {
+        if (s === 1) {
           this.streams[peerId] = new werift.MediaStream({ id: stream.id });
         }
         this.streams[peerId].addTrack(stream.getTracks()[0]);
@@ -238,7 +174,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
           target: peer[2],
           connId: peer[3],
         };
-        log('warn', 'Add tracks', { tracksOpts, s });
+        log('info', 'Add tracks', { tracksOpts, s });
         this.addTracks(tracksOpts, () => {
           /** */
         });
@@ -365,12 +301,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     const desc = new werift.RTCSessionDescription(sdp.sdp as string, 'offer');
     this.peerConnectionsServer[peerId]!.setRemoteDescription(desc)
       .then(() => {
-        log('warn', '-> Local video stream obtained', { peerId });
-        if (target) {
-          this.addTracks({ roomId: id, peerId, connId, target, userId }, () => {
-            /** */
-          });
-        }
+        log('info', '-> Local video stream obtained', { peerId });
       })
       .then(() => {
         log('info', '--> Creating answer', {
@@ -517,7 +448,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     const _peerId = this.getPeerId(roomId, target, 0, _connId);
     const stream = this.streams[_peerId];
     const tracks = stream.getTracks();
-    log('warn', 'Add tracks', {
+    log('info', 'Add tracks', {
       roomId,
       userId,
       target,
