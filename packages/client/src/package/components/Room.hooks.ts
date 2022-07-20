@@ -680,17 +680,9 @@ export const useVideoStarted = ({
   const [timeStart, setTimeStart] = useState<boolean>(false);
   const [attempts, setAttempts] = useState<Record<string | number, number>>({});
 
-  useEffect(() => {
-    if (!timeStart) {
-      setTimeStart(true);
-      const _played = { ...played };
-      streams.forEach((item) => {
-        _played[item.target] = false;
-      });
-      setPlayed(_played);
-    }
-  }, [streams, timeStart, played]);
-
+  /**
+   * Check not played
+   */
   useEffect(() => {
     let mounted = true;
     const timeout = setInterval(() => {

@@ -152,7 +152,8 @@ export namespace Signaling {
     ): SendMessageArgs<T>;
 
     public abstract sendMessage: <T extends keyof typeof MessageType>(
-      args: SendMessageArgs<T>
+      args: SendMessageArgs<T>,
+      second?: boolean
     ) => Promise<1 | 0>;
   }
 }

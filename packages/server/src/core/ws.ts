@@ -113,7 +113,7 @@ class WS implements WSInterface {
     return res;
   };
 
-  public sendMessage: WSInterface['sendMessage'] = (args) => {
+  public sendMessage: WSInterface['sendMessage'] = (args, second) => {
     return new Promise((resolve) => {
       setTimeout(() => {
         let res = '';
@@ -138,12 +138,18 @@ class WS implements WSInterface {
         } else if (this.rooms[id] && this.sockets[this.getSocketId(id, this.rooms[id])]) {
           this.sockets[this.getSocketId(id, this.rooms[id])].send(res);
         } else {
-          log('warn', 'Send message without conected socket', {
-            args,
-            k: Object.keys(this.sockets),
-            u: this.users,
-            r: this.rooms,
-          });
+          if (!second) {
+            setTimeout(() => {
+              this.sendMessage(args, true);
+            }, 1000);
+          } else {
+            log('warn', 'Send message without conected socket', {
+              args,
+              k: Object.keys(this.sockets),
+              u: this.users,
+              r: this.rooms,
+            });
+          }
         }
         resolve(0);
       }, 10);

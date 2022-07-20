@@ -115,7 +115,7 @@ async function evaluateRoom(evalPage, last = false) {
           };
           setTimeout(() => {
             resolve(false);
-          }, _delay * 1000);
+          }, 2000);
         });
         video.ontimeupdate = () => {};
         if (streamIds.indexOf(id) !== -1) {

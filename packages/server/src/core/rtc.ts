@@ -228,7 +228,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       log('warn', 'Skiping add ice candidate', {
         connId,
         id,
-        d: Object.keys(this.peerConnectionsServer),
         userId,
         peerId,
         target,
