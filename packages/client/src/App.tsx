@@ -4,7 +4,7 @@
  * Author: Sergey Kolmiller
  * Email: <uyem.ru@gmail.com>
  * License: MIT
- * License text: 
+ * License text:
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Thu Jul 14 2022 16:24:49 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
@@ -28,14 +28,14 @@ function App() {
       ) : (
         <Main
           room={{
-            server: process.env.REACT_APP_SERVER,
-            port: parseInt(process.env.REACT_APP_PORT, 10),
+            server: process.env.REACT_APP_SERVER as string,
+            port: parseInt(process.env.REACT_APP_PORT as string, 10),
             iceServers: [
               {
-                urls: [process.env.REACT_APP_STUN_SERVER],
+                urls: [process.env.REACT_APP_STUN_SERVER as string],
               },
               {
-                urls: [process.env.REACT_APP_TURN_SERVER],
+                urls: [process.env.REACT_APP_TURN_SERVER as string],
                 username: process.env.REACT_APP_TURN_SERVER_USER,
                 credential: process.env.REACT_APP_TURN_SERVER_PASSWORD,
               },

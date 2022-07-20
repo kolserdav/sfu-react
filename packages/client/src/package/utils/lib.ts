@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Thu Jul 14 2022 16:24:49 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import { LOG_LEVEL } from './constants';
+import { LOG_LEVEL, CODECS } from './constants';
 
 // eslint-disable-next-line no-unused-vars
 enum LogLevel {
@@ -59,4 +59,20 @@ export const parseQueryString = (query: string): Record<string, string> | null =
   return res;
 };
 
-export const checkVideoPlugin = (sdp: string) => (/o=mozilla/.test(sdp) ? 'webm' : 'VP8');
+export const getCodec = () => {
+  let mimeType = '';
+  for (let i = 0; CODECS[i]; i++) {
+    const item = CODECS[i];
+    if (MediaRecorder.isTypeSupported(item) && MediaSource.isTypeSupported(item)) {
+      log('info', 'Supported mimetype is', item);
+      mimeType = item;
+      break;
+    }
+  }
+  if (/codecs=/.test(mimeType)) {
+    const codec = mimeType.match(/[a-zA-Z0-9,.]+$/);
+    const codecV = codec ? codec[0] : 'webm';
+    mimeType = `video/${codecV}`;
+  }
+  return mimeType;
+};

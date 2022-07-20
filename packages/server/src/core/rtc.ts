@@ -58,7 +58,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
         ],
         video: [
           new werift.RTCRtpCodecParameters({
-            mimeType: `video/${mimeType}`,
+            mimeType,
             clockRate: 90000,
             rtcpFeedback: [
               { type: 'transport-cc' },
@@ -183,7 +183,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       };
 
     let s = 1;
-    console.log(3232);
+    console.log(32);
     this.peerConnectionsServer[peerId]!.ontrack = (e) => {
       const peer = peerId.split(delimiter);
       const isRoom = peer[2] === '0';
@@ -208,7 +208,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
           if (room) {
             setTimeout(() => {
               room.forEach((id) => {
-                console.log(1);
                 ws.sendMessage({
                   type: MessageType.SET_CHANGE_UNIT,
                   id,
@@ -254,7 +253,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       data: { candidate, userId, target },
     } = msg;
     let peerId = this.getPeerId(id, userId, target, connId);
-    console.log(peerId);
     let _connId = connId;
     if (!this.peerConnectionsServer?.[peerId]) {
       const peer = Object.keys(this.peerConnectionsServer).find((p) => {
@@ -358,7 +356,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       log('warn', 'Handle offer message without peer connection', { peerId });
       return;
     }
-    console.log(0);
     this.handleIceCandidate({
       roomId: id,
       userId,
@@ -739,7 +736,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       return;
     }
     this.createRTCServer({ roomId: id, userId: uid, target: 0, connId, mimeType });
-    console.log(port);
     const connection = new this.ws.websocket(`ws://localhost:${port}`, {
       headers: {
         origin: cors.split(',')[0],
