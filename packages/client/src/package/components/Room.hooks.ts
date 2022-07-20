@@ -713,6 +713,8 @@ export const useVideoStarted = ({
           if (_attempts[item.target] === 1) {
             if (!played[item.target] && mounted) {
               lostStreamHandler({ ...item, eventName: 'not-played' });
+              const str = streams.find((i) => i.target === item.target);
+              console.log(str?.stream.getTracks().length);
             }
           } else {
             log('info', `${_attempts[item.target]} attempts of restart:`, { target: item.target });
