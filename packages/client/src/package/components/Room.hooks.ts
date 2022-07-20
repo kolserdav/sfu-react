@@ -310,7 +310,7 @@ export const useConnection = ({
           const peerId = rtc.getPeerId(roomId, item, connId);
           const _isExists = _streams.filter((_item) => item === _item.target);
           if (!_isExists[0]) {
-            log('info', 'Check new user', { item });
+            log('info', 'Check new user', { item, id });
             rtc.createPeerConnection({
               roomId,
               target: item,
@@ -405,7 +405,6 @@ export const useConnection = ({
             id: roomId,
             data: {
               userId: id,
-              // TODO check codec
               mimeType: getCodec(),
             },
             connId,
