@@ -718,17 +718,12 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     port: number;
     cors: string;
   }) {
+    log('log', 'Get room message', message);
     const {
       data: { userId: uid, mimeType },
       id,
       connId,
     } = message;
-    // Room creatting counter local connection with every user
-    const connection = new this.ws.websocket(`ws://localhost:${port}`, {
-      headers: {
-        origin: cors.split(',')[0],
-      },
-    });
     const error = await this.addUserToRoom({
       roomId: id,
       userId: uid,
@@ -744,16 +739,24 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       return;
     }
     this.createRTCServer({ roomId: id, userId: uid, target: 0, connId, mimeType });
+    console.log(port);
+    const connection = new this.ws.websocket(`ws://localhost:${port}`, {
+      headers: {
+        origin: cors.split(',')[0],
+      },
+    });
     connection.onopen = () => {
-      log('warn', 'On open room', { roomId: id, userId: uid, target: 0, connId, mimeType });
-      this.ws.sendMessage({
-        type: MessageType.GET_USER_ID,
-        id,
-        data: {
-          isRoom: true,
-        },
-        connId: '',
-      });
+      log('info', 'On open room', { roomId: id, userId: uid, target: 0, connId, mimeType });
+      connection.send(
+        JSON.stringify({
+          type: MessageType.GET_USER_ID,
+          id,
+          data: {
+            isRoom: true,
+          },
+          connId: '',
+        })
+      );
       connection.onmessage = (mess) => {
         const msg = this.ws.parseMessage(mess.data as string);
         if (msg) {
@@ -774,7 +777,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     };
     this.ws.sendMessage({
       type: MessageType.SET_ROOM,
-      id,
+      id: uid,
       data: undefined,
       connId,
     });

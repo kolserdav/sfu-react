@@ -400,51 +400,14 @@ export const useConnection = ({
            */
           setConnectionId(connId);
           rtc.connId = connId;
-          rtc.createPeerConnection({
-            userId: ws.userId,
-            target: 0,
-            connId,
-            roomId,
-            onTrack: ({ addedUserId, stream }) => {
-              log('info', '-> Added local stream to room', { addedUserId, id });
-              addStream({ target: addedUserId, stream, connId });
+          ws.sendMessage({
+            type: MessageType.GET_ROOM,
+            id: roomId,
+            data: {
+              userId: id,
+              mimeType: 'webm',
             },
-            iceServers,
-            eventName: 'first',
-          });
-          rtc.addTracks({ userId: ws.userId, roomId, connId, target: 0, peerId: '' }, (e) => {
-            if (!e) {
-              let pC = rtc.peerConnections[rtc.getPeerId(roomId, 0, connId)];
-              const cl = setInterval(() => {
-                pC = rtc.peerConnections[rtc.getPeerId(roomId, 0, connId)];
-                if (pC?.localDescription?.sdp) {
-                  ws.sendMessage({
-                    type: MessageType.GET_ROOM,
-                    id: roomId,
-                    data: {
-                      userId: id,
-                      mimeType: checkVideoPlugin(pC.localDescription.sdp),
-                    },
-                    connId,
-                  });
-                  clearInterval(cl);
-                } else {
-                  log('warn', 'Can not get room', { sdp: pC?.localDescription?.sdp });
-                }
-              }, 100);
-            } else if (localShareScreen) {
-              ws.shareScreen = false;
-              setLocalShareScreen(false);
-              setShareScreen(false);
-              ws.onOpen = () => {
-                ws.sendMessage({
-                  type: MessageType.GET_USER_ID,
-                  id,
-                  data: {},
-                  connId: '',
-                });
-              };
-            }
+            connId,
           });
           break;
         case MessageType.OFFER:
@@ -464,6 +427,35 @@ export const useConnection = ({
           break;
         case MessageType.SET_ROOM:
           setRoomIsSaved(true);
+          rtc.createPeerConnection({
+            userId: ws.userId,
+            target: 0,
+            connId,
+            roomId,
+            onTrack: ({ addedUserId, stream }) => {
+              log('info', '-> Added local stream to room', { addedUserId, id });
+              addStream({ target: addedUserId, stream, connId });
+            },
+            iceServers,
+            eventName: 'first',
+          });
+          rtc.addTracks({ userId: ws.userId, roomId, connId, target: 0, peerId: '' }, (e) => {
+            if (!e) {
+              /** */
+            } else if (localShareScreen) {
+              ws.shareScreen = false;
+              setLocalShareScreen(false);
+              setShareScreen(false);
+              ws.onOpen = () => {
+                ws.sendMessage({
+                  type: MessageType.GET_USER_ID,
+                  id,
+                  data: {},
+                  connId: '',
+                });
+              };
+            }
+          });
           break;
         case MessageType.GET_NEED_RECONNECT:
           needReconnectHandler(rawMessage);

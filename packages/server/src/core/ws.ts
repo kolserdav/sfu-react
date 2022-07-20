@@ -138,7 +138,7 @@ class WS implements WSInterface {
         } else if (this.rooms[id] && this.sockets[this.getSocketId(id, this.rooms[id])]) {
           this.sockets[this.getSocketId(id, this.rooms[id])].send(res);
         } else {
-          log('info', 'Send message without conected socket', {
+          log('warn', 'Send message without conected socket', {
             args,
             k: Object.keys(this.sockets),
             u: this.users,
@@ -146,7 +146,7 @@ class WS implements WSInterface {
           });
         }
         resolve(0);
-      }, 100);
+      }, 10);
     });
   };
 }
