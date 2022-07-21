@@ -150,7 +150,10 @@ export const useConnection = ({
       });
       const peerId = rtc.getPeerId(roomId, target, _connId);
       if (!rtc.peerConnections[peerId]) {
-        log('info', 'Lost stream handler without peer connection', { peerId });
+        log('warn', 'Lost stream handler without peer connection', {
+          peerId,
+          k: Object.keys(rtc.peerConnections),
+        });
         return;
       }
       rtc.closeVideoCall({ roomId, userId: ws.userId, target, connId: _connId });
@@ -274,33 +277,26 @@ export const useConnection = ({
       setMuteds(_muteds);
     };
 
-    const getTracksHandler = ({
-      data: { userId },
+    const reconnectHandler = ({
+      id: _id,
       connId,
-    }: SendMessageArgs<MessageType.GET_TRACKS>) => {
-      rtc.addTracks({ roomId, userId: ws.userId, target: userId, connId, peerId: '' }, (e) => {
-        log('warn', 'Get tracks handler callback', {
-          roomId,
-          target: userId,
-          userId: ws.userId,
-          connId,
-        });
-      });
+      data: { userId },
+    }: SendMessageArgs<MessageType.GET_NEED_RECONNECT>) => {
+      lostStreamHandler({ connId, target: userId, eventName: 'need-reconnect' });
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const changeRoomGuestsHandler = ({
-      rawMessage,
+      rawMessage: {
+        data: { roomUsers, muteds: _muteds },
+        connId,
+      },
     }: {
       rawMessage: SendMessageArgs<MessageType.SET_ROOM_GUESTS>;
     }) => {
       if (!roomId) {
         return;
       }
-      const {
-        data: { roomUsers, muteds: _muteds },
-        connId,
-      } = ws.getMessage(MessageType.SET_ROOM_GUESTS, rawMessage);
       rtc.muteds = _muteds;
       setMuteds(_muteds);
       const _streams: Stream[] = storeStreams.getState().streams as Stream[];
@@ -313,14 +309,20 @@ export const useConnection = ({
           const peerId = rtc.getPeerId(roomId, item, connId);
           const _isExists = _streams.filter((_item) => item === _item.target);
           if (!_isExists[0]) {
-            log('info', 'Check new user', { item, id });
+            log('warn', 'Check new user', { item, id });
+            ws.sendMessage({
+              type: MessageType.GET_NEED_RECONNECT,
+              id: item,
+              data: { userId: id },
+              connId,
+            });
             rtc.createPeerConnection({
               roomId,
               target: item,
               userId: id,
               connId,
               onTrack: ({ addedUserId, stream }) => {
-                addStream({ target: addedUserId, stream, connId });
+                addStream({ target: addedUserId, stream, connId, change: true });
               },
               iceServers,
               eventName: 'check',
@@ -330,12 +332,6 @@ export const useConnection = ({
                 roomId,
                 target: item,
                 userId: id,
-                connId,
-              });
-              ws.sendMessage({
-                type: MessageType.GET_TRACKS,
-                id: item,
-                data: { userId: id },
                 connId,
               });
             });
@@ -469,8 +465,8 @@ export const useConnection = ({
         case MessageType.SET_CHANGE_UNIT:
           changeRoomUnitHandler(ws.getMessage(MessageType.SET_CHANGE_UNIT, rawMessage));
           break;
-        case MessageType.GET_TRACKS:
-          getTracksHandler(rawMessage);
+        case MessageType.GET_NEED_RECONNECT:
+          reconnectHandler(ws.getMessage(MessageType.GET_NEED_RECONNECT, rawMessage));
           break;
         case MessageType.SET_ERROR:
           const {

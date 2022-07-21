@@ -168,8 +168,8 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
         const tracksOpts: AddTracksProps = {
           peerId: _peerId,
           roomId: peer[0],
-          userId: peer[1],
-          target: peer[2],
+          userId: _userId,
+          target: _target,
           connId: peer[3],
         };
         log('info', 'Add tracks', { tracksOpts, s });
@@ -449,7 +449,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     const _peerId = this.getPeerId(roomId, target, 0, _connId);
     const stream = this.streams[_peerId];
     const tracks = stream?.getTracks();
-    log('info', 'Add tracks', {
+    log('warn', 'Add tracks', {
       roomId,
       userId,
       target,
