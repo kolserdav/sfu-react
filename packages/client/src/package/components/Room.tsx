@@ -118,6 +118,7 @@ function Room({ id, iceServers, server, port }: RoomProps) {
               title={item.target.toString()}
               id={item.target.toString()}
               onLoadedData={(e) => {
+                log('log', 'On loaded data', { ...item });
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const { target }: { target: HTMLVideoElement } = e as any;
                 target.play();

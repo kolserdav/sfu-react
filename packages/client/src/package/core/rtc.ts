@@ -20,6 +20,8 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
 
   public roomLength = 0;
 
+  public selfStreamId: string | number | undefined = '';
+
   public connId = '';
 
   public muteds: string[] = [];

@@ -10,6 +10,7 @@
  ******************************************************************************************/
 /* eslint-disable no-case-declarations */
 import { useEffect, useState, useMemo, useCallback } from 'react';
+import { MediaStreamTrack } from 'werift';
 import WS from '../core/ws';
 import RTC from '../core/rtc';
 import { getCodec, log } from '../utils/lib';
@@ -309,25 +310,37 @@ export const useConnection = ({
           const peerId = rtc.getPeerId(roomId, item, connId);
           const _isExists = _streams.filter((_item) => item === _item.target);
           if (!_isExists[0]) {
-            log('warn', 'Check new user', { item, id });
-            ws.sendMessage({
-              type: MessageType.GET_NEED_RECONNECT,
-              id: item,
-              data: { userId: id },
-              connId,
-            });
+            log('info', 'Check new user', { item, id });
+            let s1 = 1;
+            let ft: any = null;
             rtc.createPeerConnection({
               roomId,
               target: item,
               userId: id,
               connId,
               onTrack: ({ addedUserId, stream }) => {
-                addStream({ target: addedUserId, stream, connId, change: true });
+                log('warn', 'New user send tracks', {
+                  item,
+                  id,
+                  addedUserId,
+                  sid: stream.id,
+                  self: stream.id === rtc.selfStreamId,
+                  tracks: stream?.getTracks().map((_item) => _item.kind),
+                });
+                if (s1 === 3) {
+                  const _stream = stream;
+                  _stream.addTrack(ft);
+                  addStream({ target: item, stream: _stream, connId, change: false });
+                } else if (s1 === 2) {
+                  // eslint-disable-next-line prefer-destructuring
+                  ft = stream.getTracks()[0];
+                }
+                s1++;
               },
               iceServers,
               eventName: 'check',
             });
-            rtc.addTracks({ roomId, userId: id, target: item, connId, peerId: '' }, (e) => {
+            rtc.addTracks({ roomId, userId: ws.userId, target: item, connId, peerId: '' }, (e) => {
               log('info', 'Change room guests connection', {
                 roomId,
                 target: item,

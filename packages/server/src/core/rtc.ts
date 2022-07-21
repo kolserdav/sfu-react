@@ -172,7 +172,11 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
           target: _target,
           connId: peer[3],
         };
-        log('info', 'Add tracks', { tracksOpts, s });
+        log('info', 'Add tracks', {
+          tracksOpts,
+          s,
+          kinds: stream.getTracks().map((item) => item.kind),
+        });
         this.addTracks(tracksOpts, () => {
           /** */
         });
@@ -455,6 +459,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       target,
       connId,
       _peerId,
+      peerId,
       tracksL: tracks?.length,
       _connId,
       id: stream?.id,
