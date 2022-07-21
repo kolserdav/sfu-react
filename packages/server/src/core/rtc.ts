@@ -130,8 +130,8 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
         isRoom,
         si: stream.id,
         isNew,
-        userId: peer[1],
-        target: peer[2],
+        userId,
+        target,
         tracks: stream.getTracks().map((item) => item.kind),
       });
       if (isRoom) {
@@ -161,16 +161,12 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
         this.streams[peerId].addTrack(stream.getTracks()[0]);
         s++;
       } else {
-        const peer = peerId.split(this.delimiter);
-        const _userId = peer[1] === userId.toString() ? peer[1] : peer[2];
-        const _target = peer[2] === userId.toString() ? peer[1] : peer[2];
-        const _peerId = this.getPeerId(peer[0], _userId, _target, peer[3]);
         const tracksOpts: AddTracksProps = {
-          peerId: _peerId,
-          roomId: peer[0],
-          userId: peer[1],
-          target: peer[2],
-          connId: peer[3],
+          peerId,
+          roomId,
+          userId,
+          target,
+          connId,
         };
         log('info', 'Add tracks', { tracksOpts, s });
         this.addTracks(tracksOpts, () => {
