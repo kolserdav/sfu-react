@@ -125,6 +125,15 @@ export const useConnection = ({
   }, []);
 
   /**
+   * set self stream id
+   */
+  useEffect(() => {
+    if (rtc.selfStreamId !== selfStream?.stream.id) {
+      rtc.selfStreamId = selfStream?.stream.id;
+    }
+  }, [selfStream, rtc]);
+
+  /**
    * Connections handlers
    */
   useEffect(() => {
@@ -451,7 +460,12 @@ export const useConnection = ({
             connId,
             roomId,
             onTrack: ({ addedUserId, stream }) => {
-              log('info', '-> Added local stream to room', { addedUserId, id });
+              log('info', '-> Added local stream to room', {
+                addedUserId,
+                id,
+                tracks: stream?.getTracks().map((_item) => _item.kind),
+                trackIds: stream?.getTracks().map((_item) => _item.id),
+              });
               addStream({ target: addedUserId, stream, connId });
             },
             iceServers,
@@ -523,6 +537,7 @@ export const useConnection = ({
     iceServers,
     localShareScreen,
     rtc.lostStreamHandler,
+    rtc.selfStreamId,
   ]);
 
   /**
