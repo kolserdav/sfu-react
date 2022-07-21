@@ -72,6 +72,7 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
         connId,
         eventName,
         tracks: stream.getTracks(),
+        peers: Object.keys(this.peerConnections),
       });
       onTrack({ addedUserId, stream, connId });
     };

@@ -305,6 +305,10 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
           peerId,
           ss: this.peerConnectionsServer[peerId]?.signalingState,
         });
+        if (!this.peerConnectionsServer[peerId]) {
+          log('warn', 'Create answer without peer connection', { peerId });
+          return;
+        }
         this.peerConnectionsServer[peerId]!.createAnswer().then((answ) => {
           if (!answ) {
             log('error', 'Failed set local description for answer.', {

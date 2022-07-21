@@ -47,7 +47,7 @@ export namespace DataTypes {
       muted: boolean;
       roomId: string | number;
     };
-    export type getTracks = {
+    export type GetTracks = {
       userId: string | number;
     };
     export type GetRoomGuests = {
@@ -107,7 +107,7 @@ export namespace DataTypes {
     : T extends MessageType.GET_MUTE
     ? DataTypes.MessageTypes.GetMute
     : T extends MessageType.GET_TRACKS
-    ? DataTypes.MessageTypes.getTracks
+    ? DataTypes.MessageTypes.GetTracks
     : T extends MessageType.GET_USER_ID
     ? DataTypes.MessageTypes.GetGuestId
     : T extends MessageType.SET_USER_ID
