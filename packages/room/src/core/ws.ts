@@ -8,8 +8,8 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Thu Jul 14 2022 16:24:49 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import * as Types from '../../types/interfaces';
-import { log } from '../../utils/lib';
+import * as Types from '../types/interfaces';
+import { log } from '../utils/lib';
 
 class WS implements Types.WSInterface {
   public connection: WebSocket;
@@ -84,7 +84,7 @@ class WS implements Types.WSInterface {
     return connection;
   }
 
-  public createConnection({ server, port }: { server: string; port: string }) {
+  public createConnection({ port }: { port: string }) {
     this.newConnection({ port });
     this.connection.onopen = (ev: Event) => {
       log('log', 'onOpen', ev);
@@ -104,8 +104,8 @@ class WS implements Types.WSInterface {
     return this.connection;
   }
 
-  constructor({ server, port }: { server: string; port: string }) {
-    this.connection = this.createConnection({ server, port });
+  constructor({ port }: { port: string }) {
+    this.connection = this.createConnection({ port });
   }
 }
 

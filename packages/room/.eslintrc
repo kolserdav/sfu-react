@@ -1,0 +1,61 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "parser": "@typescript-eslint/parser",
+  "extends": [
+    "plugin:react/recommended",
+    "airbnb",
+    "react-app",
+    "react-app/jest",
+    "eslint-config-prettier",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier"
+  ],
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "plugins": ["@typescript-eslint", "react", "prettier", "eslint-plugin-prettier"],
+  "ignorePatterns": ["dist", "src/package/types/prisma.d.ts"],
+  "rules": {
+    "react-hooks/rules-of-hooks": 1,
+    "react/jsx-props-no-spreading": 0,
+    "import/no-extraneous-dependencies": 0,
+    "spaced-comment": 0,
+    "react/react-in-jsx-scope": 2,
+    "prettier/prettier": 1,
+    "react/jsx-filename-extension": [
+      1,
+      { "extensions": [".tsx", ".jsx", ".css", ".scss", ".esm", ".hooks", ".lib", ".context"] }
+    ],
+    "import/no-unresolved": 0,
+    "import/extensions": [
+      2,
+      "never",
+      {
+        "ts": "always",
+        "tsx": "always",
+        "hooks": "always",
+        "lib": "always",
+        "context": "always",
+        "scss": "always"
+      }
+    ],
+    "no-unused-vars": 1,
+    "no-underscore-dangle": 0,
+    "no-plusplus": 0,
+    "import/prefer-default-export": 1,
+    "jsx-a11y/media-has-caption": 0,
+    "no-nested-ternary": 0,
+    "no-param-reassign": 1,
+    "no-shadow": 0,
+    "@typescript-eslint/no-shadow": 2,
+    "@typescript-eslint/no-unused-vars": 1
+  }
+}

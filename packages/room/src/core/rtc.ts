@@ -8,16 +8,21 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Thu Jul 14 2022 16:24:49 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import { RTCInterface, MessageType, SendMessageArgs, AddTracksProps } from '../../types/interfaces';
-import { log } from '../../utils/lib';
+import { RTCInterface, MessageType, SendMessageArgs, AddTracksProps } from '../types/interfaces';
+import { log } from '../utils/lib';
 import WS from './ws';
 
 class RTC implements RTCInterface {
   public peerConnections: RTCInterface['peerConnections'] = {};
+
   public readonly delimiter = '_';
+
   public rooms: Record<string | number, (string | number)[]> = {};
+
   public muteds: Record<string, string[]> = {};
+
   private ws: WS;
+
   public streams: Record<string, MediaStream> = {};
 
   constructor({ ws }: { ws: WS }) {
@@ -402,6 +407,7 @@ class RTC implements RTCInterface {
     keysStreams.forEach((element) => {
       const str = element.split(this.delimiter);
       if (str[1] === target.toString() && str[2] === '0') {
+        // eslint-disable-next-line prefer-destructuring
         _connId = str[3];
       }
     });
@@ -468,6 +474,7 @@ class RTC implements RTCInterface {
     }, 1000);
   };
 
+  // eslint-disable-next-line class-methods-use-this
   public onClosedCall: RTCInterface['onClosedCall'] = (args) => {
     log('info', 'Call is closed', { ...args });
   };

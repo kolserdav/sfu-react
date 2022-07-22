@@ -1,3 +1,4 @@
+// DO NOT WRITE THIS MANUALLY! Use packages/client/src/package/types/interfaces.ts file of packages/server/src/types/interfaces.ts symlink instead
 /******************************************************************************************
  * Repository: https://github.com/kolserdav/react-node-webrtc-sfu.git
  * File name: interfaces.ts
