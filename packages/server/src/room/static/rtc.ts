@@ -8,9 +8,8 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Thu Jul 14 2022 16:24:49 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import * as werift from 'werift';
-import { RTCInterface, MessageType, SendMessageArgs, AddTracksProps } from '../types/interfaces';
-import { log } from '../utils/lib';
+import { RTCInterface, MessageType, SendMessageArgs, AddTracksProps } from '../../types/interfaces';
+import { log } from '../../utils/lib';
 import WS from './ws';
 
 class RTC implements RTCInterface {
@@ -493,6 +492,35 @@ class RTC implements RTCInterface {
         });
       }
     });
+  }
+
+  public onOpen({ id }: { id: string | number }) {
+    this.ws.sendMessage({
+      type: MessageType.GET_USER_ID,
+      id,
+      data: {
+        isRoom: true,
+      },
+      connId: '',
+    });
+  }
+
+  public onMessage(mess: any) {
+    const msg = this.ws.parseMessage(mess.data as string);
+    if (msg) {
+      const { type } = msg;
+      switch (type) {
+        case MessageType.OFFER:
+          this.handleOfferMessage(msg);
+          break;
+        case MessageType.ANSWER:
+          this.handleVideoAnswerMsg(msg);
+          break;
+        case MessageType.CANDIDATE:
+          this.handleCandidateMessage(msg);
+          break;
+      }
+    }
   }
 }
 

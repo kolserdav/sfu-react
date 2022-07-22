@@ -80,6 +80,9 @@
     "skipLibCheck": true /* Skip type checking of declaration files. */,
     "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file. */
   },
-  "exclude": ["node_modules", "dist", "node-webrtc/build", "node-webrtc/lib"],
+  "paths": {
+    "interfaces": "./src/types/interfaces.ts"
+  },
+  "exclude": ["node_modules", "dist", "node-webrtc/build", "node-webrtc/lib", "room"],
   "include": ["*.d.ts", "src", "../../package.json"]
 }

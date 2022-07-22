@@ -58,7 +58,6 @@
     "dev:install": "cd packages/server/node-webrtc && SKIP_DOWNLOAD=true npm install",
     "dev:client": "cd packages/client && npm start",
     "start": "cd packages/server && npm start",
-    "postinstall": "npm run migrate",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "test": "node tests/rooms.js",
     "dev:migrate": "cd packages/server && npm run dev:migrate",
@@ -81,6 +80,7 @@
   },
   "devDependencies": {
     "@types/dotenv": "^8.2.0",
+    "@types/express": "^4.17.13",
     "@types/jest": "^27.5.2",
     "@types/node": "^17.0.39",
     "@types/react": "^18.0.14",
@@ -94,6 +94,7 @@
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^13.5.0",
     "@types/puppeteer": "^5.4.6",
+    "@types/webpack": "^5.28.0",
     "@typescript-eslint/eslint-plugin": "^5.27.0",
     "@typescript-eslint/parser": "^5.27.0",
     "airbnb": "^0.0.2",

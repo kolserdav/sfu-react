@@ -9,15 +9,10 @@
  * Create Date: Thu Jul 14 2022 16:24:49 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import puppeteer from 'puppeteer';
-import { HEADLESS, VIEWPORT, APP_URL } from '../utils/constants';
+import { HEADLESS, VIEWPORT, ROOM_PORT } from '../utils/constants';
 
 class Browser {
-  public async createRoom({
-    roomId,
-  }: {
-    roomId: string;
-    recordVideo?: boolean;
-  }): Promise<{ page: puppeteer.Page }> {
+  public async createRoom({ roomId }: { roomId: string }): Promise<{ page: puppeteer.Page }> {
     const browser = await puppeteer.launch({
       headless: HEADLESS,
       devtools: !HEADLESS,
@@ -30,7 +25,7 @@ class Browser {
     });
     const [page] = await browser.pages();
     await page.setViewport(VIEWPORT);
-    await page.goto(`${APP_URL}/${roomId}?room=1`);
+    await page.goto(`http://localhost:${ROOM_PORT}/room/${roomId}`);
     return { page };
   }
 }

@@ -21,3 +21,4 @@ export const PORT = parseInt(process.env.PORT || DEFAULT_PORT, 10);
 export const DATABASE_URL = process.env.DATABASE_URL as string;
 export const CORS = process.env.CORS as string;
 export const APP_URL = process.env.APP_URL as string;
+export const ROOM_PORT = parseInt(process.env.ROOM_PORT as string, 10);

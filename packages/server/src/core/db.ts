@@ -9,20 +9,26 @@
  * Create Date: Thu Jul 14 2022 16:24:49 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { PrismaClient } from '@prisma/client';
-import { DBInterface, MessageType, SendMessageArgs } from '../types/interfaces';
+import { DBInterface, MessageType, SendMessageArgs, RTCInterface } from '../types/interfaces';
 import { log } from '../utils/lib';
 import WS from './ws';
+import Browser from './browser';
 
 const prisma = new PrismaClient();
 
-class DB implements DBInterface {
+class DB extends Browser {
   public readonly delimiter = '_';
   public rooms: Record<string | number, (string | number)[]> = {};
   public muteds: Record<string, string[]> = {};
   private ws: WS;
   public streams: Record<string, MediaStream> = {};
+  /**
+   * @deprecated
+   */
+  public peerConnections: RTCInterface['peerConnections'] = {};
 
   constructor({ ws }: { ws: WS }) {
+    super();
     this.ws = ws;
   }
 
@@ -282,13 +288,18 @@ class DB implements DBInterface {
       id,
       connId,
     } = message;
-    // TODO
+    const roomId = id.toString();
+    this.createRoom({ roomId });
     this.ws.sendMessage({
       type: MessageType.SET_ROOM,
       id: uid,
       data: undefined,
       connId,
     });
+  }
+
+  public cleanConnections(roomId: string, userId: string) {
+    console.log('clean connections', { roomId, userId });
   }
 }
 

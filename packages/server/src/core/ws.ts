@@ -11,9 +11,6 @@
 import { WebSocketServer, Server, WebSocket, ServerOptions } from 'ws';
 import { WSInterface } from '../types/interfaces';
 import { log } from '../utils/lib';
-import DB from './db';
-
-const db = new DB();
 
 class WS implements WSInterface {
   public connection: Server<WebSocket>;
@@ -54,28 +51,6 @@ class WS implements WSInterface {
     this.sockets[this.getSocketId(_id.toString(), connId)] = ws;
     const id = _id.toString();
     if (!isRoom) {
-      db.unitFindFirst({
-        where: {
-          id,
-        },
-      }).then((u) => {
-        if (u) {
-          db.unitUpdate({
-            where: {
-              id,
-            },
-            data: {
-              updated: new Date(),
-            },
-          });
-        } else {
-          db.unitCreate({
-            data: {
-              id,
-            },
-          });
-        }
-      });
       this.users[id] = connId;
     } else {
       this.rooms[id] = connId;

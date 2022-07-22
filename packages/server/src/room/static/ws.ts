@@ -8,8 +8,8 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Thu Jul 14 2022 16:24:49 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import * as Types from '../types/interfaces';
-import { log } from '../utils/lib';
+import * as Types from '../../types/interfaces';
+import { log } from '../../utils/lib';
 
 class WS implements Types.WSInterface {
   public connection: WebSocket;
