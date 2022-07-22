@@ -99,8 +99,6 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
         case MessageType.GET_ROOM:
           db.handleGetRoomMessage({
             message: wss.getMessage(MessageType.GET_ROOM, rawMessage),
-            port,
-            cors,
           });
           break;
         case MessageType.GET_ROOM_GUESTS:
@@ -213,6 +211,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
             });
             if (db.rooms[item].length === 0) {
               delete db.rooms[item];
+              db.closeRoom({ roomId: item });
               // set room is archive
               db.roomUpdate({
                 where: {
@@ -236,5 +235,5 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
 export default createServer;
 
 if (require.main === module) {
-  createServer({ port: PORT, cors: 'http://localhost:3000', db: DATABASE_URL });
+  createServer({ port: PORT, cors: process.env.CORS, db: DATABASE_URL });
 }

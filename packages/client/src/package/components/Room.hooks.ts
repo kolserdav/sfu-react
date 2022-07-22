@@ -426,6 +426,8 @@ export const useConnection = ({
           break;
         case MessageType.SET_ROOM:
           setRoomIsSaved(true);
+          break;
+        case MessageType.SET_ROOM_LOAD:
           rtc.createPeerConnection({
             userId: ws.userId,
             target: 0,

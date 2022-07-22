@@ -128,7 +128,7 @@ class RTC implements RTCInterface {
               });
             }, 0);
           } else {
-            log('warn', 'Room missing in memory', { roomId });
+            log('warn', 'Room missing in memory', { roomId, peerId });
           }
         }
         this.streams[peerId].addTrack(stream.getTracks()[0]);
@@ -510,24 +510,6 @@ class RTC implements RTCInterface {
       },
       connId: '',
     });
-  }
-
-  public onMessage(mess: any) {
-    const msg = this.ws.parseMessage(mess.data as string);
-    if (msg) {
-      const { type } = msg;
-      switch (type) {
-        case MessageType.OFFER:
-          this.handleOfferMessage(msg);
-          break;
-        case MessageType.ANSWER:
-          this.handleVideoAnswerMsg(msg);
-          break;
-        case MessageType.CANDIDATE:
-          this.handleCandidateMessage(msg);
-          break;
-      }
-    }
   }
 }
 

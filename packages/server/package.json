@@ -14,8 +14,6 @@
     "rmdist": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\"",
     "dev": "concurrently \"npm run watch\" \"npm run dev:start\"",
     "build": "npm run rmdist && tsc -p .",
-    "room:dev": "webpack serve --env NODE_ENV=development",
-    "room:build": "webpack --env NODE_ENV=production",
     "postinstall": "npm run migrate",
     "dev:migrate": "npm run format && npm run generate && prisma migrate dev --preview-feature",
     "migrate": "prisma migrate deploy --preview-feature && npm run generate",

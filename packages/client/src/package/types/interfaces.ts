@@ -38,6 +38,7 @@ export enum MessageType {
   GET_MUTE = 'GET_MUTE',
   SET_MUTE = 'SET_MUTE',
   GET_NEED_RECONNECT = 'GET_NEED_RECONNECT',
+  SET_ROOM_LOAD = 'SET_ROOM_LOAD',
 }
 
 export namespace DataTypes {
@@ -76,6 +77,9 @@ export namespace DataTypes {
     };
     export type SetMute = {
       muteds: string[];
+    };
+    export type SetRoomLoad = {
+      roomId: string | number;
     };
     export type Offer = {
       sdp: RTCSessionDescriptionInit;
@@ -119,6 +123,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetRoomGuests
     : T extends MessageType.SET_CHANGE_UNIT
     ? DataTypes.MessageTypes.SetChangeRoomUnit
+    : T extends MessageType.SET_ROOM_LOAD
+    ? DataTypes.MessageTypes.SetRoomLoad
     : T extends MessageType.SET_MUTE
     ? DataTypes.MessageTypes.SetMute
     : T extends MessageType.SET_ERROR

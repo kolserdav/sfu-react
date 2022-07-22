@@ -275,24 +275,35 @@ class DB extends Browser {
 
   public async handleGetRoomMessage({
     message,
-    port,
-    cors,
   }: {
     message: SendMessageArgs<MessageType.GET_ROOM>;
-    port: number;
-    cors: string;
   }) {
     log('log', 'Get room message', message);
     const {
-      data: { userId: uid },
+      data: { userId },
       id,
       connId,
     } = message;
+    const error = await this.addUserToRoom({
+      roomId: id,
+      userId,
+    });
+    if (error) {
+      this.ws.sendMessage({
+        type: MessageType.SET_ROOM,
+        id: userId,
+        data: undefined,
+        connId,
+      });
+      log('warn', 'Can not add user to room', { id, userId });
+      return;
+    }
     const roomId = id.toString();
-    this.createRoom({ roomId });
+    const uid = userId.toString();
+    this.createRoom({ roomId, userId: uid });
     this.ws.sendMessage({
       type: MessageType.SET_ROOM,
-      id: uid,
+      id: userId,
       data: undefined,
       connId,
     });

@@ -12,7 +12,15 @@ import puppeteer from 'puppeteer';
 import { HEADLESS, VIEWPORT, ROOM_URL } from '../utils/constants';
 
 class Browser {
-  public async createRoom({ roomId }: { roomId: string }): Promise<{ page: puppeteer.Page }> {
+  public pages: Record<string, puppeteer.Page> = {};
+
+  public async createRoom({
+    roomId,
+    userId,
+  }: {
+    roomId: string;
+    userId: string;
+  }): Promise<{ page: puppeteer.Page }> {
     const browser = await puppeteer.launch({
       headless: HEADLESS,
       devtools: !HEADLESS,
@@ -25,8 +33,13 @@ class Browser {
     });
     const [page] = await browser.pages();
     await page.setViewport(VIEWPORT);
-    await page.goto(`${ROOM_URL}/room/${roomId}`);
+    await page.goto(`${ROOM_URL}/${roomId}?uid=${userId}`);
+    this.pages[roomId] = page;
     return { page };
+  }
+
+  public closeRoom({ roomId }: { roomId: string }) {
+    this.pages[roomId].close();
   }
 }
 
