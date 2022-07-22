@@ -35,7 +35,7 @@ function App() {
       switch (type) {
         case MessageType.SET_USER_ID:
           ws.setUserId(roomId);
-          rtc.rooms[roomId] = [ownerId];
+          rtc.users = [ownerId];
           ws.sendMessage({
             type: MessageType.SET_ROOM_LOAD,
             connId,
@@ -45,14 +45,17 @@ function App() {
             id: ownerId,
           });
           break;
+        case MessageType.SET_CHANGE_UNIT:
+          rtc.setChangeUnitHandler(rawMessage);
+          break;
         case MessageType.OFFER:
-          rtc.handleOfferMessage(ws.getMessage(MessageType.OFFER, rawMessage));
+          rtc.handleOfferMessage(rawMessage);
           break;
         case MessageType.ANSWER:
-          rtc.handleVideoAnswerMsg(ws.getMessage(MessageType.ANSWER, rawMessage));
+          rtc.handleVideoAnswerMsg(rawMessage);
           break;
         case MessageType.CANDIDATE:
-          rtc.handleCandidateMessage(ws.getMessage(MessageType.CANDIDATE, rawMessage));
+          rtc.handleCandidateMessage(rawMessage);
           break;
       }
     };

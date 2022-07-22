@@ -17,9 +17,9 @@ class RTC implements RTCInterface {
 
   public readonly delimiter = '_';
 
-  public rooms: Record<string | number, (string | number)[]> = {};
+  public users: (string | number)[] = [];
 
-  public muteds: Record<string, string[]> = {};
+  public muteds: string[] = [];
 
   private ws: WS;
 
@@ -74,7 +74,7 @@ class RTC implements RTCInterface {
     }
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const core = this;
-    const { ws, delimiter, rooms } = this;
+    const { ws, delimiter } = this;
     this.peerConnections[peerId]!.onsignalingstatechange =
       function handleSignalingStateChangeEvent() {
         if (!core.peerConnections[peerId]) {
@@ -109,29 +109,23 @@ class RTC implements RTCInterface {
       });
       if (isRoom) {
         if (s % 2 !== 0 && isNew) {
-          this.streams[peerId] = new MediaStream();
-          const room = rooms[roomId];
-          if (room) {
-            setTimeout(() => {
-              room.forEach((id) => {
-                ws.sendMessage({
-                  type: MessageType.SET_CHANGE_UNIT,
-                  id,
-                  data: {
-                    target: userId,
-                    eventName: 'add',
-                    roomLenght: rooms[roomId]?.length || 0,
-                    muteds: this.muteds[roomId],
-                  },
-                  connId,
-                });
+          this.streams[peerId] = stream;
+          setTimeout(() => {
+            this.users.forEach((id) => {
+              ws.sendMessage({
+                type: MessageType.SET_CHANGE_UNIT,
+                id,
+                data: {
+                  target: userId,
+                  eventName: 'add',
+                  roomLenght: this.users.length,
+                  muteds: this.muteds,
+                },
+                connId,
               });
-            }, 0);
-          } else {
-            log('warn', 'Room missing in memory', { roomId, peerId });
-          }
+            });
+          }, 0);
         }
-        this.streams[peerId].addTrack(stream.getTracks()[0]);
         s++;
       } else {
         const tracksOpts: AddTracksProps = {
@@ -509,6 +503,27 @@ class RTC implements RTCInterface {
         isRoom: true,
       },
       connId: '',
+    });
+  }
+
+  public setChangeUnitHandler({
+    connId,
+    data: { target, eventName },
+  }: SendMessageArgs<MessageType.SET_CHANGE_UNIT>) {
+    const keys = Object.keys(this.peerConnections);
+    console.log(this.users);
+    this.users.forEach((_item) => {
+      let _connId = connId;
+      keys.forEach((i) => {
+        const peer = i.split(this.delimiter);
+        if (
+          (peer[1] === _item && peer[2] === target.toString()) ||
+          (peer[1] === target.toString() && peer[2] === _item)
+        ) {
+          // eslint-disable-next-line prefer-destructuring
+          _connId = peer[3];
+        }
+      });
     });
   }
 }

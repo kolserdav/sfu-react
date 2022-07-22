@@ -178,37 +178,26 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
         roomKeys.forEach((item) => {
           const index = db.rooms[item].indexOf(userId);
           if (index !== -1) {
-            const keys = Object.keys(db.peerConnections);
-            db.cleanConnections(item, userId.toString());
+            db.rooms[item].forEach((_item) => {
+              if (_item !== userId) {
+                wss.sendMessage({
+                  type: MessageType.SET_CHANGE_UNIT,
+                  id: _item,
+                  data: {
+                    roomLenght: db.rooms[item].length,
+                    muteds: db.muteds[item],
+                    target: userId,
+                    eventName: 'delete',
+                  },
+                  connId: '',
+                });
+              }
+            });
             db.rooms[item].splice(index, 1);
             const mute = db.muteds[item].indexOf(userId.toString());
             if (mute !== -1) {
               db.muteds[item].splice(mute, 1);
             }
-            // Send user list of room
-            db.rooms[item].forEach((_item) => {
-              let _connId = connId;
-              keys.forEach((i) => {
-                const peer = i.split(db.delimiter);
-                if (
-                  (peer[1] === _item && peer[2] === userId.toString()) ||
-                  (peer[1] === userId.toString() && peer[2] === _item)
-                ) {
-                  _connId = peer[3];
-                }
-              });
-              wss.sendMessage({
-                type: MessageType.SET_CHANGE_UNIT,
-                id: _item,
-                data: {
-                  roomLenght: db.rooms[item].length,
-                  muteds: db.muteds[item],
-                  target: userId,
-                  eventName: 'delete',
-                },
-                connId: _connId,
-              });
-            });
             if (db.rooms[item].length === 0) {
               delete db.rooms[item];
               db.closeRoom({ roomId: item });

@@ -300,17 +300,25 @@ class DB extends Browser {
     }
     const roomId = id.toString();
     const uid = userId.toString();
-    this.createRoom({ roomId, userId: uid });
     this.ws.sendMessage({
       type: MessageType.SET_ROOM,
       id: userId,
       data: undefined,
       connId,
     });
-  }
-
-  public cleanConnections(roomId: string, userId: string) {
-    console.log('clean connections', { roomId, userId });
+    // FIXME need more details
+    if (this.rooms[roomId].length === 1) {
+      this.createRoom({ roomId, userId: uid });
+    } else {
+      this.ws.sendMessage({
+        type: MessageType.SET_ROOM_LOAD,
+        id: userId,
+        data: {
+          roomId,
+        },
+        connId,
+      });
+    }
   }
 }
 

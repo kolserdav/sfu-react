@@ -250,6 +250,15 @@ export const useConnection = ({
           }
           break;
         case 'delete':
+          const keys = Object.keys(rtc.peerConnections);
+          let _connId = connId;
+          keys.forEach((i) => {
+            const peer = i.split(rtc.delimiter);
+            if (peer[1] === target) {
+              // eslint-disable-next-line prefer-destructuring
+              _connId = peer[2];
+            }
+          });
           log('info', 'Need delete user', {
             roomId,
             target,
@@ -257,7 +266,7 @@ export const useConnection = ({
             connId,
             k: Object.keys(rtc.peerConnections),
           });
-          rtc.closeVideoCall({ roomId, target, userId, connId });
+          rtc.closeVideoCall({ roomId, target, userId, connId: _connId });
           const _stream = streams.find((item) => item.target === target);
           if (_stream) {
             storeStreams.dispatch(changeStreams({ type: 'delete', stream: _stream }));
