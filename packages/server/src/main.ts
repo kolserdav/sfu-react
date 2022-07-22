@@ -19,59 +19,12 @@ import { log } from './utils/lib';
 import { PORT, DATABASE_URL } from './utils/constants';
 import DB from './core/db';
 
-const db = new DB();
-
 process.on('uncaughtException', (err: Error) => {
   log('error', 'uncaughtException', err);
 });
 process.on('unhandledRejection', (err: Error) => {
   log('error', 'unhandledRejection', err);
 });
-
-const deleteGuest = ({ userId, roomId }: { userId: string | number; roomId: string | number }) => {
-  return new Promise((resolve) => {
-    db.roomFindFirst({
-      where: {
-        id: roomId.toString(),
-      },
-      select: {
-        Guests: {
-          where: {
-            unitId: userId.toString(),
-          },
-        },
-      },
-    }).then((g) => {
-      if (!g) {
-        log('warn', 'Can not unitFindFirst', { userId });
-        resolve(0);
-        return;
-      }
-      db.roomUpdate({
-        where: {
-          id: roomId.toString(),
-        },
-        data: {
-          Guests: {
-            delete: g.Guests[0]?.id
-              ? {
-                  id: g.Guests[0]?.id,
-                }
-              : undefined,
-          },
-          updated: new Date(),
-        },
-      }).then((r) => {
-        if (!r) {
-          log('warn', 'Room not delete guest', { roomId, id: g.Guests[0]?.id });
-          resolve(1);
-        }
-        log('info', 'Guest deleted', { roomId, id: g.Guests[0]?.id });
-        resolve(0);
-      });
-    });
-  });
-};
 
 /**
  * Create SFU WebRTC server
@@ -87,6 +40,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
   };
 
   const wss = new WS({ port });
+  const db = new DB({ ws: wss });
   const rtc: RTC | null = new RTC({ ws: wss });
 
   wss.connection.on('connection', function connection(ws, req) {
@@ -120,7 +74,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
           });
           break;
         case MessageType.GET_ROOM:
-          rtc.handleGetRoomMessage({
+          db.handleGetRoomMessage({
             message: wss.getMessage(MessageType.GET_ROOM, rawMessage),
             port,
             cors,
@@ -203,7 +157,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
         roomKeys.forEach((item) => {
           const index = rtc.rooms[item].indexOf(userId);
           if (index !== -1) {
-            const keys = Object.keys(rtc.peerConnectionsServer);
+            const keys = Object.keys(rtc.peerConnections);
             rtc.cleanConnections(item, userId.toString());
             rtc.rooms[item].splice(index, 1);
             const mute = rtc.muteds[item].indexOf(userId.toString());
@@ -248,7 +202,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
               });
               delete rtc.muteds[item];
             }
-            deleteGuest({ userId, roomId: item });
+            db.deleteGuest({ userId, roomId: item });
             delete wss.users[userId];
           }
         });

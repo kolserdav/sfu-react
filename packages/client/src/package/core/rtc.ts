@@ -10,7 +10,7 @@
  ******************************************************************************************/
 import 'webrtc-adapter';
 import { RTCInterface, MessageType } from '../types/interfaces';
-import { getCodec, log } from '../utils/lib';
+import { log } from '../utils/lib';
 import WS from './ws';
 
 class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServer'> {
@@ -236,7 +236,6 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
                 sdp: localDescription,
                 userId,
                 target,
-                mimeType: getCodec(),
               },
               connId,
             });

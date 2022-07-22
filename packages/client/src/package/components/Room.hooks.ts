@@ -12,7 +12,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import WS from '../core/ws';
 import RTC from '../core/rtc';
-import { getCodec, log } from '../utils/lib';
+import { log } from '../utils/lib';
 import { getWidthOfItem } from './Room.lib';
 import { MessageType, SendMessageArgs } from '../types/interfaces';
 import { Stream } from '../types';
@@ -405,7 +405,6 @@ export const useConnection = ({
             id: roomId,
             data: {
               userId: id,
-              mimeType: getCodec(),
             },
             connId,
           });
