@@ -9,7 +9,7 @@
  * Create Date: Thu Jul 14 2022 16:24:49 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import puppeteer from 'puppeteer';
-import { HEADLESS, VIEWPORT, ROOM_PORT } from '../utils/constants';
+import { HEADLESS, VIEWPORT, ROOM_URL } from '../utils/constants';
 
 class Browser {
   public async createRoom({ roomId }: { roomId: string }): Promise<{ page: puppeteer.Page }> {
@@ -25,7 +25,7 @@ class Browser {
     });
     const [page] = await browser.pages();
     await page.setViewport(VIEWPORT);
-    await page.goto(`http://localhost:${ROOM_PORT}/room/${roomId}`);
+    await page.goto(`${ROOM_URL}/room/${roomId}`);
     return { page };
   }
 }

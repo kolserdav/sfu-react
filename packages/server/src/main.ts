@@ -10,25 +10,14 @@
  ******************************************************************************************/
 /* eslint-disable no-case-declarations */
 import { v4 } from 'uuid';
-import express from 'express';
-import path from 'path';
 import dotenv from 'dotenv';
 dotenv.config();
 import WS from './core/ws';
 import { MessageType } from './types/interfaces';
 import { log } from './utils/lib';
-import { PORT, DATABASE_URL, ROOM_PORT } from './utils/constants';
+import { PORT, DATABASE_URL } from './utils/constants';
 import DB from './core/db';
-/*
-const app = express();
-app.use('/static', express.static(path.resolve(__dirname, './build/static')));
-app.get('/room/:id', function (req, res) {
-  res.sendFile(path.join(__dirname, '../build/index.html'));
-});
-app.listen(ROOM_PORT, () => {
-  log('info', 'Room node listen at port', ROOM_PORT, true);
-});
-*/
+
 process.on('uncaughtException', (err: Error) => {
   log('error', 'uncaughtException', err);
 });
