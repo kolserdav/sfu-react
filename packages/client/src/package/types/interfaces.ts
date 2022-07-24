@@ -12,8 +12,7 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 /* eslint-disable max-classes-per-file */
 /* eslint-disable no-unused-vars */
-import { RTCPeerConnection as RTCPeerConnectionServer } from 'werift';
-import { Prisma, Room, Unit, Message } from '@prisma/client';
+import { Prisma, Room, Unit } from '@prisma/client';
 
 export type SendMessageArgs<T> = Signaling.SendMessageArgs<T>;
 export type WSInterface = Signaling.WSInterface;
@@ -39,6 +38,7 @@ export enum MessageType {
   GET_MUTE = 'GET_MUTE',
   SET_MUTE = 'SET_MUTE',
   GET_NEED_RECONNECT = 'GET_NEED_RECONNECT',
+  SET_ROOM_LOAD = 'SET_ROOM_LOAD',
 }
 
 export namespace DataTypes {
@@ -65,7 +65,6 @@ export namespace DataTypes {
     export type SetGuestId = undefined;
     export type GetRoom = {
       userId: number | string;
-      mimeType: string;
     };
     export type SetRoomGuests = {
       roomUsers: (number | string)[];
@@ -79,11 +78,13 @@ export namespace DataTypes {
     export type SetMute = {
       muteds: string[];
     };
+    export type SetRoomLoad = {
+      roomId: string | number;
+    };
     export type Offer = {
       sdp: RTCSessionDescriptionInit;
       userId: number | string;
       target: number | string;
-      mimeType: string;
     };
     export type Candidate = {
       candidate: RTCIceCandidate;
@@ -122,6 +123,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetRoomGuests
     : T extends MessageType.SET_CHANGE_UNIT
     ? DataTypes.MessageTypes.SetChangeRoomUnit
+    : T extends MessageType.SET_ROOM_LOAD
+    ? DataTypes.MessageTypes.SetRoomLoad
     : T extends MessageType.SET_MUTE
     ? DataTypes.MessageTypes.SetMute
     : T extends MessageType.SET_ERROR
@@ -169,8 +172,6 @@ export namespace Connection {
   export abstract class RTCInterface {
     public abstract peerConnections: Record<string, RTCPeerConnection | undefined>;
 
-    public abstract peerConnectionsServer: Record<string, RTCPeerConnectionServer | undefined>;
-
     public readonly delimiter = '_';
 
     public abstract createRTC(args: {
@@ -180,15 +181,6 @@ export namespace Connection {
       target: string | number;
       iceServers?: RTCConfiguration['iceServers'];
     }): Record<number, RTCPeerConnection | undefined>;
-
-    public abstract createRTCServer(args: {
-      connId: string;
-      roomId: number | string;
-      userId: number | string;
-      target: string | number;
-      mimeType: string;
-      iceServers?: RTCConfiguration['iceServers'];
-    }): Record<number, RTCPeerConnectionServer | undefined>;
 
     public abstract handleIceCandidate(args: {
       connId: string;

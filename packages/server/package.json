@@ -14,6 +14,7 @@
     "rmdist": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\"",
     "dev": "concurrently \"npm run watch\" \"npm run dev:start\"",
     "build": "npm run rmdist && tsc -p .",
+    "postinstall": "npm run migrate",
     "dev:migrate": "npm run format && npm run generate && prisma migrate dev --preview-feature",
     "migrate": "prisma migrate deploy --preview-feature && npm run generate",
     "migrate:reset": "prisma migrate reset --preview-feature",

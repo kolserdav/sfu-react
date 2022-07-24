@@ -13,7 +13,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import { MediaStreamTrack } from 'werift';
 import WS from '../core/ws';
 import RTC from '../core/rtc';
-import { getCodec, log } from '../utils/lib';
+import { log } from '../utils/lib';
 import { getWidthOfItem } from './Room.lib';
 import { MessageType, SendMessageArgs } from '../types/interfaces';
 import { Stream } from '../types';
@@ -263,6 +263,15 @@ export const useConnection = ({
           }
           break;
         case 'delete':
+          const keys = Object.keys(rtc.peerConnections);
+          let _connId = connId;
+          keys.forEach((i) => {
+            const peer = i.split(rtc.delimiter);
+            if (peer[1] === target) {
+              // eslint-disable-next-line prefer-destructuring
+              _connId = peer[2];
+            }
+          });
           log('info', 'Need delete user', {
             roomId,
             target,
@@ -270,7 +279,7 @@ export const useConnection = ({
             connId,
             k: Object.keys(rtc.peerConnections),
           });
-          rtc.closeVideoCall({ roomId, target, userId, connId });
+          rtc.closeVideoCall({ roomId, target, userId, connId: _connId });
           const _stream = streams.find((item) => item.target === target);
           if (_stream) {
             storeStreams.dispatch(changeStreams({ type: 'delete', stream: _stream }));
@@ -432,7 +441,6 @@ export const useConnection = ({
             id: roomId,
             data: {
               userId: id,
-              mimeType: getCodec(),
             },
             connId,
           });
@@ -454,6 +462,8 @@ export const useConnection = ({
           break;
         case MessageType.SET_ROOM:
           setRoomIsSaved(true);
+          break;
+        case MessageType.SET_ROOM_LOAD:
           rtc.createPeerConnection({
             userId: ws.userId,
             target: 0,

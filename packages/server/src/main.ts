@@ -13,13 +13,10 @@ import { v4 } from 'uuid';
 import dotenv from 'dotenv';
 dotenv.config();
 import WS from './core/ws';
-import RTC from './core/rtc';
 import { MessageType } from './types/interfaces';
 import { log } from './utils/lib';
 import { PORT, DATABASE_URL } from './utils/constants';
 import DB from './core/db';
-
-const db = new DB();
 
 process.on('uncaughtException', (err: Error) => {
   log('error', 'uncaughtException', err);
@@ -27,51 +24,6 @@ process.on('uncaughtException', (err: Error) => {
 process.on('unhandledRejection', (err: Error) => {
   log('error', 'unhandledRejection', err);
 });
-
-const deleteGuest = ({ userId, roomId }: { userId: string | number; roomId: string | number }) => {
-  return new Promise((resolve) => {
-    db.roomFindFirst({
-      where: {
-        id: roomId.toString(),
-      },
-      select: {
-        Guests: {
-          where: {
-            unitId: userId.toString(),
-          },
-        },
-      },
-    }).then((g) => {
-      if (!g) {
-        log('warn', 'Can not unitFindFirst', { userId });
-        resolve(0);
-        return;
-      }
-      db.roomUpdate({
-        where: {
-          id: roomId.toString(),
-        },
-        data: {
-          Guests: {
-            delete: g.Guests[0]?.id
-              ? {
-                  id: g.Guests[0]?.id,
-                }
-              : undefined,
-          },
-          updated: new Date(),
-        },
-      }).then((r) => {
-        if (!r) {
-          log('warn', 'Room not delete guest', { roomId, id: g.Guests[0]?.id });
-          resolve(1);
-        }
-        log('info', 'Guest deleted', { roomId, id: g.Guests[0]?.id });
-        resolve(0);
-      });
-    });
-  });
-};
 
 /**
  * Create SFU WebRTC server
@@ -87,7 +39,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
   };
 
   const wss = new WS({ port });
-  const rtc: RTC | null = new RTC({ ws: wss });
+  const db = new DB({ ws: wss });
 
   wss.connection.on('connection', function connection(ws, req) {
     const { origin } = req.headers;
@@ -112,6 +64,31 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
         case MessageType.GET_USER_ID:
           const { isRoom } = wss.getMessage(MessageType.GET_USER_ID, rawMessage).data;
           await wss.setSocket({ id, ws, connId, isRoom: isRoom || false });
+          if (isRoom) {
+            const _id = id.toString();
+            db.unitFindFirst({
+              where: {
+                id: _id,
+              },
+            }).then((u) => {
+              if (u) {
+                db.unitUpdate({
+                  where: {
+                    id: _id,
+                  },
+                  data: {
+                    updated: new Date(),
+                  },
+                });
+              } else {
+                db.unitCreate({
+                  data: {
+                    id: _id,
+                  },
+                });
+              }
+            });
+          }
           wss.sendMessage({
             type: MessageType.SET_USER_ID,
             id,
@@ -120,10 +97,8 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
           });
           break;
         case MessageType.GET_ROOM:
-          rtc.handleGetRoomMessage({
+          db.handleGetRoomMessage({
             message: wss.getMessage(MessageType.GET_ROOM, rawMessage),
-            port,
-            cors,
           });
           break;
         case MessageType.GET_ROOM_GUESTS:
@@ -132,29 +107,29 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
             type: MessageType.SET_ROOM_GUESTS,
             id,
             data: {
-              roomUsers: rtc.rooms[_roomId],
-              muteds: rtc.muteds[_roomId],
+              roomUsers: db.rooms[_roomId],
+              muteds: db.muteds[_roomId],
             },
             connId,
           });
           break;
         case MessageType.GET_MUTE:
           const { muted, roomId } = wss.getMessage(MessageType.GET_MUTE, rawMessage).data;
-          const index = rtc.muteds[roomId].indexOf(id.toString());
+          const index = db.muteds[roomId].indexOf(id.toString());
           if (muted) {
             if (index === -1) {
-              rtc.muteds[roomId].push(id.toString());
+              db.muteds[roomId].push(id.toString());
             }
           } else {
-            rtc.muteds[roomId].splice(index, 1);
+            db.muteds[roomId].splice(index, 1);
           }
-          rtc.rooms[roomId].forEach((item) => {
+          db.rooms[roomId].forEach((item) => {
             wss.sendMessage({
               type: MessageType.SET_MUTE,
               id: item,
               connId: '',
               data: {
-                muteds: rtc.muteds[roomId],
+                muteds: db.muteds[roomId],
               },
             });
           });
@@ -168,7 +143,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
       let userId: number | string = 0;
       const keys = Object.keys(wss.sockets);
       keys.forEach((item) => {
-        const sock = item.split(rtc.delimiter);
+        const sock = item.split(db.delimiter);
         if (sock[1] === connId) {
           userId = sock[0];
         }
@@ -199,43 +174,33 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
         });
         log('info', 'User disconnected', userId);
 
-        const roomKeys = Object.keys(rtc.rooms);
+        const roomKeys = Object.keys(db.rooms);
         roomKeys.forEach((item) => {
-          const index = rtc.rooms[item].indexOf(userId);
+          const index = db.rooms[item].indexOf(userId);
           if (index !== -1) {
-            const keys = Object.keys(rtc.peerConnectionsServer);
-            rtc.cleanConnections(item, userId.toString());
-            rtc.rooms[item].splice(index, 1);
-            const mute = rtc.muteds[item].indexOf(userId.toString());
-            if (mute !== -1) {
-              rtc.muteds[item].splice(mute, 1);
-            }
-            // Send user list of room
-            rtc.rooms[item].forEach((_item) => {
-              let _connId = connId;
-              keys.forEach((i) => {
-                const peer = i.split(rtc.delimiter);
-                if (
-                  (peer[1] === _item && peer[2] === userId.toString()) ||
-                  (peer[1] === userId.toString() && peer[2] === _item)
-                ) {
-                  _connId = peer[3];
-                }
-              });
-              wss.sendMessage({
-                type: MessageType.SET_CHANGE_UNIT,
-                id: _item,
-                data: {
-                  roomLenght: rtc.rooms[item].length,
-                  muteds: rtc.muteds[item],
-                  target: userId,
-                  eventName: 'delete',
-                },
-                connId: _connId,
-              });
+            db.rooms[item].forEach((_item) => {
+              if (_item !== userId) {
+                wss.sendMessage({
+                  type: MessageType.SET_CHANGE_UNIT,
+                  id: _item,
+                  data: {
+                    roomLenght: db.rooms[item].length,
+                    muteds: db.muteds[item],
+                    target: userId,
+                    eventName: 'delete',
+                  },
+                  connId: '',
+                });
+              }
             });
-            if (rtc.rooms[item].length === 0) {
-              delete rtc.rooms[item];
+            db.rooms[item].splice(index, 1);
+            const mute = db.muteds[item].indexOf(userId.toString());
+            if (mute !== -1) {
+              db.muteds[item].splice(mute, 1);
+            }
+            if (db.rooms[item].length === 0) {
+              delete db.rooms[item];
+              db.closeRoom({ roomId: item });
               // set room is archive
               db.roomUpdate({
                 where: {
@@ -246,9 +211,9 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
                   updated: new Date(),
                 },
               });
-              delete rtc.muteds[item];
+              delete db.muteds[item];
             }
-            deleteGuest({ userId, roomId: item });
+            db.deleteGuest({ userId, roomId: item });
             delete wss.users[userId];
           }
         });
@@ -259,5 +224,5 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
 export default createServer;
 
 if (require.main === module) {
-  createServer({ port: PORT, cors: 'http://localhost:3000', db: DATABASE_URL });
+  createServer({ port: PORT, cors: process.env.CORS, db: DATABASE_URL });
 }
