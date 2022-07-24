@@ -82,6 +82,7 @@ export namespace DataTypes {
     };
     export type SetRoomLoad = {
       roomId: string | number;
+      roomUsers: (number | string)[];
     };
     export type Offer = {
       sdp: RTCSessionDescriptionInit;

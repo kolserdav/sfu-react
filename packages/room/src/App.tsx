@@ -40,13 +40,16 @@ function App() {
           } = ws.getMessage(MessageType.SET_USER_ID, rawMessage);
           ws.setUserId(roomId);
           rtc.users = roomUsers;
-          ws.sendMessage({
-            type: MessageType.SET_ROOM_LOAD,
-            connId,
-            data: {
-              roomId,
-            },
-            id: ownerId,
+          roomUsers.forEach((item) => {
+            ws.sendMessage({
+              type: MessageType.SET_ROOM_LOAD,
+              connId,
+              data: {
+                roomId,
+                roomUsers: rtc.users,
+              },
+              id: item,
+            });
           });
           break;
         case MessageType.SET_CHANGE_UNIT:

@@ -166,7 +166,7 @@ class RTC implements RTCInterface {
       const isRoom = this.checkIsRoom({ peerId });
       const stream = e.streams[0];
       const isNew = stream.id !== this.streams[peerId]?.id;
-      log('warn', 'ontrack', {
+      log('info', 'ontrack', {
         peerId,
         isRoom,
         si: stream.id,
@@ -576,16 +576,14 @@ class RTC implements RTCInterface {
       peerId,
       k: Object.keys(this.peerConnections).length,
     });
-    setTimeout(() => {
-      if (this.peerConnections[peerId]) {
-        this.peerConnections[peerId]!.onicecandidate = null;
-        this.peerConnections[peerId]!.onsignalingstatechange = null;
-        this.peerConnections[peerId]!.onnegotiationneeded = null;
-        this.peerConnections[peerId]!.ontrack = null;
-        this.peerConnections[peerId]!.close();
-        delete this.peerConnections[peerId];
-      }
-    }, 1000);
+    if (this.peerConnections[peerId]) {
+      this.peerConnections[peerId]!.onicecandidate = null;
+      this.peerConnections[peerId]!.onsignalingstatechange = null;
+      this.peerConnections[peerId]!.onnegotiationneeded = null;
+      this.peerConnections[peerId]!.ontrack = null;
+      this.peerConnections[peerId]!.close();
+      delete this.peerConnections[peerId];
+    }
   };
 
   // eslint-disable-next-line class-methods-use-this
@@ -593,23 +591,29 @@ class RTC implements RTCInterface {
     log('info', 'Call is closed', { ...args });
   };
 
-  public cleanConnections(roomId: string, userId: string) {
+  // FIXME
+  public cleanConnections(roomId: string, userId: string, connId: string) {
     const peerKeys = Object.keys(this.peerConnections);
-    peerKeys.forEach((__item) => {
-      const peer = __item.split(this.delimiter);
-      if (peer[1] === userId.toString()) {
+    log('warn', 'Clean peer connections 1', {
+      peerKeys,
+      userId,
+      connId,
+    });
+    peerKeys.forEach((item) => {
+      const peer = item.split(this.delimiter);
+      if (peer[0] === userId.toString() && connId === peer[2]) {
         this.closeVideoCall({
           roomId,
           userId,
-          target: peer[2],
-          connId: peer[3],
+          target: peer[1],
+          connId: peer[2],
         });
-      } else if (peer[2] === userId.toString()) {
+      } else if (peer[1] === userId.toString() && connId === peer[2]) {
         this.closeVideoCall({
           roomId,
-          userId: peer[1],
+          userId: peer[0],
           target: userId,
-          connId: peer[3],
+          connId: peer[2],
         });
       }
     });
@@ -632,24 +636,26 @@ class RTC implements RTCInterface {
     data: { target, eventName },
   }: SendMessageArgs<MessageType.SET_CHANGE_UNIT>) {
     const keys = Object.keys(this.peerConnections);
-    console.log(this.users);
     let _connId = connId;
-    let roomId = '';
+    const targetStr = target.toString();
     this.users.forEach((_item) => {
       keys.forEach((i) => {
         const peer = i.split(this.delimiter);
-        if (peer[1] === id && peer[2] === target.toString()) {
+        if (
+          ((peer[0] === _item || peer[0] === id) && peer[1] === targetStr) ||
+          (peer[0] === targetStr && (peer[1] === _item || peer[1] === targetStr))
+        ) {
           // eslint-disable-next-line prefer-destructuring
           _connId = peer[3];
-          // eslint-disable-next-line prefer-destructuring
-          roomId = peer[0];
         }
       });
     });
     switch (eventName) {
       case 'delete':
-        delete this.streams[this.getPeerId(id, target, _connId)];
-        this.cleanConnections(roomId, target.toString());
+        log('warn', 'Delete connections', { id, target, _connId });
+        delete this.streams[this.getPeerId(id, target, connId)];
+        this.users.splice(this.users.indexOf(target), 1);
+        this.cleanConnections('', target.toString(), _connId);
         break;
     }
   }

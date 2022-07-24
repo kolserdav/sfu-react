@@ -13,6 +13,7 @@ import { DBInterface, MessageType, SendMessageArgs, RTCInterface } from '../type
 import { log } from '../utils/lib';
 import WS from './ws';
 import Browser from './browser';
+import { RtcpHeader } from 'werift';
 
 const prisma = new PrismaClient();
 
@@ -368,6 +369,7 @@ class DB extends Browser {
         id: userId,
         data: {
           roomId,
+          roomUsers: this.rooms[roomId],
         },
         connId,
       });

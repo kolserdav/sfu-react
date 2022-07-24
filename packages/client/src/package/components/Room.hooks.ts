@@ -464,6 +464,7 @@ export const useConnection = ({
           setRoomIsSaved(true);
           break;
         case MessageType.SET_ROOM_LOAD:
+          setLenght(ws.getMessage(MessageType.SET_ROOM_LOAD, rawMessage).data.roomUsers.length);
           rtc.createPeerConnection({
             userId: ws.userId,
             target: 0,
@@ -751,12 +752,13 @@ export const useVideoStarted = ({
       }
       const _attempts = { ...attempts };
       diffs.forEach((item) => {
+        return;
         if (!_attempts[item.target]) {
           _attempts[item.target] = 0;
         }
         if (_attempts[item.target] === 1) {
           if (!played[item.target] && mounted) {
-            // lostStreamHandler({ ...item, eventName: 'not-played' });
+            lostStreamHandler({ ...item, eventName: 'not-played' });
             const str = streams.find((i) => i.target === item.target);
             log('warn', 'Video not started', str?.stream.getTracks().length);
           }
