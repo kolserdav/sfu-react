@@ -163,8 +163,7 @@ class RTC implements RTCInterface {
 
     let s = 1;
     this.peerConnections[peerId]!.ontrack = (e) => {
-      const peer = peerId.split(delimiter);
-      const isRoom = peer[2] === '0';
+      const isRoom = this.checkIsRoom({ peerId });
       const stream = e.streams[0];
       const isNew = stream.id !== this.streams[peerId]?.id;
       log('warn', 'ontrack', {
@@ -175,8 +174,9 @@ class RTC implements RTCInterface {
         userId,
         target,
         tracks: stream.getTracks().map((item) => item.kind),
+        s,
       });
-      if (s % 2 !== 0 && isNew) {
+      if (isNew) {
         if (isRoom) {
           this.streams[peerId] = stream;
           setTimeout(() => {
@@ -257,6 +257,11 @@ class RTC implements RTCInterface {
         });
     };
   };
+
+  protected checkIsRoom({ peerId }: { peerId: string }) {
+    const peer = peerId.split(this.delimiter);
+    return peer[1] === '0';
+  }
 
   public handleCandidateMessage: RTCInterface['handleCandidateMessage'] = async (msg, cb) => {
     const {

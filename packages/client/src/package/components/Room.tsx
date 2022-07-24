@@ -74,7 +74,6 @@ function Room({ id, iceServers, server, port }: RoomProps) {
     lostStreamHandler,
   });
   const displayMediaSupported = useMemo(() => supportDisplayMedia(), []);
-
   return (
     <div className={s.wrapper} style={theme.wrapper}>
       <div className={s.container} ref={container}>

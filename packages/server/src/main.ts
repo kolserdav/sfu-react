@@ -17,6 +17,7 @@ import { MessageType } from './types/interfaces';
 import { log } from './utils/lib';
 import { PORT, DATABASE_URL } from './utils/constants';
 import DB from './core/db';
+import { RtcpHeader } from 'werift';
 
 process.on('uncaughtException', (err: Error) => {
   log('error', 'uncaughtException', err);
@@ -70,7 +71,9 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
           wss.sendMessage({
             type: MessageType.SET_USER_ID,
             id,
-            data: undefined,
+            data: {
+              roomUsers: isRoom ? db.rooms[id] : [],
+            },
             connId,
           });
           break;

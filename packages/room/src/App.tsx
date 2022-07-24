@@ -34,8 +34,12 @@ function App() {
       const { type, connId } = rawMessage;
       switch (type) {
         case MessageType.SET_USER_ID:
+          // eslint-disable-next-line no-case-declarations
+          const {
+            data: { roomUsers },
+          } = ws.getMessage(MessageType.SET_USER_ID, rawMessage);
           ws.setUserId(roomId);
-          rtc.users = [ownerId];
+          rtc.users = roomUsers;
           ws.sendMessage({
             type: MessageType.SET_ROOM_LOAD,
             connId,
