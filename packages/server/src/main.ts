@@ -64,30 +64,8 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
         case MessageType.GET_USER_ID:
           const { isRoom } = wss.getMessage(MessageType.GET_USER_ID, rawMessage).data;
           await wss.setSocket({ id, ws, connId, isRoom: isRoom || false });
-          if (isRoom) {
-            const _id = id.toString();
-            db.unitFindFirst({
-              where: {
-                id: _id,
-              },
-            }).then((u) => {
-              if (u) {
-                db.unitUpdate({
-                  where: {
-                    id: _id,
-                  },
-                  data: {
-                    updated: new Date(),
-                  },
-                });
-              } else {
-                db.unitCreate({
-                  data: {
-                    id: _id,
-                  },
-                });
-              }
-            });
+          if (!isRoom) {
+            db.unitCreateOrUpdate({ userId: id.toString() });
           }
           wss.sendMessage({
             type: MessageType.SET_USER_ID,
@@ -163,15 +141,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
           log('warn', 'No socket delete', { s: Object.keys(wss.sockets) });
         }
 
-        db.unitUpdate({
-          where: {
-            id: userId.toString(),
-          },
-          data: {
-            online: false,
-            updated: new Date(),
-          },
-        });
+        db.changeOnline({ userId, online: false });
         log('info', 'User disconnected', userId);
 
         const roomKeys = Object.keys(db.rooms);
@@ -200,18 +170,10 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
             }
             if (db.rooms[item].length === 0) {
               delete db.rooms[item];
-              db.closeRoom({ roomId: item });
               // set room is archive
-              db.roomUpdate({
-                where: {
-                  id: item.toString(),
-                },
-                data: {
-                  archive: true,
-                  updated: new Date(),
-                },
-              });
+              db.setRoomIsArchive({ roomId: item });
               delete db.muteds[item];
+              db.closeRoom({ roomId: item });
             }
             db.deleteGuest({ userId, roomId: item });
             delete wss.users[userId];

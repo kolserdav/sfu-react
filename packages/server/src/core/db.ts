@@ -18,10 +18,15 @@ const prisma = new PrismaClient();
 
 class DB extends Browser {
   public readonly delimiter = '_';
+
   public rooms: Record<string | number, (string | number)[]> = {};
+
   public muteds: Record<string, string[]> = {};
+
   private ws: WS;
+
   public streams: Record<string, MediaStream> = {};
+
   /**
    * @deprecated
    */
@@ -32,7 +37,7 @@ class DB extends Browser {
     this.ws = ws;
   }
 
-  public roomFindFirst: DBInterface['roomFindFirst'] = async (args) => {
+  private roomFindFirst: DBInterface['roomFindFirst'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any = null;
     try {
@@ -43,7 +48,7 @@ class DB extends Browser {
     return result;
   };
 
-  public roomUpdate: DBInterface['roomUpdate'] = async (args) => {
+  private roomUpdate: DBInterface['roomUpdate'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any = null;
     try {
@@ -55,7 +60,7 @@ class DB extends Browser {
     return result;
   };
 
-  public roomCreate: DBInterface['roomCreate'] = async (args) => {
+  private roomCreate: DBInterface['roomCreate'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any = null;
     try {
@@ -66,7 +71,7 @@ class DB extends Browser {
     return result;
   };
 
-  public unitCreate: DBInterface['unitCreate'] = async (args) => {
+  private unitCreate: DBInterface['unitCreate'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any = null;
     try {
@@ -77,7 +82,7 @@ class DB extends Browser {
     return result;
   };
 
-  public unitUpdate: DBInterface['unitUpdate'] = async (args) => {
+  private unitUpdate: DBInterface['unitUpdate'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any = null;
     try {
@@ -98,6 +103,43 @@ class DB extends Browser {
     }
     return result;
   };
+
+  public unitCreateOrUpdate({ userId }: { userId: string }) {
+    this.unitFindFirst({
+      where: {
+        id: userId,
+      },
+    }).then((u) => {
+      if (u) {
+        this.unitUpdate({
+          where: {
+            id: userId,
+          },
+          data: {
+            updated: new Date(),
+          },
+        });
+      } else {
+        this.unitCreate({
+          data: {
+            id: userId,
+          },
+        });
+      }
+    });
+  }
+
+  public changeOnline({ userId, online }: { userId: string | number; online: boolean }) {
+    this.unitUpdate({
+      where: {
+        id: userId.toString(),
+      },
+      data: {
+        online,
+        updated: new Date(),
+      },
+    });
+  }
 
   public async addUserToRoom({
     userId,
@@ -319,6 +361,18 @@ class DB extends Browser {
         connId,
       });
     }
+  }
+
+  public setRoomIsArchive({ roomId }: { roomId: string }) {
+    this.roomUpdate({
+      where: {
+        id: roomId.toString(),
+      },
+      data: {
+        archive: true,
+        updated: new Date(),
+      },
+    });
   }
 }
 

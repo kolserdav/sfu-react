@@ -27,6 +27,8 @@ services:
   coturn:
     image: instrumentisto/coturn
     network_mode: host
+    container_name: turn
+    restart: always
     volumes:
       - ./docs/resources/coturn.conf:/my/coturn.conf
     command: -c /my/coturn.conf

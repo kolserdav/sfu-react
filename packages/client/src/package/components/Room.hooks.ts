@@ -566,6 +566,7 @@ export const useConnection = ({
     interval = setInterval(() => {
       _streams = storeStreams.getState().streams as Stream[];
       if (_streams.length !== lenght) {
+        /*
         ws.sendMessage({
           type: MessageType.GET_ROOM_GUESTS,
           id,
@@ -574,6 +575,7 @@ export const useConnection = ({
             roomId,
           },
         });
+        */
       }
     }, 1000);
 
@@ -754,7 +756,7 @@ export const useVideoStarted = ({
         }
         if (_attempts[item.target] === 1) {
           if (!played[item.target] && mounted) {
-            lostStreamHandler({ ...item, eventName: 'not-played' });
+            // lostStreamHandler({ ...item, eventName: 'not-played' });
             const str = streams.find((i) => i.target === item.target);
             log('warn', 'Video not started', str?.stream.getTracks().length);
           }
