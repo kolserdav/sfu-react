@@ -24,14 +24,7 @@ class Browser {
     const browser = await puppeteer.launch({
       headless: HEADLESS,
       devtools: !HEADLESS,
-      args: [
-        '--disable-features=WebRtcHideLocalIpsWithMdns',
-        '--disable-field-trial-config',
-        '--allow-file-access-from-files',
-        '--disable-gesture-requirement-for-media-playback',
-        '--use-fake-ui-for-media-stream',
-        '--use-fake-device-for-media-stream',
-      ],
+      args: ['--disable-features=WebRtcHideLocalIpsWithMdns'],
     });
     const [page] = await browser.pages();
     await page.setViewport(VIEWPORT);
