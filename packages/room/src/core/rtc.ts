@@ -35,6 +35,26 @@ class RTC implements RTCInterface {
 
   public createRTC: RTCInterface['createRTC'] = ({ roomId, userId, target, connId }) => {
     const peerId = this.getPeerId(userId, target, connId);
+    const uidStr = userId.toString();
+    const targetStr = target.toString();
+    Object.keys(this.peerConnections).forEach((item) => {
+      const peer = item.split(this.delimiter);
+      if (peer[0] === uidStr && peer[1] === targetStr) {
+        this.closeVideoCall({
+          roomId,
+          target: targetStr,
+          userId: uidStr,
+          connId: peer[2],
+        });
+      } else if (peer[0] === targetStr && peer[1] === uidStr) {
+        this.closeVideoCall({
+          roomId,
+          target: uidStr,
+          userId: targetStr,
+          connId: peer[2],
+        });
+      }
+    });
     this.peerConnections[peerId] = new RTCPeerConnection({
       iceServers: [
         {
@@ -274,9 +294,7 @@ class RTC implements RTCInterface {
     if (!this.peerConnections?.[peerId]) {
       const peer = Object.keys(this.peerConnections).find((p) => {
         const pe = p.split(this.delimiter);
-        return (
-          pe[0] === id.toString() && pe[1] === userId.toString() && pe[2] === target.toString()
-        );
+        return pe[0] === userId.toString() && pe[1] === target.toString();
       });
       _connId = peer?.split(this.delimiter)[3] || connId;
       peerId = this.getPeerId(userId, target, _connId);
@@ -306,7 +324,7 @@ class RTC implements RTCInterface {
       this.peerConnections[peerId]?.connectionState === 'closed' ||
       this.peerConnections[peerId]?.iceConnectionState === 'closed'
     ) {
-      log('warn', 'Skiping add ice candidate', {
+      log('info', 'Skiping add ice candidate', {
         connId,
         id,
         userId,
@@ -315,6 +333,7 @@ class RTC implements RTCInterface {
         state: this.peerConnections[peerId]?.connectionState,
         ice: this.peerConnections[peerId]?.iceConnectionState,
         ss: this.peerConnections[peerId]?.signalingState,
+        k: Object.keys(this.peerConnections),
       });
       return;
     }
@@ -520,9 +539,9 @@ class RTC implements RTCInterface {
     const keysStreams = Object.keys(this.streams);
     keysStreams.forEach((element) => {
       const str = element.split(this.delimiter);
-      if (str[1] === target.toString() && str[2] === '0') {
+      if (str[0] === target.toString() && str[1] === '0') {
         // eslint-disable-next-line prefer-destructuring
-        _connId = str[3];
+        _connId = str[2];
       }
     });
     const _peerId = this.getPeerId(target, 0, _connId);
@@ -540,7 +559,7 @@ class RTC implements RTCInterface {
       });
       return;
     }
-    log('warn', 'Add tracks', {
+    log('info', 'Add tracks', {
       roomId,
       userId,
       target,
@@ -601,14 +620,14 @@ class RTC implements RTCInterface {
     });
     peerKeys.forEach((item) => {
       const peer = item.split(this.delimiter);
-      if (peer[0] === userId.toString() && connId === peer[2]) {
+      if (peer[0] === userId.toString()) {
         this.closeVideoCall({
           roomId,
           userId,
           target: peer[1],
           connId: peer[2],
         });
-      } else if (peer[1] === userId.toString() && connId === peer[2]) {
+      } else if (peer[1] === userId.toString()) {
         this.closeVideoCall({
           roomId,
           userId: peer[0],
@@ -650,14 +669,7 @@ class RTC implements RTCInterface {
         }
       });
     });
-    switch (eventName) {
-      case 'delete':
-        log('warn', 'Delete connections', { id, target, _connId });
-        delete this.streams[this.getPeerId(id, target, connId)];
-        this.users.splice(this.users.indexOf(target), 1);
-        this.cleanConnections('', target.toString(), _connId);
-        break;
-    }
+    // TODO
   }
 }
 

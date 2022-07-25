@@ -10,7 +10,6 @@
  ******************************************************************************************/
 /* eslint-disable no-case-declarations */
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { MediaStreamTrack } from 'werift';
 import WS from '../core/ws';
 import RTC from '../core/rtc';
 import { log } from '../utils/lib';

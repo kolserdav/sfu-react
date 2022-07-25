@@ -165,17 +165,6 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
                 });
               }
             });
-            wss.sendMessage({
-              type: MessageType.SET_CHANGE_UNIT,
-              id: item,
-              data: {
-                roomLenght: db.rooms[item].length,
-                muteds: db.muteds[item],
-                target: userId,
-                eventName: 'delete',
-              },
-              connId: '',
-            });
             db.rooms[item].splice(index, 1);
             const mute = db.muteds[item].indexOf(userId.toString());
             if (mute !== -1) {
