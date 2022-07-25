@@ -196,9 +196,6 @@ export const useConnection = ({
           }
         },
       };
-      if (/-/.test(stream.id)) {
-        return;
-      }
       storeStreams.dispatch(changeStreams({ type: 'add', stream: _stream, change }));
       if (!selfStream && target === ws.userId) {
         setSelfStream(_stream);
@@ -236,7 +233,12 @@ export const useConnection = ({
               userId: id,
               connId,
               onTrack: ({ addedUserId, stream }) => {
-                log('info', 'Added unit track', { addedUserId, s: stream.id, connId });
+                log('warn', 'Added unit track', {
+                  addedUserId,
+                  s: stream.id,
+                  connId,
+                  kinds: stream.getTracks().map((item) => item.kind),
+                });
                 addStream({ target: addedUserId, stream, connId });
               },
               iceServers,

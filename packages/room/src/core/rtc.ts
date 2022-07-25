@@ -37,6 +37,7 @@ class RTC implements RTCInterface {
     const peerId = this.getPeerId(userId, target, connId);
     const uidStr = userId.toString();
     const targetStr = target.toString();
+    // Clean peer connection
     Object.keys(this.peerConnections).forEach((item) => {
       const peer = item.split(this.delimiter);
       if (peer[0] === uidStr && peer[1] === targetStr) {
@@ -55,6 +56,15 @@ class RTC implements RTCInterface {
         });
       }
     });
+    if (target.toString() === '0') {
+      Object.keys(this.streams).forEach((item) => {
+        const peer = item.split(this.delimiter);
+        if (peer[0] === userId) {
+          const _peerId = this.getPeerId(userId, 0, peer[2]);
+          delete this.streams[_peerId];
+        }
+      });
+    }
     this.peerConnections[peerId] = new RTCPeerConnection({
       iceServers: [
         {
@@ -545,10 +555,9 @@ class RTC implements RTCInterface {
       }
     });
     const _peerId = this.getPeerId(target, 0, _connId);
-    const stream = this.streams[_peerId];
-    const tracks = stream?.getTracks();
-    if (!stream) {
-      log('info', 'Skiping add track', {
+    const tracks = this.streams[_peerId]?.getTracks();
+    if (!this.streams[_peerId]) {
+      log('warn', 'Skiping add track', {
         roomId,
         userId,
         target,
@@ -567,7 +576,7 @@ class RTC implements RTCInterface {
       _peerId,
       tracksL: tracks?.length,
       _connId,
-      id: stream?.id,
+      id: this.streams[_peerId]?.id,
       tracks: tracks?.map((item) => item.kind),
       ss: Object.keys(this.streams),
     });
@@ -579,7 +588,7 @@ class RTC implements RTCInterface {
         if (sender && sender?.track?.id === track.id) {
           this.peerConnections[peerId]?.removeTrack(sender);
         }
-        this.peerConnections[peerId]!.addTrack(track, stream);
+        this.peerConnections[peerId]!.addTrack(track, this.streams[_peerId]);
       }
     });
   };
@@ -594,6 +603,7 @@ class RTC implements RTCInterface {
     log('info', '| Closing the call', {
       peerId,
       k: Object.keys(this.peerConnections).length,
+      s: Object.keys(this.streams).length,
     });
     if (this.peerConnections[peerId]) {
       this.peerConnections[peerId]!.onicecandidate = null;
