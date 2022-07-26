@@ -329,11 +329,7 @@ class RTC implements RTCInterface {
         }, 500);
       });
     }
-    if (
-      !this.peerConnections[peerId] ||
-      this.peerConnections[peerId]?.connectionState === 'closed' ||
-      this.peerConnections[peerId]?.iceConnectionState === 'closed'
-    ) {
+    if (!this.peerConnections[peerId]) {
       log('info', 'Skiping add ice candidate', {
         connId,
         id,
@@ -350,9 +346,19 @@ class RTC implements RTCInterface {
     if (cand.candidate === '') {
       return;
     }
+    if (cand?.usernameFragment) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      cand!.usernameFragment = null;
+    }
     this.peerConnections[peerId]!.addIceCandidate(cand)
       .then(() => {
-        log('log', '!! Adding received ICE candidate:', { userId, id, target });
+        log('info', '!! Adding received ICE candidate:', {
+          userId,
+          id,
+          target,
+          uFrag: cand?.usernameFragment,
+        });
         if (cb) {
           cb(cand as RTCIceCandidate);
         }
@@ -361,9 +367,11 @@ class RTC implements RTCInterface {
         log('error', 'Set ice candidate error', {
           error: e,
           connId,
+          peerId,
           id,
           userId,
           target,
+          uFrag: cand?.usernameFragment,
           state: this.peerConnections[peerId]?.connectionState,
           ice: this.peerConnections[peerId]?.iceConnectionState,
           ss: this.peerConnections[peerId]?.signalingState,
@@ -568,7 +576,7 @@ class RTC implements RTCInterface {
       });
       return;
     }
-    log('info', 'Add tracks', {
+    log('warn', 'Add tracks', {
       roomId,
       userId,
       target,

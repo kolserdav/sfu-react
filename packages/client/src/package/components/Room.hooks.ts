@@ -219,49 +219,48 @@ export const useConnection = ({
       switch (eventName) {
         case 'add':
         case 'added':
-          if (userId !== target) {
-            log('info', 'Change room unit handler', {
-              userId,
-              target,
-              roomLenght,
-              connId,
-              eventName,
-            });
-            rtc.createPeerConnection({
-              roomId,
-              target,
-              userId: id,
-              connId,
-              onTrack: ({ addedUserId, stream }) => {
-                log('warn', 'Added unit track', {
-                  addedUserId,
-                  s: stream.id,
+          log('info', 'Change room unit handler', {
+            userId,
+            target,
+            roomLenght,
+            connId,
+            eventName,
+          });
+          rtc.createPeerConnection({
+            roomId,
+            target,
+            userId: id,
+            connId,
+            onTrack: ({ addedUserId, stream }) => {
+              log('warn', 'Added unit track', {
+                addedUserId,
+                s: stream.id,
+                connId,
+                kinds: stream.getTracks().map((item) => item.kind),
+              });
+              addStream({ target: addedUserId, stream, connId });
+            },
+            iceServers,
+            eventName: 'back',
+          });
+          rtc.addTracks({ roomId, userId, target, connId, peerId: '' }, (e) => {
+            if (!e) {
+              if (eventName !== 'added' && target !== userId) {
+                ws.sendMessage({
+                  type: MessageType.SET_CHANGE_UNIT,
+                  id: target,
                   connId,
-                  kinds: stream.getTracks().map((item) => item.kind),
+                  data: {
+                    target: userId,
+                    roomLenght,
+                    eventName: 'added',
+                    muteds: _muteds,
+                  },
                 });
-                addStream({ target: addedUserId, stream, connId });
-              },
-              iceServers,
-              eventName: 'back',
-            });
-            rtc.addTracks({ roomId, userId, target, connId, peerId: '' }, (e) => {
-              if (!e) {
-                if (eventName !== 'added' && target !== userId) {
-                  ws.sendMessage({
-                    type: MessageType.SET_CHANGE_UNIT,
-                    id: target,
-                    connId,
-                    data: {
-                      target: userId,
-                      roomLenght,
-                      eventName: 'added',
-                      muteds: _muteds,
-                    },
-                  });
-                }
               }
-            });
-          }
+            }
+          });
+
           break;
         case 'delete':
           const keys = Object.keys(rtc.peerConnections);

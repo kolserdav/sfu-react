@@ -383,7 +383,12 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
     log('info', 'Trying to add ice candidate', { peerId });
     this.peerConnections[peerId]!.addIceCandidate(cand)
       .then(() => {
-        log('log', '!! Adding received ICE candidate:', { id, target, userId });
+        log('info', '!! Adding received ICE candidate:', {
+          id,
+          target,
+          userId,
+          ufrag: cand?.usernameFragment,
+        });
         if (cb) {
           cb(cand);
         }
