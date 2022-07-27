@@ -681,6 +681,20 @@ export const useVideoStarted = ({
   const [attempts, setAttempts] = useState<Record<string | number, number>>({});
 
   /**
+   * Clean played
+   */
+  useEffect(() => {
+    if (!timeStart) {
+      setTimeStart(true);
+      const _played = { ...played };
+      streams.forEach((item) => {
+        _played[item.target] = false;
+      });
+      setPlayed(_played);
+    }
+  }, [streams, timeStart, played]);
+
+  /**
    * Check not played
    */
   useEffect(() => {
@@ -713,8 +727,6 @@ export const useVideoStarted = ({
           if (_attempts[item.target] === 1) {
             if (!played[item.target] && mounted) {
               lostStreamHandler({ ...item, eventName: 'not-played' });
-              const str = streams.find((i) => i.target === item.target);
-              console.log(str?.stream.getTracks().length);
             }
           } else {
             log('info', `${_attempts[item.target]} attempts of restart:`, { target: item.target });
