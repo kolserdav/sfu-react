@@ -159,19 +159,19 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
           }
         }
         this.streams[peerId].addTrack(stream.getTracks()[0]);
-        s++;
-      } else {
+      } else if (s === 2) {
         const tracksOpts: AddTracksProps = {
           roomId,
           userId,
           target,
           connId,
         };
-        log('info', 'Add tracks', { tracksOpts, s });
+        log('warn', 'Add tracks', { tracksOpts, s });
         this.addTracks(tracksOpts, () => {
           //
         });
       }
+      s++;
     };
   };
 

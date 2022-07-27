@@ -249,6 +249,7 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
           }
         });
     };
+    let s1 = 0;
     this.peerConnections[peerId]!.ontrack = (e) => {
       const stream = e.streams[0];
       log('warn', 'On add remote stream', {
@@ -257,9 +258,10 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
         streamId: stream.id,
         tracks: stream.getTracks(),
       });
-      if (target.toString() !== '0') {
+      if (target.toString() !== '0' && s1 === 1) {
         this.onAddTrack[this.getPeerId(roomId, target, connId)](target, stream);
       }
+      s1++;
     };
   };
 

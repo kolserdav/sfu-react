@@ -184,9 +184,6 @@ export const useConnection = ({
           }
         },
       };
-      if (/-/.test(stream.id)) {
-        return;
-      }
       storeStreams.dispatch(changeStreams({ type: 'add', stream: _stream, change }));
       if (!selfStream && target === ws.userId) {
         setSelfStream(_stream);
@@ -310,7 +307,7 @@ export const useConnection = ({
           const peerId = rtc.getPeerId(roomId, item, connId);
           const _isExists = _streams.filter((_item) => item === _item.target);
           if (!_isExists[0]) {
-            log('info', 'Check new user', { item, id });
+            log('warn', 'Check new user', { item, id });
             rtc.createPeerConnection({
               roomId,
               target: item,
@@ -727,36 +724,12 @@ export const useVideoStarted = ({
           if (_attempts[item.target] === 1) {
             if (!played[item.target] && mounted) {
               // lostStreamHandler({ ...item, eventName: 'not-played' });
-              ws.sendMessage({
-                type: MessageType.SET_CHANGE_UNIT,
-                id: item.target,
-                connId: item.connId,
-                data: {
-                  target: ws.userId,
-                  roomLenght: rtc.roomLength,
-                  muteds: rtc.muteds,
-                  eventName: 'delete',
-                },
-              });
               console.error('Video not played', item.target);
             }
           } else {
             log('info', `${_attempts[item.target]} attempts of restart:`, { target: item.target });
             if (_attempts[item.target] === 5) {
-              _attempts[item.target] = 0;
-              /*
-              ws.sendMessage({
-                type: MessageType.SET_CHANGE_UNIT,
-                id: item.target,
-                connId: item.connId,
-                data: {
-                  target: ws.userId,
-                  roomLenght: rtc.roomLength,
-                  muteds: rtc.muteds,
-                  eventName: 'delete',
-                },
-              });
-              */
+              // _attempts[item.target] = 0;
             }
           }
 
