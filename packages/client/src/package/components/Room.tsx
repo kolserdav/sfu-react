@@ -78,7 +78,7 @@ function Room({ id, iceServers, server, port }: RoomProps) {
     <div className={s.wrapper} style={theme.wrapper}>
       <div className={s.container} ref={container}>
         {streams.map((item, index) => (
-          <div id={item.stream.id} key={item.target} className={s.video}>
+          <div id={item.stream.id} key={item.target} className={s.video} data-connid={item.connId}>
             {/** CloseButton is strong first child */}
             <CloseButton onClick={onClickClose} onKeyDown={onPressEscape} tabindex={index} />
             {/** video is strong second child */}
