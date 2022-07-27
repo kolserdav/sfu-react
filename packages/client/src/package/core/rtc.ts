@@ -41,6 +41,9 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
 
   public roomId: number | null = null;
 
+  // eslint-disable-next-line class-methods-use-this
+  public onAddTrack: Record<string, (target: number | string, stream: MediaStream) => void> = {};
+
   constructor({ ws }: { ws: WS }) {
     this.ws = ws;
   }
@@ -295,8 +298,7 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
             localStream.getTracks().forEach((track) => {
               this.peerConnections[peerId]!.addTrack(track, localStream);
             });
-            this.onAddTrack[peerId](userId, this.localStream);
-            cb(0);
+            cb(0, localStream);
           } else {
             navigator.mediaDevices
               .getDisplayMedia({ video: true })
@@ -321,17 +323,16 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
                     this.localStream?.addTrack(track);
                   }
                 });
-                this.onAddTrack[peerId](userId, videoStream);
-                cb(0);
+                cb(0, videoStream);
               })
               .catch(() => {
-                cb(1);
+                cb(1, new MediaStream());
               });
           }
         })
         .catch((err) => {
           log('error', 'Error get self user media', err);
-          cb(1);
+          cb(1, new MediaStream());
         });
     } else {
       log('info', '> Adding tracks to current local media stream', {
@@ -348,13 +349,9 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
           this.peerConnections[peerId]!.addTrack(track, this.localStream);
         }
       });
-      this.onAddTrack[this.getPeerId(roomId, target, connId)](userId, this.localStream);
-      cb(0);
+      cb(0, this.localStream);
     }
   };
-
-  // eslint-disable-next-line class-methods-use-this
-  public onAddTrack: Record<string, (target: number | string, stream: MediaStream) => void> = {};
 
   /**
    * handleNewICECandidateMsg

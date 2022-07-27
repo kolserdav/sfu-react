@@ -230,7 +230,7 @@ export const useConnection = ({
               iceServers,
               eventName: 'back',
             });
-            rtc.addTracks({ roomId, userId, target, connId, peerId: '' }, (e) => {
+            rtc.addTracks({ roomId, userId, target, connId }, (e) => {
               if (!e) {
                 if (eventName !== 'added' && target !== userId) {
                   ws.sendMessage({
@@ -322,7 +322,7 @@ export const useConnection = ({
               iceServers,
               eventName: 'check',
             });
-            rtc.addTracks({ roomId, userId: id, target: item, connId, peerId: '' }, (e) => {
+            rtc.addTracks({ roomId, userId: id, target: item, connId }, (e) => {
               log('info', 'Change room guests connection', {
                 roomId,
                 target: item,
@@ -434,14 +434,14 @@ export const useConnection = ({
             roomId,
             onTrack: ({ addedUserId, stream }) => {
               log('info', '-> Added local stream to room', { addedUserId, id });
-              addStream({ target: addedUserId, stream, connId });
+              // addStream({ target: addedUserId, stream, connId });
             },
             iceServers,
             eventName: 'first',
           });
-          rtc.addTracks({ userId: ws.userId, roomId, connId, target: 0, peerId: '' }, (e) => {
+          rtc.addTracks({ userId: ws.userId, roomId, connId, target: 0 }, (e, stream) => {
             if (!e) {
-              /** */
+              addStream({ target: ws.userId, stream, connId });
             } else if (localShareScreen) {
               ws.shareScreen = false;
               setLocalShareScreen(false);

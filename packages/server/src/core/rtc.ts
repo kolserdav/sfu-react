@@ -135,7 +135,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
         tracks: stream.getTracks().map((item) => item.kind),
       });
       if (isRoom) {
-        if (s % 2 !== 0 && isNew) {
+        if (s === 1 && isNew) {
           this.streams[peerId] = new werift.MediaStream({ id: stream.id });
           const room = rooms[roomId];
           if (room) {
@@ -162,7 +162,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
         s++;
       } else {
         const tracksOpts: AddTracksProps = {
-          peerId,
           roomId,
           userId,
           target,
@@ -170,7 +169,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
         };
         log('info', 'Add tracks', { tracksOpts, s });
         this.addTracks(tracksOpts, () => {
-          /** */
+          //
         });
       }
     };
@@ -425,7 +424,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       });
   };
 
-  public addTracks: RTCInterface['addTracks'] = ({ roomId, connId, userId, peerId, target }) => {
+  public addTracks: RTCInterface['addTracks'] = ({ roomId, connId, userId, target }) => {
     let _connId = connId;
     const keysStreams = Object.keys(this.streams);
     keysStreams.forEach((element) => {
@@ -434,6 +433,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
         _connId = str[3];
       }
     });
+    const peerId = this.getPeerId(roomId, userId, target, connId);
     const _peerId = this.getPeerId(roomId, target, 0, _connId);
     const stream = this.streams[_peerId];
     const tracks = stream?.getTracks();
@@ -443,9 +443,8 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       target,
       connId,
       _peerId,
-      tracksL: tracks.length,
-      _connId,
-      id: stream.id,
+      tracksL: tracks?.length,
+      id: stream?.id,
       tracks: tracks?.map((item) => item.kind),
       ss: Object.keys(this.streams),
     });
@@ -456,7 +455,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
         target,
         connId,
         _peerId,
-        _connId,
         k: Object.keys(this.streams),
       });
       return;
@@ -470,6 +468,8 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
           this.peerConnectionsServer[peerId]?.removeTrack(sender);
         }
         this.peerConnectionsServer[peerId]!.addTrack(track, stream);
+      } else {
+        log('error', 'Can not add tracks', { peerId });
       }
     });
   };

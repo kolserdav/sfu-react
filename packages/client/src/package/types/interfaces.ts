@@ -164,7 +164,6 @@ export namespace Connection {
     connId: string;
     userId: number | string;
     target: number | string;
-    peerId: string;
   };
   export abstract class RTCInterface {
     public abstract peerConnections: Record<string, RTCPeerConnection | undefined>;
@@ -228,7 +227,10 @@ export namespace Connection {
       cb?: (res: 1 | 0) => any
     ): void;
 
-    public abstract addTracks(args: AddTracksProps, cb: (e: 1 | 0) => void): void;
+    public abstract addTracks(
+      args: AddTracksProps,
+      cb: (e: 1 | 0, stream: MediaStream) => void
+    ): void;
   }
 }
 
