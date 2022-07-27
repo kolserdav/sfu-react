@@ -251,7 +251,7 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
     };
     this.peerConnections[peerId]!.ontrack = (e) => {
       const stream = e.streams[0];
-      log('info', 'On add remote stream', {
+      log('warn', 'On add remote stream', {
         target,
         peerId,
         streamId: stream.id,
@@ -325,7 +325,8 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
                 });
                 cb(0, videoStream);
               })
-              .catch(() => {
+              .catch((e) => {
+                log('error', 'Error get display media', e);
                 cb(1, new MediaStream());
               });
           }

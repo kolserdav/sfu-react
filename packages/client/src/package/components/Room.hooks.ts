@@ -726,12 +726,7 @@ export const useVideoStarted = ({
           }
           if (_attempts[item.target] === 1) {
             if (!played[item.target] && mounted) {
-              lostStreamHandler({ ...item, eventName: 'not-played' });
-            }
-          } else {
-            log('info', `${_attempts[item.target]} attempts of restart:`, { target: item.target });
-            if (_attempts[item.target] === 5) {
-              _attempts[item.target] = 0;
+              // lostStreamHandler({ ...item, eventName: 'not-played' });
               ws.sendMessage({
                 type: MessageType.SET_CHANGE_UNIT,
                 id: item.target,
@@ -743,6 +738,25 @@ export const useVideoStarted = ({
                   eventName: 'delete',
                 },
               });
+              console.error('Video not played', item.target);
+            }
+          } else {
+            log('info', `${_attempts[item.target]} attempts of restart:`, { target: item.target });
+            if (_attempts[item.target] === 5) {
+              _attempts[item.target] = 0;
+              /*
+              ws.sendMessage({
+                type: MessageType.SET_CHANGE_UNIT,
+                id: item.target,
+                connId: item.connId,
+                data: {
+                  target: ws.userId,
+                  roomLenght: rtc.roomLength,
+                  muteds: rtc.muteds,
+                  eventName: 'delete',
+                },
+              });
+              */
             }
           }
 

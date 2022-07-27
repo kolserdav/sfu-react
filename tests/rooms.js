@@ -56,7 +56,6 @@ async function openRoom(room, uid) {
     const text = message.text();
     if (!/DevTools/.test(text)) {
       log('warn', `Message on room: ${room} for user: ${uid}:`, message.text(), true);
-      warnings++;
     }
   });
   log('info', 'Open page:', _url, true);
