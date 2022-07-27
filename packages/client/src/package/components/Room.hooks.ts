@@ -307,7 +307,7 @@ export const useConnection = ({
           const peerId = rtc.getPeerId(roomId, item, connId);
           const _isExists = _streams.filter((_item) => item === _item.target);
           if (!_isExists[0]) {
-            log('warn', 'Check new user', { item, id });
+            log('warn', `Check new user ${item}`, { uid: id });
             rtc.createPeerConnection({
               roomId,
               target: item,
@@ -724,7 +724,7 @@ export const useVideoStarted = ({
           if (_attempts[item.target] === 1) {
             if (!played[item.target] && mounted) {
               // lostStreamHandler({ ...item, eventName: 'not-played' });
-              console.error('Video not played', item.target);
+              console.error('Video not played', item.target, item.stream.getTracks().length);
             }
           } else {
             log('info', `${_attempts[item.target]} attempts of restart:`, { target: item.target });

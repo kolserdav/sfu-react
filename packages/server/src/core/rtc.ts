@@ -156,7 +156,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
               });
             });
           }, 0);
-        } else {
+        } else if (!room) {
           log('warn', 'Room missing in memory', { roomId });
         }
       } else if (s === 2) {
@@ -181,18 +181,8 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       connId,
       data: { candidate, userId, target },
     } = msg;
-    let peerId = this.getPeerId(id, userId, target, connId);
-    let _connId = connId;
-    if (!this.peerConnectionsServer?.[peerId]) {
-      const peer = Object.keys(this.peerConnectionsServer).find((p) => {
-        const pe = p.split(this.delimiter);
-        return (
-          pe[0] === id.toString() && pe[1] === userId.toString() && pe[2] === target.toString()
-        );
-      });
-      _connId = peer?.split(this.delimiter)[3] || connId;
-      peerId = this.getPeerId(id, userId, target, _connId);
-    }
+    const peerId = this.getPeerId(id, userId, target, connId);
+
     const cand = new werift.RTCIceCandidate(candidate as werift.RTCIceCandidate);
 
     log('log', 'Trying to add ice candidate:', {
@@ -203,21 +193,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       userId,
       target,
     });
-    if (this.peerConnectionsServer[peerId]?.connectionState === 'new') {
-      await new Promise((resolve) => {
-        const t = setInterval(() => {
-          if (this.peerConnectionsServer[peerId]?.connectionState !== 'new') {
-            clearInterval(t);
-            resolve(0);
-          }
-        }, 500);
-      });
-    }
-    if (
-      !this.peerConnectionsServer[peerId] ||
-      this.peerConnectionsServer[peerId]?.connectionState === 'closed' ||
-      this.peerConnectionsServer[peerId]?.iceConnectionState === 'closed'
-    ) {
+    if (!this.peerConnectionsServer[peerId]) {
       log('warn', 'Skiping add ice candidate', {
         connId,
         id,
@@ -257,7 +233,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       });
   };
 
-  public handleOfferMessage: RTCInterface['handleOfferMessage'] = (msg, cb) => {
+  public handleOfferMessage: RTCInterface['handleOfferMessage'] = async (msg) => {
     const {
       id,
       connId,
@@ -265,13 +241,13 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     } = msg;
     if (!sdp) {
       log('warn', 'Message offer error because sdp is:', sdp);
-      if (cb) {
-        cb(null);
-      }
       return;
     }
     const peerId = this.getPeerId(id, userId, target, connId);
-
+    log('info', '--> Creating answer', {
+      peerId,
+      ss: this.peerConnectionsServer[peerId]?.signalingState,
+    });
     this.createRTCServer({
       roomId: id,
       userId,
@@ -279,7 +255,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       connId,
       mimeType,
     });
-
     if (!this.peerConnectionsServer[peerId]) {
       log('warn', 'Handle offer message without peer connection', { peerId });
       return;
@@ -291,90 +266,66 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       connId,
     });
     const desc = new werift.RTCSessionDescription(sdp.sdp as string, 'offer');
-    this.peerConnectionsServer[peerId]!.setRemoteDescription(desc)
-      .then(() => {
-        log('info', '-> Local video stream obtained', { peerId });
-      })
-      .then(() => {
-        log('info', '--> Creating answer', {
-          peerId,
-          ss: this.peerConnectionsServer[peerId]?.signalingState,
-        });
-        this.peerConnectionsServer[peerId]!.createAnswer().then((answ) => {
-          if (!answ) {
-            log('error', 'Failed set local description for answer.', {
-              answ,
-              peerConnection: this.peerConnectionsServer[peerId],
-            });
-            if (cb) {
-              cb(null);
-            }
-            return;
-          }
-          log('info', '---> Setting local description after creating answer');
-          if (!this.peerConnectionsServer[peerId]) {
-            log('warn', 'Skip set local description fo answer', {
-              roomId: id,
-              userId,
-              target,
-              connId,
-              k: Object.keys(this.peerConnectionsServer).length,
-              s: Object.keys(this.streams).length,
-            });
-            return;
-          }
-          this.peerConnectionsServer[peerId]!.setLocalDescription(answ)
-            .catch((err) => {
-              log('error', 'Error set local description for answer', {
-                message: err.message,
-                roomId: id,
-                userId,
-                target,
-                connId,
-                k: Object.keys(this.peerConnectionsServer).length,
-                s: Object.keys(this.streams).length,
-                is: this.peerConnectionsServer[peerId]?.iceConnectionState,
-                cs: this.peerConnectionsServer[peerId]?.connectionState,
-                ss: this.peerConnectionsServer[peerId]?.signalingState,
-              });
-            })
-            .then(() => {
-              const { localDescription } = this.peerConnectionsServer[peerId]!;
-              if (localDescription) {
-                log('info', 'Sending answer packet back to other peer', { userId, target, id });
-                this.ws.sendMessage({
-                  id: userId,
-                  type: MessageType.ANSWER,
-                  data: {
-                    sdp: localDescription,
-                    userId: id,
-                    target,
-                  },
-                  connId,
-                });
-                if (cb) {
-                  cb(null);
-                }
-              } else {
-                log('warn', 'Failed send answer because localDescription is', localDescription);
-              }
-            });
-        });
-      })
-      .catch((e) => {
-        log('error', 'Failed get user media', {
-          message: e.message,
-          stack: e.stack,
-          roomId: id,
-          userId,
-          target,
-          connId,
-          desc: desc !== undefined,
-        });
-        if (cb) {
-          cb(null);
-        }
+    let error = false;
+    await this.peerConnectionsServer[peerId]!.setRemoteDescription(desc).catch((e) => {
+      log('error', 'Error set remote description', { e, peerId });
+      error = true;
+    });
+    const answ = await this.peerConnectionsServer[peerId]!.createAnswer().catch((e) => {
+      log('error', 'Error create answer', { e, peerId });
+      error = true;
+    });
+    if (!answ) {
+      log('error', 'Failed set local description for answer.', {
+        answ,
+        peerConnection: this.peerConnectionsServer[peerId],
       });
+      error = true;
+      return;
+    }
+    log('info', '---> Setting local description after creating answer');
+    if (!this.peerConnectionsServer[peerId]) {
+      log('warn', 'Skip set local description fo answer', {
+        roomId: id,
+        userId,
+        target,
+        connId,
+        k: Object.keys(this.peerConnectionsServer).length,
+        s: Object.keys(this.streams).length,
+      });
+      return;
+    }
+    await this.peerConnectionsServer[peerId]!.setLocalDescription(answ).catch((err) => {
+      log('error', 'Error set local description for answer', {
+        message: err.message,
+        roomId: id,
+        userId,
+        target,
+        connId,
+        k: Object.keys(this.peerConnectionsServer).length,
+        s: Object.keys(this.streams).length,
+        is: this.peerConnectionsServer[peerId]?.iceConnectionState,
+        cs: this.peerConnectionsServer[peerId]?.connectionState,
+        ss: this.peerConnectionsServer[peerId]?.signalingState,
+      });
+      error = true;
+    });
+    const { localDescription } = this.peerConnectionsServer[peerId]!;
+    if (localDescription) {
+      log('info', 'Sending answer packet back to other peer', { userId, target, id });
+      this.ws.sendMessage({
+        id: userId,
+        type: MessageType.ANSWER,
+        data: {
+          sdp: localDescription,
+          userId: id,
+          target,
+        },
+        connId,
+      });
+    } else {
+      log('warn', 'Failed send answer because localDescription is', localDescription);
+    }
   };
 
   public handleVideoAnswerMsg: RTCInterface['handleVideoAnswerMsg'] = async (msg, cb) => {
@@ -459,12 +410,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     }
     tracks.forEach((track) => {
       if (this.peerConnectionsServer[peerId]) {
-        const sender = this.peerConnectionsServer[peerId]!.getSenders().find(
-          (item) => item.kind === track.kind
-        );
-        if (sender && sender?.track?.id === track.id) {
-          this.peerConnectionsServer[peerId]?.removeTrack(sender);
-        }
         this.peerConnectionsServer[peerId]!.addTrack(track);
       } else {
         log('error', 'Can not add tracks', { peerId });

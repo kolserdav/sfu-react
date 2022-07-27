@@ -104,10 +104,7 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
     userId,
     target,
   }) => {
-    let peerId = this.getPeerId(roomId, target, connId);
-    if (!this.peerConnections[peerId]) {
-      peerId = this.getPeerId(roomId, target, connId);
-    }
+    const peerId = this.getPeerId(roomId, target, connId);
     if (!this.peerConnections[peerId]) {
       log('warn', 'Handle ice candidate without peerConnection', { peerId });
       return;
@@ -250,9 +247,11 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
         });
     };
     let s1 = 0;
+    const stream = new MediaStream();
     this.peerConnections[peerId]!.ontrack = (e) => {
-      const stream = e.streams[0];
-      log('warn', 'On add remote stream', {
+      const _stream = e.streams[0];
+      stream.addTrack(_stream.getTracks()[0]);
+      log('info', 'On add remote stream', {
         target,
         peerId,
         streamId: stream.id,
@@ -394,7 +393,7 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
   };
 
   // eslint-disable-next-line class-methods-use-this
-  public handleOfferMessage: RTCInterface['handleOfferMessage'] = (msg, cb) => {
+  public handleOfferMessage: RTCInterface['handleOfferMessage'] = (msg) => {
     log('warn', 'Handle offer message not implemented', msg);
   };
 
@@ -414,13 +413,6 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
       is: this.peerConnections[peerId]?.iceConnectionState,
     });
     const desc = new RTCSessionDescription(sdp);
-    if (!this.peerConnections[peerId]) {
-      await new Promise((resolve) => {
-        setTimeout(() => {
-          resolve(0);
-        }, 1000);
-      });
-    }
     if (!this.peerConnections[peerId]) {
       log('warn', 'Skiping set remote desc for answer', {
         id,

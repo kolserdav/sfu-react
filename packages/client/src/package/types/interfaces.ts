@@ -212,10 +212,7 @@ export namespace Connection {
       target: string | number;
     }): void;
 
-    public abstract handleOfferMessage(
-      msg: Signaling.SendMessageArgs<MessageType.OFFER>,
-      cb?: (desc: RTCSessionDescription | null) => any
-    ): void;
+    public abstract handleOfferMessage(msg: Signaling.SendMessageArgs<MessageType.OFFER>): void;
 
     public abstract handleCandidateMessage(
       msg: Signaling.SendMessageArgs<MessageType.CANDIDATE>,

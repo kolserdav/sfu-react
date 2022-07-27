@@ -74,7 +74,6 @@ function Room({ id, iceServers, server, port }: RoomProps) {
     lostStreamHandler,
   });
   const displayMediaSupported = useMemo(() => supportDisplayMedia(), []);
-  console.log(streams.map((item) => item.stream.getTracks()));
   return (
     <div className={s.wrapper} style={theme.wrapper}>
       <div className={s.container} ref={container}>
@@ -114,6 +113,9 @@ function Room({ id, iceServers, server, port }: RoomProps) {
                   const _played = { ...played };
                   _played[item.target] = true;
                   setPlayed(_played);
+                }
+                if (item.stream.getTracks().length < 2) {
+                  log('warn', 'Stream have less than 2 tracks', { item });
                 }
               }}
               onEmptied={(e) => {
