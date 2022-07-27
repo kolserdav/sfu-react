@@ -74,6 +74,7 @@ function Room({ id, iceServers, server, port }: RoomProps) {
     lostStreamHandler,
   });
   const displayMediaSupported = useMemo(() => supportDisplayMedia(), []);
+  console.log(streams.map((item) => item.stream.getTracks()));
   return (
     <div className={s.wrapper} style={theme.wrapper}>
       <div className={s.container} ref={container}>

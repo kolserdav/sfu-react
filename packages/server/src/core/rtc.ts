@@ -22,7 +22,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
   public rooms: Record<string | number, (string | number)[]> = {};
   public muteds: Record<string, string[]> = {};
   private ws: WS;
-  public streams: Record<string, werift.MediaStream> = {};
+  public streams: Record<string, werift.MediaStreamTrack[]> = {};
 
   constructor({ ws }: { ws: WS }) {
     this.ws = ws;
@@ -124,7 +124,10 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       const peer = peerId.split(delimiter);
       const isRoom = peer[2] === '0';
       const stream = e.streams[0];
-      const isNew = stream.id !== this.streams[peerId]?.id;
+      if (!this.streams[peerId]) {
+        this.streams[peerId] = [];
+      }
+      const isNew = this.streams[peerId]?.length === 0;
       log('info', 'ontrack', {
         peerId,
         isRoom,
@@ -135,30 +138,27 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
         tracks: stream.getTracks().map((item) => item.kind),
       });
       if (isRoom) {
-        if (s === 1 && isNew) {
-          this.streams[peerId] = new werift.MediaStream({ id: stream.id });
-          const room = rooms[roomId];
-          if (room) {
-            setTimeout(() => {
-              room.forEach((id) => {
-                ws.sendMessage({
-                  type: MessageType.SET_CHANGE_UNIT,
-                  id,
-                  data: {
-                    target: userId,
-                    eventName: 'add',
-                    roomLenght: rooms[roomId]?.length || 0,
-                    muteds: this.muteds[roomId],
-                  },
-                  connId,
-                });
+        this.streams[peerId].push(stream.getTracks()[0]);
+        const room = rooms[roomId];
+        if (room && isNew) {
+          setTimeout(() => {
+            room.forEach((id) => {
+              ws.sendMessage({
+                type: MessageType.SET_CHANGE_UNIT,
+                id,
+                data: {
+                  target: userId,
+                  eventName: 'add',
+                  roomLenght: rooms[roomId]?.length || 0,
+                  muteds: this.muteds[roomId],
+                },
+                connId,
               });
-            }, 0);
-          } else {
-            log('warn', 'Room missing in memory', { roomId });
-          }
+            });
+          }, 0);
+        } else {
+          log('warn', 'Room missing in memory', { roomId });
         }
-        this.streams[peerId].addTrack(stream.getTracks()[0]);
       } else if (s === 2) {
         const tracksOpts: AddTracksProps = {
           roomId,
@@ -166,7 +166,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
           target,
           connId,
         };
-        log('warn', 'Add tracks', { tracksOpts, s });
+        log('info', 'Add tracks', { tracksOpts, s });
         this.addTracks(tracksOpts, () => {
           //
         });
@@ -435,8 +435,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     });
     const peerId = this.getPeerId(roomId, userId, target, connId);
     const _peerId = this.getPeerId(roomId, target, 0, _connId);
-    const stream = this.streams[_peerId];
-    const tracks = stream?.getTracks();
+    const tracks = this.streams[_peerId];
     log('info', 'Add tracks', {
       roomId,
       userId,
@@ -444,11 +443,10 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       connId,
       _peerId,
       tracksL: tracks?.length,
-      id: stream?.id,
       tracks: tracks?.map((item) => item.kind),
       ss: Object.keys(this.streams),
     });
-    if (!stream) {
+    if (tracks.length === 0) {
       log('info', 'Skiping add track', {
         roomId,
         userId,
@@ -467,7 +465,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
         if (sender && sender?.track?.id === track.id) {
           this.peerConnectionsServer[peerId]?.removeTrack(sender);
         }
-        this.peerConnectionsServer[peerId]!.addTrack(track, stream);
+        this.peerConnectionsServer[peerId]!.addTrack(track);
       } else {
         log('error', 'Can not add tracks', { peerId });
       }
@@ -487,7 +485,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     });
     setTimeout(() => {
       if (this.peerConnectionsServer[peerId]) {
-        this.peerConnectionsServer[peerId]!.onicecandidate = null;
         this.peerConnectionsServer[peerId]!.onsignalingstatechange = null;
         this.peerConnectionsServer[peerId]!.onnegotiationneeded = null;
         this.peerConnectionsServer[peerId]!.ontrack = null;

@@ -477,11 +477,6 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
     delete this.onAddTrack[peerId];
   };
 
-  private getRoom() {
-    this.roomId = parseInt(window.location.pathname.replace('/', '').replace(/\?.*$/, ''), 10);
-    return this.roomId;
-  }
-
   // eslint-disable-next-line class-methods-use-this
   public onClosedCall: RTCInterface['onClosedCall'] = (args) => {
     log('warn', 'Call is closed', { ...args });
