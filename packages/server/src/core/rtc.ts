@@ -313,11 +313,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
             return;
           }
           log('info', '---> Setting local description after creating answer');
-          let _peerId = peerId;
           if (!this.peerConnectionsServer[peerId]) {
-            _peerId = this.getPeerId(id, target, userId, connId);
-          }
-          if (!this.peerConnectionsServer[_peerId]) {
             log('warn', 'Skip set local description fo answer', {
               roomId: id,
               userId,
@@ -328,7 +324,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
             });
             return;
           }
-          this.peerConnectionsServer[_peerId]!.setLocalDescription(answ)
+          this.peerConnectionsServer[peerId]!.setLocalDescription(answ)
             .catch((err) => {
               log('error', 'Error set local description for answer', {
                 message: err.message,
@@ -441,7 +437,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     const _peerId = this.getPeerId(roomId, target, 0, _connId);
     const stream = this.streams[_peerId];
     const tracks = stream?.getTracks();
-    log('info', 'Add tracks', {
+    log('warn', 'Add tracks', {
       roomId,
       userId,
       target,
