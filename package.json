@@ -61,6 +61,7 @@
     "postinstall": "npm run migrate",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "test": "node tests/rooms.js",
+    "test:browser": "node tests/webrtc-browser.js",
     "dev:migrate": "cd packages/server && npm run dev:migrate",
     "migrate": "cd packages/server && npm run migrate"
   },

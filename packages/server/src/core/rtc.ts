@@ -61,7 +61,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
             mimeType,
             clockRate: 90000,
             rtcpFeedback: [
-              { type: 'transport-cc' },
               { type: 'ccm', parameter: 'fir' },
               { type: 'nack' },
               { type: 'nack', parameter: 'pli' },
@@ -276,7 +275,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       error = true;
     });
     if (!answ) {
-      log('error', 'Failed set local description for answer.', {
+      log('warn', 'Failed set local description for answer.', {
         answ,
         peerConnection: this.peerConnectionsServer[peerId],
       });
@@ -284,8 +283,9 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       return;
     }
     log('info', '---> Setting local description after creating answer');
-    if (!this.peerConnectionsServer[peerId]) {
-      log('warn', 'Skip set local description fo answer', {
+    if (!this.peerConnectionsServer[peerId] || error) {
+      log('warn', 'Failed set local description fo answer', {
+        error,
         roomId: id,
         userId,
         target,
