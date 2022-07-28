@@ -19,7 +19,10 @@
     "noEmit": false,
     "jsx": "react-jsx",
     "jsxFactory": "",
-    "jsxFragmentFactory": ""
+    "jsxFragmentFactory": "",
+    "paths": {
+      "werift": ["../server/src/werift-webrtc/packages/webrtc/src"]
+    }
   },
   "exclude": ["node_modules"],
   "include": ["src/package", "src/types/*.ts", "declarations.d.ts"]
