@@ -1,7 +1,7 @@
 {
   "name": "uyem",
   "version": "0.4.1",
-  "repository": "https://github.com/kolserdav/webrtc-sfu-node-react.git",
+  "repository": "https://github.com/kolserdav/webrtc-sfu-werift-react.git",
   "description": "Selective Forwarding Unit (SFU) is a WebRTC web application library, the server part of which is written in Node, and the client part is a ReactJS shared component.",
   "keywords": [
     "node",
@@ -23,7 +23,7 @@
   "contributors": [
     "Sergey Kolmiller <uyem.ru@gmail.com>"
   ],
-  "bugs": "https://github.com/kolserdav/webrtc-sfu-node-react/issues",
+  "bugs": "https://github.com/kolserdav/webrtc-sfu-werift-react/issues",
   "license": "MIT",
   "main": "packages/client/dist/Main.js",
   "types": "packages/client/dist/Main.d.ts",
@@ -121,7 +121,7 @@
   },
   "fhead": {
     "root": "packages",
-    "repository": "https://github.com/kolserdav/webrtc-sfu-node-react.git",
+    "repository": "https://github.com/kolserdav/webrtc-sfu-werift-react.git",
     "patterns": [
       ".js",
       ".ts",
@@ -135,7 +135,7 @@
     "name": "Sergey Kolmiller",
     "email": "uyem.ru@gmail.com",
     "license": "MIT",
-    "licenseText": "Show LICENSE file",
+    "licenseText": "See in LICENSE file",
     "copyright": "kolserdav, All rights reserved (c)",
     "renewAll": true
   }
