@@ -21,7 +21,7 @@
     "jsxFactory": "",
     "jsxFragmentFactory": "",
     "paths": {
-      "werift": ["../server/src/werift-webrtc/packages/webrtc/src"]
+      "werift": ["./src/types/werift.ts"]
     }
   },
   "exclude": ["node_modules"],
