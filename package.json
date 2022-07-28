@@ -1,7 +1,7 @@
 {
   "name": "uyem",
   "version": "0.4.1",
-  "repository": "git@github.com:kolserdav/react-node-webrtc-sfu.git",
+  "repository": "https://github.com/kolserdav/webrtc-sfu-node-react.git",
   "description": "Selective Forwarding Unit (SFU) is a WebRTC web application library, the server part of which is written in Node, and the client part is a ReactJS shared component.",
   "keywords": [
     "node",
@@ -13,7 +13,6 @@
     "video",
     "call"
   ],
-  "homepage": "https://uyem.ru",
   "author": {
     "name": "Sergey Kolmiller",
     "email": "uyem.ru@gmail.com"
@@ -24,7 +23,7 @@
   "contributors": [
     "Sergey Kolmiller <uyem.ru@gmail.com>"
   ],
-  "bugs": "https://github.com/kolserdav/react-node-webrtc-sfu/issues",
+  "bugs": "https://github.com/kolserdav/webrtc-sfu-node-react/issues",
   "license": "MIT",
   "main": "packages/client/dist/Main.js",
   "types": "packages/client/dist/Main.d.ts",
@@ -67,7 +66,7 @@
     "migrate": "cd packages/server && npm run migrate"
   },
   "dependencies": {
-    "@prisma/client": "^4.0.0",
+    "@prisma/client": "^4.1.1",
     "@reduxjs/toolkit": "^1.8.2",
     "clsx": "^1.1.1",
     "dotenv": "^16.0.1",
@@ -88,7 +87,7 @@
     "@types/react-dom": "^18.0.5",
     "@types/uuid": "^8.3.4",
     "@types/ws": "^8.5.3",
-    "prisma": "^4.0.0"
+    "prisma": "^4.1.1"
   },
   "optionalDependencies": {
     "@testing-library/jest-dom": "^5.16.4",
@@ -122,7 +121,7 @@
   },
   "fhead": {
     "root": "packages",
-    "repository": "https://github.com/kolserdav/react-node-webrtc-sfu.git",
+    "repository": "https://github.com/kolserdav/webrtc-sfu-node-react.git",
     "patterns": [
       ".js",
       ".ts",
@@ -136,7 +135,7 @@
     "name": "Sergey Kolmiller",
     "email": "uyem.ru@gmail.com",
     "license": "MIT",
-    "licenseText": "",
+    "licenseText": "Show LICENSE file",
     "copyright": "kolserdav, All rights reserved (c)",
     "renewAll": true
   }
