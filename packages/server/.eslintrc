@@ -5,6 +5,7 @@
   },
   "extends": [
     "eslint:recommended",
+    "airbnb",
     "eslint-config-prettier",
     "prettier",
     "plugin:@typescript-eslint/recommended"
@@ -15,9 +16,28 @@
     "ecmaVersion": 12,
     "sourceType": "module"
   },
-  "ignorePatterns": ["node_modules", "dist", "src/types/prisma.d.ts", "node-webrtc"],
+  "ignorePatterns": ["node_modules", "dist", "src/werift-webrtc"],
   "rules": {
+    "spaced-comment": 0,
     "no-unused-vars": 1,
-    "prettier/prettier": 1
+    "prettier/prettier": 1,
+    "import/no-extraneous-dependencies": 0,
+    "import/no-unresolved": 0,
+    "import/extensions": [
+      2,
+      "never",
+      {
+        "ts": "always"
+      }
+    ],
+    "no-underscore-dangle": 0,
+    "no-plusplus": 0,
+    "import/prefer-default-export": 1,
+    "jsx-a11y/media-has-caption": 0,
+    "no-nested-ternary": 0,
+    "no-param-reassign": 1,
+    "no-shadow": 0,
+    "@typescript-eslint/no-shadow": 2,
+    "@typescript-eslint/no-unused-vars": 1
   }
 }

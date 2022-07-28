@@ -1,8 +1,8 @@
 {
   "url": "http://localhost:3000",
   "headless": true,
-  "rooms": 2,
+  "rooms": 1,
   "users": 3,
   "singleRoom": "string-or-false-or-null-or-undefined",
-  "delay": 1500
+  "delay": 4000
 }

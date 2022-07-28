@@ -23,9 +23,10 @@ class WS implements WSInterface {
   public readonly delimiter = '_';
 
   public users: Record<number | string, string> = {};
+
   public rooms: Record<number | string, string> = {};
 
-  public websocket = WebSocket;
+  public WebSocket = WebSocket;
 
   constructor(connectionArgs: ServerOptions | undefined) {
     this.connection = this.createConnection(connectionArgs);
@@ -95,6 +96,7 @@ class WS implements WSInterface {
     return this.connection;
   };
 
+  // eslint-disable-next-line class-methods-use-this
   public parseMessage: WSInterface['parseMessage'] = (message) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let data: any;
@@ -107,14 +109,15 @@ class WS implements WSInterface {
     return data;
   };
 
+  // eslint-disable-next-line class-methods-use-this
   public getMessage: WSInterface['getMessage'] = (type, data) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const res: any = data;
     return res;
   };
 
-  public sendMessage: WSInterface['sendMessage'] = (args, second) => {
-    return new Promise((resolve) => {
+  public sendMessage: WSInterface['sendMessage'] = (args, second) =>
+    new Promise((resolve) => {
       setTimeout(() => {
         let res = '';
         try {
@@ -137,24 +140,21 @@ class WS implements WSInterface {
           this.sockets[this.getSocketId(id, this.users[id])].send(res);
         } else if (this.rooms[id] && this.sockets[this.getSocketId(id, this.rooms[id])]) {
           this.sockets[this.getSocketId(id, this.rooms[id])].send(res);
+        } else if (!second) {
+          setTimeout(() => {
+            this.sendMessage(args, true);
+          }, 3000);
         } else {
-          if (!second) {
-            setTimeout(() => {
-              this.sendMessage(args, true);
-            }, 3000);
-          } else {
-            log('warn', 'Send message without conected socket', {
-              args,
-              k: Object.keys(this.sockets),
-              u: this.users,
-              r: this.rooms,
-            });
-          }
+          log('warn', 'Send message without conected socket', {
+            args,
+            k: Object.keys(this.sockets),
+            u: this.users,
+            r: this.rooms,
+          });
         }
         resolve(0);
       }, 10);
     });
-  };
 }
 
 export default WS;

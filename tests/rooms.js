@@ -1,8 +1,29 @@
 // @ts-check
+const path = require('path');
 const puppeteer = require('puppeteer');
 const { log } = require('../packages/server/dist/utils/lib');
 const { stdout } = require('process');
-const { rooms, users, headless, singleRoom, url, delay } = require('./rooms.json');
+const exConfig = require('./rooms.example.json');
+
+let importErr = false;
+/**
+ * @type {any}
+ */
+let config;
+try {
+  config = require('./rooms.json');
+} catch (e) {
+  log(
+    'warn',
+    `Config file ${path.resolve(
+      __dirname,
+      '../rooms.json'
+    )} not specified, use default ${path.resolve(__dirname, '../rooms.json')}`
+  );
+  importErr = true;
+}
+
+let { rooms, users, headless, singleRoom, url, delay } = importErr ? exConfig : config;
 
 process.setMaxListeners(0);
 

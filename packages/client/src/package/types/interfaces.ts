@@ -15,13 +15,10 @@
 import { RTCPeerConnection as RTCPeerConnectionServer } from 'werift';
 import { Prisma, Room, Unit } from '@prisma/client';
 
-export type SendMessageArgs<T> = Signaling.SendMessageArgs<T>;
-export type WSInterface = Signaling.WSInterface;
-export type RTCInterface = Connection.RTCInterface;
-export type DBInterface = Data.DBInterface;
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type ArgumentTypes<F extends Function> = F extends (args: infer A) => any ? A : never;
 
+// eslint-disable-next-line no-shadow
 export enum MessageType {
   GET_USER_ID = 'GET_USER_ID',
   SET_USER_ID = 'SET_USER_ID',
@@ -74,6 +71,7 @@ export namespace DataTypes {
     export type SetRoom = undefined;
     export type SetError = {
       message: string;
+      // eslint-disable-next-line no-use-before-define
       context: SendMessageArgs<any>;
     };
     export type SetMute = {
@@ -231,8 +229,6 @@ export namespace Connection {
   }
 }
 
-export type AddTracksProps = Connection.AddTracksProps;
-
 export namespace Data {
   export abstract class DBInterface {
     public abstract roomCreate<T extends Prisma.RoomCreateArgs>(
@@ -270,3 +266,9 @@ export namespace Data {
 export namespace Handlers {
   export type Awaited<T> = T extends PromiseLike<infer U> ? U : T;
 }
+
+export type SendMessageArgs<T> = Signaling.SendMessageArgs<T>;
+export type WSInterface = Signaling.WSInterface;
+export type RTCInterface = Connection.RTCInterface;
+export type DBInterface = Data.DBInterface;
+export type AddTracksProps = Connection.AddTracksProps;

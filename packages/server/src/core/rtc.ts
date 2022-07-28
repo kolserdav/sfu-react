@@ -19,10 +19,15 @@ const db = new DB();
 
 class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
   public peerConnectionsServer: RTCInterface['peerConnectionsServer'] = {};
+
   public readonly delimiter = '_';
+
   public rooms: Record<string | number, (string | number)[]> = {};
+
   public muteds: Record<string, string[]> = {};
+
   private ws: WS;
+
   public streams: Record<string, werift.MediaStreamTrack[]> = {};
 
   constructor({ ws }: { ws: WS }) {
@@ -117,6 +122,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
           case 'closed':
             core.onClosedCall({ roomId, userId, target, connId });
             break;
+          default:
         }
       };
     let s = 1;
@@ -268,17 +274,17 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     const desc = new werift.RTCSessionDescription(sdp.sdp as string, 'offer');
     let error = false;
     await this.peerConnectionsServer[peerId]!.setRemoteDescription(desc).catch((e) => {
-      log('error', 'Error set remote description', { e, peerId });
+      log('error', 'Error set remote description', { e: e.message, stack: e.stack, peerId });
       error = true;
     });
     const answ = await this.peerConnectionsServer[peerId]!.createAnswer().catch((e) => {
-      log('error', 'Error create answer', { e, peerId });
+      log('error', 'Error create answer', { e: e.message, stack: e.stack, peerId });
       error = true;
     });
     if (!answ) {
       log('warn', 'Failed set local description for answer.', {
         answ,
-        peerConnection: this.peerConnectionsServer[peerId],
+        peerId,
       });
       error = true;
       return;
@@ -382,6 +388,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     keysStreams.forEach((element) => {
       const str = element.split(this.delimiter);
       if (str[1] === target.toString() && str[2] === '0') {
+        // eslint-disable-next-line prefer-destructuring
         _connId = str[3];
       }
     });
@@ -489,17 +496,16 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
             this.muteds[roomId] = [];
           }
           return 1;
-        } else {
-          await db.roomUpdate({
-            where: {
-              id: room.id,
-            },
-            data: {
-              archive: false,
-              updated: new Date(),
-            },
-          });
         }
+        await db.roomUpdate({
+          where: {
+            id: room.id,
+          },
+          data: {
+            archive: false,
+            updated: new Date(),
+          },
+        });
       }
 
       db.unitFindFirst({
@@ -599,7 +605,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       return;
     }
     this.createRTCServer({ roomId: id, userId: uid, target: 0, connId, mimeType });
-    const connection = new this.ws.websocket(`ws://localhost:${port}`, {
+    const connection = new this.ws.WebSocket(`ws://localhost:${port}`, {
       headers: {
         origin: cors.split(',')[0],
       },
@@ -630,6 +636,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
             case MessageType.CANDIDATE:
               this.handleCandidateMessage(msg);
               break;
+            default:
           }
         }
       };
@@ -642,6 +649,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     });
   }
 
+  // eslint-disable-next-line class-methods-use-this
   public onClosedCall: RTCInterface['onClosedCall'] = (args) => {
     log('info', 'Call is closed', { ...args });
   };

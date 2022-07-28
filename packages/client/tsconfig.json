@@ -19,10 +19,7 @@
     "noEmit": false,
     "jsx": "react-jsx",
     "jsxFactory": "",
-    "jsxFragmentFactory": "",
-    "paths": {
-      "werift": ["./src/types/werift.ts"]
-    }
+    "jsxFragmentFactory": ""
   },
   "exclude": ["node_modules"],
   "include": ["src/package", "src/types/*.ts", "declarations.d.ts"]
