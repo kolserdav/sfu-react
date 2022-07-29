@@ -53,7 +53,7 @@
     "copy-interfaces": "node scripts/create-interfaces-symlink.js",
     "copy": "npm run copy-interfaces",
     "stun": "cd packages/server && node-stun-server",
-    "preinstall:werift": "cd packages/server/src/werift-webrtc/packages/webrtc && npm i",
+    "preinstall:werift": "cd packages/server/src/werift-webrtc && npm i && cd packages/webrtc && npm i && npm run build",
     "preinstall:server": "cd packages/server && npm run format && npm run generate",
     "preinstall": "npm run copy && npm run preinstall:werift && npm run preinstall:server",
     "dev:server": "cd packages/server && npm run dev",
