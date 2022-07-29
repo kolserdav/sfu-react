@@ -1,7 +1,7 @@
 {
   "name": "uyem",
   "version": "0.4.1",
-  "repository": "https://github.com/kolserdav/webrtc-sfu-werift-react.git",
+  "repository": "https://github.com/kolserdav/werift-sfu-react.git",
   "description": "Selective Forwarding Unit (SFU) is a WebRTC web application library, the server part of which is written in Node, and the client part is a ReactJS shared component.",
   "keywords": [
     "node",
@@ -23,7 +23,7 @@
   "contributors": [
     "Sergey Kolmiller <uyem.ru@gmail.com>"
   ],
-  "bugs": "https://github.com/kolserdav/webrtc-sfu-werift-react/issues",
+  "bugs": "https://github.com/kolserdav/werift-sfu-react/issues",
   "license": "MIT",
   "main": "packages/client/dist/Main.js",
   "types": "packages/client/dist/Main.d.ts",
@@ -47,6 +47,9 @@
   },
   "scripts": {
     "build:server": "cd packages/server && npm run build",
+    "clean:server": "cd packages/server && npm run clean",
+    "clean": "npm run clean:server",
+    "deploy": "npm run clean && npm run build",
     "prebuild:client": "cd packages/client && npm run build",
     "build:client": "cd packages/client && npm run compile",
     "build": "npm run build:server && npm run build:client",
@@ -122,14 +125,14 @@
   },
   "fhead": {
     "root": "packages",
-    "repository": "https://github.com/kolserdav/webrtc-sfu-werift-react.git",
+    "repository": "https://github.com/kolserdav/werift-sfu-react.git",
     "patterns": [
       ".js",
       ".ts",
       ".tsx"
     ],
     "exclude": [
-      "node-webrtc",
+      "werift-webrtc",
       "dist",
       "build"
     ],

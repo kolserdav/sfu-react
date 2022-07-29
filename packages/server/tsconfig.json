@@ -1,5 +1,8 @@
 {
   "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+
     "allowJs": true,
     "declaration": true,
     "emitDeclarationOnly": false,
@@ -7,8 +10,6 @@
     "downlevelIteration": true,
     "target": "esnext",
     "module": "commonjs",
-    "outDir": "./dist",
-    "rootDir": "./src",
     "strict": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
@@ -18,10 +19,29 @@
     "jsx": "react-jsx",
     "jsxFactory": "",
     "jsxFragmentFactory": "",
+    "lib": ["esnext", "ES2020", "DOM"],
+    "allowSyntheticDefaultImports": true,
+    "pretty": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "noUnusedLocals": false,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
     "paths": {
-      "werift": ["./src/werift-webrtc/packages/webrtc/src/peerConnection.ts"]
+      "werift": ["./src/werift-webrtc/packages/webrtc/src"]
     }
   },
-  "exclude": ["node_modules", "dist", "./src/werift-webrtc/packages/website/tsconfig.json"],
-  "include": ["*.d.ts", "src", "../../package.json", "./src/werift-webrtc/packages/webrtc"]
+  "include": ["*.d.ts", "src"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/werift-webrtc/website",
+    "src/werift-webrtc/examples",
+    "src/werift-webrtc/e2e",
+    "src/werift-webrtc/loadtest",
+    "src/werift-webrtc/packages/webrtc/tests",
+    "src/werift-webrtc/packages/dtls/examples",
+    "src/werift-webrtc/packages/ice/examples",
+    "src/werift-webrtc/packages/rtp/examples"
+  ]
 }

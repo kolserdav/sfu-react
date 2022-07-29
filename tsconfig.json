@@ -19,5 +19,5 @@
     "jsxFactory": "",
     "jsxFragmentFactory": ""
   },
-  "exclude": ["packages", "packages/server/node-webrtc", "examples"]
+  "exclude": ["packages", "packages/server/src/werift-webrtc", "examples"]
 }

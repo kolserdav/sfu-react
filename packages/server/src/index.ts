@@ -1,19 +1,20 @@
 /******************************************************************************************
- * Repository: https://github.com/kolserdav/webrtc-sfu-werift-react.git
+ * Repository: https://github.com/kolserdav/werift-sfu-react.git
  * File name: index.ts
  * Author: Sergey Kolmiller
  * Email: <uyem.ru@gmail.com>
  * License: MIT
- * License text: Show LICENSE file
+ * License text: See in LICENSE file
  * Copyright: kolserdav, All rights reserved (c)
- * Create Date: Thu Jul 28 2022 22:20:46 GMT+0700 (Krasnoyarsk Standard Time)
+ * Create Date: Fri Jul 29 2022 21:35:51 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 /* eslint-disable no-case-declarations */
 import { log } from './utils/lib';
 import Server from './main';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 //@ts-ignore
-import { name, version } from '../../../package.json';
+// eslint-disable-next-line import/no-relative-packages
+import { name, version } from '../../../package';
 
 log('info', `${name}@${version} started`, '...', true);
 
@@ -30,14 +31,11 @@ const ARGS = {
   version: 'Show installed version',
 };
 const argv: Partial<typeof ARGS> & Record<string, string> = DEFAULT_PARAMS;
-processArgs
-  .map((item, index) => {
-    if (/^-{1,2}\w+/.test(item)) {
-      argv[item.replace(/-/g, '')] = process.argv[index + 1];
-    }
-  })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  .filter((item) => item !== undefined) as any;
+processArgs.forEach((item, index) => {
+  if (/^-{1,2}\w+/.test(item)) {
+    argv[item.replace(/-/g, '')] = process.argv[index + 1];
+  }
+});
 
 const args = Object.keys(argv);
 
@@ -55,6 +53,7 @@ for (let i = 0; REQUIRED[i]; i++) {
 
 if (skipedReq.length) {
   log('warn', 'Missing required parameter(s):', REQUIRED.join(', '), true);
+  // eslint-disable-next-line no-console
   console.log('\n');
   process.exit(1);
 }
