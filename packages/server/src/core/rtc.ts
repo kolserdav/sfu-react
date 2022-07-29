@@ -282,7 +282,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       error = true;
     });
     if (!answ) {
-      log('warn', 'Failed set local description for answer.', {
+      log('warn', 'Failed set remote description for answer.', {
         answ,
         peerId,
       });

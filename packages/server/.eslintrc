@@ -16,7 +16,7 @@
     "ecmaVersion": 12,
     "sourceType": "module"
   },
-  "ignorePatterns": ["node_modules", "dist", "src/werift-webrtc"],
+  "ignorePatterns": ["node_modules", "dist"],
   "rules": {
     "spaced-comment": 0,
     "no-unused-vars": 1,
