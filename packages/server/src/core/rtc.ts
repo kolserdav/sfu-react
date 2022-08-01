@@ -9,8 +9,8 @@
  * Create Date: Fri Jul 29 2022 21:35:51 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 // eslint-disable-next-line import/no-relative-packages
-// import * as werift from '../werift-webrtc/packages/webrtc/src/index';
-import * as werift from 'werift';
+import * as werift from '../werift-webrtc/packages/webrtc/lib/webrtc/src/index';
+//import * as werift from 'werift';
 import { RTCInterface, MessageType, SendMessageArgs, AddTracksProps } from '../types/interfaces';
 import { log } from '../utils/lib';
 import WS from './ws';

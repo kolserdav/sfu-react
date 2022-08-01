@@ -28,7 +28,7 @@
     "strictNullChecks": false,
     "noImplicitAny": false,
     "paths": {
-      "werift": ["./src/werift-webrtc/packages/webrtc/src"]
+      "werift": ["./src/werift-webrtc/packages/webrtc/lib/webrtc/src"]
     }
   },
   "include": ["*.d.ts", "src"],
