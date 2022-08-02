@@ -12,6 +12,7 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 /* eslint-disable max-classes-per-file */
 /* eslint-disable no-unused-vars */
+import * as werift from 'werift';
 import { Prisma, Room, Unit } from '@prisma/client';
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -165,7 +166,7 @@ export namespace Connection {
   export abstract class RTCInterface {
     public abstract peerConnections: Record<string, RTCPeerConnection | undefined>;
 
-    public abstract peerConnectionsServer: Record<string, RTCPeerConnectionServer | undefined>;
+    public abstract peerConnectionsServer: Record<string, werift.RTCPeerConnection | undefined>;
 
     public readonly delimiter = '_';
 
@@ -184,7 +185,7 @@ export namespace Connection {
       target: string | number;
       mimeType: string;
       iceServers?: RTCConfiguration['iceServers'];
-    }): Record<number, RTCPeerConnectionServer | undefined>;
+    }): Record<number, werift.RTCPeerConnection | undefined>;
 
     public abstract handleIceCandidate(args: {
       connId: string;

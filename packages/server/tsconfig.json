@@ -19,7 +19,7 @@
     "jsx": "react-jsx",
     "jsxFactory": "",
     "jsxFragmentFactory": "",
-    "lib": ["esnext", "ES2020"],
+    "lib": ["esnext", "ES2020", "DOM"],
     "allowSyntheticDefaultImports": true,
     "pretty": true,
     "sourceMap": true,
@@ -32,6 +32,7 @@
   "exclude": [
     "node_modules",
     "dist",
+    "src/werift-webrtc",
     "src/werift-webrtc/website",
     "src/werift-webrtc/examples",
     "src/werift-webrtc/e2e",

@@ -22,10 +22,5 @@
     "studio": "prisma studio",
     "generate": "prisma generate",
     "format": "prisma format"
-  },
-  "nodemonConfig": {
-    "ignore": [
-      ""
-    ]
   }
 }

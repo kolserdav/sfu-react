@@ -220,7 +220,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       .then(() => {
         log('log', '!! Adding received ICE candidate:', { userId, id, target });
         if (cb) {
-          cb(cand as werift.RTCIceCandidate);
+          cb(cand as RTCIceCandidate);
         }
       })
       .catch((e) => {
