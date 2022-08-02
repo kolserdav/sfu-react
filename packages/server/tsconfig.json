@@ -19,7 +19,7 @@
     "jsx": "react-jsx",
     "jsxFactory": "",
     "jsxFragmentFactory": "",
-    "lib": ["esnext", "ES2020", "DOM"],
+    "lib": ["esnext", "ES2020"],
     "allowSyntheticDefaultImports": true,
     "pretty": true,
     "sourceMap": true,
