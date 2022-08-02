@@ -388,7 +388,8 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     const keysStreams = Object.keys(this.streams);
     keysStreams.forEach((element) => {
       const str = element.split(this.delimiter);
-      if (str[1] === target.toString() && str[2] === '0') {
+      const isStreamOfTarget = str[1] === target.toString() && str[2] === '0';
+      if (isStreamOfTarget) {
         // eslint-disable-next-line prefer-destructuring
         _connId = str[3];
       }
@@ -396,7 +397,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     const peerId = this.getPeerId(roomId, userId, target, connId);
     const _peerId = this.getPeerId(roomId, target, 0, _connId);
     const tracks = this.streams[_peerId];
-    log('warn', 'Add tracks', {
+    const opts = {
       roomId,
       userId,
       target,
@@ -405,23 +406,17 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       tracksL: tracks?.length,
       tracks: tracks?.map((item) => item.kind),
       ss: Object.keys(this.streams),
-    });
+    };
+    log('warn', 'Add tracks', opts);
     if (!tracks || tracks?.length === 0) {
-      log('info', 'Skiping add track', {
-        roomId,
-        userId,
-        target,
-        connId,
-        _peerId,
-        k: Object.keys(this.streams),
-      });
+      log('info', 'Skiping add track', opts);
       return;
     }
     tracks.forEach((track) => {
       if (this.peerConnectionsServer[peerId]) {
         this.peerConnectionsServer[peerId]!.addTrack(track);
       } else {
-        log('error', 'Can not add tracks', { peerId });
+        log('error', 'Can not add tracks', { opts });
       }
     });
   };
