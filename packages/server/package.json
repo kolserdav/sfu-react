@@ -25,7 +25,7 @@
   },
   "nodemonConfig": {
     "ignore": [
-      "node-webrtc/build/external/libwebrtc/download/"
+      ""
     ]
   }
 }

@@ -26,10 +26,7 @@
     "inlineSources": true,
     "noUnusedLocals": false,
     "strictNullChecks": false,
-    "noImplicitAny": false,
-    "paths": {
-      "werift": ["./src/werift-webrtc/packages/webrtc/lib/webrtc/src"]
-    }
+    "noImplicitAny": false
   },
   "include": ["*.d.ts", "src"],
   "exclude": [

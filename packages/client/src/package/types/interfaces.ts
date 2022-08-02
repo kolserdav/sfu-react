@@ -12,7 +12,6 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 /* eslint-disable max-classes-per-file */
 /* eslint-disable no-unused-vars */
-import { RTCPeerConnection as RTCPeerConnectionServer } from 'werift';
 import { Prisma, Room, Unit } from '@prisma/client';
 
 // eslint-disable-next-line @typescript-eslint/ban-types
