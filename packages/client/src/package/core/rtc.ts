@@ -251,9 +251,10 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
     this.peerConnections[peerId]!.ontrack = (e) => {
       const _stream = e.streams[0];
       stream.addTrack(_stream.getTracks()[0]);
-      log('info', 'On add remote stream', {
+      log('warn', 'On add remote stream', {
         target,
         peerId,
+        s1,
         streamId: stream.id,
         tracks: stream.getTracks(),
       });

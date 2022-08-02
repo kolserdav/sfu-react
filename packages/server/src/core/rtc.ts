@@ -396,7 +396,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     const peerId = this.getPeerId(roomId, userId, target, connId);
     const _peerId = this.getPeerId(roomId, target, 0, _connId);
     const tracks = this.streams[_peerId];
-    log('info', 'Add tracks', {
+    log('warn', 'Add tracks', {
       roomId,
       userId,
       target,
@@ -406,7 +406,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       tracks: tracks?.map((item) => item.kind),
       ss: Object.keys(this.streams),
     });
-    if (tracks.length === 0) {
+    if (!tracks || tracks?.length === 0) {
       log('info', 'Skiping add track', {
         roomId,
         userId,

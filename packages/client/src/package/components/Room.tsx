@@ -86,10 +86,11 @@ function Room({ id, iceServers, server, port }: RoomProps) {
               muted={item.target === id || muteds.indexOf(item.target.toString()) !== -1}
               onTimeUpdate={(e) => {
                 if (item.stream.active === false) {
-                  log('warn', 'Stream is not active', { uid: item.target, sid: item.stream.id });
+                  log('warn', 'Stream is not active', { uid: item.target, stream: item.stream });
                   lostStreamHandler({
                     target: item.target,
                     connId: item.connId,
+
                     eventName: 'stream-not-active',
                   });
                 } else {
