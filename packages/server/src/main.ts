@@ -1,3 +1,4 @@
+/* eslint-disable import/first */
 /******************************************************************************************
  * Repository: https://github.com/kolserdav/werift-sfu-react.git
  * File name: main.ts
@@ -11,6 +12,7 @@
 /* eslint-disable no-case-declarations */
 import { v4 } from 'uuid';
 import dotenv from 'dotenv';
+
 dotenv.config();
 import WS from './core/ws';
 import RTC from './core/rtc';
@@ -28,8 +30,8 @@ process.on('unhandledRejection', (err: Error) => {
   log('error', 'unhandledRejection', err);
 });
 
-const deleteGuest = ({ userId, roomId }: { userId: string | number; roomId: string | number }) => {
-  return new Promise((resolve) => {
+const deleteGuest = ({ userId, roomId }: { userId: string | number; roomId: string | number }) =>
+  new Promise((resolve) => {
     db.roomFindFirst({
       where: {
         id: roomId.toString(),
@@ -71,12 +73,14 @@ const deleteGuest = ({ userId, roomId }: { userId: string | number; roomId: stri
       });
     });
   });
-};
 
 /**
  * Create SFU WebRTC server
  */
 function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string; db?: string }) {
+  const wss = new WS({ port });
+  const rtc: RTC | null = new RTC({ ws: wss });
+
   log('info', 'Server listen at port:', port, true);
   const getConnectionId = (): string => {
     const connId = v4();
@@ -86,10 +90,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
     return connId;
   };
 
-  const wss = new WS({ port });
-  const rtc: RTC | null = new RTC({ ws: wss });
-
-  wss.connection.on('connection', function connection(ws, req) {
+  wss.connection.on('connection', (ws, req) => {
     const { origin } = req.headers;
     const notAllowed = cors.split(',').indexOf(origin || '') === -1;
     if (cors && notAllowed) {
@@ -98,7 +99,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
       return;
     }
     const connId = getConnectionId();
-    ws.on('message', async function message(message) {
+    ws.on('message', async (message) => {
       let _data = '';
       if (typeof message !== 'string') {
         _data = message.toString('utf8');
@@ -170,6 +171,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
       keys.forEach((item) => {
         const sock = item.split(rtc.delimiter);
         if (sock[1] === connId) {
+          // eslint-disable-next-line prefer-destructuring
           userId = sock[0];
         }
       });
@@ -177,6 +179,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
     };
 
     // Remove user from room
+    // eslint-disable-next-line no-param-reassign
     ws.onclose = async () => {
       const userId = getUserId();
       if (userId) {
@@ -219,6 +222,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
                   (peer[1] === _item && peer[2] === userId.toString()) ||
                   (peer[1] === userId.toString() && peer[2] === _item)
                 ) {
+                  // eslint-disable-next-line prefer-destructuring
                   _connId = peer[3];
                 }
               });
