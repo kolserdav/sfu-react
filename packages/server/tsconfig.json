@@ -32,6 +32,7 @@
   "exclude": [
     "node_modules",
     "dist",
+    "tmp",
     "src/werift-webrtc",
     "src/werift-webrtc/website",
     "src/werift-webrtc/examples",

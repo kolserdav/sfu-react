@@ -408,7 +408,10 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
       is: this.peerConnections[peerId]?.iceConnectionState,
     });
     const desc = new RTCSessionDescription(sdp);
-    if (!this.peerConnections[peerId]) {
+    if (
+      !this.peerConnections[peerId] ||
+      this.peerConnections[peerId]?.iceConnectionState === 'connected'
+    ) {
       log('warn', 'Skiping set remote desc for answer', {
         id,
         userId,
