@@ -90,7 +90,6 @@ function Room({ id, iceServers, server, port }: RoomProps) {
                   lostStreamHandler({
                     target: item.target,
                     connId: item.connId,
-
                     eventName: 'stream-not-active',
                   });
                 } else {
@@ -120,10 +119,18 @@ function Room({ id, iceServers, server, port }: RoomProps) {
                 }
               }}
               onEmptied={(e) => {
-                log('warn', 'Empty video data', { active: item.stream.active, id: item.target });
+                log('warn', 'Empty video data', {
+                  stream: item.stream,
+                  id: item.target,
+                  tracks: item.stream.getTracks(),
+                });
               }}
               onSuspend={(e) => {
-                log('warn', 'Suspend video data', { active: item.stream.active, id: item.target });
+                log('warn', 'Suspend video data', {
+                  stream: item.stream,
+                  id: item.target,
+                  tracks: item.stream.getTracks(),
+                });
                 lostStreamHandler({
                   target: item.target,
                   connId: item.connId,
@@ -131,13 +138,25 @@ function Room({ id, iceServers, server, port }: RoomProps) {
                 });
               }}
               onStalled={(e) => {
-                log('warn', 'Stalled video data', { active: item.stream.active, id: item.target });
+                log('warn', 'Stalled video data', {
+                  stream: item.stream,
+                  id: item.target,
+                  tracks: item.stream.getTracks(),
+                });
               }}
               onAbort={(e) => {
-                log('warn', 'Abort video data', { active: item.stream.active, id: item.target });
+                log('warn', 'Abort video data', {
+                  stream: item.stream,
+                  id: item.target,
+                  tracks: item.stream.getTracks(),
+                });
               }}
               onEnded={(e) => {
-                log('warn', 'End video data', { active: item.stream.active, id: item.target });
+                log('warn', 'End video data', {
+                  stream: item.stream,
+                  id: item.target,
+                  tracks: item.stream.getTracks(),
+                });
               }}
               onWaiting={(e) => {
                 log('warn', 'Waiting video data', {
