@@ -67,14 +67,16 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
   }) {
     const peerId = this.getPeerId(roomId, target, connId);
     if (this.peerConnections[peerId]) {
+      log('warn', 'Duplicate peer connection', { peerId });
       this.closeVideoCall({ target, userId, roomId, connId });
     }
     this.createRTC({ roomId, target, userId, connId, iceServers });
     this.onAddTrack[peerId] = (addedUserId, stream) => {
-      log('info', 'On track peer', {
+      log('warn', 'On track peer', {
         sid: stream.id,
         userId,
         target,
+        addedUserId,
         connId,
         eventName,
         tracks: stream.getTracks(),
@@ -117,6 +119,7 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
         case 'closed':
         case 'disconnected':
         case 'failed':
+          this.closeVideoCall({ userId, target, connId, roomId });
           this.lostStreamHandler({
             target: peerId.split(this.delimiter)[1],
             connId: peerId.split(this.delimiter)[2],

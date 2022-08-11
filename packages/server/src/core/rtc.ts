@@ -46,14 +46,14 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     }${connId}`;
   }
 
-  public createRTCServer: RTCInterface['createRTCServer'] = ({
-    roomId,
-    userId,
-    target,
-    connId,
-    mimeType,
-  }) => {
+  public createRTCServer: RTCInterface['createRTCServer'] = (opts) => {
+    const { roomId, userId, target, connId, mimeType } = opts;
     const peerId = this.getPeerId(roomId, userId, target, connId);
+    if (this.peerConnectionsServer[peerId]) {
+      log('warn', 'Duplicate peer connection', opts);
+    } else {
+      log('info', 'Creating peer connection', opts);
+    }
     this.peerConnectionsServer[peerId] = new werift.RTCPeerConnection({
       codecs: {
         audio: [
@@ -173,7 +173,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
           target,
           connId,
         };
-        log('info', 'Add tracks', { tracksOpts, s });
+        log('info', 'On add tracks', { tracksOpts, s });
         this.addTracks(tracksOpts, () => {
           //
         });
@@ -610,7 +610,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       log('warn', 'Can not add user to room', { id, uid });
       return;
     }
-    this.createRTCServer({ roomId: id, userId: uid, target: 0, connId, mimeType });
     const connection = new this.ws.WebSocket(`ws://localhost:${port}`, {
       headers: {
         origin: cors.split(',')[0],

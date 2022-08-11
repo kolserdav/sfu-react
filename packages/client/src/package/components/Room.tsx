@@ -80,13 +80,29 @@ function Room({ id, iceServers, server, port }: RoomProps) {
         {streams.map((item, index) => (
           <div id={item.stream.id} key={item.target} className={s.video} data-connid={item.connId}>
             {/** CloseButton is strong first child */}
-            <CloseButton onClick={onClickClose} onKeyDown={onPressEscape} tabindex={index} />
+            <CloseButton
+              onClick={(e) => {
+                /*
+                lostStreamHandler({
+                  target: item.target,
+                  connId: item.connId,
+                  eventName: '',
+                });
+                */
+                onClickClose(e);
+              }}
+              onKeyDown={onPressEscape}
+              tabindex={index}
+            />
             {/** video is strong second child */}
             <video
               muted={item.target === id || muteds.indexOf(item.target.toString()) !== -1}
               onTimeUpdate={(e) => {
                 if (item.stream.active === false) {
-                  log('warn', 'Stream is not active', { uid: item.target, stream: item.stream });
+                  log('warn', `Stream is not active ${item.target}`, {
+                    uid: item.target,
+                    stream: item.stream,
+                  });
                   lostStreamHandler({
                     target: item.target,
                     connId: item.connId,

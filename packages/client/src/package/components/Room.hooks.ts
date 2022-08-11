@@ -328,17 +328,10 @@ export const useConnection = ({
               });
             });
           } else if (rtc.peerConnections[peerId]) {
-            const { connectionState } = rtc.peerConnections[peerId]!;
-            switch (connectionState) {
-              case 'closed':
-              case 'failed':
-              case 'disconnected':
-                log('warn', 'Unclosed connection', {
-                  peerId,
-                  d: rtc.peerConnections[peerId]!.connectionState,
-                });
-                break;
-            }
+            log('warn', 'Unclosed connection', {
+              peerId,
+              d: rtc.peerConnections[peerId]!.connectionState,
+            });
           }
         } else if (!streams.find((_item) => _item.target === ws.userId)) {
           const __streams = streams.map((_item) => _item);
