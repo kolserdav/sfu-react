@@ -81,7 +81,7 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
       });
       onTrack({ addedUserId, stream, connId });
     };
-    this.invite({ roomId, userId, target, connId });
+    this.handleIceCandidate({ connId, roomId, userId, target });
   }
 
   public createRTC: RTCInterface['createRTC'] = ({ connId, roomId, target, iceServers = [] }) => {
@@ -251,33 +251,20 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
     this.peerConnections[peerId]!.ontrack = (e) => {
       const _stream = e.streams[0];
       stream.addTrack(_stream.getTracks()[0]);
-      log('warn', 'On add remote stream', {
+      const tracks = stream.getTracks();
+      log('info', 'On add remote stream', {
         target,
         peerId,
         s1,
         streamId: stream.id,
-        tracks: stream.getTracks(),
+        tracks,
       });
-      if (target.toString() !== '0' && s1 === 1) {
+      if (target.toString() !== '0' && (s1 === 1 || tracks.length >= 2)) {
         this.onAddTrack[this.getPeerId(roomId, target, connId)](target, stream);
       }
       s1++;
     };
   };
-
-  public invite({
-    roomId,
-    userId,
-    target,
-    connId,
-  }: {
-    roomId: number | string;
-    userId: number | string;
-    target: number | string;
-    connId: string;
-  }) {
-    this.handleIceCandidate({ connId, roomId, userId, target });
-  }
 
   public addTracks: RTCInterface['addTracks'] = ({ roomId, userId, target, connId }, cb) => {
     const peerId = this.getPeerId(roomId, target, connId);
@@ -399,23 +386,18 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
       data: { sdp, userId, target },
     } = msg;
     const peerId = this.getPeerId(userId, target, connId);
-    log('info', '----> Call recipient has accepted our call', {
+    const opts = {
       id,
       userId,
       target,
       peerId,
       s: this.peerConnections[peerId]?.connectionState,
       is: this.peerConnections[peerId]?.iceConnectionState,
-    });
+    };
+    log('info', '----> Call recipient has accepted our call', opts);
     const desc = new RTCSessionDescription(sdp);
     if (!this.peerConnections[peerId]) {
-      log('warn', 'Skiping set remote desc for answer', {
-        id,
-        userId,
-        target,
-        peerId,
-        peer: this.peerConnections[peerId],
-      });
+      log('warn', 'Skiping set remote desc for answer', opts);
       return;
     }
     this.peerConnections[peerId]!.setRemoteDescription(desc)
@@ -427,11 +409,7 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
       .catch((e) => {
         log('error', 'Error set description for answer:', {
           message: e.message,
-          id,
-          userId,
-          target,
-          peerId,
-          peer: this.peerConnections[peerId],
+          ...opts,
         });
         if (cb) {
           cb(1);

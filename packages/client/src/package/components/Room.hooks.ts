@@ -307,7 +307,7 @@ export const useConnection = ({
           const peerId = rtc.getPeerId(roomId, item, connId);
           const _isExists = _streams.filter((_item) => item === _item.target);
           if (!_isExists[0]) {
-            log('warn', `Check new user ${item}`, { uid: id });
+            log('info', `Check new user ${item}`, { uid: id });
             rtc.createPeerConnection({
               roomId,
               target: item,
@@ -599,7 +599,8 @@ export const useVideoDimensions = ({
                 target.parentElement?.parentElement?.setAttribute(
                   'style',
                   `grid-template-columns: repeat(${cols}, auto);
-                  grid-template-rows: repeat(${rows}, auto);`
+                  grid-template-rows: repeat(${rows}, auto);
+                  transition: width 0.3s ease-in`
                 );
                 item
                   .applyConstraints(coeff < 1 ? { height: _height } : { width: _width })
@@ -723,8 +724,8 @@ export const useVideoStarted = ({
           }
           if (_attempts[item.target] === 1) {
             if (!played[item.target] && mounted) {
-              // lostStreamHandler({ ...item, eventName: 'not-played' });
-              log('error', 'Video not played', {
+              lostStreamHandler({ ...item, eventName: 'not-played' });
+              log('error', `Video not played ${item.target}`, {
                 target: item.target,
                 streamL: item.stream.getTracks().length,
               });

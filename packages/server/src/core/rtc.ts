@@ -131,10 +131,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       const peer = peerId.split(delimiter);
       const isRoom = peer[2] === '0';
       const stream = e.streams[0];
-      if (!this.streams[peerId]) {
-        this.streams[peerId] = [];
-      }
-      const isNew = this.streams[peerId]?.length === 0;
+      const isNew = !this.streams[peerId]?.length;
       log('info', 'ontrack', {
         peerId,
         isRoom,
@@ -145,6 +142,9 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
         tracks: stream.getTracks().map((item) => item.kind),
       });
       if (isRoom) {
+        if (!this.streams[peerId]) {
+          this.streams[peerId] = [];
+        }
         this.streams[peerId].push(stream.getTracks()[0]);
         const room = rooms[roomId];
         if (room && isNew) {
@@ -279,7 +279,13 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       error = true;
     });
     const answ = await this.peerConnectionsServer[peerId]!.createAnswer().catch((e) => {
-      log('error', 'Error create answer', { e: e.message, stack: e.stack, peerId });
+      log('error', 'Error create answer', {
+        e: e.message,
+        stack: e.stack,
+        peerId,
+        state: this.peerConnectionsServer[peerId]?.connectionState,
+        SState: this.peerConnectionsServer[peerId]?.signalingState,
+      });
       error = true;
     });
     if (!answ) {
@@ -397,15 +403,19 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     const peerId = this.getPeerId(roomId, userId, target, connId);
     const _peerId = this.getPeerId(roomId, target, 0, _connId);
     const tracks = this.streams[_peerId];
+    const streams = Object.keys(this.streams);
     const opts = {
       roomId,
       userId,
       target,
       connId,
       _peerId,
+      peerId,
       tracksL: tracks?.length,
       tracks: tracks?.map((item) => item.kind),
-      ss: Object.keys(this.streams),
+      peers: Object.keys(this.peerConnectionsServer),
+      ssL: streams.length,
+      ss: streams,
     };
     log('warn', 'Add tracks', opts);
     if (!tracks || tracks?.length === 0) {
