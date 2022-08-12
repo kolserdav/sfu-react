@@ -60,7 +60,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     if (this.peerConnectionsServer[peerId]) {
       log('warn', 'Duplicate peer connection', opts);
     } else {
-      log('warn', 'Creating peer connection', opts);
+      log('info', 'Creating peer connection', opts);
     }
     this.peerConnectionsServer[peerId] = new werift.RTCPeerConnection({
       codecs: {
@@ -397,8 +397,8 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       });
   };
 
-  public addTracks: RTCInterface['addTracks'] = ({ roomId, connId, userId, target }) => {
-    let _connId = connId;
+  private getStreamConnId(target: string | number) {
+    let _connId = '';
     const keysStreams = Object.keys(this.streams);
     keysStreams.forEach((element) => {
       const str = element.split(this.delimiter);
@@ -408,6 +408,11 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
         _connId = str[3];
       }
     });
+    return _connId;
+  }
+
+  public addTracks: RTCInterface['addTracks'] = ({ roomId, connId, userId, target }) => {
+    const _connId = this.getStreamConnId(target);
     const peerId = this.getPeerId(roomId, userId, target, connId);
     const _peerId = this.getPeerId(roomId, target, 0, _connId);
     const tracks = this.streams[_peerId];
@@ -425,7 +430,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       ssL: streams.length,
       ss: streams,
     };
-    log('info', 'Add tracks', opts);
+    log('warn', 'Add tracks', opts);
     if (!tracks || tracks?.length === 0) {
       log('info', 'Skiping add track', opts);
       return;
