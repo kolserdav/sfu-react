@@ -159,9 +159,9 @@ async function evaluateRoom(evalPage, last = false) {
   // stdoutClean();
   const k = Object.keys(timeupdate);
   const tUval = k.filter((item) => timeupdate[item] === false);
-  if (tUval.length) {
+  tUval.forEach(() => {
     warnings++;
-  }
+  });
   log(tUval.length === 0 ? 'info' : 'warn', `Timeupdate ${evalPage.uid}`, timeupdate, true);
 
   const videos = await page.$$('video');

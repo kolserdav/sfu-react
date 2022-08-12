@@ -334,9 +334,7 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
         streamId: this.localStream.id,
       });
       this.localStream.getTracks().forEach((track) => {
-        if (this.localStream) {
-          this.peerConnections[peerId]!.addTrack(track, this.localStream);
-        }
+        this.peerConnections[peerId]!.addTrack(track);
       });
       cb(0, this.localStream);
     }
