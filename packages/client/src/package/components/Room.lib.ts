@@ -10,7 +10,6 @@
  ******************************************************************************************/
 import s from './Room.module.scss';
 import c from './ui/CloseButton.module.scss';
-import { log } from '../utils/lib';
 
 export const getRoomLink = (roomId: number | string | null): string | null => {
   let res = null;

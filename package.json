@@ -93,7 +93,8 @@
     "@types/uuid": "^8.3.4",
     "@types/webrtc": "^0.0.32",
     "@types/ws": "^8.5.3",
-    "prisma": "^4.1.1"
+    "prisma": "^4.1.1",
+    "react-scripts": "^5.0.1"
   },
   "optionalDependencies": {
     "@testing-library/jest-dom": "^5.16.4",

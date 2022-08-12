@@ -139,6 +139,9 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
             connId,
           });
           break;
+        case MessageType.GET_CLOSE_PEER_CONNECTION:
+          rtc.closePeerConnectionHandler(rawMessage);
+          break;
         case MessageType.GET_MUTE:
           const { muted, roomId } = wss.getMessage(MessageType.GET_MUTE, rawMessage).data;
           const index = rtc.muteds[roomId].indexOf(id.toString());

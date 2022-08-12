@@ -46,13 +46,21 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     }${connId}`;
   }
 
+  public closePeerConnectionHandler({
+    id,
+    data: { target, roomId },
+    connId,
+  }: SendMessageArgs<MessageType.GET_CLOSE_PEER_CONNECTION>) {
+    this.closeVideoCall({ roomId, userId: id, target, connId });
+  }
+
   public createRTCServer: RTCInterface['createRTCServer'] = (opts) => {
     const { roomId, userId, target, connId, mimeType } = opts;
     const peerId = this.getPeerId(roomId, userId, target, connId);
     if (this.peerConnectionsServer[peerId]) {
       log('warn', 'Duplicate peer connection', opts);
     } else {
-      log('info', 'Creating peer connection', opts);
+      log('warn', 'Creating peer connection', opts);
     }
     this.peerConnectionsServer[peerId] = new werift.RTCPeerConnection({
       codecs: {
@@ -417,7 +425,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       ssL: streams.length,
       ss: streams,
     };
-    log('warn', 'Add tracks', opts);
+    log('info', 'Add tracks', opts);
     if (!tracks || tracks?.length === 0) {
       log('info', 'Skiping add track', opts);
       return;

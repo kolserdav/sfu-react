@@ -36,6 +36,7 @@ export enum MessageType {
   GET_MUTE = 'GET_MUTE',
   SET_MUTE = 'SET_MUTE',
   GET_NEED_RECONNECT = 'GET_NEED_RECONNECT',
+  GET_CLOSE_PEER_CONNECTION = 'GET_CLOSE_PEER_CONNECTION',
 }
 
 export namespace DataTypes {
@@ -49,6 +50,10 @@ export namespace DataTypes {
     };
     export type GetRoomGuests = {
       roomId: number | string;
+    };
+    export type GetClosePeerConnection = {
+      roomId: number | string;
+      target: number | string;
     };
     export type GetGuestId = {
       isRoom?: boolean;
@@ -106,6 +111,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.GetMute
     : T extends MessageType.GET_NEED_RECONNECT
     ? DataTypes.MessageTypes.GetNeedReconnect
+    : T extends MessageType.GET_CLOSE_PEER_CONNECTION
+    ? DataTypes.MessageTypes.GetClosePeerConnection
     : T extends MessageType.GET_USER_ID
     ? DataTypes.MessageTypes.GetGuestId
     : T extends MessageType.SET_USER_ID

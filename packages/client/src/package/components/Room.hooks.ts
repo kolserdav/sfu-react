@@ -148,6 +148,15 @@ export const useConnection = ({
           _connId = peer[2];
         }
       });
+      ws.sendMessage({
+        type: MessageType.GET_CLOSE_PEER_CONNECTION,
+        connId: _connId,
+        id: ws.userId,
+        data: {
+          roomId,
+          target,
+        },
+      });
       const peerId = rtc.getPeerId(roomId, target, _connId);
       if (!rtc.peerConnections[peerId]) {
         log('info', 'Lost stream handler without peer connection', { peerId });

@@ -69,6 +69,8 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
     if (this.peerConnections[peerId]) {
       log('warn', 'Duplicate peer connection', { peerId });
       this.closeVideoCall({ target, userId, roomId, connId });
+    } else {
+      log('info', 'Creating peer connection', { peerId });
     }
     this.createRTC({ roomId, target, userId, connId, iceServers });
     this.onAddTrack[peerId] = (addedUserId, stream) => {
