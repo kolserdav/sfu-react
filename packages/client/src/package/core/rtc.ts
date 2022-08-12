@@ -74,7 +74,7 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
     }
     this.createRTC({ roomId, target, userId, connId, iceServers });
     this.onAddTrack[peerId] = (addedUserId, stream) => {
-      log('warn', 'On track peer', {
+      log('info', 'On track peer', {
         sid: stream.id,
         userId,
         target,
@@ -115,6 +115,24 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
     }
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const core = this;
+    let s1 = 0;
+    const stream = new MediaStream();
+    this.peerConnections[peerId]!.ontrack = (e) => {
+      const _stream = e.streams[0];
+      stream.addTrack(_stream.getTracks()[0]);
+      const tracks = stream.getTracks();
+      log('info', 'On add remote stream', {
+        target,
+        peerId,
+        s1,
+        streamId: stream.id,
+        tracks,
+      });
+      if (target.toString() !== '0' && (s1 === 1 || tracks.length >= 2)) {
+        this.onAddTrack[this.getPeerId(roomId, target, connId)](target, stream);
+      }
+      s1++;
+    };
     this.peerConnections[peerId]!.onconnectionstatechange = (e) => {
       const { currentTarget }: { currentTarget: RTCPeerConnection } = e as any;
       switch (currentTarget.connectionState) {
@@ -250,24 +268,6 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
             });
           }
         });
-    };
-    let s1 = 0;
-    const stream = new MediaStream();
-    this.peerConnections[peerId]!.ontrack = (e) => {
-      const _stream = e.streams[0];
-      stream.addTrack(_stream.getTracks()[0]);
-      const tracks = stream.getTracks();
-      log('info', 'On add remote stream', {
-        target,
-        peerId,
-        s1,
-        streamId: stream.id,
-        tracks,
-      });
-      if (target.toString() !== '0' && (s1 === 1 || tracks.length >= 2)) {
-        this.onAddTrack[this.getPeerId(roomId, target, connId)](target, stream);
-      }
-      s1++;
     };
   };
 

@@ -313,7 +313,6 @@ export const useConnection = ({
       setLenght(roomUsers.length);
       roomUsers.forEach((item) => {
         if (item !== id) {
-          const peerId = rtc.getPeerId(roomId, item, connId);
           const _isExists = _streams.filter((_item) => item === _item.target);
           if (!_isExists[0]) {
             log('info', `Check new user ${item}`, { uid: id });
@@ -329,17 +328,15 @@ export const useConnection = ({
               eventName: 'check',
             });
             rtc.addTracks({ roomId, userId: id, target: item, connId }, (e) => {
+              if (e) {
+                log('warn', 'Failed add tracks', { roomId, userId: id, target: item, connId });
+              }
               log('info', 'Change room guests connection', {
                 roomId,
                 target: item,
                 userId: id,
                 connId,
               });
-            });
-          } else if (rtc.peerConnections[peerId]) {
-            log('warn', 'Unclosed connection', {
-              peerId,
-              d: rtc.peerConnections[peerId]!.connectionState,
             });
           }
         } else if (!streams.find((_item) => _item.target === ws.userId)) {

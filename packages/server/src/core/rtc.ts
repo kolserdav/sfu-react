@@ -116,11 +116,20 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const core = this;
     const { ws, delimiter, rooms } = this;
+    const { addTracks, peerConnectionsServer } = this;
     this.peerConnectionsServer[peerId]!.onsignalingstatechange =
       function handleSignalingStateChangeEvent() {
         if (!core.peerConnectionsServer[peerId]) {
           log('warn', 'On signalling state change without peer connection', { peerId });
           return;
+        }
+        const state = peerConnectionsServer[peerId].signalingState;
+        log('log', 'On connection state change', { peerId, state, target });
+        // Add tracks from remote offer
+        if (state === 'have-remote-offer' && target.toString() !== '0') {
+          addTracks({ roomId, userId, target, connId }, () => {
+            //
+          });
         }
         log(
           'info',
@@ -181,10 +190,12 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
           target,
           connId,
         };
-        log('info', 'On add tracks', { tracksOpts, s });
+        log('info', 'On add tracks', { tracksOpts, s, streamId: stream.id, peerId });
+        /*
         this.addTracks(tracksOpts, () => {
           //
         });
+        */
       }
       s++;
     };
@@ -397,13 +408,27 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       });
   };
 
-  private getStreamConnId(target: string | number) {
+  private getStreamConnId(userId: string | number) {
     let _connId = '';
-    const keysStreams = Object.keys(this.streams);
-    keysStreams.forEach((element) => {
+    const keys = Object.keys(this.streams);
+    keys.forEach((element) => {
       const str = element.split(this.delimiter);
-      const isStreamOfTarget = str[1] === target.toString() && str[2] === '0';
-      if (isStreamOfTarget) {
+      const isTarget = str[1] === userId.toString() && str[2] === '0';
+      if (isTarget) {
+        // eslint-disable-next-line prefer-destructuring
+        _connId = str[3];
+      }
+    });
+    return _connId;
+  }
+
+  private getPeerConnId(userId: string | number, target: number | string) {
+    let _connId = '';
+    const keys = Object.keys(this.peerConnectionsServer);
+    keys.forEach((element) => {
+      const str = element.split(this.delimiter);
+      const isTarget = str[1] === userId.toString() && str[2] === target.toString();
+      if (isTarget) {
         // eslint-disable-next-line prefer-destructuring
         _connId = str[3];
       }
@@ -413,7 +438,8 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
 
   public addTracks: RTCInterface['addTracks'] = ({ roomId, connId, userId, target }) => {
     const _connId = this.getStreamConnId(target);
-    const peerId = this.getPeerId(roomId, userId, target, connId);
+    const _connId1 = this.getPeerConnId(userId, target);
+    const peerId = this.getPeerId(roomId, userId, target, _connId1);
     const _peerId = this.getPeerId(roomId, target, 0, _connId);
     const tracks = this.streams[_peerId];
     const streams = Object.keys(this.streams);
@@ -429,19 +455,22 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       peers: Object.keys(this.peerConnectionsServer),
       ssL: streams.length,
       ss: streams,
+      cS: this.peerConnectionsServer[peerId]?.connectionState,
+      sS: this.peerConnectionsServer[peerId]?.signalingState,
+      iS: this.peerConnectionsServer[peerId]?.iceConnectionState,
     };
-    log('warn', 'Add tracks', opts);
     if (!tracks || tracks?.length === 0) {
-      log('info', 'Skiping add track', opts);
+      log('warn', 'Skiping add track', opts);
       return;
     }
-    tracks.forEach((track) => {
-      if (this.peerConnectionsServer[peerId]) {
+    if (this.peerConnectionsServer[peerId]) {
+      log('info', 'Add tracks', opts);
+      tracks.forEach((track) => {
         this.peerConnectionsServer[peerId]!.addTrack(track);
-      } else {
-        log('error', 'Can not add tracks', { opts });
-      }
-    });
+      });
+    } else {
+      log('error', 'Can not add tracks', { opts });
+    }
   };
 
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, userId, target, connId }) => {
