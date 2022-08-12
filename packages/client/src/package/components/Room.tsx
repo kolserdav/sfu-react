@@ -74,6 +74,7 @@ function Room({ id, iceServers, server, port }: RoomProps) {
     lostStreamHandler,
   });
   const displayMediaSupported = useMemo(() => supportDisplayMedia(), []);
+
   return (
     <div className={s.wrapper} style={theme.wrapper}>
       <div className={s.container} ref={container}>
@@ -124,11 +125,6 @@ function Room({ id, iceServers, server, port }: RoomProps) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const { target }: { target: HTMLVideoElement } = e as any;
                 target.play();
-                if (!played[item.target]) {
-                  const _played = { ...played };
-                  _played[item.target] = true;
-                  setPlayed(_played);
-                }
                 if (item.stream.getTracks().length < 2) {
                   log('warn', 'Stream have less than 2 tracks', { item });
                 }
@@ -179,6 +175,13 @@ function Room({ id, iceServers, server, port }: RoomProps) {
                   id: item.target,
                   t: (e.target as HTMLVideoElement).played,
                 });
+              }}
+              onLoadedMetadata={() => {
+                if (!played[item.target]) {
+                  const _played = { ...played };
+                  _played[item.target] = true;
+                  setPlayed(_played);
+                }
               }}
             />
             <div className={s.muted}>

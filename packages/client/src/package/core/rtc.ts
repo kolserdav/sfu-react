@@ -13,7 +13,9 @@ import { RTCInterface, MessageType } from '../types/interfaces';
 import { getCodec, log } from '../utils/lib';
 import WS from './ws';
 
-class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServer'> {
+class RTC
+  implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServer' | 'handleOfferMessage'>
+{
   public peerConnections: RTCInterface['peerConnections'] = {};
 
   public readonly delimiter = '_';
@@ -375,11 +377,6 @@ class RTC implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServ
           cb(null);
         }
       });
-  };
-
-  // eslint-disable-next-line class-methods-use-this
-  public handleOfferMessage: RTCInterface['handleOfferMessage'] = (msg) => {
-    log('warn', 'Handle offer message not implemented', msg);
   };
 
   public handleVideoAnswerMsg: RTCInterface['handleVideoAnswerMsg'] = async (msg, cb) => {

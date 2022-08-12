@@ -136,10 +136,11 @@ class WS implements WSInterface {
           r: this.rooms[id],
           ss: Object.keys(this.sockets[this.getSocketId(id, this.rooms[id])] || {}).length,
         });
+        let key = '';
         if (this.users[id] && this.sockets[this.getSocketId(id, this.users[id])]) {
-          this.sockets[this.getSocketId(id, this.users[id])].send(res);
+          key = this.getSocketId(id, this.users[id]);
         } else if (this.rooms[id] && this.sockets[this.getSocketId(id, this.rooms[id])]) {
-          this.sockets[this.getSocketId(id, this.rooms[id])].send(res);
+          key = this.getSocketId(id, this.rooms[id]);
         } else if (!second) {
           setTimeout(() => {
             this.sendMessage(args, true);
@@ -152,8 +153,9 @@ class WS implements WSInterface {
             r: this.rooms,
           });
         }
+        this.sockets[key].send(res);
         resolve(0);
-      }, 10);
+      }, 0);
     });
 }
 

@@ -11,14 +11,14 @@
 // eslint-disable-next-line import/no-relative-packages
 //import * as werift from '../werift-webrtc/packages/webrtc/lib/webrtc/src/index';
 import * as werift from 'werift';
-import { RTCInterface, MessageType, SendMessageArgs, AddTracksProps } from '../types/interfaces';
+import { RTCInterface, MessageType, SendMessageArgs } from '../types/interfaces';
 import { log } from '../utils/lib';
 import WS from './ws';
 import DB from './db';
 
 const db = new DB();
 
-class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
+class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handleVideoAnswerMsg'> {
   public peerConnectionsServer: RTCInterface['peerConnectionsServer'] = {};
 
   public readonly delimiter = '_';
@@ -193,9 +193,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       data: { candidate, userId, target },
     } = msg;
     const peerId = this.getPeerId(id, userId, target, connId);
-
     const cand = new werift.RTCIceCandidate(candidate as werift.RTCIceCandidate);
-
     log('log', 'Trying to add ice candidate:', {
       peerId,
       d: Object.keys(this.peerConnectionsServer).length,
@@ -215,9 +213,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
         ice: this.peerConnectionsServer[peerId]?.iceConnectionState,
         ss: this.peerConnectionsServer[peerId]?.signalingState,
       });
-      return;
-    }
-    if (cand.candidate === '') {
       return;
     }
     this.peerConnectionsServer[peerId]!.addIceCandidate(cand)
@@ -255,10 +250,18 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       return;
     }
     const peerId = this.getPeerId(id, userId, target, connId);
-    log('info', '--> Creating answer', {
-      peerId,
+    const opts = {
+      roomId: id,
+      userId,
+      target,
+      connId,
+      k: Object.keys(this.peerConnectionsServer).length,
+      s: Object.keys(this.streams).length,
+      is: this.peerConnectionsServer[peerId]?.iceConnectionState,
+      cs: this.peerConnectionsServer[peerId]?.connectionState,
       ss: this.peerConnectionsServer[peerId]?.signalingState,
-    });
+    };
+    log('info', '--> Creating answer', opts);
     this.createRTCServer({
       roomId: id,
       userId,
@@ -267,7 +270,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       mimeType,
     });
     if (!this.peerConnectionsServer[peerId]) {
-      log('warn', 'Handle offer message without peer connection', { peerId });
+      log('warn', 'Handle offer message without peer connection', opts);
       return;
     }
     this.handleIceCandidate({
@@ -279,23 +282,21 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     const desc = new werift.RTCSessionDescription(sdp.sdp as string, 'offer');
     let error = false;
     await this.peerConnectionsServer[peerId]!.setRemoteDescription(desc).catch((e) => {
-      log('error', 'Error set remote description', { e: e.message, stack: e.stack, peerId });
+      log('error', 'Error set remote description', { e: e.message, stack: e.stack, ...opts });
       error = true;
     });
     const answ = await this.peerConnectionsServer[peerId]!.createAnswer().catch((e) => {
       log('error', 'Error create answer', {
         e: e.message,
         stack: e.stack,
-        peerId,
-        state: this.peerConnectionsServer[peerId]?.connectionState,
-        SState: this.peerConnectionsServer[peerId]?.signalingState,
+        ...opts,
       });
       error = true;
     });
     if (!answ) {
       log('warn', 'Failed set remote description for answer.', {
         answ,
-        peerId,
+        ...opts,
       });
       error = true;
       return;
@@ -304,33 +305,20 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     if (!this.peerConnectionsServer[peerId] || error) {
       log('warn', 'Failed set local description fo answer', {
         error,
-        roomId: id,
-        userId,
-        target,
-        connId,
-        k: Object.keys(this.peerConnectionsServer).length,
-        s: Object.keys(this.streams).length,
+        ...opts,
       });
       return;
     }
     await this.peerConnectionsServer[peerId]!.setLocalDescription(answ).catch((err) => {
       log('error', 'Error set local description for answer', {
         message: err.message,
-        roomId: id,
-        userId,
-        target,
-        connId,
-        k: Object.keys(this.peerConnectionsServer).length,
-        s: Object.keys(this.streams).length,
-        is: this.peerConnectionsServer[peerId]?.iceConnectionState,
-        cs: this.peerConnectionsServer[peerId]?.connectionState,
-        ss: this.peerConnectionsServer[peerId]?.signalingState,
+        ...opts,
       });
       error = true;
     });
     const { localDescription } = this.peerConnectionsServer[peerId]!;
     if (localDescription) {
-      log('info', 'Sending answer packet back to other peer', { userId, target, id });
+      log('info', 'Sending answer packet back to other peer', opts);
       this.ws.sendMessage({
         id: userId,
         type: MessageType.ANSWER,
@@ -344,53 +332,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
     } else {
       log('warn', 'Failed send answer because localDescription is', localDescription);
     }
-  };
-
-  public handleVideoAnswerMsg: RTCInterface['handleVideoAnswerMsg'] = async (msg, cb) => {
-    const {
-      id,
-      connId,
-      data: { sdp, userId, target },
-    } = msg;
-    const peerId = this.getPeerId(userId, id, target, connId);
-    log('info', '----> Call recipient has accepted our call', {
-      id,
-      userId,
-      target,
-      peerId,
-      s: this.peerConnectionsServer[peerId]?.connectionState,
-      is: this.peerConnectionsServer[peerId]?.iceConnectionState,
-    });
-    if (!this.peerConnectionsServer[peerId]) {
-      await new Promise((resolve) => {
-        setTimeout(() => {
-          resolve(0);
-        }, 1000);
-      });
-    }
-    if (!this.peerConnectionsServer[peerId]) {
-      log('warn', 'Skiping set remote desc for answer', {
-        id,
-        userId,
-        target,
-        peerId,
-        peer: this.peerConnectionsServer[peerId],
-      });
-      return;
-    }
-    const desc = new werift.RTCSessionDescription(sdp.sdp as string, 'answer');
-    this.peerConnectionsServer[peerId]!.setRemoteDescription(desc)
-      .then(() => {
-        if (cb) {
-          cb(0);
-        }
-      })
-      .catch((e) => {
-        log('error', 'Error set description for answer', e);
-        if (cb) {
-          cb(1);
-        }
-      });
   };
 
   private getStreamConnId(userId: string | number) {
@@ -540,7 +481,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
           },
         });
       }
-
       db.unitFindFirst({
         where: {
           id: userId.toString(),
@@ -661,9 +601,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
           switch (type) {
             case MessageType.OFFER:
               this.handleOfferMessage(msg);
-              break;
-            case MessageType.ANSWER:
-              this.handleVideoAnswerMsg(msg);
               break;
             case MessageType.CANDIDATE:
               this.handleCandidateMessage(msg);

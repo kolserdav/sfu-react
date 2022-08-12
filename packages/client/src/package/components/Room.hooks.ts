@@ -308,7 +308,7 @@ export const useConnection = ({
       setMuteds(_muteds);
       const _streams: Stream[] = storeStreams.getState().streams as Stream[];
       log('info', 'onChangeRoomGuests', { roomUsers, id, st: _streams.map((i) => i.target) });
-      // Add remote streams
+      // Add remote connections
       rtc.roomLength = roomUsers.length;
       setLenght(roomUsers.length);
       roomUsers.forEach((item) => {
@@ -405,9 +405,6 @@ export const useConnection = ({
             },
             connId,
           });
-          break;
-        case MessageType.OFFER:
-          rtc.handleOfferMessage(rawMessage);
           break;
         case MessageType.CANDIDATE:
           rtc.handleCandidateMessage(rawMessage);
@@ -744,7 +741,7 @@ export const useVideoStarted = ({
         });
         setAttempts(_attempts);
       }
-    }, 1000);
+    }, 2000);
     return () => {
       clearInterval(timeout);
       mounted = false;

@@ -10,7 +10,7 @@
  ******************************************************************************************/
 export const WS_TTL = 1;
 export const LOG_LEVEL = process.env.NODE_ENV === 'production' ? 3 : 2;
-export const START_DELAY = 999;
+export const START_DELAY = 1999;
 export const CODECS = [
   'video/webm;codecs=H264',
   'video/webm;codecs=vp8',
