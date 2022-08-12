@@ -121,9 +121,6 @@ async function evaluateRoom(evalPage, last = false) {
       const streamIds = [];
       for (let i = 0; _videos[i]; i++) {
         const video = _videos[i];
-        if (Boolean(video.played) !== true) {
-          log('warn', 'Video not played', { room, uid, id: video.getAttribute('id') }, true);
-        }
         /**
          * @type {any}
          */
@@ -135,7 +132,7 @@ async function evaluateRoom(evalPage, last = false) {
           };
           setTimeout(() => {
             resolve(false);
-          }, 2000);
+          }, 3000);
         });
         video.ontimeupdate = () => {};
         if (streamIds.indexOf(id) !== -1) {

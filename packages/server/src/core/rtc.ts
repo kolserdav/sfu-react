@@ -449,7 +449,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC'> {
       return;
     }
     if (this.peerConnectionsServer[peerId]) {
-      log('warn', 'Add tracks', opts);
+      log('info', 'Add tracks', opts);
       tracks.forEach((track) => {
         this.peerConnectionsServer[peerId]!.addTrack(track);
       });

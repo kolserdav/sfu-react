@@ -723,7 +723,7 @@ export const useVideoStarted = ({
           }
           if (_attempts[item.target] === 1) {
             if (!played[item.target] && mounted) {
-              lostStreamHandler({ ...item, eventName: 'not-played' });
+              // TODO lostStreamHandler({ ...item, eventName: 'not-played' });
               log('error', `Video not played ${item.target}`, {
                 target: item.target,
                 streamL: item.stream.getTracks().length,
