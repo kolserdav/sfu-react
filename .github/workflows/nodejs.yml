@@ -36,6 +36,7 @@ jobs:
           npm run env:server
           npm run env:client
           sudo cp docs/resources/nginx.client.conf /etc/nginx/conf.d/app.conf
+          sudo systemctl restart nginx
           npm i
       - name: build
         env:
