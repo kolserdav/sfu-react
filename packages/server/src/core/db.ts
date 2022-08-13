@@ -15,6 +15,7 @@ import { log } from '../utils/lib';
 const prisma = new PrismaClient();
 
 class DB implements DBInterface {
+  // eslint-disable-next-line class-methods-use-this
   public roomFindFirst: DBInterface['roomFindFirst'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any = null;
@@ -26,6 +27,7 @@ class DB implements DBInterface {
     return result;
   };
 
+  // eslint-disable-next-line class-methods-use-this
   public roomUpdate: DBInterface['roomUpdate'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any = null;
@@ -38,6 +40,7 @@ class DB implements DBInterface {
     return result;
   };
 
+  // eslint-disable-next-line class-methods-use-this
   public roomCreate: DBInterface['roomCreate'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any = null;
@@ -49,6 +52,7 @@ class DB implements DBInterface {
     return result;
   };
 
+  // eslint-disable-next-line class-methods-use-this
   public unitCreate: DBInterface['unitCreate'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any = null;
@@ -60,6 +64,7 @@ class DB implements DBInterface {
     return result;
   };
 
+  // eslint-disable-next-line class-methods-use-this
   public unitUpdate: DBInterface['unitUpdate'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any = null;
@@ -71,6 +76,7 @@ class DB implements DBInterface {
     return result;
   };
 
+  // eslint-disable-next-line class-methods-use-this
   public unitFindFirst: DBInterface['unitFindFirst'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any = null;

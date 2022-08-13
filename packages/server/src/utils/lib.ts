@@ -29,17 +29,15 @@ export const log = (type: keyof typeof LogLevel, text: string, data?: any, cons?
   if (cons) {
     console.log(type === 'info' ? Cyan : type === 'warn' ? Yellow : type === 'error' ? Red : Reset);
     console[type](type, Reset, text, Bright, data, Reset);
-  } else {
-    if (LogLevel[type] >= LOG_LEVEL) {
-      console[type](
-        type === 'error' ? Red : type === 'warn' ? Yellow : Bright,
-        type,
-        Reset,
-        text,
-        Dim,
-        data,
-        Reset
-      );
-    }
+  } else if (LogLevel[type] >= LOG_LEVEL) {
+    console[type](
+      type === 'error' ? Red : type === 'warn' ? Yellow : Bright,
+      type,
+      Reset,
+      text,
+      Dim,
+      data,
+      Reset
+    );
   }
 };

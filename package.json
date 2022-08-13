@@ -61,6 +61,8 @@
     "preinstall": "npm run copy && npm run preinstall:server",
     "dev:server": "cd packages/server && npm run dev",
     "dev:client": "cd packages/client && npm start",
+    "env:server": "cp packages/server/.env.example packages/server/.env",
+    "env:client": "cp packages/client/.env.example packages/server/.env",
     "start": "cd packages/server && npm start",
     "postinstall": "npm run migrate",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
