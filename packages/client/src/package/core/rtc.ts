@@ -141,10 +141,9 @@ class RTC
         case 'closed':
         case 'disconnected':
         case 'failed':
-          this.closeVideoCall({ userId, target, connId, roomId });
           this.lostStreamHandler({
-            target: peerId.split(this.delimiter)[1],
-            connId: peerId.split(this.delimiter)[2],
+            target,
+            connId,
             eventName: 'disconnected-peer',
           });
           log('warn', 'Failed connection state', { cs: currentTarget.connectionState, peerId });
@@ -353,13 +352,10 @@ class RTC
     } = msg;
     const peerId = this.getPeerId(id, target, connId);
     if (!this.peerConnections[peerId]) {
-      log('warn', 'Handle candidatte without peer connection', { peerId });
+      log('warn', 'Handle candidate without peer connection', { peerId });
       return;
     }
     const cand = new RTCIceCandidate(candidate);
-    if (cand.candidate === '') {
-      return;
-    }
     log('info', 'Trying to add ice candidate', { peerId });
     this.peerConnections[peerId]!.addIceCandidate(cand)
       .then(() => {
@@ -425,7 +421,7 @@ class RTC
 
   public closeByPeer = (peerId: string) => {
     if (!this.peerConnections[peerId]) {
-      log('info', `Close video call without peer connection ${peerId}`, {
+      log('warn', `Close video call without peer connection ${peerId}`, {
         r: Object.keys(this.peerConnections),
       });
       return;

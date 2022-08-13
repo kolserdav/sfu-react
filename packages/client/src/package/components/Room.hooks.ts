@@ -166,6 +166,8 @@ export const useConnection = ({
       const _stream = streams.find((item) => item.target === target);
       if (_stream) {
         storeStreams.dispatch(changeStreams({ type: 'delete', stream: _stream }));
+      } else {
+        log('warn', 'Close call without stream', { peerId });
       }
     };
 
@@ -427,7 +429,6 @@ export const useConnection = ({
             roomId,
             onTrack: ({ addedUserId, stream }) => {
               log('info', '-> Added local stream to room', { addedUserId, id });
-              // addStream({ target: addedUserId, stream, connId });
             },
             iceServers,
             eventName: 'first',

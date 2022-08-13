@@ -141,6 +141,9 @@ class WS implements WSInterface {
           key = this.getSocketId(id, this.users[id]);
         } else if (this.rooms[id] && this.sockets[this.getSocketId(id, this.rooms[id])]) {
           key = this.getSocketId(id, this.rooms[id]);
+        }
+        if (this.sockets[key]) {
+          this.sockets[key].send(res);
         } else if (!second) {
           setTimeout(() => {
             this.sendMessage(args, true);
@@ -152,8 +155,8 @@ class WS implements WSInterface {
             u: this.users,
             r: this.rooms,
           });
+          resolve(1);
         }
-        this.sockets[key].send(res);
         resolve(0);
       }, 0);
     });
