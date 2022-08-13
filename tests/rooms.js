@@ -207,7 +207,9 @@ function stdoutWrite(seconds) {
   let oldNumber = seconds.toString();
   stdout.write(oldNumber);
   return setInterval(() => {
-    stdout.clearLine(0);
+    if (!Boolean(process.env.CI)) {
+      stdout.clearLine(0);
+    }
     process.stdout.cursorTo(0);
     oldNumber = `${--seconds}`;
     stdout.write(oldNumber);
@@ -215,8 +217,10 @@ function stdoutWrite(seconds) {
 }
 
 function stdoutClean() {
-  stdout.clearLine(0);
-  process.stdout.cursorTo(0);
+  if (!Boolean(process.env.CI)) {
+    stdout.clearLine(0);
+    process.stdout.cursorTo(0);
+  }
 }
 
 /**
