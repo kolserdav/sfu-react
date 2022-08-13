@@ -237,7 +237,7 @@ const startServer = () => {
   const child = spawn('npm', ['run', 'start'], {
     env: {
       NODE_ENV: 'test',
-      PATH: process.env.PATH
+      PATH: process.env.PATH,
     },
   });
   return new Promise((resolve) => {
@@ -252,7 +252,7 @@ const startServer = () => {
 
 (async () => {
   if (process.env.CI) {
-    startServer();
+    await startServer();
   }
   log('log', 'Start test ...', { USERS, ROOMS }, true);
   /**
