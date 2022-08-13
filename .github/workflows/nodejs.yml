@@ -36,6 +36,6 @@ jobs:
           npm i
       - name: build
         env:
-          CI: true
+          CI: false
         run: |
           npm run build

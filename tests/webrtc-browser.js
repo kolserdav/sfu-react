@@ -1,8 +1,8 @@
 // @ts-check
-const { webkit } = require('playwright');
+const { chromium } = require('playwright');
 
 (async () => {
-  const browser = await webkit.launch({
+  const browser = await chromium.launch({
     headless: false,
     args: [
       '--allow-file-access-from-files',
@@ -13,5 +13,6 @@ const { webkit } = require('playwright');
   });
   const context = await browser.newContext();
   const page = await context.newPage();
-  await page.goto('https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/');
+  const trickle = 'https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/';
+  await page.goto('http://localhost:3000/1660351415964?uid=1660351522130');
 })();
