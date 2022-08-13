@@ -35,11 +35,6 @@ jobs:
           npm run env:server
           npm run env:client
           npm i
-      - name: nginx
-        run: |
-          sudo apt-get install nginx
-          sudo cp docs/resources/nginx.client.conf /etc/nginx/conf.d/app.conf
-          sudo systemctl restart nginx
       - name: build
         env:
           CI: false
