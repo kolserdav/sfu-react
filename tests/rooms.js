@@ -231,14 +231,21 @@ async function reloadPage(page) {
 
 /**
  *
- * @returns {ReturnType<typeof spawn>}
+ * @returns {Promise<1 | 0>}
  */
 const startServer = () => {
-  console.log(1, spawn('which', ['npm']));
-  return spawn('npm', ['run', 'start'], {
+  const child = spawn('npm', ['run', 'start'], {
     env: {
       NODE_ENV: 'test',
     },
+  });
+  return new Promise((resolve) => {
+    child.on('data', (data) => {
+      console.log(1, data);
+      if (/Server listen at port/.test(data.toString())) {
+        resolve(0);
+      }
+    });
   });
 };
 
