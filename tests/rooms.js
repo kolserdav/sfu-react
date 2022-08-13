@@ -234,19 +234,16 @@ async function reloadPage(page) {
  * @returns {Promise<1 | 0>}
  */
 const startServer = () => {
-  const child = spawn('npm', ['run', 'start'], {
+  spawn('npm', ['run', 'start'], {
     env: {
       NODE_ENV: 'test',
       PATH: process.env.PATH,
     },
   });
   return new Promise((resolve) => {
-    child.on('data', (data) => {
-      console.log(1, data);
-      if (/Server listen at port/.test(data.toString())) {
-        resolve(0);
-      }
-    });
+    setTimeout(() => {
+      resolve(0);
+    }, 4000);
   });
 };
 
