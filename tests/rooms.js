@@ -19,7 +19,10 @@ try {
     `Config file ${path.resolve(
       __dirname,
       '../rooms.json'
-    )} not specified, use default ${path.resolve(__dirname, '../rooms.json')}`
+    )} not specified, use default ${path.resolve(__dirname, '../rooms.example.json')}`,
+    {
+      CI: Boolean(process.env.CI),
+    }
   );
   importErr = true;
 }
@@ -226,24 +229,28 @@ async function reloadPage(page) {
   await page.waitForSelector('video');
 }
 
+/**
+ *
+ * @returns {ReturnType<typeof spawn>}
+ */
+const startServer = () => {
+  console.log(1, spawn('which', ['npm']));
+  return spawn('npm', ['run', 'start'], {
+    env: {
+      NODE_ENV: 'test',
+    },
+  });
+};
+
 (async () => {
+  if (process.env.CI) {
+    startServer();
+  }
   log('log', 'Start test ...', { USERS, ROOMS }, true);
   /**
    * @type {EvalPage[]}
    */
   const pages = [];
-  if (process.env.CI) {
-    await new Promise((resolve) => {
-      spawn('npm', ['run', 'start'], {
-        env: {
-          NODE_ENV: 'test',
-        },
-      });
-      setTimeout(() => {
-        resolve(0);
-      }, 4000);
-    });
-  }
   let startTime = new Date().getTime();
   for (let i = 0; i < ROOMS; i++) {
     const room = typeof singleRoom === 'string' ? singleRoom : (++id).toString();
