@@ -24,7 +24,7 @@ import DB from './core/db';
 const db = new DB();
 
 setTimeout(() => {
-  if (process.env.CI) {
+  if (process.env.NODE_ENV === 'test') {
     process.exit(0);
   }
 }, 18000);
