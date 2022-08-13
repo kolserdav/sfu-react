@@ -182,7 +182,11 @@ async function evaluateRoom(evalPage, last = false) {
     setTimeout(() => {
       log('log', 'Test end', { success, warnings, errors }, true);
       if (last) {
-        process.exit(0);
+        if (errors === 0) {
+          process.exit(0);
+        } else {
+          process.exit(1);
+        }
       }
     }, EXIT_DELAY);
   }
