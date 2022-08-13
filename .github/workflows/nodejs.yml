@@ -42,6 +42,7 @@ jobs:
           npm run build
       - name: start
         env:
+          CI: false
           NODE_ENV: test
         run: |
           npm run start
