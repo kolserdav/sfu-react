@@ -38,11 +38,12 @@ jobs:
           sudo cp docs/resources/nginx.client.conf /etc/nginx/conf.d/app.conf
           npm i
       - name: build
+        env:
+          CI: false
         run: |
           npm run build
       - name: start
         env:
-          CI: false
           NODE_ENV: test
         run: |
           npm run start
