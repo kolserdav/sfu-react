@@ -32,3 +32,10 @@ services:
     volumes:
       - ./docs/resources/coturn.conf:/my/coturn.conf
     command: -c /my/coturn.conf
+  nginx:
+    image: nginx
+    volumes:
+      - ./docs/resources/nginx.client.conf:/etc/nginx/conf.d/app.conf
+      - ./packages/client/build:/home/app
+    ports:
+      - '3000:80'
