@@ -183,7 +183,11 @@ async function evaluateRoom(evalPage, last = false) {
       log('log', 'Test end', { success, warnings, errors }, true);
       if (last) {
         if (errors === 0) {
-          process.exit(0);
+          if (warnings === 0) {
+            process.exit(0);
+          } else {
+            process.exit(2);
+          }
         } else {
           process.exit(1);
         }
@@ -239,9 +243,9 @@ async function reloadPage(page) {
  * @returns {Promise<1 | 0>}
  */
 const startServer = () => {
+  log('log', 'Run command:', '"npm run start"', true);
   spawn('npm', ['run', 'start'], {
     env: {
-      NODE_ENV: 'test',
       PATH: process.env.PATH,
     },
   });

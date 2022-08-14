@@ -23,12 +23,6 @@ import DB from './core/db';
 
 const db = new DB();
 
-setTimeout(() => {
-  if (process.env.NODE_ENV === 'test') {
-    process.exit(0);
-  }
-}, 180000);
-
 process.on('uncaughtException', (err: Error) => {
   log('error', 'uncaughtException', err);
 });
