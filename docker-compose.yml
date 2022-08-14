@@ -38,4 +38,5 @@ services:
       - ./docs/resources/nginx.client.conf:/etc/nginx/conf.d/app.conf
       - ./packages/client/build:/home/app
     ports:
-      - '3000:80'
+      - '3000:3000'
+    container_name: nginx
