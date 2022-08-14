@@ -34,18 +34,19 @@ jobs:
           docker-compose up -d
           npm run env:server
           npm run env:client
-          sudo chown 1000 packages/client/public
           npm i
+      - name: nginx
+        run: |
+          sudo apt-get install nginx
+          sudo cp docs/resources/nginx.client.conf /etc/nginx/conf.d/app.conf
+          sudo systemctl restart nginx
       - name: build
         env:
           CI: false
         run: |
           npm run build
-      - name: start
-        env:
-          NODE_ENV: test
-        run: |
-          npm run start
       - name: test
+        env:
+          CI: true
         run: |
           npm run test

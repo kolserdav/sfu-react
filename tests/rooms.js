@@ -1,5 +1,6 @@
 // @ts-check
 const path = require('path');
+const { spawn } = require('child_process');
 const puppeteer = require('puppeteer');
 const { log } = require('../packages/server/dist/utils/lib');
 const { stdout } = require('process');
@@ -231,6 +232,18 @@ async function reloadPage(page) {
    * @type {EvalPage[]}
    */
   const pages = [];
+  if (process.env.CI) {
+    await new Promise((resolve) => {
+      spawn('npm', ['run', 'start'], {
+        env: {
+          NODE_ENV: 'test',
+        },
+      });
+      setTimeout(() => {
+        resolve(0);
+      }, 4000);
+    });
+  }
   let startTime = new Date().getTime();
   for (let i = 0; i < ROOMS; i++) {
     const room = typeof singleRoom === 'string' ? singleRoom : (++id).toString();
