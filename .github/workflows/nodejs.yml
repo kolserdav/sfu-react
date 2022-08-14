@@ -34,6 +34,7 @@ jobs:
           docker-compose up -d
           npm run env:server
           npm run env:client
+          chown 1000 packages/client/public
           npm i
       - name: build
         env:
