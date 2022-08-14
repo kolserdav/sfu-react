@@ -63,6 +63,7 @@
     "dev:client": "cd packages/client && npm start",
     "env:server": "cp packages/server/.env.example packages/server/.env",
     "env:client": "cp packages/client/.env.example packages/client/.env",
+    "env": "npm run env:server && npm run env:client",
     "start": "cd packages/server && npm start",
     "postinstall": "npm run migrate",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",

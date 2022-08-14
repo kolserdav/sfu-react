@@ -15,8 +15,6 @@ npm i uyem --omit=optional
 
 - To be able to create connections on a host other than localhost, you need to connect SSL certificates.
 
----
-
 Sample setup SSL certificates from Let's Encrypt for client and for server together with `nginx` see [docs/SSL.md](./docs.SSL.md)
 
 ---
@@ -60,3 +58,7 @@ npm run server
 
 - [Client Hello World](examples/hello-world/src/App.jsx)
 - [Server](examples/server/index.js)
+
+## Contributing
+
+See [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md)

@@ -38,8 +38,7 @@ jobs:
       - name: application
         run: |
           docker-compose up -d
-          npm run env:server
-          npm run env:client
+          npm run env
           npm i
           which npm
       - name: build
