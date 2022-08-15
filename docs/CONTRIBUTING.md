@@ -11,7 +11,7 @@ git clone https://github.com/kolserdav/werift-sfu-react.git
 cd werift-sfu-react
 ```
 
-- Run database via `docker-compose`:
+- Run database via `docker-compose` [optional if you system have `mysql` database (but required create database like DATABASE_URL in `packages/server/.env`)]:
 
 ```sh
 docker-compose up -d
