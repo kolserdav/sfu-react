@@ -2,7 +2,7 @@
   "url": "http://localhost:3000",
   "headless": true,
   "rooms": 1,
-  "users": 4,
+  "users": 3,
   "singleRoom": "string-or-false-or-null-or-undefined",
   "delay": 4000
 }
