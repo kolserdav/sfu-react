@@ -428,6 +428,7 @@ class RTC
     }
     log('info', '| Closing the call', { peerId, k: Object.keys(this.peerConnections) });
     this.peerConnections[peerId]!.onicecandidate = null;
+    this.peerConnections[peerId]!.onconnectionstatechange = null;
     this.peerConnections[peerId]!.oniceconnectionstatechange = null;
     this.peerConnections[peerId]!.onicegatheringstatechange = null;
     this.peerConnections[peerId]!.onsignalingstatechange = null;

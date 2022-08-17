@@ -84,11 +84,13 @@ function Room({ id, iceServers, server, port }: RoomProps) {
             <CloseButton
               onClick={(e) => {
                 // TODO remove
+                /*
                 lostStreamHandler({
                   target: item.target,
                   connId: item.connId,
                   eventName: '',
                 });
+                */
                 onClickClose(e);
               }}
               onKeyDown={onPressEscape}
