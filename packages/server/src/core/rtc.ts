@@ -86,6 +86,18 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       },
       iceTransportPolicy: 'all',
       bundlePolicy: 'disable',
+      /*
+      iceServers: [
+        {
+          urls: process.env.STUN_SERVER as string,
+        },
+        {
+          urls: process.env.TURN_SERVER as string,
+          username: process.env.TURN_SERVER_USER,
+          credential: process.env.TURN_SERVER_PASSWORD,
+        },
+      ],
+      */
     });
 
     return this.peerConnectionsServer;
@@ -250,6 +262,13 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       return;
     }
     const peerId = this.getPeerId(id, userId, target, connId);
+    this.createRTCServer({
+      roomId: id,
+      userId,
+      target,
+      connId,
+      mimeType,
+    });
     const opts = {
       roomId: id,
       userId,
@@ -262,13 +281,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       ss: this.peerConnectionsServer[peerId]?.signalingState,
     };
     log('info', '--> Creating answer', opts);
-    this.createRTCServer({
-      roomId: id,
-      userId,
-      target,
-      connId,
-      mimeType,
-    });
     if (!this.peerConnectionsServer[peerId]) {
       log('warn', 'Handle offer message without peer connection', opts);
       return;
@@ -301,7 +313,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       error = true;
       return;
     }
-    log('info', '---> Setting local description after creating answer');
+    log('info', '---> Setting local description after creating answer', { ...opts });
     if (!this.peerConnectionsServer[peerId] || error) {
       log('warn', 'Failed set local description fo answer', {
         error,
@@ -620,7 +632,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
 
   // eslint-disable-next-line class-methods-use-this
   public onClosedCall: RTCInterface['onClosedCall'] = (args) => {
-    log('info', 'Call is closed', { ...args });
+    log('warn', 'Call is closed', { ...args });
   };
 
   public cleanConnections(roomId: string, userId: string) {

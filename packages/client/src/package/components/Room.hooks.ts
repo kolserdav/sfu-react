@@ -307,12 +307,11 @@ export const useConnection = ({
         connId,
       } = ws.getMessage(MessageType.SET_ROOM_GUESTS, rawMessage);
       rtc.muteds = _muteds;
-      setMuteds(_muteds);
       const _streams: Stream[] = storeStreams.getState().streams as Stream[];
       log('info', 'onChangeRoomGuests', { roomUsers, id, st: _streams.map((i) => i.target) });
-      // Add remote connections
       rtc.roomLength = roomUsers.length;
       setLenght(roomUsers.length);
+      setMuteds(_muteds);
       roomUsers.forEach((item) => {
         if (item !== id) {
           const _isExists = _streams.filter((_item) => item === _item.target);
@@ -332,6 +331,7 @@ export const useConnection = ({
             rtc.addTracks({ roomId, userId: id, target: item, connId }, (e) => {
               if (e) {
                 log('warn', 'Failed add tracks', { roomId, userId: id, target: item, connId });
+                return;
               }
               log('info', 'Change room guests connection', {
                 roomId,
@@ -412,7 +412,7 @@ export const useConnection = ({
           rtc.handleCandidateMessage(rawMessage);
           break;
         case MessageType.SET_ROOM_GUESTS:
-          changeRoomGuestsHandler({ rawMessage });
+          // changeRoomGuestsHandler({ rawMessage });
           break;
         case MessageType.SET_MUTE:
           changeMuteHandler(ws.getMessage(MessageType.SET_MUTE, rawMessage));

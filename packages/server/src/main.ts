@@ -124,12 +124,12 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
       }
     });
 
-    const getUserId = () => {
+    const getUserId = (_connId: string) => {
       let userId: number | string = 0;
       const keys = Object.keys(wss.sockets);
       keys.forEach((item) => {
         const sock = item.split(rtc.delimiter);
-        if (sock[1] === connId) {
+        if (sock[1] === _connId) {
           // eslint-disable-next-line prefer-destructuring
           userId = sock[0];
         }
@@ -137,10 +137,9 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
       return userId;
     };
 
-    // Remove user from room
     // eslint-disable-next-line no-param-reassign
     ws.onclose = async () => {
-      const userId = getUserId();
+      const userId = getUserId(connId);
       if (userId) {
         const socketId = wss.getSocketId(userId, connId);
         if (wss.sockets[socketId]) {

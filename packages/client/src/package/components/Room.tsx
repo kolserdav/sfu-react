@@ -177,6 +177,7 @@ function Room({ id, iceServers, server, port }: RoomProps) {
                 });
               }}
               onLoadedMetadata={() => {
+                log('info', 'Meta data loaded', { ...item });
                 if (!played[item.target]) {
                   const _played = { ...played };
                   _played[item.target] = true;
