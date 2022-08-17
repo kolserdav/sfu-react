@@ -412,7 +412,7 @@ export const useConnection = ({
           rtc.handleCandidateMessage(rawMessage);
           break;
         case MessageType.SET_ROOM_GUESTS:
-          // changeRoomGuestsHandler({ rawMessage });
+          changeRoomGuestsHandler({ rawMessage });
           break;
         case MessageType.SET_MUTE:
           changeMuteHandler(ws.getMessage(MessageType.SET_MUTE, rawMessage));
