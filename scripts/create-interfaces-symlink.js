@@ -7,9 +7,7 @@ const srcPath = resolve(__dirname, '../packages/client/src/package/types/interfa
 
 if (!existsSync(srcPath)) {
   console.warn('Create symlink skipped.');
-}
-
-if (existsSync(destPath)) {
+} else if (existsSync(destPath)) {
   console.warn('Symlink created', destPath);
 } else {
   symlink(srcPath, destPath, 'file', (err) => {
