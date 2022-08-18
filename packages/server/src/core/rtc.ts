@@ -155,6 +155,12 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
           default:
         }
       };
+    this.peerConnectionsServer[peerId]!.onRemoteTransceiverAdded.subscribe(async (transceiver) => {
+      const [track] = await transceiver.onTrack.asPromise();
+      setInterval(() => {
+        transceiver.receiver.sendRtcpPLI(track.ssrc);
+      }, 1000);
+    });
     this.peerConnectionsServer[peerId]!.ontrack = (e) => {
       const peer = peerId.split(delimiter);
       const isRoom = peer[2] === '0';
