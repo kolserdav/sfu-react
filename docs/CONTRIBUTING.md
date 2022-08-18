@@ -31,6 +31,12 @@ npm i
 npm run env
 ```
 
+- Run migrations to database:
+
+```sh
+npm run db
+```
+
 then set up `packages/server/.env` and `packages/client/.env` files
 
 ---
