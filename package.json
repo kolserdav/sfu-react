@@ -65,7 +65,7 @@
     "env": "npm run env:server && npm run env:client",
     "postinstall": "npm run copy && npm run postinstall:server",
     "db": "cd packages/server && npm run migrate",
-    "start:server": "cd packages/server && npm start",
+    "start:server": "cd packages/server && npm run start",
     "start": "npm run db && npm run start:server",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "test": "node tests/rooms.js",
