@@ -1,6 +1,6 @@
 {
   "name": "uyem",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "repository": "https://github.com/kolserdav/werift-sfu-react.git",
   "description": "Selective Forwarding Unit (SFU) is a WebRTC web application library, the server part of which is written in Node, and the client part is a ReactJS shared component.",
   "keywords": [
@@ -56,21 +56,19 @@
     "copy-interfaces": "node scripts/create-interfaces-symlink.js",
     "copy": "npm run copy-interfaces",
     "postinstall:werift": "cd packages/server/src/werift-webrtc && npm i && cd packages/webrtc && npm i && npm run build",
-    "postinstall:server": "cd packages/server && npm run format && npm run generate",
-    "postinstall": "npm run copy && npm run postinstall:server",
+    "postinstall:server": "cd packages/server && npm run format && npm run generate && npm run migrate",
     "dev:server": "cd packages/server && npm run dev",
     "dev:client": "cd packages/client && npm start",
     "env:server": "cp packages/server/.env.example packages/server/.env",
     "env:client": "cp packages/client/.env.example packages/client/.env",
     "env": "npm run env:server && npm run env:client",
-    "prepare": "npm run migrate",
+    "prepare": "npm run copy && npm run postinstall:server",
     "start:server": "cd packages/server && npm start",
     "start": "npm run prepare && npm run start:server",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "test": "node tests/rooms.js",
     "test:browser": "node tests/webrtc-browser.js",
-    "dev:migrate": "cd packages/server && npm run dev:migrate",
-    "migrate": "cd packages/server && npm run migrate"
+    "dev:migrate": "cd packages/server && npm run dev:migrate"
   },
   "dependencies": {
     "@prisma/client": "^4.2.1",
