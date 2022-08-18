@@ -4,7 +4,7 @@ const { resolve } = require('path');
 
 const destPath = resolve(__dirname, '../packages/server/src/types/interfaces.ts');
 const srcPath = resolve(__dirname, '../packages/client/src/package/types/interfaces.ts');
-const srcPathD = resolve(__dirname, '../packages/client/src/package/types/interfaces.d.ts');
+const srcPathD = resolve(__dirname, '../packages/client/dist/types/interfaces.d.ts');
 
 if (existsSync(destPath)) {
   console.warn('Symlink created', destPath);
