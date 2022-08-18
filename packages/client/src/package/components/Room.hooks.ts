@@ -294,7 +294,7 @@ export const useConnection = ({
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const changeRoomGuestsHandler = ({
+    const changeRoomGuestsHandler = async ({
       rawMessage,
     }: {
       rawMessage: SendMessageArgs<MessageType.SET_ROOM_GUESTS>;
@@ -721,7 +721,7 @@ export const useVideoStarted = ({
           }
           if (_attempts[item.target] === 1) {
             if (!played[item.target] && mounted) {
-              // TODO lostStreamHandler({ ...item, eventName: 'not-played' });
+              lostStreamHandler({ ...item, eventName: 'not-played' });
               log('error', `Video not played ${item.target}`, {
                 target: item.target,
                 streamL: item.stream.getTracks().length,

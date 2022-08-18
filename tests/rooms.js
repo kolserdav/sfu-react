@@ -163,7 +163,7 @@ async function evaluateRoom(evalPage, last = false) {
   tUval.forEach(() => {
     warnings++;
   });
-  log(tUval.length === 0 ? 'info' : 'warn', `Timeupdate ${evalPage.uid}`, timeupdate, true);
+  log(tUval.length === 0 ? 'info' : 'warn', `Videos played ${evalPage.uid}`, timeupdate, true);
 
   const videos = await page.$$('video');
   const { length } = videos;

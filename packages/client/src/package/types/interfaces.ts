@@ -87,11 +87,13 @@ export namespace DataTypes {
       userId: number | string;
       target: number | string;
       mimeType: string;
+      roomId: number | string;
     };
     export type Candidate = {
       candidate: RTCIceCandidate;
       userId: number | string;
       target: number | string;
+      roomId: number | string;
     };
     export type Answer = {
       sdp: RTCSessionDescriptionInit;
@@ -173,7 +175,10 @@ export namespace Connection {
   export abstract class RTCInterface {
     public abstract peerConnections: Record<string, RTCPeerConnection | undefined>;
 
-    public abstract peerConnectionsServer: Record<string, werift.RTCPeerConnection | undefined>;
+    public abstract peerConnectionsServer: Record<
+      string,
+      Record<string, werift.RTCPeerConnection | undefined>
+    >;
 
     public readonly delimiter = '_';
 
@@ -192,7 +197,7 @@ export namespace Connection {
       target: string | number;
       mimeType: string;
       iceServers?: RTCConfiguration['iceServers'];
-    }): Record<number, werift.RTCPeerConnection | undefined>;
+    }): void;
 
     public abstract handleIceCandidate(args: {
       connId: string;

@@ -198,6 +198,8 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
             });
             if (rtc.rooms[item].length === 0) {
               delete rtc.rooms[item];
+              delete rtc.streams[item];
+              delete rtc.peerConnectionsServer[item];
               // set room is archive
               db.roomUpdate({
                 where: {

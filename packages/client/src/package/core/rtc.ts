@@ -174,6 +174,7 @@ class RTC
             candidate: event.candidate,
             userId,
             target,
+            roomId,
           },
           connId,
         });
@@ -264,6 +265,7 @@ class RTC
                 userId,
                 target,
                 mimeType: getCodec(),
+                roomId,
               },
               connId,
             });
@@ -403,8 +405,7 @@ class RTC
         }
       })
       .catch((e) => {
-        log('error', 'Error set description for answer:', {
-          message: e.message,
+        log('error', `Error set description for answer: ${e.message}`, {
           ...opts,
         });
         if (cb) {
