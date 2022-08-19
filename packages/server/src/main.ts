@@ -37,7 +37,6 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
   const wss = new WS({ port });
   const rtc: RTC | null = new RTC({ ws: wss });
 
-  log('info', 'Server listen at port:', port, true);
   const getConnectionId = (): string => {
     const connId = v4();
     if (wss.sockets[connId]) {
@@ -45,7 +44,6 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
     }
     return connId;
   };
-
   wss.connection.on('connection', (ws, req) => {
     const { origin } = req.headers;
     const notAllowed = cors.split(',').indexOf(origin || '') === -1;

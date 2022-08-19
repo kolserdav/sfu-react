@@ -92,7 +92,9 @@ class WS implements WSInterface {
   }
 
   public createConnection = (args: ServerOptions | undefined) => {
-    this.connection = new WebSocketServer(args);
+    this.connection = new WebSocketServer(args, () => {
+      log('info', 'Server listen at port:', args.port, true);
+    });
     return this.connection;
   };
 

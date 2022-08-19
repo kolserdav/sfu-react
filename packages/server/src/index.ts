@@ -63,24 +63,8 @@ if (skipedReq.length) {
 let port = 3000;
 let cors = '';
 let code = 0;
+let db = '';
 (async () => {
-  console.log('Running "npm run postinstall-server" command...');
-  const res = spawn('npm', ['run', 'postinstall-server'], {
-    env: process.env,
-    cwd: path.resolve(__dirname, '../../..'),
-  });
-  res.stdout.on('data', (d) => {
-    console.log(d.toString());
-  });
-  res.stderr.on('data', (d) => {
-    console.error(d.toString());
-  });
-  await new Promise((resolve) => {
-    res.on('exit', (e) => {
-      console.log('Command "npm run postinstall-server" exit with code:', e);
-      resolve(0);
-    });
-  });
   for (let n = 0; args[n]; n++) {
     const arg: string = args[n];
     switch (arg) {
@@ -98,7 +82,11 @@ let code = 0;
         break;
       case 'db':
         log('info', 'Set up database url:', argv.db);
-        cors = argv.db || DEFAULT_PARAMS.db;
+        db = argv.db || DEFAULT_PARAMS.db;
+        if (db === DEFAULT_PARAMS.db) {
+          log('warn', 'Parameter "db" not specified, using default:', DEFAULT_PARAMS.db, true);
+        }
+        process.env.DATABASE_URL = db;
         break;
       case 'help':
         log('info', `$ uyem [option] [value] > options:`, ARGS, true);
@@ -119,7 +107,24 @@ let code = 0;
         code = 1;
     }
   }
-  if (code !== undefined) {
+  log('info', 'Running "npm run prod:migrate" command...', '', true);
+  const res = spawn('npm', ['run', 'prod:migrate'], {
+    env: process.env,
+    cwd: path.resolve(__dirname, '../../..'),
+  });
+  res.stdout.on('data', (d) => {
+    // eslint-disable-next-line no-console
+    console.log(d.toString());
+  });
+  res.stderr.on('data', (d) => {
+    log('error', d.toString(), '', true);
+  });
+  code = await new Promise((resolve) => {
+    res.on('exit', (e) => {
+      resolve(e);
+    });
+  });
+  if (code !== 0) {
     log('warn', 'Script end with code:', code, true);
   } else {
     Server({ port, cors });
