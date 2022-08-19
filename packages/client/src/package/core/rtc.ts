@@ -300,27 +300,21 @@ class RTC
             navigator.mediaDevices
               .getDisplayMedia({ video: true })
               .then((videoStream) => {
-                this.localStream = new MediaStream();
-                localStream.getTracks().forEach((track) => {
-                  if (track.kind === 'audio') {
-                    this.peerConnections[peerId]!.addTrack(track, videoStream);
-                    this.localStream?.addTrack(track);
-                  } else {
-                    const sender = this.peerConnections[peerId]!.getSenders().find(
-                      (item) => item.track?.kind === 'video'
-                    );
-                    if (sender) {
-                      this.peerConnections[peerId]!.removeTrack(sender);
+                this.localStream = videoStream;
+                const audio = localStream.getTracks().find((item) => item.kind === 'audio');
+                if (audio) {
+                  this.localStream.addTrack(audio);
+                  this.localStream.getTracks().forEach((track) => {
+                    if (this.localStream) {
+                      this.peerConnections[peerId]!.addTrack(track, this.localStream);
+                    } else {
+                      log('warn', 'Add share screen track without local stream', this.localStream);
                     }
-                  }
-                });
-                videoStream.getTracks().forEach((track) => {
-                  if (track.kind === 'video') {
-                    this.peerConnections[peerId]!.addTrack(track, videoStream);
-                    this.localStream?.addTrack(track);
-                  }
-                });
-                cb(0, videoStream);
+                  });
+                } else {
+                  log('warn', 'Share screen without sound', audio);
+                }
+                cb(0, this.localStream);
               })
               .catch((e) => {
                 log('error', 'Error get display media', e);

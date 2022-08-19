@@ -113,8 +113,9 @@ function Room({ id, iceServers, server, port }: RoomProps) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const { target }: { target: HTMLVideoElement } = e as any;
                 target.play();
-                if (item.stream.getTracks().length < 2) {
-                  log('warn', 'Stream have less than 2 tracks', { item });
+                const tracks = item.stream.getTracks();
+                if (tracks.length < 2) {
+                  log('warn', 'Stream have less than 2 tracks', { item, tracks });
                 }
               }}
               onEmptied={(e) => {
