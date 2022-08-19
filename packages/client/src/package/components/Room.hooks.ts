@@ -574,10 +574,8 @@ export const useVideoDimensions = ({
         requestAnimationFrame(() => {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const { target }: { target: HTMLVideoElement } = e as any;
-          const _container =
-            target.getAttribute('data') !== 'full'
-              ? container
-              : (target.parentElement as HTMLDivElement);
+          const isFull = target.getAttribute('data') === 'full';
+          const _container = !isFull ? container : (target.parentElement as HTMLDivElement);
           if (_container) {
             const { videoHeight, videoWidth } = target;
             const coeff = videoWidth / videoHeight;
@@ -589,16 +587,30 @@ export const useVideoDimensions = ({
             // Change track constraints
             stream.getVideoTracks().forEach((item) => {
               const oldWidth = item.getConstraints().width;
-
               if (oldWidth !== width) {
                 let _width = width;
                 let _height = width;
-                if (videoHeight < videoWidth) {
+                if (coeff >= 1) {
                   _height = Math.floor(width / coeff);
+                  if (isFull) {
+                    _height =
+                      _container.clientWidth > _container.clientHeight * coeff
+                        ? _container.clientHeight
+                        : Math.floor(_container.clientWidth / coeff);
+                    _width = Math.floor(_height * coeff);
+                  }
                   target.setAttribute('width', _width.toString());
                   target.setAttribute('height', _height.toString());
                 } else {
                   _width = Math.floor(width * coeff);
+                  // TODO test it
+                  if (isFull) {
+                    _width =
+                      _container.clientHeight > _container.clientWidth / coeff
+                        ? _container.clientWidth
+                        : Math.floor(_container.clientHeight * coeff);
+                    _width = Math.floor(_height * coeff);
+                  }
                   target.setAttribute('width', _width.toString());
                   target.setAttribute('height', _height.toString());
                 }
