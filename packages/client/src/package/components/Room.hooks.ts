@@ -136,6 +136,19 @@ export const useConnection = ({
       ws.setUserId(id);
     }
 
+    const removeStreamHandler = ({
+      data: { roomId: _roomId, target: _target },
+      connId: _connId,
+    }: SendMessageArgs<MessageType.SET_CLOSE_PEER_CONNECTION>) => {
+      const peerId = rtc.getPeerId(_roomId, _target, _connId);
+      const _stream = streams.find((item) => item.target === _target);
+      if (_stream) {
+        storeStreams.dispatch(changeStreams({ type: 'delete', stream: _stream }));
+      } else {
+        log('warn', 'Close call without stream', { peerId });
+      }
+    };
+
     const lostStreamHandler: typeof rtc.lostStreamHandler = ({ connId, target, eventName }) => {
       if (!roomId) {
         return;
@@ -148,6 +161,7 @@ export const useConnection = ({
           _connId = peer[2];
         }
       });
+      rtc.closeVideoCall({ roomId, userId: ws.userId, target, connId: _connId });
       ws.sendMessage({
         type: MessageType.GET_CLOSE_PEER_CONNECTION,
         connId: _connId,
@@ -157,18 +171,6 @@ export const useConnection = ({
           target,
         },
       });
-      const peerId = rtc.getPeerId(roomId, target, _connId);
-      if (!rtc.peerConnections[peerId]) {
-        log('info', 'Lost stream handler without peer connection', { peerId });
-        return;
-      }
-      rtc.closeVideoCall({ roomId, userId: ws.userId, target, connId: _connId });
-      const _stream = streams.find((item) => item.target === target);
-      if (_stream) {
-        storeStreams.dispatch(changeStreams({ type: 'delete', stream: _stream }));
-      } else {
-        log('warn', 'Close call without stream', { peerId });
-      }
     };
 
     rtc.lostStreamHandler = lostStreamHandler;
@@ -207,11 +209,11 @@ export const useConnection = ({
      */
     const changeRoomUnitHandler = ({
       id: userId,
-      data: { target, eventName, roomLenght, muteds: _muteds },
+      data: { target, eventName, roomLength, muteds: _muteds },
       connId,
     }: SendMessageArgs<MessageType.SET_CHANGE_UNIT>) => {
-      if (lenght !== roomLenght) {
-        setLenght(roomLenght);
+      if (lenght !== roomLength) {
+        setLenght(roomLength);
       }
       rtc.muteds = _muteds;
       setMuteds(_muteds);
@@ -222,7 +224,7 @@ export const useConnection = ({
             log('info', 'Change room unit handler', {
               userId,
               target,
-              roomLenght,
+              roomLength,
               connId,
               eventName,
             });
@@ -247,7 +249,7 @@ export const useConnection = ({
                     connId,
                     data: {
                       target: userId,
-                      roomLenght,
+                      roomLength,
                       eventName: 'added',
                       muteds: _muteds,
                     },
@@ -308,7 +310,11 @@ export const useConnection = ({
       } = ws.getMessage(MessageType.SET_ROOM_GUESTS, rawMessage);
       rtc.muteds = _muteds;
       const _streams: Stream[] = storeStreams.getState().streams as Stream[];
-      log('info', 'onChangeRoomGuests', { roomUsers, id, st: _streams.map((i) => i.target) });
+      log('info', 'Run change room gusets handler', {
+        roomUsers,
+        id,
+        st: _streams.map((i) => i.target),
+      });
       rtc.roomLength = roomUsers.length;
       setLenght(roomUsers.length);
       setMuteds(_muteds);
@@ -413,6 +419,9 @@ export const useConnection = ({
           break;
         case MessageType.SET_ROOM_GUESTS:
           changeRoomGuestsHandler({ rawMessage });
+          break;
+        case MessageType.SET_CLOSE_PEER_CONNECTION:
+          removeStreamHandler(rawMessage);
           break;
         case MessageType.SET_MUTE:
           changeMuteHandler(ws.getMessage(MessageType.SET_MUTE, rawMessage));

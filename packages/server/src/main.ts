@@ -162,7 +162,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
         roomKeys.forEach((item) => {
           const index = rtc.rooms[item].indexOf(userId);
           if (index !== -1) {
-            const keys = Object.keys(rtc.peerConnectionsServer);
+            const keys = rtc.getPeerConnectionKeys(item);
             rtc.cleanConnections(item, userId.toString());
             rtc.rooms[item].splice(index, 1);
             const mute = rtc.muteds[item].indexOf(userId.toString());
@@ -186,7 +186,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
                 type: MessageType.SET_CHANGE_UNIT,
                 id: _item,
                 data: {
-                  roomLenght: rtc.rooms[item].length,
+                  roomLength: rtc.rooms[item].length,
                   muteds: rtc.muteds[item],
                   target: userId,
                   eventName: 'delete',
@@ -198,6 +198,7 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
               delete rtc.rooms[item];
               delete rtc.streams[item];
               delete rtc.peerConnectionsServer[item];
+
               // set room is archive
               db.roomUpdate({
                 where: {

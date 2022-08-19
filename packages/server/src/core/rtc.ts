@@ -54,6 +54,15 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     connId,
   }: SendMessageArgs<MessageType.GET_CLOSE_PEER_CONNECTION>) {
     this.closeVideoCall({ roomId, userId: id, target, connId });
+    this.ws.sendMessage({
+      type: MessageType.SET_CLOSE_PEER_CONNECTION,
+      id,
+      data: {
+        target,
+        roomId,
+      },
+      connId,
+    });
   }
 
   public createRTCServer: RTCInterface['createRTCServer'] = (opts) => {
@@ -200,7 +209,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
                 data: {
                   target: userId,
                   eventName: 'add',
-                  roomLenght: rooms[roomId]?.length || 0,
+                  roomLength: rooms[roomId]?.length || 0,
                   muteds: this.muteds[roomId],
                 },
                 connId,
@@ -653,7 +662,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     log('warn', 'Call is closed', { ...args });
   };
 
-  private getPeerConnectionKeys(roomId: string | number) {
+  public getPeerConnectionKeys(roomId: string | number) {
     return Object.keys(this.peerConnectionsServer[roomId]);
   }
 

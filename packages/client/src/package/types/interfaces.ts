@@ -37,6 +37,7 @@ export enum MessageType {
   SET_MUTE = 'SET_MUTE',
   GET_NEED_RECONNECT = 'GET_NEED_RECONNECT',
   GET_CLOSE_PEER_CONNECTION = 'GET_CLOSE_PEER_CONNECTION',
+  SET_CLOSE_PEER_CONNECTION = 'SET_CLOSE_PEER_CONNECTION',
 }
 
 export namespace DataTypes {
@@ -61,7 +62,7 @@ export namespace DataTypes {
     export type SetChangeRoomUnit = {
       target: number | string;
       eventName: 'delete' | 'add' | 'added';
-      roomLenght: number;
+      roomLength: number;
       muteds: string[];
     };
     export type SetGuestId = undefined;
@@ -81,6 +82,10 @@ export namespace DataTypes {
     };
     export type SetMute = {
       muteds: string[];
+    };
+    export type SetClosePeerConnection = {
+      roomId: number | string;
+      target: number | string;
     };
     export type Offer = {
       sdp: RTCSessionDescriptionInit;
@@ -131,6 +136,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetChangeRoomUnit
     : T extends MessageType.SET_MUTE
     ? DataTypes.MessageTypes.SetMute
+    : T extends MessageType.SET_CLOSE_PEER_CONNECTION
+    ? DataTypes.MessageTypes.SetClosePeerConnection
     : T extends MessageType.SET_ERROR
     ? DataTypes.MessageTypes.SetError
     : unknown;
