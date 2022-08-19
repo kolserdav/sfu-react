@@ -2,4 +2,3 @@ node_modules
 tmp
 data
 tests/rooms.json
-.env
