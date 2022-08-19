@@ -29,18 +29,5 @@
     "noImplicitAny": false
   },
   "include": ["*.d.ts", "src"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "tmp",
-    "src/werift-webrtc",
-    "src/werift-webrtc/website",
-    "src/werift-webrtc/examples",
-    "src/werift-webrtc/e2e",
-    "src/werift-webrtc/loadtest",
-    "src/werift-webrtc/packages/webrtc/tests",
-    "src/werift-webrtc/packages/dtls/examples",
-    "src/werift-webrtc/packages/ice/examples",
-    "src/werift-webrtc/packages/rtp/examples"
-  ]
+  "exclude": ["node_modules", "dist", "tmp"]
 }

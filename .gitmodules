@@ -1,3 +1,0 @@
-[submodule "packages/server/src/werift-webrtc"]
-	path = packages/server/src/werift-webrtc
-	url = git@github.com:kolserdav/werift-webrtc.git
