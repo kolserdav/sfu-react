@@ -16,7 +16,7 @@
     "ecmaVersion": 12,
     "sourceType": "module"
   },
-  "ignorePatterns": ["node_modules", "dist", "tmp", "src/werift-webrtc", "src/types/prisma.d.ts"],
+  "ignorePatterns": ["node_modules", "dist", "tmp", "src/werift-webrtc"],
   "rules": {
     "spaced-comment": 0,
     "no-unused-vars": 1,
