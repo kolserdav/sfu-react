@@ -14,6 +14,7 @@ const { spawn } = require('child_process');
   });
   await new Promise((resolve) => {
     res.on('exit', (e) => {
+      console.log('Command "npm run db:dev" exit with code:', e);
       resolve(0);
     });
   });
@@ -26,5 +27,11 @@ const { spawn } = require('child_process');
   });
   res.stderr.on('data', (d) => {
     console.log(d.toString());
+  });
+  await new Promise((resolve) => {
+    res.on('exit', (e) => {
+      console.log('Command "npm run db:prod" exit with code:', e);
+      resolve(0);
+    });
   });
 })();

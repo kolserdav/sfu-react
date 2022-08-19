@@ -16,7 +16,7 @@
     "dev": "concurrently \"npm run watch\" \"npm run dev:start\"",
     "build": "eslint ./src --fix -c .eslintrc && tsc -p .",
     "dev:migrate": "npm run format && npm run generate && prisma migrate dev --preview-feature",
-    "migrate": "prisma migrate deploy --preview-feature && npm run generate",
+    "migrate": "npm run generate && prisma migrate deploy --preview-feature",
     "migrate:reset": "prisma migrate reset --preview-feature",
     "migrate:status": "prisma migrate status --preview-feature",
     "studio": "prisma studio",
