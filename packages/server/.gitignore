@@ -10,3 +10,4 @@ cloud/*
 !cloud/.gitkeep
 
 src/types/interfaces.ts
+src/types/prisma.d.ts

@@ -243,10 +243,16 @@ async function reloadPage(page) {
  */
 const startServer = () => {
   log('log', 'Run command:', '"npm run start"', true);
-  spawn('npm', ['run', 'start'], {
+  const res = spawn('npm', ['run', 'start'], {
     env: {
       PATH: process.env.PATH,
     },
+  });
+  res.stdout.on('data', (d) => {
+    console.log(d.toString());
+  });
+  res.stderr.on('data', (d) => {
+    console.log(d.toString());
   });
   return new Promise((resolve) => {
     setTimeout(() => {

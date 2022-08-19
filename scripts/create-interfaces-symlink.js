@@ -4,17 +4,19 @@ const { resolve } = require('path');
 
 const destPath = resolve(__dirname, '../packages/server/src/types/interfaces.ts');
 const srcPath = resolve(__dirname, '../packages/client/src/package/types/interfaces.ts');
-
-if (!existsSync(srcPath)) {
-  console.warn('Create symlink skipped.');
-} else if (existsSync(destPath)) {
-  console.warn('Symlink created', destPath);
+const srcPathD = resolve(__dirname, '../packages/client/dist/types/interfaces.d.ts');
+const destPathD = resolve(__dirname, '../packages/server/dist/types/interfaces.ts');
+const isDev = existsSync(srcPath);
+const _srcPath = isDev ? srcPath : srcPathD;
+const _destPath = isDev ? destPath : destPathD;
+if (existsSync(_destPath)) {
+  console.info('Symlink created:', _destPath);
 } else {
-  symlink(srcPath, destPath, 'file', (err) => {
+  symlink(_srcPath, _destPath, 'file', (err) => {
     if (err) {
       console.error('Error create symlink', err);
       return;
     }
-    console.info('Symlink created', destPath);
+    console.info('Symlink created:', _destPath);
   });
 }

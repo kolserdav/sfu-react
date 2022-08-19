@@ -13,7 +13,7 @@
 /* eslint-disable max-classes-per-file */
 /* eslint-disable no-unused-vars */
 import * as werift from 'werift';
-import { Prisma, Room, Unit } from '@prisma/client';
+import { Prisma, Room, Unit } from './prisma';
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type ArgumentTypes<F extends Function> = F extends (args: infer A) => any ? A : never;
