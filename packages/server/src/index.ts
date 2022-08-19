@@ -9,6 +9,8 @@
  * Create Date: Fri Jul 29 2022 21:35:51 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 /* eslint-disable no-case-declarations */
+import { spawn } from 'child_process';
+import path from 'path';
 import { log } from './utils/lib';
 import Server from './main';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -61,47 +63,65 @@ if (skipedReq.length) {
 let port = 3000;
 let cors = '';
 let code = 0;
-
-for (let n = 0; args[n]; n++) {
-  const arg: string = args[n];
-  switch (arg) {
-    case 'port':
-      port = parseInt(argv.port || DEFAULT_PARAMS.port, 10);
-      if (Number.isNaN(port)) {
-        log('warn', 'Required number type of port, received:', port, true);
-        code = 1;
-        break;
-      }
-      break;
-    case 'cors':
-      log('info', 'Set up Simple-CORS defence:', argv.cors);
-      cors = argv.cors || DEFAULT_PARAMS.cors;
-      break;
-    case 'db':
-      log('info', 'Set up database url:', argv.db);
-      cors = argv.db || DEFAULT_PARAMS.db;
-      break;
-    case 'help':
-      log('info', `$ uyem [option] [value] > options:`, ARGS, true);
-      code = 0;
-      break;
-    default:
-      if (arg === '$0' || arg === '_') {
-        break;
-      }
-      log('warn', 'Unknown argument:', arg);
-      for (let i = 0; defKeys[i]; i++) {
-        if (new RegExp(arg).test(defKeys[i])) {
-          log('info', 'Maybe need: ', defKeys[i], true);
+(async () => {
+  console.log('Running "npm run postinstall-server" command...');
+  const res = spawn('npm', ['run', 'postinstall-server'], {
+    env: process.env,
+    cwd: path.resolve(__dirname, '../../..'),
+  });
+  res.stdout.on('data', (d) => {
+    console.log(d.toString());
+  });
+  res.stderr.on('data', (d) => {
+    console.error(d.toString());
+  });
+  await new Promise((resolve) => {
+    res.on('exit', (e) => {
+      console.log('Command "npm run postinstall-server" exit with code:', e);
+      resolve(0);
+    });
+  });
+  for (let n = 0; args[n]; n++) {
+    const arg: string = args[n];
+    switch (arg) {
+      case 'port':
+        port = parseInt(argv.port || DEFAULT_PARAMS.port, 10);
+        if (Number.isNaN(port)) {
+          log('warn', 'Required number type of port, received:', port, true);
+          code = 1;
           break;
         }
-      }
-      log('info', 'Try run:', '--help');
-      code = 1;
+        break;
+      case 'cors':
+        log('info', 'Set up Simple-CORS defence:', argv.cors);
+        cors = argv.cors || DEFAULT_PARAMS.cors;
+        break;
+      case 'db':
+        log('info', 'Set up database url:', argv.db);
+        cors = argv.db || DEFAULT_PARAMS.db;
+        break;
+      case 'help':
+        log('info', `$ uyem [option] [value] > options:`, ARGS, true);
+        code = 0;
+        break;
+      default:
+        if (arg === '$0' || arg === '_') {
+          break;
+        }
+        log('warn', 'Unknown argument:', arg);
+        for (let i = 0; defKeys[i]; i++) {
+          if (new RegExp(arg).test(defKeys[i])) {
+            log('info', 'Maybe need: ', defKeys[i], true);
+            break;
+          }
+        }
+        log('info', 'Try run:', '--help');
+        code = 1;
+    }
   }
-}
-if (code !== undefined) {
-  log('warn', 'Script end with code:', code, true);
-} else {
-  Server({ port, cors });
-}
+  if (code !== undefined) {
+    log('warn', 'Script end with code:', code, true);
+  } else {
+    Server({ port, cors });
+  }
+})();
