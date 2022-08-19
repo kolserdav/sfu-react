@@ -45,7 +45,7 @@ See [docs/COTURN.md](docs/COTURN.md) for more details.
 - Add property `server` to the `scripts` block of `package.json`:
 
 ```json
-"server": "uyem --port 3001",
+"server": "uyem --port 3001 --db mysql://user:password@127.0.0.1:3306/db_name",
 ```
 
 - Run server:

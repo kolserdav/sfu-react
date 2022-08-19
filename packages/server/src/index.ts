@@ -32,7 +32,7 @@ const ARGS = {
   db: `Database url ${DEFAULT_PARAMS.db}`,
   version: 'Show installed version',
 };
-const argv: Partial<typeof ARGS> & Record<string, string> = DEFAULT_PARAMS;
+const argv: Partial<typeof ARGS> & Record<string, string> = { ...DEFAULT_PARAMS };
 processArgs.forEach((item, index) => {
   if (/^-{1,2}\w+/.test(item)) {
     argv[item.replace(/-/g, '')] = process.argv[index + 1];
@@ -85,6 +85,8 @@ let db = '';
         db = argv.db || DEFAULT_PARAMS.db;
         if (db === DEFAULT_PARAMS.db) {
           log('warn', 'Parameter "db" not specified, using default:', DEFAULT_PARAMS.db, true);
+        } else {
+          log('info', 'Using database url:', db, true);
         }
         process.env.DATABASE_URL = db;
         break;
