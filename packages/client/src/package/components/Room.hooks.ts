@@ -848,7 +848,7 @@ export const useAudioAnalyzer = () => {
         });
       }
       const target = audioLevelsArr.sort((a, b) => {
-        if (a.level > b.level) {
+        if (a.level < b.level) {
           return 1;
         }
         return -1;
