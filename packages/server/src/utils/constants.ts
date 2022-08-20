@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Fri Jul 29 2022 21:35:51 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-export const LOG_LEVEL = process.env.NODE_ENV === 'production' ? 3 : 2;
+export const LOG_LEVEL = 2;
 
 export const DEFAULT_PORT = '3001';
 export const HEADLESS = false;
