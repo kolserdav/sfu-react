@@ -577,6 +577,7 @@ export const useVideoDimensions = ({
           const isFull = target.getAttribute('data') === 'full';
           const _container = !isFull ? container : (target.parentElement as HTMLDivElement);
           if (_container) {
+            const { clientHeight, clientWidth } = _container;
             const { videoHeight, videoWidth } = target;
             const coeff = videoWidth / videoHeight;
             const { width, cols, rows } = getWidthOfItem({
@@ -594,9 +595,9 @@ export const useVideoDimensions = ({
                   _height = Math.floor(width / coeff);
                   if (isFull) {
                     _height =
-                      _container.clientWidth > _container.clientHeight * coeff
-                        ? _container.clientHeight
-                        : Math.floor(_container.clientWidth / coeff);
+                      clientWidth > clientHeight * coeff
+                        ? clientHeight
+                        : Math.floor(clientWidth / coeff);
                     _width = Math.floor(_height * coeff);
                   }
                   target.setAttribute('width', _width.toString());
@@ -606,10 +607,10 @@ export const useVideoDimensions = ({
                   // TODO test it
                   if (isFull) {
                     _width =
-                      _container.clientHeight > _container.clientWidth / coeff
-                        ? _container.clientWidth
-                        : Math.floor(_container.clientHeight * coeff);
-                    _width = Math.floor(_height * coeff);
+                      clientHeight > clientWidth / coeff
+                        ? clientWidth
+                        : Math.floor(clientHeight * coeff);
+                    _height = Math.floor(_width / coeff);
                   }
                   target.setAttribute('width', _width.toString());
                   target.setAttribute('height', _height.toString());
