@@ -8,6 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Fri Jul 29 2022 21:35:51 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
+import type { Stream } from '../types';
 import s from './Room.module.scss';
 import c from './ui/CloseButton.module.scss';
 

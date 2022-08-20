@@ -32,6 +32,10 @@
 .video {
   video {
     cursor: pointer;
+
+    &.speaker {
+      border: 2px solid red;
+    }
   }
 
   position: relative;

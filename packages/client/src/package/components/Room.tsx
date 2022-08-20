@@ -9,6 +9,7 @@
  * Create Date: Fri Jul 29 2022 21:35:51 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import React, { useMemo, useContext, useRef } from 'react';
+import clsx from 'clsx';
 import { getRoomId, log } from '../utils/lib';
 import s from './Room.module.scss';
 import { RoomProps } from '../types/index';
@@ -18,6 +19,7 @@ import {
   useOnclickClose,
   usePressEscape,
   useVideoStarted,
+  useAudioAnalyzer,
 } from './Room.hooks';
 import ThemeContext from '../Theme.context';
 import { getRoomLink, getPathname, onClickVideo, copyLink, supportDisplayMedia } from './Room.lib';
@@ -32,14 +34,13 @@ import CameraOutlineIcon from '../Icons/CameraOutlineIcon';
 import CopyIcon from '../Icons/CopyIcon';
 import WarningIcon from '../Icons/ErrorIcon';
 
-const analyzer: Record<string, AnalyserNode> = {};
-const freqs: Record<string, Uint8Array> = {};
-
 function Room({ id, iceServers, server, port }: RoomProps) {
   const pathname = getPathname();
   const container = useRef<HTMLDivElement>(null);
   const roomId = useMemo(() => getRoomId(pathname || ''), [pathname]);
   const roomLink = useMemo(() => getRoomLink(roomId), [roomId]);
+  const { createAudioAnalyzer, analyzeSoundLevel, cleanAudioAnalyzer, speaker } =
+    useAudioAnalyzer();
   const {
     streams,
     lenght,
@@ -60,6 +61,7 @@ function Room({ id, iceServers, server, port }: RoomProps) {
     iceServers,
     server,
     port: port.toString(),
+    cleanAudioAnalyzer,
   });
   const theme = useContext(ThemeContext);
   const setVideoDimensions = useVideoDimensions({
@@ -78,18 +80,6 @@ function Room({ id, iceServers, server, port }: RoomProps) {
   });
   const displayMediaSupported = useMemo(() => supportDisplayMedia(), []);
 
-  // TODO need test
-  const analyzeSoundLevel = (uid: string | number) => {
-    if (analyzer[uid]) {
-      analyzer[uid].getByteTimeDomainData(freqs[uid]);
-      let level = 0;
-      freqs[uid].forEach((i) => {
-        level = Math.max(level, i);
-      });
-      console.log(level / 256);
-    }
-  };
-
   return (
     <div className={s.wrapper} style={theme.wrapper}>
       <div className={s.container} ref={container}>
@@ -99,6 +89,7 @@ function Room({ id, iceServers, server, port }: RoomProps) {
             <CloseButton onClick={onClickClose} onKeyDown={onPressEscape} tabindex={index} />
             {/** video is strong second child */}
             <video
+              className={speaker === item.target ? s.speaker : ''}
               muted={item.target === id || muteds.indexOf(item.target.toString()) !== -1}
               onTimeUpdate={(e) => {
                 analyzeSoundLevel(item.target);
@@ -141,16 +132,11 @@ function Room({ id, iceServers, server, port }: RoomProps) {
                   tracks: item.stream.getTracks(),
                 });
               }}
-              onSuspend={(e) => {
-                log('warn', 'Suspend video data', {
+              onSuspend={() => {
+                log('info', 'Suspend video data', {
                   stream: item.stream,
                   id: item.target,
                   tracks: item.stream.getTracks(),
-                });
-                lostStreamHandler({
-                  target: item.target,
-                  connId: item.connId,
-                  eventName: 'suspend-video-data',
                 });
               }}
               onStalled={(e) => {
@@ -188,16 +174,7 @@ function Room({ id, iceServers, server, port }: RoomProps) {
                   _played[item.target] = true;
                   setPlayed(_played);
                 }
-                const audioContext = new AudioContext();
-                const audioSource = audioContext.createMediaStreamSource(item.stream);
-                const audioGain = audioContext.createGain();
-                audioSource.connect(audioGain);
-                analyzer[item.target] = audioContext.createAnalyser();
-                analyzer[item.target].minDecibels = -100;
-                analyzer[item.target].maxDecibels = 0;
-                analyzer[item.target].smoothingTimeConstant = 0.8;
-                analyzer[item.target].fftSize = 32;
-                freqs[item.target] = new Uint8Array(analyzer[item.target].frequencyBinCount);
+                createAudioAnalyzer(item);
               }}
             />
             <div className={s.muted}>

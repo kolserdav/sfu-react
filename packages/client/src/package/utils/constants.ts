@@ -27,3 +27,4 @@ export const CODECS = [
   'video/webm;codecs=h264,vp9,opus',
   'video/x-matroska;codecs=avc1',
 ];
+export const SPEAKER_LEVEL = 0.4;

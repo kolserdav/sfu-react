@@ -19,7 +19,7 @@ import { Stream } from '../types';
 import s from './Room.module.scss';
 import c from './ui/CloseButton.module.scss';
 import storeStreams, { changeStreams } from '../store/streams';
-import { START_DELAY } from '../utils/constants';
+import { START_DELAY, SPEAKER_LEVEL } from '../utils/constants';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -28,12 +28,14 @@ export const useConnection = ({
   iceServers,
   server,
   port,
+  cleanAudioAnalyzer,
 }: {
   id: number | string;
   roomId: number | string | null;
   iceServers: RTCConfiguration['iceServers'];
   server: string;
   port: string;
+  cleanAudioAnalyzer: (uid: string | number) => void;
 }) => {
   const [streams, setStreams] = useState<Stream[]>([]);
   const [shareScreen, setShareScreen] = useState<boolean>(false);
@@ -141,6 +143,7 @@ export const useConnection = ({
       connId: _connId,
     }: SendMessageArgs<MessageType.SET_CLOSE_PEER_CONNECTION>) => {
       const peerId = rtc.getPeerId(_roomId, _target, _connId);
+      cleanAudioAnalyzer(_target);
       const _stream = streams.find((item) => item.target === _target);
       if (_stream) {
         storeStreams.dispatch(changeStreams({ type: 'delete', stream: _stream }));
@@ -604,7 +607,6 @@ export const useVideoDimensions = ({
                   target.setAttribute('height', _height.toString());
                 } else {
                   _width = Math.floor(width * coeff);
-                  // TODO test it
                   if (isFull) {
                     _width =
                       clientHeight > clientWidth / coeff
@@ -772,4 +774,97 @@ export const useVideoStarted = ({
   }, [played, streams, lostStreamHandler, attempts, ws, timeStart, rtc.muteds, rtc.roomLength]);
 
   return { played, setPlayed };
+};
+
+const analyzer: Record<string, AnalyserNode[]> = {};
+const freqs: Record<string, Uint8Array[]> = {};
+const audioLevels: Record<string, number> = {};
+
+export const useAudioAnalyzer = () => {
+  const [speaker, setSpeaker] = useState<string | number>(0);
+  const createAudioAnalyzer = (item: Stream) => {
+    const audioContext = new AudioContext();
+    const audioSource = audioContext.createMediaStreamSource(item.stream);
+    const audioGain = audioContext.createGain();
+    const audioChannelSplitter = audioContext.createChannelSplitter(audioSource.channelCount);
+    audioSource.connect(audioGain);
+    audioGain.connect(audioChannelSplitter);
+    audioGain.connect(audioContext.destination);
+    analyzer[item.target] = [];
+    freqs[item.target] = [];
+    for (let i = 0; i < audioSource.channelCount; i++) {
+      analyzer[item.target][i] = audioContext.createAnalyser();
+      analyzer[item.target][i].minDecibels = -100;
+      analyzer[item.target][i].maxDecibels = 0;
+      analyzer[item.target][i].smoothingTimeConstant = 0.8;
+      analyzer[item.target][i].fftSize = 32;
+      freqs[item.target][i] = new Uint8Array(analyzer[item.target][i].frequencyBinCount);
+      audioChannelSplitter.connect(analyzer[item.target][i], i, 0);
+    }
+  };
+
+  const analyzeSoundLevel = (uid: string | number) => {
+    if (analyzer[uid]) {
+      for (let i = 0; i < analyzer[uid].length; i++) {
+        analyzer[uid][i].getByteFrequencyData(freqs[uid][i]);
+        let level = 0;
+        freqs[uid][i].forEach((item) => {
+          level = Math.max(level, item);
+        });
+        audioLevels[uid] = level / 256;
+      }
+    }
+  };
+
+  const cleanAudioAnalyzer = (uid: string | number) => {
+    if (analyzer[uid]) {
+      delete analyzer[uid];
+    } else {
+      log('warn', 'Audio analyzer not found', uid);
+    }
+    if (freqs[uid]) {
+      delete freqs[uid];
+    } else {
+      log('warn', 'Audio analyzer freqs not found', uid);
+    }
+    if (audioLevels[uid]) {
+      delete audioLevels[uid];
+    } else {
+      log('warn', 'Audio analyzer levels not found', uid);
+    }
+  };
+
+  /**
+   * Compare audio levels
+   */
+  useEffect(() => {
+    const timeout = setInterval(() => {
+      const audioLevelsArr: { uid: string | number; level: number }[] = [];
+      const keys = Object.keys(audioLevels);
+      for (let i = 0; keys[i]; i++) {
+        audioLevelsArr.push({
+          uid: keys[i],
+          level: audioLevels[keys[i]],
+        });
+      }
+      const target = audioLevelsArr.sort((a, b) => {
+        if (a.level > b.level) {
+          return 1;
+        }
+        return -1;
+      });
+      if (target[0]) {
+        let _speaker: number | string = 0;
+        if (target[0].level >= SPEAKER_LEVEL) {
+          _speaker = target[0].uid;
+        }
+        setSpeaker(_speaker);
+      }
+    }, 1000);
+    return () => {
+      clearInterval(timeout);
+    };
+  }, []);
+
+  return { analyzeSoundLevel, createAudioAnalyzer, cleanAudioAnalyzer, speaker };
 };
