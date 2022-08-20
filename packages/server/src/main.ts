@@ -48,8 +48,8 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
     const { origin } = req.headers;
     const notAllowed = cors.split(',').indexOf(origin || '') === -1;
     if (cors && notAllowed) {
-      ws.close();
       log('warn', 'Block CORS attempt', { headers: req.headers });
+      ws.close();
       return;
     }
     const connId = getConnectionId();
