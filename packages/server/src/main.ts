@@ -18,7 +18,7 @@ import WS from './core/ws';
 import RTC from './core/rtc';
 import { MessageType } from './types/interfaces';
 import { log } from './utils/lib';
-import { PORT, DATABASE_URL } from './utils/constants';
+import { PORT, DATABASE_URL, CORS } from './utils/constants';
 import DB from './core/db';
 
 const db = new DB();
@@ -33,7 +33,7 @@ process.on('unhandledRejection', (err: Error) => {
 /**
  * Create SFU WebRTC server
  */
-function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string; db?: string }) {
+function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: string; db?: string }) {
   const wss = new WS({ port });
   const rtc: RTC | null = new RTC({ ws: wss });
 
@@ -222,5 +222,5 @@ function createServer({ port = PORT, cors = '' }: { port?: number; cors?: string
 export default createServer;
 
 if (require.main === module) {
-  createServer({ port: PORT, cors: 'http://localhost:3000', db: DATABASE_URL });
+  createServer({ port: PORT, cors: CORS, db: DATABASE_URL });
 }
