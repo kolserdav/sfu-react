@@ -525,7 +525,7 @@ export const useConnection = ({
     let _streams: Stream[] = storeStreams.getState().streams as Stream[];
     interval = setInterval(() => {
       _streams = storeStreams.getState().streams as Stream[];
-      if (_streams.length !== lenght) {
+      if (_streams.length !== lenght && ws.connection.readyState) {
         ws.sendMessage({
           type: MessageType.GET_ROOM_GUESTS,
           id,
