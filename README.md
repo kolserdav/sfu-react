@@ -56,8 +56,8 @@ npm run server
 
 ## Include examples
 
-- [Client Hello World](examples/hello-world/src/App.jsx)
-- [Server](examples/server/index.js)
+- [Client Hello World](examples/hello-world/src)
+- [Server](examples/server)
 
 ## Contributing
 
