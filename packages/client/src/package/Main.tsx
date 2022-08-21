@@ -25,12 +25,14 @@ import { getLocale } from './utils/lib';
 import storeTheme from './store/theme';
 import storeLocale from './store/locale';
 import { LocaleClient } from './types/interfaces';
+import { getLocalStorage, LocalStorageName } from './utils/localStorage';
 
 function Main({ room }: { room: Omit<RoomProps, 'locale'> }) {
   const { colors } = room;
-  const [currentTheme, setCurrentTheme] = useState<keyof Themes>('light');
+  const savedTheme = getLocalStorage(LocalStorageName.THEME);
+  const [currentTheme, setCurrentTheme] = useState<keyof Themes>(savedTheme || 'light');
   const _themes = useMemo(() => changeColors({ colors, themes }), [colors]);
-  const [theme, setTheme] = useState<Themes['dark' | 'light']>(_themes.light);
+  const [theme, setTheme] = useState<Themes['dark' | 'light']>(_themes[savedTheme || 'light']);
   const [hallOpen, setHallOpen] = useState<boolean>(false);
   const [locale, setLocale] = useState<LocaleClient | null>(null);
 

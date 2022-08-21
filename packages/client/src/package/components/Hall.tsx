@@ -17,6 +17,7 @@ import storeTheme, { changeTheme } from '../store/theme';
 import { LocaleDefault, LocaleSelector, LocaleValue } from '../types/interfaces';
 import storeLocale, { changeLocale } from '../store/locale';
 import Select from './ui/Select';
+import { setLocalStorage, LocalStorageName } from '../utils/localStorage';
 
 import s from './Hall.module.scss';
 import IconButton from './ui/IconButton';
@@ -24,6 +25,7 @@ import IconButton from './ui/IconButton';
 const changeThemeHandler = () => {
   const { theme } = storeTheme.getState();
   storeTheme.dispatch(changeTheme({ theme }));
+  setLocalStorage(LocalStorageName.THEME, theme === 'dark' ? 'light' : 'dark');
 };
 
 function Hall({ open, locale }: HallProps) {

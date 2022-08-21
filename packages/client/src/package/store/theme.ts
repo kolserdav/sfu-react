@@ -10,6 +10,7 @@
  ******************************************************************************************/
 import { createSlice, configureStore } from '@reduxjs/toolkit';
 import { ThemeType } from '../types';
+import { getLocalStorage, LocalStorageName } from '../utils/localStorage';
 
 interface State {
   theme: ThemeType;
@@ -22,7 +23,7 @@ interface Action {
 const slice = createSlice({
   name: 'theme',
   initialState: {
-    theme: 'light',
+    theme: getLocalStorage(LocalStorageName.THEME) || 'light',
   } as State,
   reducers: {
     changeTheme: (state: State, action: Action) => {
