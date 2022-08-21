@@ -133,7 +133,7 @@ let db = '';
     log('warn', 'Script end with code:', code, true);
   } else {
     code = await migrate();
-    if (args.indexOf('--migrate') !== -1) {
+    if (process.argv.indexOf('--migrate') !== -1) {
       log(code ? 'warn' : 'info', 'Migrate exit with code', code, true);
       return;
     }

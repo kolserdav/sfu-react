@@ -12,6 +12,6 @@
   "author": "kolserdav",
   "license": "ISC",
   "dependencies": {
-    "uyem": "^0.5.30"
+    "uyem": "^0.5.31"
   }
 }
