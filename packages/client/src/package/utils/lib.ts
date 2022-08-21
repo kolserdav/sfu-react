@@ -9,15 +9,21 @@
  * Create Date: Fri Jul 29 2022 21:35:51 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { LOG_LEVEL, CODECS } from './constants';
+import { LocaleClient, LocaleDefault, LocaleValue } from '../types/interfaces';
 
 // eslint-disable-next-line no-unused-vars
 enum LogLevel {
+  // eslint-disable-next-line no-unused-vars
   log = 0,
+  // eslint-disable-next-line no-unused-vars
   info = 1,
+  // eslint-disable-next-line no-unused-vars
   warn = 2,
+  // eslint-disable-next-line no-unused-vars
   error = 3,
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const log = (type: keyof typeof LogLevel, text: string, data?: any) => {
   if (LogLevel[type] >= LOG_LEVEL) {
     // eslint-disable-next-line no-console
@@ -75,4 +81,23 @@ export const getCodec = () => {
     mimeType = `video/${codecV}`;
   }
   return mimeType;
+};
+
+const locales: Record<string, LocaleClient> = {};
+
+export const getLocale = (value: LocaleValue): LocaleClient => {
+  if (locales[value]) {
+    return locales[value];
+  }
+  try {
+    // eslint-disable-next-line global-require
+    locales[value] = require(`../locales/${value}/lang`).default;
+  } catch (e) {
+    if (!locales[LocaleDefault]) {
+      // eslint-disable-next-line global-require
+      locales[LocaleDefault] = require(`../locales/${LocaleDefault}/lang`).default;
+    }
+    return locales[LocaleDefault];
+  }
+  return locales[value];
 };

@@ -27,5 +27,26 @@
 }
 
 .block {
+  position: relative;
+  width: 100%;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   max-width: $container-max-width;
+}
+
+.users {
+  position: relative;
+  width: 20%;
+}
+
+.chat {
+  position: relative;
+  width: 60%;
+}
+
+.settings {
+  position: relative;
+  width: 20%;
 }

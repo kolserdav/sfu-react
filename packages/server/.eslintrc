@@ -18,6 +18,8 @@
   },
   "ignorePatterns": ["node_modules", "dist", "tmp", "src/werift-webrtc"],
   "rules": {
+    "import/no-dynamic-require": 1,
+    "@typescript-eslint/no-var-requires": 1,
     "spaced-comment": 0,
     "no-unused-vars": 1,
     "prettier/prettier": 1,

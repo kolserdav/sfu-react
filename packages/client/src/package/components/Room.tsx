@@ -9,7 +9,6 @@
  * Create Date: Fri Jul 29 2022 21:35:51 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import React, { useMemo, useContext, useRef } from 'react';
-import clsx from 'clsx';
 import { getRoomId, log } from '../utils/lib';
 import s from './Room.module.scss';
 import { RoomProps } from '../types/index';

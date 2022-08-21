@@ -16,10 +16,12 @@ function IconButton({
   children,
   className,
   width,
+  title,
   height,
   onClick,
 }: {
   children: JSX.Element;
+  title?: string;
   width?: number;
   height?: number;
   className?: string;
@@ -30,6 +32,7 @@ function IconButton({
       style={{ width, height }}
       onClick={onClick}
       role="button"
+      title={title}
       tabIndex={0}
       className={className}
     >
@@ -41,6 +44,7 @@ IconButton.defaultProps = {
   className: s.wrapper,
   width: 40,
   height: 40,
+  title: '',
   onClick: () => {
     /** */
   },

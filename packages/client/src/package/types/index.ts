@@ -9,13 +9,20 @@
  * Create Date: Fri Jul 29 2022 21:35:51 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { Colors } from '../Theme';
+import { LocaleClient } from './interfaces';
 
 export interface RoomProps {
   id: number | string;
   server: string;
   port: number;
+  locale: LocaleClient['room'];
   colors?: Colors;
   iceServers?: RTCConfiguration['iceServers'];
+}
+
+export interface HallProps {
+  open: boolean;
+  locale: LocaleClient['hall'];
 }
 
 export interface Stream {

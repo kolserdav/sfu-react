@@ -9,12 +9,17 @@
  * Create Date: Fri Jul 29 2022 21:35:51 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { LOG_LEVEL } from './constants';
+import { LocaleServer, LocaleDefault, LocaleValue } from '../types/interfaces';
 
 // eslint-disable-next-line no-unused-vars
 enum LogLevel {
+  // eslint-disable-next-line no-unused-vars
   log = 0,
+  // eslint-disable-next-line no-unused-vars
   info = 1,
+  // eslint-disable-next-line no-unused-vars
   warn = 2,
+  // eslint-disable-next-line no-unused-vars
   error = 3,
 }
 
@@ -27,9 +32,12 @@ export const log = (type: keyof typeof LogLevel, text: string, data?: any, cons?
   const Dim = '\x1b[2m';
   const Cyan = '\x1b[36m';
   if (cons) {
+    // eslint-disable-next-line no-console
     console.log(type === 'info' ? Cyan : type === 'warn' ? Yellow : type === 'error' ? Red : Reset);
+    // eslint-disable-next-line no-console
     console[type](type, Reset, text, Bright, data, Reset);
   } else if (LogLevel[type] >= LOG_LEVEL) {
+    // eslint-disable-next-line no-console
     console[type](
       type === 'error' ? Red : type === 'warn' ? Yellow : Bright,
       type,
@@ -40,4 +48,23 @@ export const log = (type: keyof typeof LogLevel, text: string, data?: any, cons?
       Reset
     );
   }
+};
+
+const locales: Record<string, LocaleServer> = {};
+
+export const getLocale = (value: LocaleValue): LocaleServer => {
+  if (locales[value]) {
+    return locales[value];
+  }
+  try {
+    // eslint-disable-next-line global-require
+    locales[value] = require(`../locales/${value}/lang`).default;
+  } catch (e) {
+    if (!locales[LocaleDefault]) {
+      // eslint-disable-next-line global-require
+      locales[LocaleDefault] = require(`../locales/${LocaleDefault}/lang`).default;
+    }
+    return locales[LocaleDefault];
+  }
+  return locales[value];
 };

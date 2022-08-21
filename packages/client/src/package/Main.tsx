@@ -21,24 +21,47 @@ import ChevronRightIcon from './Icons/ChevronRightIcon';
 import { changeColors } from './Main.lib';
 import s from './Main.module.scss';
 import IconButton from './components/ui/IconButton';
+import { getLocale } from './utils/lib';
 import storeTheme from './store/theme';
+import storeLocale from './store/locale';
+import { LocaleClient } from './types/interfaces';
 
-// TODO theme provider
-function Main({ room }: { room: RoomProps }) {
+function Main({ room }: { room: Omit<RoomProps, 'locale'> }) {
   const { colors } = room;
   const [currentTheme, setCurrentTheme] = useState<keyof Themes>('light');
   const _themes = useMemo(() => changeColors({ colors, themes }), [colors]);
   const [theme, setTheme] = useState<Themes['dark' | 'light']>(_themes.light);
   const [hallOpen, setHallOpen] = useState<boolean>(false);
+  const [locale, setLocale] = useState<LocaleClient | null>(null);
 
   const openMenu = () => {
     setHallOpen(!hallOpen);
   };
 
+  /**
+   * Set theme
+   */
   useEffect(() => {
     setTheme(_themes[currentTheme]);
-  }, [currentTheme]);
+  }, [currentTheme, _themes]);
 
+  /**
+   * Change locale
+   */
+  useEffect(() => {
+    // TODO change to saved locale
+    let _locale = getLocale(storeLocale.getState().locale);
+    setLocale(_locale);
+    storeLocale.subscribe(() => {
+      const state = storeLocale.getState();
+      _locale = getLocale(state.locale);
+      setLocale(_locale);
+    });
+  }, []);
+
+  /**
+   * Change theme
+   */
   useEffect(() => {
     const cleanSubs = storeTheme.subscribe(() => {
       const { theme: _theme } = storeTheme.getState();
@@ -51,7 +74,7 @@ function Main({ room }: { room: RoomProps }) {
 
   return (
     <ThemeContext.Provider value={theme}>
-      <Room {...room} />
+      {locale && <Room {...room} locale={locale.room} />}
       <div
         className={clsx(s.button, hallOpen ? s.active : '')}
         role="button"
@@ -67,7 +90,7 @@ function Main({ room }: { room: RoomProps }) {
           )}
         </IconButton>
       </div>
-      <Hall open={hallOpen} />
+      {locale && <Hall open={hallOpen} locale={locale.hall} />}
     </ThemeContext.Provider>
   );
 }

@@ -24,6 +24,8 @@
   "plugins": ["@typescript-eslint", "react", "prettier", "eslint-plugin-prettier"],
   "ignorePatterns": ["dist"],
   "rules": {
+    "import/no-dynamic-require": 1,
+    "@typescript-eslint/no-var-requires": 1,
     "react-hooks/rules-of-hooks": 1,
     "react/jsx-props-no-spreading": 0,
     "import/no-extraneous-dependencies": 0,

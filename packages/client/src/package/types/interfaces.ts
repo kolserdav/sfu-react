@@ -291,3 +291,38 @@ export type WSInterface = Signaling.WSInterface;
 export type RTCInterface = Connection.RTCInterface;
 export type DBInterface = Data.DBInterface;
 export type AddTracksProps = Connection.AddTracksProps;
+
+export namespace Locale {
+  export type Value = 'en' | 'ru';
+  export const DEFAULT: Value = 'en';
+  export const SELECTOR: { value: Value; name: string; impl: boolean }[] = [
+    {
+      name: 'English',
+      value: 'en',
+      impl: true,
+    },
+    {
+      name: 'Русский',
+      value: 'ru',
+      impl: false,
+    },
+  ];
+  export interface Server {
+    error: string;
+  }
+
+  export interface Client {
+    room: {
+      shareScreen: string;
+    };
+    hall: {
+      changeTheme: string;
+    };
+  }
+}
+
+export type LocaleServer = Locale.Server;
+export type LocaleClient = Locale.Client;
+export type LocaleValue = Locale.Value;
+export const LocaleDefault = Locale.DEFAULT;
+export const LocaleSelector = Locale.SELECTOR;
