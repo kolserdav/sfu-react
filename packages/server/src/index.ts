@@ -31,6 +31,7 @@ const ARGS = {
   cors: 'Allowed origins',
   db: `Database url ${DEFAULT_PARAMS.db}`,
   version: 'Show installed version',
+  migrate: 'Run only migrate script',
 };
 const argv: Partial<typeof ARGS> & Record<string, string> = { ...DEFAULT_PARAMS };
 processArgs.forEach((item, index) => {
@@ -40,6 +41,25 @@ processArgs.forEach((item, index) => {
 });
 
 const args = Object.keys(argv);
+
+const migrate = async (): Promise<number> => {
+  const res = spawn('npm', ['run', 'prod:migrate'], {
+    env: process.env,
+    cwd: path.resolve(__dirname, '../../..'),
+  });
+  res.stdout.on('data', (d) => {
+    // eslint-disable-next-line no-console
+    console.log(d.toString());
+  });
+  res.stderr.on('data', (d) => {
+    log('error', d.toString(), '', true);
+  });
+  return new Promise((resolve) => {
+    res.on('exit', (e) => {
+      resolve(e);
+    });
+  });
+};
 
 const REQUIRED: (keyof typeof ARGS)[] = [];
 
@@ -94,10 +114,10 @@ let db = '';
         log('info', `$ uyem [option] [value] > options:`, ARGS, true);
         code = 0;
         break;
+      case 'migrate':
+        log('info', 'Start migrate only script...', '', true);
+        break;
       default:
-        if (arg === '$0' || arg === '_') {
-          break;
-        }
         log('warn', 'Unknown argument:', arg);
         for (let i = 0; defKeys[i]; i++) {
           if (new RegExp(arg).test(defKeys[i])) {
@@ -110,25 +130,18 @@ let db = '';
     }
   }
   log('info', 'Running "npm run prod:migrate" command...', '', true);
-  const res = spawn('npm', ['run', 'prod:migrate'], {
-    env: process.env,
-    cwd: path.resolve(__dirname, '../../..'),
-  });
-  res.stdout.on('data', (d) => {
-    // eslint-disable-next-line no-console
-    console.log(d.toString());
-  });
-  res.stderr.on('data', (d) => {
-    log('error', d.toString(), '', true);
-  });
-  code = await new Promise((resolve) => {
-    res.on('exit', (e) => {
-      resolve(e);
-    });
-  });
   if (code !== 0) {
     log('warn', 'Script end with code:', code, true);
   } else {
+    code = await migrate();
+    if (args.indexOf('--migrate')) {
+      log(code ? 'warn' : 'info', 'Migrate exit with code', code, true);
+      return;
+    }
+    if (code !== 0) {
+      log('warn', 'Script end with code:', code, true);
+      return;
+    }
     Server({ port, cors });
   }
 })();

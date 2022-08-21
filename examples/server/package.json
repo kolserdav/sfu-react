@@ -4,13 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "uyem --db mysql://arch:1234@127.0.0.1:3306/uyem_db --migrate && node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "kolserdav",
   "license": "ISC",
   "dependencies": {
-    "uyem": "^0.1.23"
+    "uyem": "^0.5.25"
   }
 }
