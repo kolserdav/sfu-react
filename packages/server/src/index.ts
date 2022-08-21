@@ -12,7 +12,6 @@
 import { spawn } from 'child_process';
 import path from 'path';
 import { log } from './utils/lib';
-import Server from './main';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 //@ts-ignore
 // eslint-disable-next-line import/no-relative-packages
@@ -141,6 +140,8 @@ let db = '';
     if (code !== 0) {
       log('warn', 'Script end with code:', code, true);
     } else {
+      // eslint-disable-next-line global-require
+      const Server = require('./main');
       Server({ port, cors });
     }
   }
