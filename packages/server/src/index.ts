@@ -141,7 +141,7 @@ let db = '';
       log('warn', 'Script end with code:', code, true);
     } else {
       // eslint-disable-next-line global-require
-      const Server = require('./main');
+      const Server = require('./main').default;
       Server({ port, cors });
     }
   }
