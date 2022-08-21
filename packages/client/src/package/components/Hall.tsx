@@ -18,6 +18,7 @@ import { LocaleDefault, LocaleSelector, LocaleValue } from '../types/interfaces'
 import storeLocale, { changeLocale } from '../store/locale';
 import Select from './ui/Select';
 import { setLocalStorage, LocalStorageName } from '../utils/localStorage';
+import { getCookie, CookieName, setCookie } from '../utils/cookies';
 
 import s from './Hall.module.scss';
 import IconButton from './ui/IconButton';
@@ -29,12 +30,12 @@ const changeThemeHandler = () => {
 };
 
 function Hall({ open, locale }: HallProps) {
-  const [lang, setLang] = useState<LocaleValue>(LocaleDefault);
+  const [lang, setLang] = useState<LocaleValue>(getCookie(CookieName.lang) || LocaleDefault);
   const theme = useContext(ThemeContext);
-
   const changeLang = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value as LocaleValue;
     setLang(value);
+    setCookie(CookieName.lang, value);
     storeLocale.dispatch(changeLocale({ locale: value }));
   };
 
