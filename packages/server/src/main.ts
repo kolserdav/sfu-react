@@ -33,7 +33,7 @@ process.on('unhandledRejection', (err: Error) => {
 /**
  * Create SFU WebRTC server
  */
-function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: string; db?: string }) {
+function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: string }) {
   const wss = new WS({ port });
   const rtc: RTC | null = new RTC({ ws: wss });
 
@@ -222,5 +222,5 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
 export default createServer;
 
 if (require.main === module) {
-  createServer({ port: PORT, cors: CORS, db: DATABASE_URL });
+  createServer({ port: PORT, cors: CORS });
 }
