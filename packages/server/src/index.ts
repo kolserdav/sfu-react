@@ -140,8 +140,8 @@ let db = '';
     }
     if (code !== 0) {
       log('warn', 'Script end with code:', code, true);
-      return;
+    } else {
+      Server({ port, cors });
     }
-    Server({ port, cors });
   }
 })();
