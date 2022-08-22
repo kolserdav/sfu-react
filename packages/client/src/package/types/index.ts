@@ -23,6 +23,8 @@ export interface RoomProps {
 export interface HallProps {
   open: boolean;
   locale: LocaleClient['hall'];
+  server: string;
+  port: number;
 }
 
 export interface Stream {

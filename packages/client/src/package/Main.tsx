@@ -92,7 +92,9 @@ function Main({ room }: { room: Omit<RoomProps, 'locale'> }) {
           )}
         </IconButton>
       </div>
-      {locale && <Hall open={hallOpen} locale={locale.hall} />}
+      {locale && (
+        <Hall open={hallOpen} locale={locale.hall} server={room.server} port={room.port} />
+      )}
     </ThemeContext.Provider>
   );
 }

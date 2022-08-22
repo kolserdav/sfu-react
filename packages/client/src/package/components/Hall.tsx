@@ -30,7 +30,7 @@ const changeThemeHandler = () => {
   setLocalStorage(LocalStorageName.THEME, theme === 'dark' ? 'light' : 'dark');
 };
 
-function Hall({ open, locale }: HallProps) {
+function Hall({ open, locale, server, port }: HallProps) {
   const [lang, setLang] = useState<LocaleValue>(getCookie(CookieName.lang) || LocaleDefault);
   const theme = useContext(ThemeContext);
   const changeLang = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -46,7 +46,7 @@ function Hall({ open, locale }: HallProps) {
         <div className={s.block}>
           <div className={s.users}>Users</div>
           <div className={s.chat}>
-            <Chat />
+            <Chat server={server} port={port} />
           </div>
           <div className={s.settings}>
             <Select onChange={changeLang} value={lang}>

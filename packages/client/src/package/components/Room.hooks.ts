@@ -500,6 +500,7 @@ export const useConnection = ({
       };
     };
   }, [
+    cleanAudioAnalyzer,
     roomId,
     streams,
     ws,

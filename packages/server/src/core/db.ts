@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Fri Jul 29 2022 21:35:51 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import { PrismaClient } from '@prisma/client';
+import { Message, PrismaClient } from '@prisma/client';
 import { DBInterface } from '../types/interfaces';
 import { log } from '../utils/lib';
 
@@ -86,6 +86,56 @@ class DB implements DBInterface {
       log('error', 'DB Error find first unit', { args, err });
     }
     return result;
+  };
+
+  // eslint-disable-next-line class-methods-use-this
+  public messageUpdate: DBInterface['messageUpdate'] = async (args) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let result: any = null;
+    try {
+      result = await prisma.message.update(args);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      log('error', 'DB Error update message', { where: args.where, data: args.data, err });
+    }
+    return result;
+  };
+
+  // eslint-disable-next-line class-methods-use-this
+  public messageCreate: DBInterface['messageCreate'] = async (args) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let result: any = null;
+    try {
+      result = await prisma.message.create(args);
+    } catch (err: any) {
+      log('error', 'DB Error create message', { args, err });
+    }
+    return result;
+  };
+
+  // eslint-disable-next-line class-methods-use-this
+  public messageFindMany: DBInterface['messageFindMany'] = async (args) => {
+    const { where, skip, take } = args;
+    let count: any;
+    try {
+      count = await prisma.message.count({
+        where,
+      });
+    } catch (err: any) {
+      log('error', 'Error get count of messages', { err });
+    }
+    let data: any;
+    try {
+      data = await prisma.message.findMany(args);
+    } catch (err: any) {
+      log('error', 'Error get messages', { err });
+    }
+    return {
+      data,
+      skip,
+      take,
+      count,
+    } as any;
   };
 
   public deleteGuest({ userId, roomId }: { userId: string | number; roomId: string | number }) {

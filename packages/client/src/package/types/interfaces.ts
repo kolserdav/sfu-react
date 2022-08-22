@@ -13,7 +13,7 @@
 /* eslint-disable max-classes-per-file */
 /* eslint-disable no-unused-vars */
 import * as werift from 'werift';
-import { Prisma, Room, Unit } from '@prisma/client';
+import { Message, Prisma, Room, Unit } from '@prisma/client';
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type ArgumentTypes<F extends Function> = F extends (args: infer A) => any ? A : never;
@@ -85,6 +85,7 @@ export namespace DataTypes {
       muteds: string[];
     };
     export type SetRoomMessage = {
+      userId: string | number;
       message: string;
     };
     export type SetClosePeerConnection = {
@@ -255,6 +256,7 @@ export namespace Connection {
 }
 
 export namespace Data {
+  export type GetManyResult<T> = { data: T[]; skip: number; count: number; take: number };
   export abstract class DBInterface {
     public abstract roomCreate<T extends Prisma.RoomCreateArgs>(
       args: Prisma.SelectSubset<T, Prisma.RoomCreateArgs>,
@@ -285,6 +287,21 @@ export namespace Data {
       args: Prisma.SelectSubset<T, Prisma.UnitFindFirstArgs>,
       _connection?: WebSocket
     ): Promise<Prisma.CheckSelect<T, Unit, Prisma.UnitGetPayload<T>> | null>;
+
+    public abstract messageUpdate<T extends Prisma.MessageUpdateArgs>(
+      args: Prisma.SelectSubset<T, Prisma.MessageUpdateArgs>,
+      _connection?: WebSocket
+    ): Promise<Prisma.CheckSelect<T, Message, Prisma.MessageGetPayload<T>> | null>;
+
+    public abstract messageCreate<T extends Prisma.MessageCreateArgs>(
+      args: Prisma.SelectSubset<T, Prisma.MessageCreateArgs>,
+      _connection?: WebSocket
+    ): Promise<Prisma.CheckSelect<T, Message, Prisma.MessageGetPayload<T>> | null>;
+
+    public abstract messageFindMany<T extends Prisma.MessageFindManyArgs>(
+      args: Prisma.SelectSubset<T, Prisma.MessageFindManyArgs>,
+      _connection?: WebSocket
+    ): Promise<Prisma.CheckSelect<T, GetManyResult<Message>, Prisma.MessageGetPayload<T>> | null>;
   }
 }
 
