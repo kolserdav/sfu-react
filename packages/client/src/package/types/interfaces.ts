@@ -38,6 +38,7 @@ export enum MessageType {
   GET_NEED_RECONNECT = 'GET_NEED_RECONNECT',
   GET_CLOSE_PEER_CONNECTION = 'GET_CLOSE_PEER_CONNECTION',
   SET_CLOSE_PEER_CONNECTION = 'SET_CLOSE_PEER_CONNECTION',
+  SET_ROOM_MESSAGE = 'SET_ROOM_MESSAGE',
 }
 
 export namespace DataTypes {
@@ -82,6 +83,9 @@ export namespace DataTypes {
     };
     export type SetMute = {
       muteds: string[];
+    };
+    export type SetRoomMessage = {
+      message: string;
     };
     export type SetClosePeerConnection = {
       roomId: number | string;
@@ -136,6 +140,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetChangeRoomUnit
     : T extends MessageType.SET_MUTE
     ? DataTypes.MessageTypes.SetMute
+    : T extends MessageType.SET_ROOM_MESSAGE
+    ? DataTypes.MessageTypes.SetRoomMessage
     : T extends MessageType.SET_CLOSE_PEER_CONNECTION
     ? DataTypes.MessageTypes.SetClosePeerConnection
     : T extends MessageType.SET_ERROR

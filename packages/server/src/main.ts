@@ -18,7 +18,7 @@ import WS from './core/ws';
 import RTC from './core/rtc';
 import { MessageType } from './types/interfaces';
 import { log } from './utils/lib';
-import { PORT, DATABASE_URL, CORS } from './utils/constants';
+import { PORT, CORS } from './utils/constants';
 import DB from './core/db';
 
 const db = new DB();
@@ -147,15 +147,7 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
           log('warn', 'No socket delete', { s: Object.keys(wss.sockets) });
         }
 
-        db.unitUpdate({
-          where: {
-            id: userId.toString(),
-          },
-          data: {
-            online: false,
-            updated: new Date(),
-          },
-        });
+        db.changeUserOnline({ userId, online: false });
         log('info', 'User disconnected', userId);
 
         const roomKeys = Object.keys(rtc.rooms);

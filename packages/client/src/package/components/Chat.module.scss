@@ -1,0 +1,32 @@
+$wrapper-padding: 1rem;
+
+.wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: $wrapper-padding;
+  height: calc(100% - #{$wrapper-padding} * 2);
+}
+
+.container {
+  position: relative;
+  width: calc(100% - #{$wrapper-padding} * 2);
+  height: 100%;
+}
+
+.input {
+  input {
+    position: relative;
+    width: 90%;
+    height: 2rem;
+    margin-right: $wrapper-padding;
+  }
+
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: calc(100% - #{$wrapper-padding} * 2);
+}

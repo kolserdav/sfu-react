@@ -10,6 +10,7 @@
  ******************************************************************************************/
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React from 'react';
+import clsx from 'clsx';
 import s from './IconButton.module.scss';
 
 function IconButton({
@@ -34,7 +35,7 @@ function IconButton({
       role="button"
       title={title}
       tabIndex={0}
-      className={className}
+      className={clsx(className || s.wrapper)}
     >
       {children}
     </div>

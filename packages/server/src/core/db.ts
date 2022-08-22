@@ -132,6 +132,18 @@ class DB implements DBInterface {
       });
     });
   }
+
+  public changeUserOnline({ userId, online }: { userId: string | number; online: boolean }) {
+    this.unitUpdate({
+      where: {
+        id: userId.toString(),
+      },
+      data: {
+        online,
+        updated: new Date(),
+      },
+    });
+  }
 }
 
 export default DB;

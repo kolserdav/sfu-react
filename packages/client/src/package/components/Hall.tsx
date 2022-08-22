@@ -13,6 +13,7 @@ import clsx from 'clsx';
 import { HallProps } from '../types';
 import ThemeContext from '../Theme.context';
 import ThemeIcon from '../Icons/ThemeIcon';
+import Chat from './Chat';
 import storeTheme, { changeTheme } from '../store/theme';
 import { LocaleDefault, LocaleSelector, LocaleValue } from '../types/interfaces';
 import storeLocale, { changeLocale } from '../store/locale';
@@ -44,7 +45,9 @@ function Hall({ open, locale }: HallProps) {
       <div className={s.container} style={theme.container}>
         <div className={s.block}>
           <div className={s.users}>Users</div>
-          <div className={s.chat}>Chat</div>
+          <div className={s.chat}>
+            <Chat />
+          </div>
           <div className={s.settings}>
             <Select onChange={changeLang} value={lang}>
               {LocaleSelector}
