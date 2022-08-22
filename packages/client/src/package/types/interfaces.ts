@@ -29,6 +29,7 @@ export enum MessageType {
   ANSWER = 'ANSWER',
   GET_ROOM = 'GET_ROOM',
   SET_ROOM = 'SET_ROOM',
+  GET_CHAT_UNIT = 'GET_CHAT_UNIT',
   SET_ERROR = 'SET_ERROR',
   GET_ROOM_GUESTS = 'GET_ROOM_GUESTS',
   SET_ROOM_GUESTS = 'SET_ROOM_GUESTS',
@@ -39,6 +40,7 @@ export enum MessageType {
   GET_CLOSE_PEER_CONNECTION = 'GET_CLOSE_PEER_CONNECTION',
   SET_CLOSE_PEER_CONNECTION = 'SET_CLOSE_PEER_CONNECTION',
   SET_ROOM_MESSAGE = 'SET_ROOM_MESSAGE',
+  SET_CHAT_UNIT = 'SET_CHAT_UNIT',
 }
 
 export namespace DataTypes {
@@ -52,6 +54,9 @@ export namespace DataTypes {
     };
     export type GetRoomGuests = {
       roomId: number | string;
+    };
+    export type GetChatUnit = {
+      userId: string | number;
     };
     export type GetClosePeerConnection = {
       roomId: number | string;
@@ -110,6 +115,7 @@ export namespace DataTypes {
       userId: number | string;
       target: number | string;
     };
+    export type SetChatUnit = undefined;
     export type ConnectionId<T> = T extends infer R ? R : never;
   }
 
@@ -129,6 +135,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.GetGuestId
     : T extends MessageType.SET_USER_ID
     ? DataTypes.MessageTypes.SetGuestId
+    : T extends MessageType.GET_CHAT_UNIT
+    ? DataTypes.MessageTypes.GetChatUnit
     : T extends MessageType.GET_ROOM
     ? DataTypes.MessageTypes.GetRoom
     : T extends MessageType.SET_ROOM
@@ -141,6 +149,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetChangeRoomUnit
     : T extends MessageType.SET_MUTE
     ? DataTypes.MessageTypes.SetMute
+    : T extends MessageType.SET_CHAT_UNIT
+    ? DataTypes.MessageTypes.SetChatUnit
     : T extends MessageType.SET_ROOM_MESSAGE
     ? DataTypes.MessageTypes.SetRoomMessage
     : T extends MessageType.SET_CLOSE_PEER_CONNECTION

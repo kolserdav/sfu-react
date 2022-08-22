@@ -9,7 +9,7 @@
  * Create Date: Fri Jul 29 2022 21:35:51 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import React, { useMemo, useContext, useRef } from 'react';
-import { getRoomId, log } from '../utils/lib';
+import { log } from '../utils/lib';
 import s from './Room.module.scss';
 import { RoomProps } from '../types/index';
 import {
@@ -21,7 +21,7 @@ import {
   useAudioAnalyzer,
 } from './Room.hooks';
 import ThemeContext from '../Theme.context';
-import { getRoomLink, getPathname, onClickVideo, copyLink, supportDisplayMedia } from './Room.lib';
+import { getRoomLink, onClickVideo, copyLink, supportDisplayMedia } from './Room.lib';
 import CloseButton from './ui/CloseButton';
 import ScreenIcon from '../Icons/ScreeenIcon';
 import IconButton from './ui/IconButton';
@@ -33,10 +33,8 @@ import CameraOutlineIcon from '../Icons/CameraOutlineIcon';
 import CopyIcon from '../Icons/CopyIcon';
 import WarningIcon from '../Icons/ErrorIcon';
 
-function Room({ id, iceServers, server, port }: RoomProps) {
-  const pathname = getPathname();
+function Room({ id, iceServers, server, port, roomId }: RoomProps) {
   const container = useRef<HTMLDivElement>(null);
-  const roomId = useMemo(() => getRoomId(pathname || ''), [pathname]);
   const roomLink = useMemo(() => getRoomLink(roomId), [roomId]);
   const { createAudioAnalyzer, analyzeSoundLevel, cleanAudioAnalyzer, speaker } =
     useAudioAnalyzer();

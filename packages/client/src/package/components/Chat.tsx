@@ -5,8 +5,19 @@ import SendIcon from '../Icons/Send';
 import IconButton from './ui/IconButton';
 import WS from '../core/ws';
 import { log } from '../utils/lib';
+import { MessageType } from '../types/interfaces';
 
-function Chat({ server, port }: { server: string; port: number }) {
+function Chat({
+  server,
+  port,
+  roomId,
+  userId,
+}: {
+  server: string;
+  port: number;
+  roomId: string | number;
+  userId: string | number;
+}) {
   const theme = useContext(ThemeContext);
   const [message, setMessage] = useState<string>('');
 
@@ -22,7 +33,15 @@ function Chat({ server, port }: { server: string; port: number }) {
   };
 
   const sendMessage = () => {
-    console.log(message);
+    ws.sendMessage({
+      type: MessageType.SET_ROOM_MESSAGE,
+      connId: '',
+      id: roomId,
+      data: {
+        message,
+        userId,
+      },
+    });
   };
 
   /**
@@ -30,7 +49,14 @@ function Chat({ server, port }: { server: string; port: number }) {
    */
   useEffect(() => {
     ws.onOpen = () => {
-      /** */
+      ws.sendMessage({
+        id: roomId,
+        type: MessageType.GET_CHAT_UNIT,
+        connId: '',
+        data: {
+          userId,
+        },
+      });
     };
     ws.onMessage = (ev) => {
       const { data } = ev;
@@ -38,7 +64,13 @@ function Chat({ server, port }: { server: string; port: number }) {
       if (!rawMessage) {
         return;
       }
-      console.log(rawMessage);
+      const { type } = rawMessage;
+      switch (type) {
+        case MessageType.SET_ROOM_MESSAGE:
+          console.log(rawMessage);
+          break;
+        default:
+      }
     };
     ws.onError = (e) => {
       log('error', 'Error chat', { e });

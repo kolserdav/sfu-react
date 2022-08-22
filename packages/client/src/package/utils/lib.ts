@@ -101,3 +101,11 @@ export const getLocale = (value: LocaleValue): LocaleClient => {
   }
   return locales[value];
 };
+
+export const getPathname = (): string | null => {
+  let res = null;
+  if (typeof window !== 'undefined') {
+    res = window.location.pathname;
+  }
+  return res;
+};

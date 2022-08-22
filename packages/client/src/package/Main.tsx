@@ -21,13 +21,15 @@ import ChevronRightIcon from './Icons/ChevronRightIcon';
 import { changeColors } from './Main.lib';
 import s from './Main.module.scss';
 import IconButton from './components/ui/IconButton';
-import { getLocale } from './utils/lib';
+import { getLocale, getRoomId, getPathname } from './utils/lib';
 import storeTheme from './store/theme';
 import storeLocale from './store/locale';
 import { LocaleClient } from './types/interfaces';
 import { getLocalStorage, LocalStorageName } from './utils/localStorage';
 
-function Main({ room }: { room: Omit<RoomProps, 'locale'> }) {
+function Main({ room }: { room: Omit<RoomProps, 'locale' | 'roomId'> }) {
+  const pathname = getPathname();
+  const roomId = useMemo(() => getRoomId(pathname || ''), [pathname]);
   const { colors } = room;
   const savedTheme = getLocalStorage(LocalStorageName.THEME);
   const [currentTheme, setCurrentTheme] = useState<keyof Themes>(savedTheme || 'light');
@@ -76,7 +78,7 @@ function Main({ room }: { room: Omit<RoomProps, 'locale'> }) {
 
   return (
     <ThemeContext.Provider value={theme}>
-      {locale && <Room {...room} locale={locale.room} />}
+      {locale && <Room {...room} roomId={roomId} locale={locale.room} />}
       <div
         className={clsx(s.button, hallOpen ? s.active : '')}
         role="button"
@@ -93,7 +95,14 @@ function Main({ room }: { room: Omit<RoomProps, 'locale'> }) {
         </IconButton>
       </div>
       {locale && (
-        <Hall open={hallOpen} locale={locale.hall} server={room.server} port={room.port} />
+        <Hall
+          roomId={roomId}
+          userId={room.id}
+          open={hallOpen}
+          locale={locale.hall}
+          server={room.server}
+          port={room.port}
+        />
       )}
     </ThemeContext.Provider>
   );

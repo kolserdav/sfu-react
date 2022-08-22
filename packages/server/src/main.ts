@@ -20,8 +20,10 @@ import { MessageType } from './types/interfaces';
 import { log } from './utils/lib';
 import { PORT, CORS } from './utils/constants';
 import DB from './core/db';
+import Chat from './core/chat';
 
 const db = new DB();
+const chat = new Chat();
 
 process.on('uncaughtException', (err: Error) => {
   log('error', 'uncaughtException', err);
@@ -81,6 +83,13 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
             cors,
           });
           break;
+        case MessageType.GET_CHAT_UNIT:
+          chat.setChatUnit({
+            roomId: wss.getMessage(MessageType.GET_CHAT_UNIT, rawMessage).id,
+            userId: wss.getMessage(MessageType.GET_CHAT_UNIT, rawMessage).data.userId,
+            ws,
+          });
+          break;
         case MessageType.GET_ROOM_GUESTS:
           const _roomId = wss.getMessage(MessageType.GET_ROOM_GUESTS, rawMessage).data.roomId;
           wss.sendMessage({
@@ -95,6 +104,9 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
           break;
         case MessageType.GET_CLOSE_PEER_CONNECTION:
           rtc.closePeerConnectionHandler(rawMessage);
+          break;
+        case MessageType.SET_ROOM_MESSAGE:
+          chat.handleRoomMessage(rawMessage);
           break;
         case MessageType.GET_MUTE:
           const { muted, roomId } = wss.getMessage(MessageType.GET_MUTE, rawMessage).data;
@@ -154,6 +166,7 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
         roomKeys.forEach((item) => {
           const index = rtc.rooms[item].indexOf(userId);
           if (index !== -1) {
+            chat.cleanChatUnit({ roomId: item, userId });
             const keys = rtc.getPeerConnectionKeys(item);
             rtc.cleanConnections(item, userId.toString());
             rtc.rooms[item].splice(index, 1);

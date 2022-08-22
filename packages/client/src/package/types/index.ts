@@ -13,6 +13,7 @@ import { LocaleClient } from './interfaces';
 
 export interface RoomProps {
   id: number | string;
+  roomId: string | number;
   server: string;
   port: number;
   locale: LocaleClient['room'];
@@ -24,6 +25,8 @@ export interface HallProps {
   open: boolean;
   locale: LocaleClient['hall'];
   server: string;
+  roomId: string | number;
+  userId: string | number;
   port: number;
 }
 

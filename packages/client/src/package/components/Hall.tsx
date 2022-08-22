@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Fri Jul 29 2022 21:35:51 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { HallProps } from '../types';
 import ThemeContext from '../Theme.context';
@@ -30,7 +30,7 @@ const changeThemeHandler = () => {
   setLocalStorage(LocalStorageName.THEME, theme === 'dark' ? 'light' : 'dark');
 };
 
-function Hall({ open, locale, server, port }: HallProps) {
+function Hall({ open, locale, server, port, roomId, userId }: HallProps) {
   const [lang, setLang] = useState<LocaleValue>(getCookie(CookieName.lang) || LocaleDefault);
   const theme = useContext(ThemeContext);
   const changeLang = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -46,7 +46,7 @@ function Hall({ open, locale, server, port }: HallProps) {
         <div className={s.block}>
           <div className={s.users}>Users</div>
           <div className={s.chat}>
-            <Chat server={server} port={port} />
+            <Chat userId={userId} roomId={roomId} server={server} port={port} />
           </div>
           <div className={s.settings}>
             <Select onChange={changeLang} value={lang}>

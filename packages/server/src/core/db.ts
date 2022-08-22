@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Fri Jul 29 2022 21:35:51 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import { Message, PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { DBInterface } from '../types/interfaces';
 import { log } from '../utils/lib';
 
@@ -21,6 +21,7 @@ class DB implements DBInterface {
     let result: any = null;
     try {
       result = await prisma.room.findFirst(args);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error room find first', { args, err });
     }
@@ -46,6 +47,7 @@ class DB implements DBInterface {
     let result: any = null;
     try {
       result = await prisma.room.create(args);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error create room', { args, err });
     }
@@ -58,6 +60,7 @@ class DB implements DBInterface {
     let result: any = null;
     try {
       result = await prisma.unit.create(args);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error create unit', { args, err });
     }
@@ -70,6 +73,7 @@ class DB implements DBInterface {
     let result: any = null;
     try {
       result = await prisma.unit.update(args);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error update unit', { args, err });
     }
@@ -82,6 +86,7 @@ class DB implements DBInterface {
     let result: any = null;
     try {
       result = await prisma.unit.findFirst(args);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error find first unit', { args, err });
     }
@@ -107,6 +112,7 @@ class DB implements DBInterface {
     let result: any = null;
     try {
       result = await prisma.message.create(args);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error create message', { args, err });
     }
@@ -116,17 +122,21 @@ class DB implements DBInterface {
   // eslint-disable-next-line class-methods-use-this
   public messageFindMany: DBInterface['messageFindMany'] = async (args) => {
     const { where, skip, take } = args;
-    let count: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let count = 0;
     try {
       count = await prisma.message.count({
         where,
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'Error get count of messages', { err });
     }
-    let data: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let data: any = null;
     try {
       data = await prisma.message.findMany(args);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'Error get messages', { err });
     }
@@ -135,6 +145,7 @@ class DB implements DBInterface {
       skip,
       take,
       count,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
   };
 

@@ -20,14 +20,6 @@ export const getRoomLink = (roomId: number | string | null): string | null => {
   return res;
 };
 
-export const getPathname = (): string | null => {
-  let res = null;
-  if (typeof window !== 'undefined') {
-    res = window.location.pathname;
-  }
-  return res;
-};
-
 const checkVideoFixed = (container: HTMLDivElement) => {
   const { classList } = container;
   let check = false;
