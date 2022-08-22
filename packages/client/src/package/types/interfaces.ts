@@ -17,6 +17,7 @@ import { Message, Prisma, Room, Unit } from '@prisma/client';
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type ArgumentTypes<F extends Function> = F extends (args: infer A) => any ? A : never;
+export type GetManyResult<T> = { result: T[]; skip: number; count: number; take: number };
 
 // eslint-disable-next-line no-shadow
 export enum MessageType {
@@ -41,6 +42,8 @@ export enum MessageType {
   SET_CLOSE_PEER_CONNECTION = 'SET_CLOSE_PEER_CONNECTION',
   SET_ROOM_MESSAGE = 'SET_ROOM_MESSAGE',
   SET_CHAT_UNIT = 'SET_CHAT_UNIT',
+  GET_CHAT_MESSAGES = 'GET_CHAT_MESSAGES',
+  SET_CHAT_MESSAGES = 'SET_CHAT_MESSAGES',
 }
 
 export namespace DataTypes {
@@ -80,6 +83,10 @@ export namespace DataTypes {
       roomUsers: (number | string)[];
       muteds: string[];
     };
+    export type GetChatMessages = {
+      args: Prisma.MessageFindManyArgs;
+      userId: string | number;
+    };
     export type SetRoom = undefined;
     export type SetError = {
       message: string;
@@ -93,6 +100,7 @@ export namespace DataTypes {
       userId: string | number;
       message: string;
     };
+    export type SetChatMessages = GetManyResult<Message>;
     export type SetClosePeerConnection = {
       roomId: number | string;
       target: number | string;
@@ -143,6 +151,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetRoom
     : T extends MessageType.GET_ROOM_GUESTS
     ? DataTypes.MessageTypes.GetRoomGuests
+    : T extends MessageType.GET_CHAT_MESSAGES
+    ? DataTypes.MessageTypes.GetChatMessages
     : T extends MessageType.SET_ROOM_GUESTS
     ? DataTypes.MessageTypes.SetRoomGuests
     : T extends MessageType.SET_CHANGE_UNIT
@@ -151,6 +161,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetMute
     : T extends MessageType.SET_CHAT_UNIT
     ? DataTypes.MessageTypes.SetChatUnit
+    : T extends MessageType.SET_CHAT_MESSAGES
+    ? DataTypes.MessageTypes.SetChatMessages
     : T extends MessageType.SET_ROOM_MESSAGE
     ? DataTypes.MessageTypes.SetRoomMessage
     : T extends MessageType.SET_CLOSE_PEER_CONNECTION
@@ -266,7 +278,6 @@ export namespace Connection {
 }
 
 export namespace Data {
-  export type GetManyResult<T> = { data: T[]; skip: number; count: number; take: number };
   export abstract class DBInterface {
     public abstract roomCreate<T extends Prisma.RoomCreateArgs>(
       args: Prisma.SelectSubset<T, Prisma.RoomCreateArgs>,

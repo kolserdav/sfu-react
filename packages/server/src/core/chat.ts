@@ -42,7 +42,14 @@ class Chat extends DB {
     delete this.users[roomId][userId];
   }
 
-  public sendMessage({ msg, roomId }: { msg: SendMessageArgs<any>; roomId: string | number }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public sendMessage<T extends keyof typeof MessageType>({
+    msg,
+    roomId,
+  }: {
+    msg: SendMessageArgs<T>;
+    roomId: string | number;
+  }) {
     const { id } = msg;
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -58,6 +65,7 @@ class Chat extends DB {
           resolve(1);
         }
         this.users[roomId][id].send(res);
+        resolve(0);
       }, 0);
     });
   }
@@ -108,6 +116,22 @@ class Chat extends DB {
           },
         },
       });
+    });
+  }
+
+  public async getChatMessages({
+    id,
+    data: { args, userId },
+  }: SendMessageArgs<MessageType.GET_CHAT_MESSAGES>) {
+    const data = await this.messageFindMany(args);
+    this.sendMessage({
+      roomId: id,
+      msg: {
+        type: MessageType.SET_CHAT_MESSAGES,
+        connId: '',
+        id: userId,
+        data,
+      },
     });
   }
 }

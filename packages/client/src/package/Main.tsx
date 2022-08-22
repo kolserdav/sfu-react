@@ -25,7 +25,7 @@ import { getLocale, getRoomId, getPathname } from './utils/lib';
 import storeTheme from './store/theme';
 import storeLocale from './store/locale';
 import { LocaleClient } from './types/interfaces';
-import { getLocalStorage, LocalStorageName } from './utils/localStorage';
+import { getLocalStorage, LocalStorageName, setLocalStorage } from './utils/localStorage';
 
 function Main({ room }: { room: Omit<RoomProps, 'locale' | 'roomId'> }) {
   const pathname = getPathname();
@@ -35,10 +35,13 @@ function Main({ room }: { room: Omit<RoomProps, 'locale' | 'roomId'> }) {
   const [currentTheme, setCurrentTheme] = useState<keyof Themes>(savedTheme || 'light');
   const _themes = useMemo(() => changeColors({ colors, themes }), [colors]);
   const [theme, setTheme] = useState<Themes['dark' | 'light']>(_themes[savedTheme || 'light']);
-  const [hallOpen, setHallOpen] = useState<boolean>(false);
+  const [hallOpen, setHallOpen] = useState<boolean>(
+    getLocalStorage(LocalStorageName.HALL_OPEN) || false
+  );
   const [locale, setLocale] = useState<LocaleClient | null>(null);
 
   const openMenu = () => {
+    setLocalStorage(LocalStorageName.HALL_OPEN, !hallOpen);
     setHallOpen(!hallOpen);
   };
 

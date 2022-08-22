@@ -4,6 +4,7 @@ $wrapper-padding: 1rem;
   position: relative;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   width: 100%;
   padding: $wrapper-padding;
   height: calc(100% - #{$wrapper-padding} * 2);
@@ -11,22 +12,36 @@ $wrapper-padding: 1rem;
 
 .container {
   position: relative;
-  width: calc(100% - #{$wrapper-padding} * 2);
-  height: 100%;
+  width: 100%;
+  height: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-bottom: calc(#{$wrapper-padding} * 2);
 }
 
 .input {
   input {
     position: relative;
-    width: 90%;
+    width: 80%;
     height: 2rem;
-    margin-right: $wrapper-padding;
   }
 
-  position: relative;
+  position: absolute;
+  bottom: $wrapper-padding;
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: space-around;
   align-items: center;
   width: calc(100% - #{$wrapper-padding} * 2);
+}
+
+.message {
+  position: relative;
+  margin: calc(#{$wrapper-padding} / 2);
+  padding: $wrapper-padding;
+  border-radius: 5px;
 }

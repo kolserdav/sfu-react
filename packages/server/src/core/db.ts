@@ -141,7 +141,7 @@ class DB implements DBInterface {
       log('error', 'Error get messages', { err });
     }
     return {
-      data,
+      result: data,
       skip,
       take,
       count,

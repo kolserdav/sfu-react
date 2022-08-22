@@ -90,6 +90,9 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
             ws,
           });
           break;
+        case MessageType.GET_CHAT_MESSAGES:
+          chat.getChatMessages(rawMessage);
+          break;
         case MessageType.GET_ROOM_GUESTS:
           const _roomId = wss.getMessage(MessageType.GET_ROOM_GUESTS, rawMessage).data.roomId;
           wss.sendMessage({

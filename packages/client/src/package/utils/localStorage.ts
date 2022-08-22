@@ -4,10 +4,14 @@ import { log } from './lib';
 export enum LocalStorageName {
   // eslint-disable-next-line no-unused-vars
   THEME = 'THEME',
+  // eslint-disable-next-line no-unused-vars
+  HALL_OPEN = 'HALL_OPEN',
 }
 
 type LocalStorageValue<T extends keyof typeof LocalStorageName> = T extends LocalStorageName.THEME
   ? ThemeType
+  : T extends LocalStorageName.HALL_OPEN
+  ? boolean
   : never;
 
 export function getLocalStorage<T extends keyof typeof LocalStorageName>(

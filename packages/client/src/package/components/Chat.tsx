@@ -5,7 +5,7 @@ import SendIcon from '../Icons/Send';
 import IconButton from './ui/IconButton';
 import WS from '../core/ws';
 import { log } from '../utils/lib';
-import { MessageType } from '../types/interfaces';
+import { MessageType, SendMessageArgs } from '../types/interfaces';
 
 function Chat({
   server,
@@ -20,6 +20,10 @@ function Chat({
 }) {
   const theme = useContext(ThemeContext);
   const [message, setMessage] = useState<string>('');
+  const [chatUnit, setChatUnit] = useState<boolean>(false);
+  const [messages, setMessages] = useState<
+    SendMessageArgs<MessageType.SET_CHAT_MESSAGES>['data']['result'] | null
+  >(null);
 
   const ws = useMemo(
     () => new WS({ server, port: port.toString(), shareScreen: false }),
@@ -43,6 +47,33 @@ function Chat({
       },
     });
   };
+
+  const setChatMessagesHandler = ({
+    data: { result },
+  }: SendMessageArgs<MessageType.SET_CHAT_MESSAGES>) => {
+    setMessages(result);
+  };
+
+  /**
+   * Get first chat messages
+   */
+  useEffect(() => {
+    if (chatUnit) {
+      ws.sendMessage({
+        type: MessageType.GET_CHAT_MESSAGES,
+        id: roomId,
+        connId: '',
+        data: {
+          userId,
+          args: {
+            where: {
+              roomId: roomId.toString(),
+            },
+          },
+        },
+      });
+    }
+  }, [ws, roomId, chatUnit, userId]);
 
   /**
    * Handle messages
@@ -69,6 +100,12 @@ function Chat({
         case MessageType.SET_ROOM_MESSAGE:
           console.log(rawMessage);
           break;
+        case MessageType.SET_CHAT_MESSAGES:
+          setChatMessagesHandler(rawMessage);
+          break;
+        case MessageType.SET_CHAT_UNIT:
+          setChatUnit(true);
+          break;
         default:
       }
     };
@@ -92,11 +129,22 @@ function Chat({
         /** */
       };
     };
-  }, []);
+  }, [roomId, userId, ws]);
 
   return (
     <div className={s.wrapper} style={{ background: theme.colors.paper }}>
-      <div className={s.container}>Chat</div>
+      <div className={s.container}>
+        {messages &&
+          messages.map((item) => (
+            <div
+              style={{ background: theme.colors.active, color: theme.colors.textActive }}
+              key={item.id}
+              className={s.message}
+            >
+              {item.text}
+            </div>
+          ))}
+      </div>
       <div className={s.input}>
         <input onInput={changeText} value={message} />
         <IconButton onClick={sendMessage}>

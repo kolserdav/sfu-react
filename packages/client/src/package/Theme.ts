@@ -19,6 +19,7 @@ export interface Color {
   paper: string;
   text: string;
   active: string;
+  textActive: string;
   red: string;
   yellow: string;
 }
@@ -42,6 +43,7 @@ const colors: Colors = {
     paper: '#36413e',
     text: '#d7d6d6',
     active: '#beb2c8',
+    textActive: '#000',
     red: 'red',
     yellow: 'yellow',
   },
@@ -51,6 +53,7 @@ const colors: Colors = {
     paper: '#fff',
     text: '#5d5e60',
     active: '#8d8d92',
+    textActive: '#fff',
   },
 };
 
