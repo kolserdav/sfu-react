@@ -45,9 +45,7 @@ function Hall({ open, locale, server, port, roomId, userId }: HallProps) {
       <div className={s.container} style={theme.container}>
         <div className={s.block}>
           <div className={s.users}>Users</div>
-          <div className={s.chat}>
-            <Chat userId={userId} roomId={roomId} server={server} port={port} />
-          </div>
+          <Chat userId={userId} roomId={roomId} server={server} port={port} />
           <div className={s.settings}>
             <Select onChange={changeLang} value={lang}>
               {LocaleSelector}

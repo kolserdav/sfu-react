@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState, useRef } from 'react';
 import ThemeContext from '../Theme.context';
 import s from './Chat.module.scss';
 import SendIcon from '../Icons/Send';
@@ -19,8 +19,12 @@ function Chat({
   userId: string | number;
 }) {
   const theme = useContext(ThemeContext);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const [message, setMessage] = useState<string>('');
   const [chatUnit, setChatUnit] = useState<boolean>(false);
+  const [myMessage, setMyMessage] = useState<boolean>(false);
   const [messages, setMessages] = useState<
     SendMessageArgs<MessageType.SET_CHAT_MESSAGES>['data']['result'] | null
   >(null);
@@ -37,15 +41,17 @@ function Chat({
   };
 
   const sendMessage = () => {
-    ws.sendMessage({
-      type: MessageType.GET_ROOM_MESSAGE,
-      connId: '',
-      id: roomId,
-      data: {
-        message,
-        userId,
-      },
-    });
+    if (message) {
+      ws.sendMessage({
+        type: MessageType.GET_ROOM_MESSAGE,
+        connId: '',
+        id: roomId,
+        data: {
+          message,
+          userId,
+        },
+      });
+    }
   };
 
   const setChatMessagesHandler = ({
@@ -76,6 +82,15 @@ function Chat({
   }, [ws, roomId, chatUnit, userId]);
 
   /**
+   * Scroll to new message
+   */
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'smooth' });
+    }
+  }, [myMessage]);
+
+  /**
    * Handle messages
    */
   useEffect(() => {
@@ -84,6 +99,10 @@ function Chat({
         const _messages = messages.map((item) => item);
         _messages.push(data);
         setMessages(_messages);
+        if (data.text === message) {
+          setMessage('');
+        }
+        setMyMessage(!myMessage);
       }
     };
     ws.onOpen = () => {
@@ -136,11 +155,11 @@ function Chat({
         /** */
       };
     };
-  }, [roomId, userId, ws, messages]);
+  }, [roomId, userId, ws, messages, message]);
 
   return (
     <div className={s.wrapper} style={{ background: theme.colors.paper }}>
-      <div className={s.container}>
+      <div className={s.container} ref={containerRef}>
         {messages &&
           messages.map((item) => (
             <div

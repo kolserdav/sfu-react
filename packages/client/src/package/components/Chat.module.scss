@@ -17,7 +17,6 @@ $wrapper-padding: 1rem;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  justify-content: flex-end;
   overflow-y: auto;
   overflow-x: hidden;
   margin-bottom: calc(#{$wrapper-padding} * 2);
@@ -44,4 +43,5 @@ $wrapper-padding: 1rem;
   margin: calc(#{$wrapper-padding} / 2);
   padding: $wrapper-padding;
   border-radius: 5px;
+  max-width: 80%;
 }
