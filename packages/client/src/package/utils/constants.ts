@@ -28,3 +28,4 @@ export const CODECS = [
   'video/x-matroska;codecs=avc1',
 ];
 export const SPEAKER_LEVEL = 0.4;
+export const CHAT_TAKE_MESSAGES = 10;
