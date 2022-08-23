@@ -38,7 +38,7 @@ function Chat({
 
   const sendMessage = () => {
     ws.sendMessage({
-      type: MessageType.SET_ROOM_MESSAGE,
+      type: MessageType.GET_ROOM_MESSAGE,
       connId: '',
       id: roomId,
       data: {
@@ -79,6 +79,13 @@ function Chat({
    * Handle messages
    */
   useEffect(() => {
+    const setRoomMessage = ({ data }: SendMessageArgs<MessageType.SET_ROOM_MESSAGE>) => {
+      if (messages) {
+        const _messages = messages.map((item) => item);
+        _messages.push(data);
+        setMessages(_messages);
+      }
+    };
     ws.onOpen = () => {
       ws.sendMessage({
         id: roomId,
@@ -98,7 +105,7 @@ function Chat({
       const { type } = rawMessage;
       switch (type) {
         case MessageType.SET_ROOM_MESSAGE:
-          console.log(rawMessage);
+          setRoomMessage(rawMessage);
           break;
         case MessageType.SET_CHAT_MESSAGES:
           setChatMessagesHandler(rawMessage);
@@ -129,7 +136,7 @@ function Chat({
         /** */
       };
     };
-  }, [roomId, userId, ws]);
+  }, [roomId, userId, ws, messages]);
 
   return (
     <div className={s.wrapper} style={{ background: theme.colors.paper }}>

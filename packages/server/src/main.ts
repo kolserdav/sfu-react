@@ -108,7 +108,7 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
         case MessageType.GET_CLOSE_PEER_CONNECTION:
           rtc.closePeerConnectionHandler(rawMessage);
           break;
-        case MessageType.SET_ROOM_MESSAGE:
+        case MessageType.GET_ROOM_MESSAGE:
           chat.handleRoomMessage(rawMessage);
           break;
         case MessageType.GET_MUTE:

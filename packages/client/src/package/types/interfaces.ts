@@ -40,6 +40,7 @@ export enum MessageType {
   GET_NEED_RECONNECT = 'GET_NEED_RECONNECT',
   GET_CLOSE_PEER_CONNECTION = 'GET_CLOSE_PEER_CONNECTION',
   SET_CLOSE_PEER_CONNECTION = 'SET_CLOSE_PEER_CONNECTION',
+  GET_ROOM_MESSAGE = 'GET_ROOM_MESSAGE',
   SET_ROOM_MESSAGE = 'SET_ROOM_MESSAGE',
   SET_CHAT_UNIT = 'SET_CHAT_UNIT',
   GET_CHAT_MESSAGES = 'GET_CHAT_MESSAGES',
@@ -96,10 +97,11 @@ export namespace DataTypes {
     export type SetMute = {
       muteds: string[];
     };
-    export type SetRoomMessage = {
+    export type GetRoomMessage = {
       userId: string | number;
       message: string;
     };
+    export type SetRoomMessage = Message;
     export type SetChatMessages = GetManyResult<Message>;
     export type SetClosePeerConnection = {
       roomId: number | string;
@@ -163,6 +165,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetChatUnit
     : T extends MessageType.SET_CHAT_MESSAGES
     ? DataTypes.MessageTypes.SetChatMessages
+    : T extends MessageType.GET_ROOM_MESSAGE
+    ? DataTypes.MessageTypes.GetRoomMessage
     : T extends MessageType.SET_ROOM_MESSAGE
     ? DataTypes.MessageTypes.SetRoomMessage
     : T extends MessageType.SET_CLOSE_PEER_CONNECTION

@@ -74,7 +74,7 @@ class Chat extends DB {
     id,
     connId,
     data: { userId, message },
-  }: SendMessageArgs<MessageType.SET_ROOM_MESSAGE>) {
+  }: SendMessageArgs<MessageType.GET_ROOM_MESSAGE>) {
     const res = await this.messageCreate({
       data: {
         unitId: userId.toString(),
@@ -110,10 +110,7 @@ class Chat extends DB {
           type: MessageType.SET_ROOM_MESSAGE,
           id: item,
           connId,
-          data: {
-            message,
-            userId,
-          },
+          data: res,
         },
       });
     });
