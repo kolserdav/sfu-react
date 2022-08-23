@@ -22,9 +22,10 @@ export const useMesages = ({
   const [chatUnit, setChatUnit] = useState<boolean>(false);
   const [myMessage, setMyMessage] = useState<boolean>(false);
   const [skip, setSkip] = useState<number>(0);
+  const [count, setCount] = useState<number>(0);
   const [messages, setMessages] = useState<
-    SendMessageArgs<MessageType.SET_CHAT_MESSAGES>['data']['result'] | null
-  >(null);
+    SendMessageArgs<MessageType.SET_CHAT_MESSAGES>['data']['result']
+  >([]);
 
   const ws = useMemo(
     () => new WS({ server, port: port.toString(), shareScreen: false }),
@@ -49,19 +50,6 @@ export const useMesages = ({
         },
       });
     }
-  };
-
-  const setChatMessagesHandler = ({
-    data: { result },
-  }: SendMessageArgs<MessageType.SET_CHAT_MESSAGES>) => {
-    let _result = [];
-    for (let i = result.length - 1; i >= 0; i--) {
-      _result.push(result[i]);
-    }
-    if (messages) {
-      _result = _result.concat(messages);
-    }
-    setMessages(_result);
   };
 
   /**
@@ -106,7 +94,7 @@ export const useMesages = ({
     const containerOnScroll = () => {
       const { current } = containerRef;
       if (current) {
-        if (current.scrollTop === 0) {
+        if (current.scrollTop === 0 && count > messages.length) {
           setSkip(skip + CHAT_TAKE_MESSAGES);
           current.scrollTo({ top: 1 });
         }
@@ -121,12 +109,26 @@ export const useMesages = ({
         current.removeEventListener('scroll', containerOnScroll);
       }
     };
-  }, [containerRef, skip]);
+  }, [containerRef, skip, count, messages]);
 
   /**
    * Handle messages
    */
   useEffect(() => {
+    const setChatMessagesHandler = ({
+      data: { result, count: _count },
+    }: SendMessageArgs<MessageType.SET_CHAT_MESSAGES>) => {
+      let _result = [];
+      for (let i = result.length - 1; i >= 0; i--) {
+        _result.push(result[i]);
+      }
+      if (messages) {
+        _result = _result.concat(messages);
+      }
+      setCount(_count);
+      setMessages(_result);
+    };
+
     const setRoomMessage = ({ data }: SendMessageArgs<MessageType.SET_ROOM_MESSAGE>) => {
       if (messages) {
         const _messages = messages.map((item) => item);
