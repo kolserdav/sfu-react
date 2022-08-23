@@ -11,18 +11,22 @@ export const useMesages = ({
   roomId,
   userId,
   containerRef,
+  inputRef,
 }: {
   port: number;
   server: string;
   roomId: string | number;
   userId: string | number;
   containerRef: React.RefObject<HTMLDivElement>;
+  inputRef: React.RefObject<HTMLTextAreaElement>;
 }) => {
   const [message, setMessage] = useState<string>('');
   const [chatUnit, setChatUnit] = useState<boolean>(false);
   const [myMessage, setMyMessage] = useState<boolean>(false);
   const [skip, setSkip] = useState<number>(0);
   const [count, setCount] = useState<number>(0);
+  const [rows, setRows] = useState<number>(1);
+
   const [messages, setMessages] = useState<
     SendMessageArgs<MessageType.SET_CHAT_MESSAGES>['data']['result']
   >([]);
@@ -32,25 +36,28 @@ export const useMesages = ({
     [port, server]
   );
 
-  const changeText = (e: React.FormEvent<HTMLInputElement>) => {
+  const changeText = (e: React.FormEvent<HTMLTextAreaElement>) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { target }: any = e;
     setMessage(target.value);
   };
 
-  const sendMessage = () => {
-    if (message) {
-      ws.sendMessage({
-        type: MessageType.GET_ROOM_MESSAGE,
-        connId: '',
-        id: roomId,
-        data: {
-          message,
-          userId,
-        },
-      });
-    }
-  };
+  const sendMessage = useMemo(
+    () => () => {
+      if (message) {
+        ws.sendMessage({
+          type: MessageType.GET_ROOM_MESSAGE,
+          connId: '',
+          id: roomId,
+          data: {
+            message,
+            userId,
+          },
+        });
+      }
+    },
+    [message, userId, roomId, ws]
+  );
 
   /**
    * Get first chat messages
@@ -86,6 +93,26 @@ export const useMesages = ({
       containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'smooth' });
     }
   }, [myMessage, containerRef]);
+
+  /**
+   * Listen input Enter
+   */
+  useEffect(() => {
+    const { current } = inputRef;
+    const onPressButton = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        sendMessage();
+      }
+    };
+    if (current) {
+      current.addEventListener('keypress', onPressButton);
+    }
+    return () => {
+      if (current) {
+        current.removeEventListener('keypress', onPressButton);
+      }
+    };
+  }, [inputRef, sendMessage, message]);
 
   /**
    * Container scroll handler
@@ -134,11 +161,9 @@ export const useMesages = ({
         const _messages = messages.map((item) => item);
         _messages.push(data);
         setMessages(_messages);
-        if (data.text === message) {
-          setMessage('');
-        }
-        if (containerRef.current && data.unitId === userId.toString()) {
+        if (data.unitId === userId.toString()) {
           setMyMessage(!myMessage);
+          setMessage('');
         }
       }
     };
@@ -193,5 +218,5 @@ export const useMesages = ({
       };
     };
   }, [roomId, userId, ws, messages, message, myMessage, containerRef]);
-  return { changeText, sendMessage, messages, message };
+  return { changeText, sendMessage, messages, message, rows };
 };

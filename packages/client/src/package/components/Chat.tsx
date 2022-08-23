@@ -21,12 +21,15 @@ function Chat({
   const theme = useContext(ThemeContext);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const { message, messages, changeText, sendMessage } = useMesages({
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const { message, messages, changeText, sendMessage, rows } = useMesages({
     port,
     server,
     userId,
     roomId,
     containerRef,
+    inputRef,
   });
 
   return (
@@ -50,7 +53,7 @@ function Chat({
           ))}
       </div>
       <div className={s.input}>
-        <input onInput={changeText} value={message} />
+        <textarea rows={rows} ref={inputRef} onInput={changeText} value={message} />
         <IconButton onClick={sendMessage}>
           <SendIcon color={theme.colors.text} />
         </IconButton>

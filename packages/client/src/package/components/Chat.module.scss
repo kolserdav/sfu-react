@@ -22,10 +22,12 @@ $wrapper-padding: 0.5rem;
 }
 
 .input {
-  input {
+  textarea {
     position: relative;
     width: 80%;
-    height: 2rem;
+    padding: auto;
+    font-size: large;
+    line-height: 1;
   }
 
   position: absolute;
