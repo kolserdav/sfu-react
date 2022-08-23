@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Fri Jul 29 2022 21:35:51 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { LOG_LEVEL, CODECS } from './constants';
 import { LocaleClient, LocaleDefault, LocaleValue } from '../types/interfaces';
 
@@ -114,3 +114,35 @@ export const getPathname = (): string | null => {
 export const dateToString = (date: Date) => format(date, 'dd.MM.yyyy');
 
 export const dateToTime = (date: Date) => format(date, 'HH:mm');
+
+const checkDate = (date: Date) => {
+  let value: any = '';
+  try {
+    value = date.getDate();
+  } catch (e) {
+    //
+  }
+  return !Number.isNaN(value);
+};
+
+export function getLocaleDate(date: string): Date {
+  const dt = new Date(date);
+  dt.setTime(dt.getTime() - dt.getTimezoneOffset() * 60 * 1000);
+  return dt;
+}
+
+export function getUTCDate(date: string): Date {
+  const dt = new Date(date);
+  dt.setTime(dt.getTime() + dt.getTimezoneOffset() * 60 * 1000);
+  return dt;
+}
+
+export const getDay = (date: Date) => {
+  let day = '0';
+  const isValid = checkDate(date);
+  if (isValid) {
+    day = format(date, 'dd', {});
+  }
+
+  return day;
+};

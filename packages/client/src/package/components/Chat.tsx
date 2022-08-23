@@ -5,7 +5,7 @@ import s from './Chat.module.scss';
 import SendIcon from '../Icons/Send';
 import IconButton from './ui/IconButton';
 import { useMesages } from './Chat.hooks';
-import { dateToTime, dateToString } from '../utils/lib';
+import { dateToTime, dateToString, getLocaleDate } from '../utils/lib';
 import { prepareMessage } from './Chat.lib';
 
 function Chat({
@@ -32,7 +32,6 @@ function Chat({
     containerRef,
     inputRef,
   });
-
   return (
     <div className={s.wrapper} style={{ background: theme.colors.paper }}>
       <div
@@ -43,8 +42,8 @@ function Chat({
         {messages &&
           messages.map((item, index) => (
             <React.Fragment key={item.id}>
-              {new Date(item.created).getDate() !==
-                new Date(messages[index - 1]?.created).getDate() && (
+              {getLocaleDate(item.created.toString()).getDay() !==
+                getLocaleDate(messages[index - 1]?.created.toString()).getDay() && (
                 <p className={s.day}>{dateToString(new Date(item.created))}</p>
               )}
               <div
