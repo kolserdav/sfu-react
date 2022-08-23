@@ -39,7 +39,7 @@
 
 .users {
   position: relative;
-  width: 20%;
+  flex-basis: 20%;
   height: 100%;
 }
 
@@ -48,6 +48,6 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  width: 20%;
+  flex-basis: 20%;
   height: 100%;
 }

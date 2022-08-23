@@ -113,4 +113,4 @@ export const getPathname = (): string | null => {
 
 export const dateToString = (date: Date) => format(date, 'dd.MM.yyyy');
 
-export const dateToTime = (date: Date) => format(date, 'hh:mm');
+export const dateToTime = (date: Date) => format(date, 'HH:mm');

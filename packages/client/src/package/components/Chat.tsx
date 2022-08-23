@@ -6,6 +6,7 @@ import SendIcon from '../Icons/Send';
 import IconButton from './ui/IconButton';
 import { useMesages } from './Chat.hooks';
 import { dateToTime, dateToString } from '../utils/lib';
+import { prepareMessage } from './Chat.lib';
 
 function Chat({
   server,
@@ -34,7 +35,11 @@ function Chat({
 
   return (
     <div className={s.wrapper} style={{ background: theme.colors.paper }}>
-      <div className={s.container} ref={containerRef}>
+      <div
+        className={s.container}
+        ref={containerRef}
+        style={{ height: `calc(90% - ${rows} * 3rem)` }}
+      >
         {messages &&
           messages.map((item, index) => (
             <React.Fragment key={item.id}>
@@ -46,7 +51,10 @@ function Chat({
                 style={{ background: theme.colors.active, color: theme.colors.textActive }}
                 className={clsx(s.message, item.unitId === userId.toString() ? s.self : '')}
               >
-                <div className={s.text}>{item.text}</div>
+                <div
+                  className={s.text}
+                  dangerouslySetInnerHTML={{ __html: prepareMessage(item.text) }}
+                />
                 <div className={s.date}>{dateToTime(new Date(item.created))}</div>
               </div>
             </React.Fragment>

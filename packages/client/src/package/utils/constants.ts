@@ -29,3 +29,4 @@ export const CODECS = [
 ];
 export const SPEAKER_LEVEL = 0.4;
 export const CHAT_TAKE_MESSAGES = 10;
+export const TEXT_AREA_MAX_ROWS = 5;
