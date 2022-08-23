@@ -8,6 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Fri Jul 29 2022 21:35:51 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
+import { format } from 'date-fns';
 import { LOG_LEVEL, CODECS } from './constants';
 import { LocaleClient, LocaleDefault, LocaleValue } from '../types/interfaces';
 
@@ -109,3 +110,7 @@ export const getPathname = (): string | null => {
   }
   return res;
 };
+
+export const dateToString = (date: Date) => format(date, 'dd.MM.yyyy');
+
+export const dateToTime = (date: Date) => format(date, 'hh:mm');

@@ -1,4 +1,4 @@
-$wrapper-padding: 1rem;
+$wrapper-padding: 0.5rem;
 
 .wrapper {
   position: relative;
@@ -16,10 +16,9 @@ $wrapper-padding: 1rem;
   height: 90%;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
   overflow-y: auto;
   overflow-x: hidden;
-  margin-bottom: calc(#{$wrapper-padding} * 2);
+  margin-bottom: calc(#{$wrapper-padding} * 4);
 }
 
 .input {
@@ -40,8 +39,27 @@ $wrapper-padding: 1rem;
 
 .message {
   position: relative;
-  margin: calc(#{$wrapper-padding} / 2);
+  display: flex;
+  flex-direction: column;
   padding: $wrapper-padding;
   border-radius: 5px;
   max-width: 80%;
+  margin: calc(#{$wrapper-padding} / 2) auto calc(#{$wrapper-padding} / 2)
+    calc(#{$wrapper-padding} / 2);
+
+  &.self {
+    margin: calc(#{$wrapper-padding} / 2) calc(#{$wrapper-padding} / 2)
+      calc(#{$wrapper-padding} / 2) auto;
+  }
+
+  .date {
+    font-size: xx-small;
+    margin: 5px 0 0 auto;
+  }
+}
+
+.day {
+  display: flex;
+  justify-content: center;
+  height: 2rem;
 }

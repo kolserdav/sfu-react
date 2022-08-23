@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { LocaleSelector } from '../../types/interfaces';
 import ThemeContext from '../../Theme.context';
+import s from './Select.module.scss';
 
 function Select({
   value,
@@ -14,6 +15,7 @@ function Select({
   const theme = useContext(ThemeContext);
   return (
     <select
+      className={s.wrapper}
       onChange={onChange}
       value={value}
       style={{ background: theme.colors.active, color: theme.colors.paper }}
