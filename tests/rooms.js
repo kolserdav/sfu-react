@@ -254,9 +254,6 @@ const startServer = async () => {
   res.stderr.on('data', (d) => {
     const data = d.toString();
     console.log(data);
-    if (!/npm notice/.test(data)) {
-      process.exit(1);
-    }
   });
   await new Promise((resolve) => {
     res.on('exit', () => {
@@ -275,9 +272,6 @@ const startServer = async () => {
   res.stderr.on('data', (d) => {
     const data = d.toString();
     console.log(data);
-    if (!/npm notice/.test(data)) {
-      process.exit(1);
-    }
   });
   return new Promise((resolve) => {
     setTimeout(() => {
