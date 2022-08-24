@@ -26,6 +26,7 @@ import storeTheme from './store/theme';
 import storeLocale from './store/locale';
 import { LocaleClient } from './types/interfaces';
 import { getLocalStorage, LocalStorageName, setLocalStorage } from './utils/localStorage';
+import { CookieName, getCookie, setCookie } from './utils/cookies';
 
 function Main({ room }: { room: Omit<RoomProps, 'locale' | 'roomId'> }) {
   const pathname = getPathname();
@@ -57,11 +58,12 @@ function Main({ room }: { room: Omit<RoomProps, 'locale' | 'roomId'> }) {
    */
   useEffect(() => {
     // TODO change to saved locale
-    let _locale = getLocale(storeLocale.getState().locale);
+    let _locale = getLocale(getCookie(CookieName.lang) || storeLocale.getState().locale);
     setLocale(_locale);
     storeLocale.subscribe(() => {
       const state = storeLocale.getState();
       _locale = getLocale(state.locale);
+      setCookie(CookieName.lang, state.locale);
       setLocale(_locale);
     });
   }, []);

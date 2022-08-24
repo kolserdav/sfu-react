@@ -10,7 +10,7 @@
  ******************************************************************************************/
 import { createSlice, configureStore } from '@reduxjs/toolkit';
 import { LocaleValue, LocaleDefault } from '../types/interfaces';
-import { getCookie, CookieName } from '../utils/cookies';
+import { getCookie, CookieName, setCookie } from '../utils/cookies';
 
 interface State {
   locale: LocaleValue;
@@ -20,10 +20,15 @@ interface Action {
   payload: State;
 }
 
+const locale = getCookie(CookieName.lang) || LocaleDefault;
+if (locale === LocaleDefault) {
+  setCookie(CookieName.lang, locale);
+}
+
 const slice = createSlice({
   name: 'locale',
   initialState: {
-    locale: getCookie(CookieName.lang) || LocaleDefault,
+    locale,
   } as State,
   reducers: {
     changeLocale: (state: State, action: Action) => {

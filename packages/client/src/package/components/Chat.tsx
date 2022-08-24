@@ -5,19 +5,22 @@ import s from './Chat.module.scss';
 import SendIcon from '../Icons/Send';
 import IconButton from './ui/IconButton';
 import { useMesages } from './Chat.hooks';
-import { dateToTime, dateToString, getLocaleDate } from '../utils/lib';
+import { dateToTime, dateToString } from '../utils/lib';
 import { prepareMessage } from './Chat.lib';
+import { LocaleClient } from '../types/interfaces';
 
 function Chat({
   server,
   port,
   roomId,
   userId,
+  locale,
 }: {
   server: string;
   port: number;
   roomId: string | number;
   userId: string | number;
+  locale: LocaleClient['hall'];
 }) {
   const theme = useContext(ThemeContext);
 
@@ -42,8 +45,8 @@ function Chat({
         {messages &&
           messages.map((item, index) => (
             <React.Fragment key={item.id}>
-              {getLocaleDate(item.created.toString()).getDay() !==
-                getLocaleDate(messages[index - 1]?.created.toString()).getDay() && (
+              {new Date(item.created).getDay() !==
+                new Date(messages[index - 1]?.created).getDay() && (
                 <p className={s.day}>{dateToString(new Date(item.created))}</p>
               )}
               <div
@@ -61,7 +64,7 @@ function Chat({
       </div>
       <div className={s.input}>
         <textarea rows={rows} ref={inputRef} onInput={changeText} value={message} />
-        <IconButton onClick={sendMessage}>
+        <IconButton title={locale.send} onClick={sendMessage}>
           <SendIcon color={theme.colors.text} />
         </IconButton>
       </div>

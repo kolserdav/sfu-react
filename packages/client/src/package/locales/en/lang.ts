@@ -6,6 +6,7 @@ const lang: LocaleClient = {
   },
   hall: {
     changeTheme: 'Change theme',
+    send: 'Send',
   },
 };
 

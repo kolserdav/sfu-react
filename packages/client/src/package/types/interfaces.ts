@@ -365,6 +365,7 @@ export namespace Locale {
     };
     hall: {
       changeTheme: string;
+      send: string;
     };
   }
 }

@@ -11,7 +11,8 @@
     "peer",
     "group",
     "video",
-    "call"
+    "call",
+    "chat"
   ],
   "author": {
     "name": "Sergey Kolmiller",

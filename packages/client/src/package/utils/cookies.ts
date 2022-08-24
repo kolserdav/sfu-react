@@ -28,10 +28,10 @@ export function setCookie<T extends keyof typeof CookieName>(
   if (options) {
     const { expires } = options;
     date = expires;
-    if (!date) {
-      date = new Date();
-      date.setFullYear(date.getFullYear() + 1);
-    }
+  }
+  if (!options?.expires) {
+    date = new Date();
+    date.setFullYear(date.getFullYear() + 1);
   }
   cookies.set(name, value, {
     expires: date,
