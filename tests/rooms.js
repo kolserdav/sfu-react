@@ -241,9 +241,25 @@ async function reloadPage(page) {
  *
  * @returns {Promise<1 | 0>}
  */
-const startServer = () => {
+const startServer = async () => {
   log('log', 'Run command:', '"npm run start"', true);
-  const res = spawn('npm', ['run', 'start'], {
+  let res = spawn('npm', ['run', 'prod:migrate'], {
+    env: {
+      PATH: process.env.PATH,
+    },
+  });
+  res.stdout.on('data', (d) => {
+    console.log(d.toString());
+  });
+  res.stderr.on('data', (d) => {
+    console.log(d.toString());
+  });
+  await new Promise((resolve) => {
+    res.on('exit', () => {
+      resolve(0);
+    });
+  });
+  res = spawn('npm', ['run', 'start'], {
     env: {
       PATH: process.env.PATH,
     },
