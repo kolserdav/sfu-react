@@ -5,6 +5,7 @@ import { MessageType, SendMessageArgs } from '../types/interfaces';
 import { CHAT_TAKE_MESSAGES, TEXT_AREA_MAX_ROWS } from '../utils/constants';
 import { scrollToBottom } from './Chat.lib';
 
+let oldSkip = 0;
 // eslint-disable-next-line import/prefer-default-export
 export const useMesages = ({
   port,
@@ -81,10 +82,37 @@ export const useMesages = ({
   }, [rows, containerRef]);
 
   /**
+   * Container scroll handler
+   */
+  useEffect(() => {
+    const { current } = containerRef;
+    const containerOnScroll = () => {
+      if (current) {
+        if (current.scrollTop === 0 && count > messages.length) {
+          setSkip(skip + CHAT_TAKE_MESSAGES);
+          current.scrollTo({ top: 1 });
+        }
+      }
+    };
+    if (current) {
+      if (current.clientTop === 0) {
+        current.scrollTo({ top: 1 });
+      }
+      current.addEventListener('scroll', containerOnScroll);
+    }
+    return () => {
+      if (current) {
+        current.removeEventListener('scroll', containerOnScroll);
+      }
+    };
+  }, [containerRef, skip, count, messages]);
+
+  /**
    * Get first chat messages
    */
   useEffect(() => {
-    if (chatUnit) {
+    if (chatUnit && skip - oldSkip !== 1) {
+      oldSkip = skip;
       ws.sendMessage({
         type: MessageType.GET_CHAT_MESSAGES,
         id: roomId,
@@ -136,30 +164,6 @@ export const useMesages = ({
   }, [inputRef, sendMessage, message]);
 
   /**
-   * Container scroll handler
-   */
-  useEffect(() => {
-    const { current } = containerRef;
-    const containerOnScroll = () => {
-      if (current) {
-        if (current.scrollTop === 0 && count > messages.length) {
-          setSkip(skip + CHAT_TAKE_MESSAGES);
-          current.scrollTo({ top: 1 });
-        }
-      }
-    };
-    if (current) {
-      current.scrollTo({ top: 1 });
-      current.addEventListener('scroll', containerOnScroll);
-    }
-    return () => {
-      if (current) {
-        current.removeEventListener('scroll', containerOnScroll);
-      }
-    };
-  }, [containerRef, skip, count, messages]);
-
-  /**
    * Handle messages
    */
   useEffect(() => {
@@ -187,6 +191,7 @@ export const useMesages = ({
           setMessage('');
           setRows(1);
         }
+        setSkip(skip + 1);
       }
     };
     ws.onOpen = () => {
