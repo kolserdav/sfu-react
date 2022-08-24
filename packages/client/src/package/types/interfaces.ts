@@ -19,6 +19,18 @@ import { Message, Prisma, Room, Unit } from '@prisma/client';
 export type ArgumentTypes<F extends Function> = F extends (args: infer A) => any ? A : never;
 export type GetManyResult<T> = { result: T[]; skip: number; count: number; take: number };
 
+// eslint-disable-next-line no-unused-vars
+export enum LogLevel {
+  // eslint-disable-next-line no-unused-vars
+  log = 0,
+  // eslint-disable-next-line no-unused-vars
+  info = 1,
+  // eslint-disable-next-line no-unused-vars
+  warn = 2,
+  // eslint-disable-next-line no-unused-vars
+  error = 3,
+}
+
 // eslint-disable-next-line no-shadow
 export enum MessageType {
   GET_USER_ID = 'GET_USER_ID',

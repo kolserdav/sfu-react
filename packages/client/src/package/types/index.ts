@@ -9,7 +9,7 @@
  * Create Date: Fri Jul 29 2022 21:35:51 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { Colors } from '../Theme';
-import { LocaleClient } from './interfaces';
+import { LocaleClient, LogLevel } from './interfaces';
 
 export interface RoomProps {
   id: number | string;
@@ -35,6 +35,12 @@ export interface Stream {
   stream: MediaStream;
   connId: string;
   ref: React.Ref<HTMLVideoElement>;
+}
+
+export interface DialogProps {
+  children: string;
+  type: keyof typeof LogLevel;
+  open: boolean;
 }
 
 export type ThemeType = 'light' | 'dark';

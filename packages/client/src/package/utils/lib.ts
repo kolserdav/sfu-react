@@ -10,19 +10,7 @@
  ******************************************************************************************/
 import { format } from 'date-fns';
 import { LOG_LEVEL, CODECS } from './constants';
-import { LocaleClient, LocaleDefault, LocaleValue } from '../types/interfaces';
-
-// eslint-disable-next-line no-unused-vars
-enum LogLevel {
-  // eslint-disable-next-line no-unused-vars
-  log = 0,
-  // eslint-disable-next-line no-unused-vars
-  info = 1,
-  // eslint-disable-next-line no-unused-vars
-  warn = 2,
-  // eslint-disable-next-line no-unused-vars
-  error = 3,
-}
+import { LocaleClient, LocaleDefault, LocaleValue, LogLevel } from '../types/interfaces';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const log = (type: keyof typeof LogLevel, text: string, data?: any) => {

@@ -22,6 +22,7 @@ export interface Color {
   textActive: string;
   red: string;
   yellow: string;
+  blue: string;
 }
 
 export interface Colors {
@@ -46,6 +47,7 @@ const colors: Colors = {
     textActive: '#000',
     red: 'red',
     yellow: 'yellow',
+    blue: 'blue',
   },
   light: {
     red: 'red',
@@ -54,6 +56,7 @@ const colors: Colors = {
     text: '#5d5e60',
     active: '#8d8d92',
     textActive: '#fff',
+    blue: 'blue',
   },
 };
 

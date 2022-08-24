@@ -1,0 +1,23 @@
+$border-radius: 8px;
+$height: 50px;
+
+.wrapper {
+  position: fixed;
+  bottom: calc(#{$height} * -1);
+  right: 0;
+  width: 300px;
+  height: $height;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  border-radius: $border-radius;
+  box-shadow: -2px -2px $border-radius rgb(0 0 0 / 30%);
+  font-size: large;
+  transition: bottom 0.3s ease-in;
+
+  &.open {
+    bottom: 0;
+    transition: bottom 0.3s ease-out;
+  }
+}

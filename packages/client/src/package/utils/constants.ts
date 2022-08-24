@@ -1,3 +1,5 @@
+import { DialogProps } from '../types';
+
 /******************************************************************************************
  * Repository: https://github.com/kolserdav/werift-sfu-react.git
  * File name: constants.ts
@@ -30,3 +32,9 @@ export const CODECS = [
 export const SPEAKER_LEVEL = 0.4;
 export const CHAT_TAKE_MESSAGES = 10;
 export const TEXT_AREA_MAX_ROWS = 5;
+export const DIALOG_DEFAULT: DialogProps = {
+  open: false,
+  children: '',
+  type: 'log',
+};
+export const DIALOG_TIMEOUT = 2000;

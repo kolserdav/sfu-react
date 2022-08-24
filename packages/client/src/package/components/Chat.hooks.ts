@@ -2,7 +2,8 @@ import React, { useEffect, useState, useMemo } from 'react';
 import WS from '../core/ws';
 import { log } from '../utils/lib';
 import { MessageType, SendMessageArgs } from '../types/interfaces';
-import { CHAT_TAKE_MESSAGES, TEXT_AREA_MAX_ROWS } from '../utils/constants';
+import { DialogProps } from '../types';
+import { CHAT_TAKE_MESSAGES, TEXT_AREA_MAX_ROWS, DIALOG_DEFAULT } from '../utils/constants';
 import { scrollToBottom } from './Chat.lib';
 
 let oldSkip = 0;
@@ -25,6 +26,7 @@ export const useMesages = ({
   const [message, setMessage] = useState<string>('');
   const [chatUnit, setChatUnit] = useState<boolean>(false);
   const [myMessage, setMyMessage] = useState<boolean>(false);
+  const [dialog, setDialog] = useState<DialogProps>(DIALOG_DEFAULT);
   const [skip, setSkip] = useState<number>(0);
   const [count, setCount] = useState<number>(0);
   const [rows, setRows] = useState<number>(1);
@@ -71,6 +73,11 @@ export const useMesages = ({
         setRows(1);
         setMessage(mess);
       }
+      setDialog({
+        open: true,
+        children: 'Send',
+        type: 'info',
+      });
     },
     [message, userId, roomId, ws]
   );
@@ -245,5 +252,5 @@ export const useMesages = ({
       };
     };
   }, [roomId, userId, ws, messages, message, myMessage, containerRef, skip]);
-  return { changeText, sendMessage, messages, message, rows };
+  return { changeText, sendMessage, messages, message, rows, dialog };
 };
