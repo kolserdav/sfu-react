@@ -139,8 +139,8 @@ export const useMesages = ({
    * Container scroll handler
    */
   useEffect(() => {
+    const { current } = containerRef;
     const containerOnScroll = () => {
-      const { current } = containerRef;
       if (current) {
         if (current.scrollTop === 0 && count > messages.length) {
           setSkip(skip + CHAT_TAKE_MESSAGES);
@@ -148,8 +148,8 @@ export const useMesages = ({
         }
       }
     };
-    const { current } = containerRef;
     if (current) {
+      current.scrollTo({ top: 1 });
       current.addEventListener('scroll', containerOnScroll);
     }
     return () => {
