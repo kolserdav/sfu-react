@@ -1,3 +1,13 @@
+/******************************************************************************************
+ * Repository: https://github.com/kolserdav/werift-sfu-react.git
+ * File name: Chat.tsx
+ * Author: Sergey Kolmiller
+ * Email: <uyem.ru@gmail.com>
+ * License: MIT
+ * License text: See in LICENSE file
+ * Copyright: kolserdav, All rights reserved (c)
+ * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
+ ******************************************************************************************/
 import React, { useContext, useRef } from 'react';
 import clsx from 'clsx';
 import ThemeContext from '../Theme.context';
@@ -35,6 +45,12 @@ function Chat({
     containerRef,
     inputRef,
   });
+
+  const clickByMessage = (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    ev.preventDefault();
+    const { clientX, clientY } = ev;
+  };
+
   return (
     <div className={s.wrapper} style={{ background: theme.colors.paper }}>
       <div
@@ -50,6 +66,7 @@ function Chat({
                 <p className={s.day}>{dateToString(new Date(item.created))}</p>
               )}
               <div
+                onContextMenu={clickByMessage}
                 style={{ background: theme.colors.active, color: theme.colors.textActive }}
                 className={clsx(s.message, item.unitId === userId.toString() ? s.self : '')}
               >

@@ -1,3 +1,13 @@
+/******************************************************************************************
+ * Repository: https://github.com/kolserdav/werift-sfu-react.git
+ * File name: Chat.lib.ts
+ * Author: Sergey Kolmiller
+ * Email: <uyem.ru@gmail.com>
+ * License: MIT
+ * License text: See in LICENSE file
+ * Copyright: kolserdav, All rights reserved (c)
+ * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
+ ******************************************************************************************/
 const prepareLinks = (text: string) => {
   let _text = text.slice();
   const links = text.match(/https?:\/\/[a-zA-Z.-_0-9/]+/g);

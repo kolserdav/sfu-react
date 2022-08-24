@@ -6,7 +6,7 @@
  * License: MIT
  * License text: See in LICENSE file
  * Copyright: kolserdav, All rights reserved (c)
- * Create Date: Fri Jul 29 2022 21:35:51 GMT+0700 (Krasnoyarsk Standard Time)
+ * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { Colors } from '../Theme';
 import { LocaleClient, LogLevel } from './interfaces';
@@ -37,7 +37,7 @@ export interface Stream {
   ref: React.Ref<HTMLVideoElement>;
 }
 
-export interface DialogProps {
+export interface AlertProps {
   children: string;
   type: keyof typeof LogLevel;
   open: boolean;

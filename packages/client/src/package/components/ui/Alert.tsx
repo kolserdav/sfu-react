@@ -1,18 +1,28 @@
+/******************************************************************************************
+ * Repository: https://github.com/kolserdav/werift-sfu-react.git
+ * File name: Alert.tsx
+ * Author: Sergey Kolmiller
+ * Email: <uyem.ru@gmail.com>
+ * License: MIT
+ * License text: See in LICENSE file
+ * Copyright: kolserdav, All rights reserved (c)
+ * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
+ ******************************************************************************************/
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import clsx from 'clsx';
-import s from './Dialog.module.scss';
+import s from './Alert.module.scss';
 import ThemeContext from '../../Theme.context';
-import { DialogProps } from '../../types';
-import { DIALOG_DEFAULT, DIALOG_TIMEOUT } from '../../utils/constants';
-import storeDialog, { changeDialog } from '../../store/dialog';
+import { AlertProps } from '../../types';
+import { ALERT_DEFAULT, ALERT_TIMEOUT } from '../../utils/constants';
+import storeAlert, { changeAlert } from '../../store/alert';
 
-function Dialog({ children, type, open }: DialogProps) {
+function Alert({ children, type, open }: AlertProps) {
   const theme = useContext(ThemeContext);
   const dialogRef = useRef<HTMLDivElement>(null);
   const [mouseMove, setMouseMove] = useState<boolean>(false);
 
   /**
-   * Close dialog
+   * Close alert
    */
   useEffect(() => {
     let timeout = setTimeout(() => {
@@ -20,8 +30,8 @@ function Dialog({ children, type, open }: DialogProps) {
     }, 0);
     if (!mouseMove && open) {
       timeout = setTimeout(() => {
-        storeDialog.dispatch(changeDialog({ dialog: DIALOG_DEFAULT }));
-      }, DIALOG_TIMEOUT);
+        storeAlert.dispatch(changeAlert({ alert: ALERT_DEFAULT }));
+      }, ALERT_TIMEOUT);
     }
     return () => {
       clearTimeout(timeout);
@@ -82,4 +92,4 @@ function Dialog({ children, type, open }: DialogProps) {
   );
 }
 
-export default Dialog;
+export default Alert;

@@ -1,6 +1,6 @@
 /******************************************************************************************
  * Repository: https://github.com/kolserdav/werift-sfu-react.git
- * File name: index.tsx
+ * File name: Menu.tsx
  * Author: Sergey Kolmiller
  * Email: <uyem.ru@gmail.com>
  * License: MIT
@@ -9,13 +9,16 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.scss';
-import App from './App';
+import Icon, { IconProps } from './Icon';
 
-const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+function MenuIcon(props: Omit<IconProps, 'children'>) {
+  return (
+    <Icon {...props}>
+      M12,16A2,2 0 0,1 14,18A2,2 0 0,1 12,20A2,2 0 0,1 10,18A2,2 0 0,1 12,16M12,10A2,2 0 0,1
+      14,12A2,2 0 0,1 12,14A2,2 0 0,1 10,12A2,2 0 0,1 12,10M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0
+      0,1 10,6A2,2 0 0,1 12,4Z
+    </Icon>
+  );
+}
+
+export default MenuIcon;

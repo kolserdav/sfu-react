@@ -6,15 +6,15 @@
  * License: MIT
  * License text: See in LICENSE file
  * Copyright: kolserdav, All rights reserved (c)
- * Create Date: Fri Jul 29 2022 21:35:51 GMT+0700 (Krasnoyarsk Standard Time)
+ * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { useEffect, useState, useMemo } from 'react';
 import clsx from 'clsx';
 import Room from './components/Room';
 import Hall from './components/Hall';
-import { RoomProps, DialogProps } from './types';
-import { DIALOG_DEFAULT } from './utils/constants';
+import { RoomProps, AlertProps } from './types';
+import { ALERT_DEFAULT } from './utils/constants';
 import ThemeContext from './Theme.context';
 import { themes, Themes } from './Theme';
 import ChevronLeftIcon from './Icons/ChevronLeftIcon';
@@ -28,8 +28,8 @@ import storeLocale from './store/locale';
 import { LocaleClient } from './types/interfaces';
 import { getLocalStorage, LocalStorageName, setLocalStorage } from './utils/localStorage';
 import { CookieName, getCookie, setCookie } from './utils/cookies';
-import Dialog from './components/ui/Dialog';
-import storeDialog from './store/dialog';
+import Alert from './components/ui/Alert';
+import storeDialog from './store/alert';
 
 function Main({ room }: { room: Omit<RoomProps, 'locale' | 'roomId'> }) {
   const pathname = getPathname();
@@ -39,7 +39,7 @@ function Main({ room }: { room: Omit<RoomProps, 'locale' | 'roomId'> }) {
   const [currentTheme, setCurrentTheme] = useState<keyof Themes>(savedTheme || 'light');
   const _themes = useMemo(() => changeColors({ colors, themes }), [colors]);
   const [theme, setTheme] = useState<Themes['dark' | 'light']>(_themes[savedTheme || 'light']);
-  const [dialog, setDialog] = useState<DialogProps>(DIALOG_DEFAULT);
+  const [alert, setAlert] = useState<AlertProps>(ALERT_DEFAULT);
   const [hallOpen, setHallOpen] = useState<boolean>(
     getLocalStorage(LocalStorageName.HALL_OPEN) || false
   );
@@ -78,7 +78,7 @@ function Main({ room }: { room: Omit<RoomProps, 'locale' | 'roomId'> }) {
   useEffect(() => {
     const cleanStore = storeDialog.subscribe(() => {
       const state = storeDialog.getState();
-      setDialog(state.dialog);
+      setAlert(state.alert);
     });
     return () => {
       cleanStore();
@@ -108,7 +108,7 @@ function Main({ room }: { room: Omit<RoomProps, 'locale' | 'roomId'> }) {
         tabIndex={0}
         onClick={openMenu}
       >
-        <IconButton className={clsx(s.button__icon, hallOpen ? s.active : '')}>
+        <IconButton strict className={clsx(s.button__icon, hallOpen ? s.active : '')}>
           {hallOpen ? (
             <ChevronRightIcon color={theme.colors.paper} />
           ) : (
@@ -126,9 +126,9 @@ function Main({ room }: { room: Omit<RoomProps, 'locale' | 'roomId'> }) {
           port={room.port}
         />
       )}
-      <Dialog open={dialog.open} type={dialog.type}>
-        {dialog.children}
-      </Dialog>
+      <Alert open={alert.open} type={alert.type}>
+        {alert.children}
+      </Alert>
     </ThemeContext.Provider>
   );
 }

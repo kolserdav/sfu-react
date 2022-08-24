@@ -1,19 +1,19 @@
 /******************************************************************************************
  * Repository: https://github.com/kolserdav/werift-sfu-react.git
- * File name: dialog.ts
+ * File name: alert.ts
  * Author: Sergey Kolmiller
  * Email: <uyem.ru@gmail.com>
  * License: MIT
  * License text: See in LICENSE file
  * Copyright: kolserdav, All rights reserved (c)
- * Create Date: Fri Jul 29 2022 21:35:51 GMT+0700 (Krasnoyarsk Standard Time)
+ * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { createSlice, configureStore } from '@reduxjs/toolkit';
-import { DialogProps } from '../types';
-import { DIALOG_DEFAULT } from '../utils/constants';
+import { AlertProps } from '../types';
+import { ALERT_DEFAULT } from '../utils/constants';
 
 interface State {
-  dialog: DialogProps;
+  alert: AlertProps;
 }
 
 interface Action {
@@ -23,12 +23,12 @@ interface Action {
 const slice = createSlice({
   name: 'dialog',
   initialState: {
-    dialog: DIALOG_DEFAULT,
+    alert: ALERT_DEFAULT,
   } as State,
   reducers: {
-    changeDialog: (state: State, action: Action) => {
+    changeAlert: (state: State, action: Action) => {
       // eslint-disable-next-line no-param-reassign
-      state.dialog = action.payload.dialog;
+      state.alert = action.payload.alert;
     },
   },
 });
@@ -37,14 +37,14 @@ const slice = createSlice({
  * FIXME change @reduxjs/toolkit to IndexedDB
  * @deprecated
  */
-export const { changeDialog } = slice.actions;
+export const { changeAlert } = slice.actions;
 
 /**
  * FIXME change @reduxjs/toolkit to IndexedDB
  * @deprecated
  */
-const storeDialog = configureStore({
+const storeAlert = configureStore({
   reducer: slice.reducer,
 });
 
-export default storeDialog;
+export default storeAlert;

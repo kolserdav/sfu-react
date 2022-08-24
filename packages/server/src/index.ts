@@ -6,7 +6,7 @@
  * License: MIT
  * License text: See in LICENSE file
  * Copyright: kolserdav, All rights reserved (c)
- * Create Date: Fri Jul 29 2022 21:35:51 GMT+0700 (Krasnoyarsk Standard Time)
+ * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 /* eslint-disable no-case-declarations */
 import { spawn } from 'child_process';

@@ -6,7 +6,7 @@
  * License: MIT
  * License text: See in LICENSE file
  * Copyright: kolserdav, All rights reserved (c)
- * Create Date: Fri Jul 29 2022 21:35:51 GMT+0700 (Krasnoyarsk Standard Time)
+ * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React from 'react';
@@ -19,6 +19,7 @@ function IconButton({
   width,
   title,
   height,
+  strict,
   onClick,
 }: {
   children: JSX.Element;
@@ -26,6 +27,7 @@ function IconButton({
   width?: number;
   height?: number;
   className?: string;
+  strict?: boolean;
   onClick?: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
 }) {
   return (
@@ -35,7 +37,7 @@ function IconButton({
       role="button"
       title={title}
       tabIndex={0}
-      className={clsx(className || s.wrapper)}
+      className={clsx(!strict ? s.wrapper : className, strict ? '' : className)}
     >
       {children}
     </div>
@@ -46,6 +48,7 @@ IconButton.defaultProps = {
   width: 40,
   height: 40,
   title: '',
+  strict: false,
   onClick: () => {
     /** */
   },

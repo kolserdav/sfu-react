@@ -1,10 +1,20 @@
+/******************************************************************************************
+ * Repository: https://github.com/kolserdav/werift-sfu-react.git
+ * File name: Chat.hooks.ts
+ * Author: Sergey Kolmiller
+ * Email: <uyem.ru@gmail.com>
+ * License: MIT
+ * License text: See in LICENSE file
+ * Copyright: kolserdav, All rights reserved (c)
+ * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
+ ******************************************************************************************/
 import React, { useEffect, useState, useMemo } from 'react';
 import WS from '../core/ws';
 import { log } from '../utils/lib';
 import { MessageType, SendMessageArgs } from '../types/interfaces';
 import { CHAT_TAKE_MESSAGES, TEXT_AREA_MAX_ROWS } from '../utils/constants';
 import { scrollToBottom } from './Chat.lib';
-import storeDialog, { changeDialog } from '../store/dialog';
+import storeAlert, { changeAlert } from '../store/alert';
 
 let oldSkip = 0;
 // eslint-disable-next-line import/prefer-default-export
@@ -72,18 +82,6 @@ export const useMesages = ({
         setRows(1);
         setMessage(mess);
       }
-      // TODO remove
-      /*
-      storeDialog.dispatch(
-        changeDialog({
-          dialog: {
-            open: true,
-            children: 'Send',
-            type: 'info',
-          },
-        })
-      );
-      */
     },
     [message, userId, roomId, ws]
   );
@@ -194,6 +192,20 @@ export const useMesages = ({
       setMessages(_result);
     };
 
+    const setErrorHandler = ({
+      data: { message: children },
+    }: SendMessageArgs<MessageType.SET_ERROR>) => {
+      storeAlert.dispatch(
+        changeAlert({
+          alert: {
+            open: true,
+            children,
+            type: 'error',
+          },
+        })
+      );
+    };
+
     const setRoomMessage = ({ data }: SendMessageArgs<MessageType.SET_ROOM_MESSAGE>) => {
       if (messages) {
         const _messages = messages.map((item) => item);
@@ -233,6 +245,9 @@ export const useMesages = ({
           break;
         case MessageType.SET_CHAT_UNIT:
           setChatUnit(true);
+          break;
+        case MessageType.SET_ERROR:
+          setErrorHandler(rawMessage);
           break;
         default:
       }
