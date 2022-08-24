@@ -8,6 +8,9 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
+
+import { log } from '../utils/lib';
+
 const prepareLinks = (text: string) => {
   let _text = text.slice();
   const links = text.match(/https?:\/\/[a-zA-Z.-_0-9/]+/g);
@@ -24,7 +27,13 @@ const prepareQuotes = (text: string) => {
   let _text = text.slice();
   const quote = text.match(/\[quote=\d+\]/);
   if (quote) {
-    _text = _text.replace(quote[0], `| Message`);
+    const _quote = quote[0];
+    const id = _quote.match(/\d+/);
+    if (!id) {
+      log('error', 'Error get quote', { id, _quote });
+      return text;
+    }
+    _text = _text.replace(_quote, `| Message ${id[0]}`);
   }
   return _text;
 };

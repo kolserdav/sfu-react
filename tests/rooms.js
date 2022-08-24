@@ -253,6 +253,7 @@ const startServer = async () => {
   });
   res.stderr.on('data', (d) => {
     console.log(d.toString());
+    process.exit(1);
   });
   await new Promise((resolve) => {
     res.on('exit', () => {
@@ -270,6 +271,7 @@ const startServer = async () => {
   });
   res.stderr.on('data', (d) => {
     console.log(d.toString());
+    process.exit(1);
   });
   return new Promise((resolve) => {
     setTimeout(() => {
