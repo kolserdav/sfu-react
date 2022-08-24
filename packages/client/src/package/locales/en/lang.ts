@@ -11,13 +11,10 @@
 import type { LocaleClient } from '../../types/interfaces';
 
 const lang: LocaleClient = {
-  room: {
-    shareScreen: 'Share screen',
-  },
-  hall: {
-    changeTheme: 'Change theme',
-    send: 'Send',
-  },
+  shareScreen: 'Share screen',
+  changeTheme: 'Change theme',
+  send: 'Send',
+  quote: 'Quote',
 };
 
 export default lang;

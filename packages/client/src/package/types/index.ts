@@ -11,24 +11,26 @@
 import { Colors } from '../Theme';
 import { LocaleClient, LogLevel } from './interfaces';
 
-export interface RoomProps {
-  id: number | string;
-  roomId: string | number;
+interface GlobalProps {
   server: string;
+  roomId: string | number;
   port: number;
-  locale: LocaleClient['room'];
-  colors?: Colors;
-  iceServers?: RTCConfiguration['iceServers'];
+  userId: string | number;
+  name?: string;
 }
 
-export interface HallProps {
+export type RoomProps = GlobalProps & {
+  iceServers?: RTCConfiguration['iceServers'];
+  locale: LocaleClient;
+  colors?: Colors;
+};
+
+export type HallProps = GlobalProps & {
   open: boolean;
-  locale: LocaleClient['hall'];
-  server: string;
-  roomId: string | number;
-  userId: string | number;
-  port: number;
-}
+  locale: LocaleClient;
+};
+
+export type ChatProps = Omit<HallProps, 'open'>;
 
 export interface Stream {
   target: number | string;
@@ -48,11 +50,9 @@ export interface DialogProps {
   children: React.ReactNode;
   clientX: number;
   clientY: number;
+  context: number;
 }
 
 export type ThemeType = 'light' | 'dark';
 
-export interface ClickPosition {
-  clientX: number;
-  clientY: number;
-}
+export type ClickPosition = Omit<DialogProps, 'open' | 'children'>;

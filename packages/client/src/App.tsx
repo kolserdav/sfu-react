@@ -40,7 +40,7 @@ function App() {
                 credential: process.env.REACT_APP_TURN_SERVER_PASSWORD,
               },
             ],
-            id: window.location.search.replace(/\?uid=/, ''),
+            userId: window.location.search.replace(/\?uid=/, ''),
           }}
         />
       )}

@@ -20,8 +20,18 @@ const prepareLinks = (text: string) => {
   return _text;
 };
 
+const prepareQuotes = (text: string) => {
+  let _text = text.slice();
+  const quote = text.match(/\[quote=\d+\]/);
+  if (quote) {
+    _text = _text.replace(quote[0], `| Message`);
+  }
+  return _text;
+};
+
 // eslint-disable-next-line import/prefer-default-export
-export const prepareMessage = (text: string) => prepareLinks(text.replace(/\n/g, '<br>'));
+export const prepareMessage = (text: string) =>
+  prepareQuotes(prepareLinks(text.replace(/\n/g, '<br>')));
 
 export const scrollToBottom = (element: HTMLDivElement) => {
   element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' });

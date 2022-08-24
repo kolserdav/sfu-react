@@ -43,8 +43,10 @@ export const DIALOG_DEFAULT: DialogProps = {
   children: '',
   clientX: 0,
   clientY: 0,
+  context: 0,
 };
 export const CLICK_POSITION_DEFAULT: ClickPosition = {
   clientX: 0,
   clientY: 0,
+  context: 0,
 };

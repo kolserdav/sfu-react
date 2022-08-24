@@ -72,6 +72,17 @@ export const useMesages = ({
     setMessage(value);
   };
 
+  const clickQuoteWrapper =
+    (context: number) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      const quote = `[quote=${context}]\n`;
+      setMessage(quote);
+      const { current } = inputRef;
+      if (current) {
+        current.select();
+        current.selectionStart = quote.length;
+      }
+    };
+
   const sendMessage = useMemo(
     () => () => {
       const mess = message.replace(/[\n\s]+/g, '');
@@ -280,25 +291,28 @@ export const useMesages = ({
       };
     };
   }, [roomId, userId, ws, messages, message, myMessage, containerRef, skip]);
-  return { changeText, sendMessage, messages, message, rows };
+  return { changeText, sendMessage, messages, message, rows, clickQuoteWrapper };
 };
 
 export const useDialog = () => {
   const [dialog, setDialog] = useState<Omit<DialogProps, 'children'>>(DIALOG_DEFAULT);
   const [position, setPosition] = useState<ClickPosition>(CLICK_POSITION_DEFAULT);
-  const messageContextHandler = (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    ev.preventDefault();
-    const { clientX, clientY } = ev;
-    setDialog({
-      open: true,
-      clientY,
-      clientX,
-    });
-    setPosition({
-      clientX,
-      clientY,
-    });
-  };
+  const messageContextWrapper =
+    (context: number) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      ev.preventDefault();
+      const { clientX, clientY } = ev;
+      setDialog({
+        open: true,
+        clientY,
+        clientX,
+        context,
+      });
+      setPosition({
+        clientX,
+        clientY,
+        context,
+      });
+    };
 
   /**
    * Listen click document
@@ -313,6 +327,7 @@ export const useDialog = () => {
         open: false,
         clientY: position.clientX,
         clientX: position.clientY,
+        context: 0,
       });
     });
     return () => {
@@ -320,5 +335,5 @@ export const useDialog = () => {
     };
   }, [position]);
 
-  return { dialog, messageContextHandler };
+  return { dialog, messageContextWrapper };
 };

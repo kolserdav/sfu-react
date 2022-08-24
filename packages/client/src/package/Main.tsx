@@ -32,7 +32,7 @@ function Main({ room }: { room: Omit<RoomProps, 'locale' | 'roomId'> }) {
 
   return (
     <ThemeContext.Provider value={theme}>
-      {locale && <Room {...room} roomId={roomId} locale={locale.room} />}
+      {locale && <Room {...room} roomId={roomId} locale={locale} />}
       <div
         className={clsx(s.button, hallOpen ? s.active : '')}
         role="button"
@@ -51,9 +51,9 @@ function Main({ room }: { room: Omit<RoomProps, 'locale' | 'roomId'> }) {
       {locale && (
         <Hall
           roomId={roomId}
-          userId={room.id}
+          userId={room.userId}
           open={hallOpen}
-          locale={locale.hall}
+          locale={locale}
           server={room.server}
           port={room.port}
         />

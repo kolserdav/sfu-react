@@ -1,4 +1,5 @@
 .wrapper {
+  z-index: 102;
   position: fixed;
   width: 0;
   height: 0;
@@ -8,6 +9,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  border-radius: 6px;
 
   &.open {
     width: 200px;

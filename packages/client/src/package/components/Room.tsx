@@ -33,7 +33,7 @@ import CameraOutlineIcon from '../Icons/CameraOutlineIcon';
 import CopyIcon from '../Icons/CopyIcon';
 import WarningIcon from '../Icons/ErrorIcon';
 
-function Room({ id, iceServers, server, port, roomId }: RoomProps) {
+function Room({ userId, iceServers, server, port, roomId }: RoomProps) {
   const container = useRef<HTMLDivElement>(null);
   const roomLink = useMemo(() => getRoomLink(roomId), [roomId]);
   const { createAudioAnalyzer, analyzeSoundLevel, cleanAudioAnalyzer, speaker } =
@@ -53,7 +53,7 @@ function Room({ id, iceServers, server, port, roomId }: RoomProps) {
     changeVideo,
     error,
   } = useConnection({
-    id,
+    id: userId,
     roomId,
     iceServers,
     server,
@@ -87,7 +87,7 @@ function Room({ id, iceServers, server, port, roomId }: RoomProps) {
             {/** video is strong second child */}
             <video
               className={speaker === item.target ? s.speaker : ''}
-              muted={item.target === id || muteds.indexOf(item.target.toString()) !== -1}
+              muted={item.target === userId || muteds.indexOf(item.target.toString()) !== -1}
               onTimeUpdate={(e) => {
                 analyzeSoundLevel(item.target);
                 if (item.stream.active === false) {

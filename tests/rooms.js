@@ -184,7 +184,7 @@ async function evaluateRoom(evalPage, last = false) {
       if (last) {
         if (errors === 0) {
           if (warnings !== 0) {
-            // TODO
+            process.exit(1);
           }
           process.exit(0);
         } else {

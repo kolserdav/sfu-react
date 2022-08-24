@@ -372,13 +372,10 @@ export namespace Locale {
   }
 
   export interface Client {
-    room: {
-      shareScreen: string;
-    };
-    hall: {
-      changeTheme: string;
-      send: string;
-    };
+    shareScreen: string;
+    changeTheme: string;
+    send: string;
+    quote: string;
   }
 }
 

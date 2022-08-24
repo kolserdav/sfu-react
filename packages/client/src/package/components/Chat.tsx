@@ -17,28 +17,16 @@ import IconButton from './ui/IconButton';
 import { useMesages, useDialog } from './Chat.hooks';
 import { dateToTime, dateToString } from '../utils/lib';
 import { prepareMessage } from './Chat.lib';
-import { LocaleClient } from '../types/interfaces';
 import Dialog from './ui/Dialog';
+import { ChatProps } from '../types';
 
-function Chat({
-  server,
-  port,
-  roomId,
-  userId,
-  locale,
-}: {
-  server: string;
-  port: number;
-  roomId: string | number;
-  userId: string | number;
-  locale: LocaleClient['hall'];
-}) {
+function Chat({ server, port, roomId, userId, locale }: ChatProps) {
   const theme = useContext(ThemeContext);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const { message, messages, changeText, sendMessage, rows } = useMesages({
+  const { message, messages, changeText, sendMessage, rows, clickQuoteWrapper } = useMesages({
     port,
     server,
     userId,
@@ -47,7 +35,7 @@ function Chat({
     inputRef,
   });
 
-  const { dialog, messageContextHandler } = useDialog();
+  const { dialog, messageContextWrapper } = useDialog();
 
   return (
     <div className={s.wrapper} style={{ background: theme.colors.paper }}>
@@ -64,7 +52,7 @@ function Chat({
                 <p className={s.day}>{dateToString(new Date(item.created))}</p>
               )}
               <div
-                onContextMenu={messageContextHandler}
+                onContextMenu={messageContextWrapper(item.id)}
                 style={{ background: theme.colors.active, color: theme.colors.textActive }}
                 className={clsx(s.message, item.unitId === userId.toString() ? s.self : '')}
               >
@@ -83,7 +71,19 @@ function Chat({
           <SendIcon color={theme.colors.text} />
         </IconButton>
       </div>
-      <Dialog {...dialog}>dasd</Dialog>
+      <Dialog {...dialog}>
+        <div className={s.message__dialog}>
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}
+          <div
+            tabIndex={-1}
+            role="button"
+            onClick={clickQuoteWrapper(dialog.context)}
+            className={s.message__dialog__item}
+          >
+            {locale.quote}
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 }

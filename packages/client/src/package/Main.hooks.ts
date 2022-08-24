@@ -75,6 +75,7 @@ export const useListeners = ({ colors }: { colors?: Colors }) => {
           clickDocument: {
             clientX,
             clientY,
+            context: 0,
           },
         })
       );
