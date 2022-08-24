@@ -242,7 +242,7 @@ async function reloadPage(page) {
  * @returns {Promise<1 | 0>}
  */
 const startServer = async () => {
-  log('log', 'Run command:', '"npm run start"', true);
+  log('log', 'Run command:', '"npm run prod:migrate"', true);
   let res = spawn('npm', ['run', 'prod:migrate'], {
     env: {
       PATH: process.env.PATH,
@@ -259,6 +259,7 @@ const startServer = async () => {
       resolve(0);
     });
   });
+  log('log', 'Run command:', '"npm run start"', true);
   res = spawn('npm', ['run', 'start'], {
     env: {
       PATH: process.env.PATH,
