@@ -43,4 +43,16 @@ export interface AlertProps {
   open: boolean;
 }
 
+export interface DialogProps {
+  open: boolean;
+  children: React.ReactNode;
+  clientX: number;
+  clientY: number;
+}
+
 export type ThemeType = 'light' | 'dark';
+
+export interface ClickPosition {
+  clientX: number;
+  clientY: number;
+}

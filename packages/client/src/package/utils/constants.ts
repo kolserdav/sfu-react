@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import { AlertProps } from '../types';
+import { AlertProps, ClickPosition, DialogProps } from '../types';
 
 export const WS_TTL = 1;
 export const LOG_LEVEL = 2;
@@ -38,3 +38,13 @@ export const ALERT_DEFAULT: AlertProps = {
   type: 'log',
 };
 export const ALERT_TIMEOUT = 2000;
+export const DIALOG_DEFAULT: DialogProps = {
+  open: false,
+  children: '',
+  clientX: 0,
+  clientY: 0,
+};
+export const CLICK_POSITION_DEFAULT: ClickPosition = {
+  clientX: 0,
+  clientY: 0,
+};

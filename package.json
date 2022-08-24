@@ -152,6 +152,6 @@
     "license": "MIT",
     "licenseText": "See in LICENSE file",
     "copyright": "kolserdav, All rights reserved (c)",
-    "renewAll": true
+    "renewAll": false
   }
 }

@@ -49,6 +49,7 @@ $wrapper-padding: 0.5rem;
 }
 
 .message {
+  cursor: default;
   position: relative;
   display: flex;
   flex-direction: column;

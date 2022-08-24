@@ -38,16 +38,8 @@ const slice = createSlice({
   },
 });
 
-/**
- * FIXME change @reduxjs/toolkit to IndexedDB
- * @deprecated
- */
 export const { changeLocale } = slice.actions;
 
-/**
- * FIXME change @reduxjs/toolkit to IndexedDB
- * @deprecated
- */
 const storeLocale = configureStore({
   reducer: slice.reducer,
 });

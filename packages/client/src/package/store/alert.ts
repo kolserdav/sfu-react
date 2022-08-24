@@ -33,16 +33,8 @@ const slice = createSlice({
   },
 });
 
-/**
- * FIXME change @reduxjs/toolkit to IndexedDB
- * @deprecated
- */
 export const { changeAlert } = slice.actions;
 
-/**
- * FIXME change @reduxjs/toolkit to IndexedDB
- * @deprecated
- */
 const storeAlert = configureStore({
   reducer: slice.reducer,
 });

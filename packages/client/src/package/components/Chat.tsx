@@ -14,10 +14,11 @@ import ThemeContext from '../Theme.context';
 import s from './Chat.module.scss';
 import SendIcon from '../Icons/Send';
 import IconButton from './ui/IconButton';
-import { useMesages } from './Chat.hooks';
+import { useMesages, useDialog } from './Chat.hooks';
 import { dateToTime, dateToString } from '../utils/lib';
 import { prepareMessage } from './Chat.lib';
 import { LocaleClient } from '../types/interfaces';
+import Dialog from './ui/Dialog';
 
 function Chat({
   server,
@@ -46,10 +47,7 @@ function Chat({
     inputRef,
   });
 
-  const clickByMessage = (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    ev.preventDefault();
-    const { clientX, clientY } = ev;
-  };
+  const { dialog, messageContextHandler } = useDialog();
 
   return (
     <div className={s.wrapper} style={{ background: theme.colors.paper }}>
@@ -66,7 +64,7 @@ function Chat({
                 <p className={s.day}>{dateToString(new Date(item.created))}</p>
               )}
               <div
-                onContextMenu={clickByMessage}
+                onContextMenu={messageContextHandler}
                 style={{ background: theme.colors.active, color: theme.colors.textActive }}
                 className={clsx(s.message, item.unitId === userId.toString() ? s.self : '')}
               >
@@ -85,6 +83,7 @@ function Chat({
           <SendIcon color={theme.colors.text} />
         </IconButton>
       </div>
+      <Dialog {...dialog}>dasd</Dialog>
     </div>
   );
 }

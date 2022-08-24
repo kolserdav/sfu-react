@@ -33,16 +33,8 @@ const slice = createSlice({
   },
 });
 
-/**
- * FIXME change @reduxjs/toolkit to IndexedDB
- * @deprecated
- */
 export const { changeTheme } = slice.actions;
 
-/**
- * FIXME change @reduxjs/toolkit to IndexedDB
- * @deprecated
- */
 const storeTheme = configureStore({
   reducer: slice.reducer,
 });

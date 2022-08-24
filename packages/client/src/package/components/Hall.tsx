@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import clsx from 'clsx';
 import { HallProps } from '../types';
 import ThemeContext from '../Theme.context';

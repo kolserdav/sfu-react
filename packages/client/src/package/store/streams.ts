@@ -70,16 +70,8 @@ const slice = createSlice({
   },
 });
 
-/**
- * FIXME change @reduxjs/toolkit to IndexedDB
- * @deprecated
- */
 export const { changeStreams } = slice.actions;
 
-/**
- * FIXME change @reduxjs/toolkit to IndexedDB
- * @deprecated
- */
 const storeStreams = configureStore({
   middleware: (getDefaultMiddleware) => getDefaultMiddleware({ serializableCheck: false }),
   reducer: slice.reducer,

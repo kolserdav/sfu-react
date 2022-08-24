@@ -12,9 +12,16 @@ import React, { useEffect, useState, useMemo } from 'react';
 import WS from '../core/ws';
 import { log } from '../utils/lib';
 import { MessageType, SendMessageArgs } from '../types/interfaces';
-import { CHAT_TAKE_MESSAGES, TEXT_AREA_MAX_ROWS } from '../utils/constants';
+import {
+  CHAT_TAKE_MESSAGES,
+  TEXT_AREA_MAX_ROWS,
+  DIALOG_DEFAULT,
+  CLICK_POSITION_DEFAULT,
+} from '../utils/constants';
+import { ClickPosition, DialogProps } from '../types';
 import { scrollToBottom } from './Chat.lib';
 import storeAlert, { changeAlert } from '../store/alert';
+import storeClickDocument from '../store/clickDocument';
 
 let oldSkip = 0;
 // eslint-disable-next-line import/prefer-default-export
@@ -274,4 +281,44 @@ export const useMesages = ({
     };
   }, [roomId, userId, ws, messages, message, myMessage, containerRef, skip]);
   return { changeText, sendMessage, messages, message, rows };
+};
+
+export const useDialog = () => {
+  const [dialog, setDialog] = useState<Omit<DialogProps, 'children'>>(DIALOG_DEFAULT);
+  const [position, setPosition] = useState<ClickPosition>(CLICK_POSITION_DEFAULT);
+  const messageContextHandler = (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    ev.preventDefault();
+    const { clientX, clientY } = ev;
+    setDialog({
+      open: true,
+      clientY,
+      clientX,
+    });
+    setPosition({
+      clientX,
+      clientY,
+    });
+  };
+
+  /**
+   * Listen click document
+   */
+  useEffect(() => {
+    const cleanStore = storeClickDocument.subscribe(() => {
+      // TODO check area
+      const {
+        clickDocument: { clientX, clientY },
+      } = storeClickDocument.getState();
+      setDialog({
+        open: false,
+        clientY: position.clientX,
+        clientX: position.clientY,
+      });
+    });
+    return () => {
+      cleanStore();
+    };
+  }, [position]);
+
+  return { dialog, messageContextHandler };
 };
