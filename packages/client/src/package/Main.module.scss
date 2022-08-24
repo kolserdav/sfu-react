@@ -24,6 +24,10 @@ $button-width: 40px;
     left: calc((#{$button-width} / 2 * -1));
     transition: left $container-transition ease-out;
   }
+
+  @media (max-width: $mobile-width) {
+    bottom: calc(#{$button-width} / 2 + 90vh);
+  }
 }
 
 .button__icon {

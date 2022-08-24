@@ -8,7 +8,6 @@ import { useMesages } from './Chat.hooks';
 import { dateToTime, dateToString } from '../utils/lib';
 import { prepareMessage } from './Chat.lib';
 import { LocaleClient } from '../types/interfaces';
-import Dialog from './ui/Dialog';
 
 function Chat({
   server,
@@ -28,7 +27,7 @@ function Chat({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const { message, messages, changeText, sendMessage, rows, dialog } = useMesages({
+  const { message, messages, changeText, sendMessage, rows } = useMesages({
     port,
     server,
     userId,
@@ -41,7 +40,7 @@ function Chat({
       <div
         className={s.container}
         ref={containerRef}
-        style={{ height: `calc(90% - ${rows} * 3rem)` }}
+        style={{ height: `calc(90% - ${rows} * 1rem)` }}
       >
         {messages &&
           messages.map((item, index) => (
@@ -69,9 +68,6 @@ function Chat({
           <SendIcon color={theme.colors.text} />
         </IconButton>
       </div>
-      <Dialog open={dialog.open} type={dialog.type}>
-        {dialog.children}
-      </Dialog>
     </div>
   );
 }

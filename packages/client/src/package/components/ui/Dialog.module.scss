@@ -2,6 +2,7 @@ $border-radius: 8px;
 $height: 50px;
 
 .wrapper {
+  z-index: 12;
   position: fixed;
   bottom: calc(#{$height} * -1);
   right: 0;

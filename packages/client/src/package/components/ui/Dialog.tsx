@@ -3,20 +3,13 @@ import clsx from 'clsx';
 import s from './Dialog.module.scss';
 import ThemeContext from '../../Theme.context';
 import { DialogProps } from '../../types';
-import { DIALOG_TIMEOUT } from '../../utils/constants';
+import { DIALOG_DEFAULT, DIALOG_TIMEOUT } from '../../utils/constants';
+import storeDialog, { changeDialog } from '../../store/dialog';
 
 function Dialog({ children, type, open }: DialogProps) {
   const theme = useContext(ThemeContext);
   const dialogRef = useRef<HTMLDivElement>(null);
-  const [dialogOpen, setDialogOpen] = useState<boolean>(open);
   const [mouseMove, setMouseMove] = useState<boolean>(false);
-
-  /**
-   * Set dialog
-   */
-  useEffect(() => {
-    setDialogOpen(open);
-  }, [open]);
 
   /**
    * Close dialog
@@ -25,9 +18,9 @@ function Dialog({ children, type, open }: DialogProps) {
     let timeout = setTimeout(() => {
       /** */
     }, 0);
-    if (!mouseMove) {
+    if (!mouseMove && open) {
       timeout = setTimeout(() => {
-        setDialogOpen(false);
+        storeDialog.dispatch(changeDialog({ dialog: DIALOG_DEFAULT }));
       }, DIALOG_TIMEOUT);
     }
     return () => {
@@ -44,11 +37,11 @@ function Dialog({ children, type, open }: DialogProps) {
       setMouseMove(true);
     };
     if (current) {
-      current.addEventListener('mousemove', onMouseMove);
+      current.addEventListener('mouseover', onMouseMove);
     }
     return () => {
       if (current) {
-        current.removeEventListener('mousemove', onMouseMove);
+        current.removeEventListener('mouseover', onMouseMove);
       }
     };
   }, []);
@@ -58,15 +51,15 @@ function Dialog({ children, type, open }: DialogProps) {
    */
   useEffect(() => {
     const { current } = dialogRef;
-    const onMouseLeave = () => {
+    const onMouseLeave = (e: MouseEvent) => {
       setMouseMove(false);
     };
     if (current) {
-      current.addEventListener('mouseleave', onMouseLeave);
+      current.addEventListener('mouseout', onMouseLeave);
     }
     return () => {
       if (current) {
-        current.removeEventListener('mouseleave', onMouseLeave);
+        current.addEventListener('mouseout', onMouseLeave);
       }
     };
   }, []);
@@ -74,7 +67,7 @@ function Dialog({ children, type, open }: DialogProps) {
   return (
     <div
       ref={dialogRef}
-      className={clsx(s.wrapper, dialogOpen ? s.open : '')}
+      className={clsx(s.wrapper, open ? s.open : '')}
       style={{
         background:
           type === 'error'

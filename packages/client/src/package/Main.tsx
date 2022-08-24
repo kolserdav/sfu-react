@@ -13,7 +13,8 @@ import React, { useEffect, useState, useMemo } from 'react';
 import clsx from 'clsx';
 import Room from './components/Room';
 import Hall from './components/Hall';
-import { RoomProps } from './types';
+import { RoomProps, DialogProps } from './types';
+import { DIALOG_DEFAULT } from './utils/constants';
 import ThemeContext from './Theme.context';
 import { themes, Themes } from './Theme';
 import ChevronLeftIcon from './Icons/ChevronLeftIcon';
@@ -27,6 +28,8 @@ import storeLocale from './store/locale';
 import { LocaleClient } from './types/interfaces';
 import { getLocalStorage, LocalStorageName, setLocalStorage } from './utils/localStorage';
 import { CookieName, getCookie, setCookie } from './utils/cookies';
+import Dialog from './components/ui/Dialog';
+import storeDialog from './store/dialog';
 
 function Main({ room }: { room: Omit<RoomProps, 'locale' | 'roomId'> }) {
   const pathname = getPathname();
@@ -36,6 +39,7 @@ function Main({ room }: { room: Omit<RoomProps, 'locale' | 'roomId'> }) {
   const [currentTheme, setCurrentTheme] = useState<keyof Themes>(savedTheme || 'light');
   const _themes = useMemo(() => changeColors({ colors, themes }), [colors]);
   const [theme, setTheme] = useState<Themes['dark' | 'light']>(_themes[savedTheme || 'light']);
+  const [dialog, setDialog] = useState<DialogProps>(DIALOG_DEFAULT);
   const [hallOpen, setHallOpen] = useState<boolean>(
     getLocalStorage(LocalStorageName.HALL_OPEN) || false
   );
@@ -66,6 +70,19 @@ function Main({ room }: { room: Omit<RoomProps, 'locale' | 'roomId'> }) {
       setCookie(CookieName.lang, state.locale);
       setLocale(_locale);
     });
+  }, []);
+
+  /**
+   * Dialog listener
+   */
+  useEffect(() => {
+    const cleanStore = storeDialog.subscribe(() => {
+      const state = storeDialog.getState();
+      setDialog(state.dialog);
+    });
+    return () => {
+      cleanStore();
+    };
   }, []);
 
   /**
@@ -109,6 +126,9 @@ function Main({ room }: { room: Omit<RoomProps, 'locale' | 'roomId'> }) {
           port={room.port}
         />
       )}
+      <Dialog open={dialog.open} type={dialog.type}>
+        {dialog.children}
+      </Dialog>
     </ThemeContext.Provider>
   );
 }

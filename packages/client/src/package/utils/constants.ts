@@ -30,7 +30,7 @@ export const CODECS = [
   'video/x-matroska;codecs=avc1',
 ];
 export const SPEAKER_LEVEL = 0.4;
-export const CHAT_TAKE_MESSAGES = 10;
+export const CHAT_TAKE_MESSAGES = 20;
 export const TEXT_AREA_MAX_ROWS = 5;
 export const DIALOG_DEFAULT: DialogProps = {
   open: false,

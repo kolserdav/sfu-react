@@ -4,7 +4,6 @@
   position: fixed;
   overflow: hidden;
   z-index: 12;
-  width: 100%;
   width: $wrapper-width;
   height: $wrapper-height;
   top: 0;
@@ -24,6 +23,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
 }
 
 .block {
@@ -35,12 +35,18 @@
   flex-direction: row;
   align-items: flex-start;
   max-width: $container-max-width;
+  @media (max-width: $mobile-width) {
+    flex-direction: column;
+  }
 }
 
 .users {
   position: relative;
   flex-basis: 20%;
   height: 100%;
+  @media (max-width: $mobile-width) {
+    display: none;
+  }
 }
 
 .settings {
@@ -50,4 +56,7 @@
   align-items: flex-end;
   flex-basis: 20%;
   height: 100%;
+  @media (max-width: $mobile-width) {
+    display: none;
+  }
 }
