@@ -1,11 +1,12 @@
+@import '../../Main';
+
 $border-radius: 8px;
 $height: 50px;
 
 .wrapper {
-  z-index: 12;
+  z-index: 101;
   position: fixed;
   bottom: calc(#{$height} * -1);
-  right: 0;
   width: 300px;
   height: $height;
   display: flex;
@@ -17,8 +18,16 @@ $height: 50px;
   font-size: large;
   transition: bottom 0.3s ease-in;
 
+  @media (max-width: $mobile-width) {
+    width: 100%;
+    bottom: calc(100vh + #{$height});
+  }
+
   &.open {
     bottom: 0;
     transition: bottom 0.3s ease-out;
+    @media (max-width: $mobile-width) {
+      bottom: calc(100vh - #{$height});
+    }
   }
 }

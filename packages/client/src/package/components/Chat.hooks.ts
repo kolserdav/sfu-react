@@ -125,7 +125,6 @@ export const useMesages = ({
    */
   useEffect(() => {
     if (chatUnit && skip - oldSkip !== 1) {
-      oldSkip = skip;
       ws.sendMessage({
         type: MessageType.GET_CHAT_MESSAGES,
         id: roomId,
@@ -145,6 +144,7 @@ export const useMesages = ({
         },
       });
     }
+    oldSkip = skip;
   }, [ws, roomId, chatUnit, userId, skip]);
 
   /**
