@@ -100,7 +100,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       },
       iceTransportPolicy: 'all',
       bundlePolicy: 'disable',
-      /*
       iceServers: [
         {
           urls: process.env.STUN_SERVER as string,
@@ -111,7 +110,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
           credential: process.env.TURN_SERVER_PASSWORD,
         },
       ],
-      */
     });
   };
 
@@ -440,13 +438,25 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     }
   };
 
-  public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, userId, target, connId }) => {
-    const peerId = this.getPeerId(roomId, userId, target, connId);
+  private cleanStream({
+    roomId,
+    peerId,
+    target,
+  }: {
+    roomId: string | number;
+    peerId: string;
+    target: string | number;
+  }) {
     if (this.streams[roomId]?.[peerId]) {
       delete this.streams[roomId][peerId];
-    } else {
+    } else if (target.toString() === '0') {
       log('warn', 'Delete undefined stream', { peerId });
     }
+  }
+
+  public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, userId, target, connId }) => {
+    const peerId = this.getPeerId(roomId, userId, target, connId);
+    this.cleanStream({ roomId, peerId, target });
     if (!this.peerConnectionsServer[roomId]?.[peerId]) {
       log('warn', 'Close video call without peer connection', { peerId });
       return;
