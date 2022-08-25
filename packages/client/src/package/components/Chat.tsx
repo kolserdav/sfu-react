@@ -26,7 +26,7 @@ function Chat({ server, port, roomId, userId, locale }: ChatProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const { message, messages, changeText, sendMessage, rows, clickQuoteWrapper, count, scrolled } =
+  const { message, messages, changeText, sendMessage, rows, clickQuoteWrapper, count } =
     useMesages({
       port,
       server,
