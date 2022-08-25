@@ -1,0 +1,10 @@
+version: '3.8'
+services:
+  db:
+    extends:
+      file: docker-compose.yml
+      service: db
+  coturn:
+    extends:
+      file: docker-compose.yml
+      service: coturn
