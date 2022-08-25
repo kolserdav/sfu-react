@@ -23,6 +23,7 @@ $wrapper-padding: 0.5rem;
   max-width: 100%;
   display: flex;
   flex-direction: column;
+  scroll-padding-top: 1px;
   overflow-y: auto;
   overflow-x: hidden;
   margin-bottom: calc(#{$wrapper-padding} * 4);
@@ -63,6 +64,15 @@ $wrapper-padding: 0.5rem;
   &.self {
     margin: calc(#{$wrapper-padding} / 2) calc(#{$wrapper-padding} / 2)
       calc(#{$wrapper-padding} / 2) auto;
+  }
+
+  .name {
+    font-weight: bold;
+  }
+
+  .quote {
+    border-left: 1px solid cyan;
+    padding-left: 1rem;
   }
 
   .date {

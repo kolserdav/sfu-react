@@ -30,9 +30,8 @@ class Chat extends DB {
     }
     if (this.users[roomId][userId]) {
       log('warn', 'Duplicate chat user', { roomId, userId });
-    } else {
-      this.users[roomId][userId] = ws;
     }
+    this.users[roomId][userId] = ws;
     this.sendMessage({
       roomId,
       msg: {
@@ -90,6 +89,13 @@ class Chat extends DB {
         unitId: userId.toString(),
         roomId: id.toString(),
         text: message,
+      },
+      include: {
+        Unit: {
+          select: {
+            name: true,
+          },
+        },
       },
     });
     if (!res) {

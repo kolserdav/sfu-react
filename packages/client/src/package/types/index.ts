@@ -50,7 +50,7 @@ export interface DialogProps {
   children: React.ReactNode;
   clientX: number;
   clientY: number;
-  context: number;
+  context: string;
 }
 
 export type ThemeType = 'light' | 'dark';

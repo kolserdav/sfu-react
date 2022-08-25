@@ -8,6 +8,7 @@ $height: 50px;
   position: fixed;
   bottom: calc(#{$height} * -1);
   width: 300px;
+  right: 0;
   height: $height;
   display: flex;
   flex-direction: row;

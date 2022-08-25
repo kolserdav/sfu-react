@@ -205,6 +205,18 @@ class DB implements DBInterface {
       },
     });
   }
+
+  public changeRoomArchive({ userId, archive }: { userId: string; archive: boolean }) {
+    this.roomUpdate({
+      where: {
+        id: userId,
+      },
+      data: {
+        archive,
+        updated: new Date(),
+      },
+    });
+  }
 }
 
 export default DB;

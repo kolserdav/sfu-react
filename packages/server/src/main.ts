@@ -67,8 +67,8 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
       const { type, id } = rawMessage;
       switch (type) {
         case MessageType.GET_USER_ID:
-          const { isRoom } = wss.getMessage(MessageType.GET_USER_ID, rawMessage).data;
-          await wss.setSocket({ id, ws, connId, isRoom: isRoom || false });
+          const { isRoom, userName } = wss.getMessage(MessageType.GET_USER_ID, rawMessage).data;
+          await wss.setSocket({ id, ws, connId, isRoom: isRoom || false, userName });
           wss.sendMessage({
             type: MessageType.SET_USER_ID,
             id,
@@ -206,17 +206,7 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
               delete rtc.rooms[item];
               delete rtc.streams[item];
               delete rtc.peerConnectionsServer[item];
-
-              // set room is archive
-              db.roomUpdate({
-                where: {
-                  id: item.toString(),
-                },
-                data: {
-                  archive: true,
-                  updated: new Date(),
-                },
-              });
+              db.changeRoomArchive({ userId: item.toString(), archive: true });
               delete rtc.muteds[item];
             }
             db.deleteGuest({ userId, roomId: item });

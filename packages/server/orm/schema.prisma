@@ -9,7 +9,7 @@ generator client {
 
 model Unit {
   id      String    @id
-  name    String?   @default("Anon")
+  name    String    @default("No Name")
   online  Boolean   @default(true)
   updated DateTime  @default(now())
   created DateTime  @default(now())

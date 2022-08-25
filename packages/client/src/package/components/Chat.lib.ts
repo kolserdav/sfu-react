@@ -9,7 +9,12 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 
+import { MessageFull } from '../types/interfaces';
 import { log } from '../utils/lib';
+import { SHORT_MESS_LENGTH } from '../utils/constants';
+import s from './Chat.module.scss';
+
+const quoteRegex = /\[quote=.+\]/;
 
 const prepareLinks = (text: string) => {
   let _text = text.slice();
@@ -25,15 +30,20 @@ const prepareLinks = (text: string) => {
 
 const prepareQuotes = (text: string) => {
   let _text = text.slice();
-  const quote = text.match(/\[quote=\d+\]/);
+  const quote = text.match(quoteRegex);
   if (quote) {
     const _quote = quote[0];
-    const id = _quote.match(/\d+/);
+    const { id, name, shortMess } = parseQuoteContext(
+      _quote.replace('[quote=', '').replace(/\]$/, '')
+    );
     if (!id) {
       log('error', 'Error get quote', { id, _quote });
       return text;
     }
-    _text = _text.replace(_quote, `| Message ${id[0]}`);
+    _text = _text.replace(
+      _quote,
+      `<div class="${s.quote}"><div class="${s.name}">${name}</div><div className="${s.text}">${shortMess}</div></div>`
+    );
   }
   return _text;
 };
@@ -44,4 +54,40 @@ export const prepareMessage = (text: string) =>
 
 export const scrollToBottom = (element: HTMLDivElement) => {
   element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' });
+};
+
+export const scrollToTop = (element: HTMLDivElement) => {
+  element.scrollTo({ top: 1, behavior: 'smooth' });
+};
+
+const getShortMess = (text: string) => {
+  let result = '';
+  const _text = text.replace(quoteRegex, '');
+  for (let i = 0; i < SHORT_MESS_LENGTH && _text[i]; i++) {
+    result += _text[i];
+  }
+  if (_text.length > result.length) {
+    result += ' ...';
+  }
+  return result;
+};
+
+export const getQuoteContext = (item: MessageFull) =>
+  JSON.stringify({ id: item.id, name: item.Unit.name, shortMess: getShortMess(item.text) });
+
+export const parseQuoteContext = (
+  text: string
+): {
+  id: number;
+  name: string;
+  shortMess: string;
+} => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let result: any = {};
+  try {
+    result = JSON.parse(text);
+  } catch (e) {
+    log('error', 'Error parse quote', e);
+  }
+  return result;
 };

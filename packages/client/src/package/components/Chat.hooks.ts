@@ -11,19 +11,21 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import WS from '../core/ws';
 import { log } from '../utils/lib';
-import { MessageType, SendMessageArgs } from '../types/interfaces';
+import { MessageFull, MessageType, SendMessageArgs } from '../types/interfaces';
 import {
   CHAT_TAKE_MESSAGES,
   TEXT_AREA_MAX_ROWS,
   DIALOG_DEFAULT,
   CLICK_POSITION_DEFAULT,
+  CONTEXT_DEFAULT,
 } from '../utils/constants';
 import { ClickPosition, DialogProps } from '../types';
-import { scrollToBottom } from './Chat.lib';
+import { scrollToBottom, scrollToTop } from './Chat.lib';
 import storeAlert, { changeAlert } from '../store/alert';
 import storeClickDocument from '../store/clickDocument';
 
 let oldSkip = 0;
+let scrolled = false;
 // eslint-disable-next-line import/prefer-default-export
 export const useMesages = ({
   port,
@@ -73,7 +75,7 @@ export const useMesages = ({
   };
 
   const clickQuoteWrapper =
-    (context: number) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       const quote = `[quote=${context}]\n`;
       setMessage(quote);
       const { current } = inputRef;
@@ -104,29 +106,47 @@ export const useMesages = ({
     [message, userId, roomId, ws]
   );
 
+  /**
+   * Scroll by load
+   */
   useEffect(() => {
-    if (containerRef.current) {
-      scrollToBottom(containerRef.current);
+    const { current } = containerRef;
+    if (current && !scrolled) {
+      scrollToBottom(current);
     }
-  }, [rows, containerRef]);
+  }, [containerRef, messages]);
+
+  /**
+   * Scroll by new message
+   */
+  useEffect(() => {
+    const { current } = containerRef;
+    if (current) {
+      scrollToBottom(current);
+    }
+  }, [myMessage, containerRef]);
 
   /**
    * Container scroll handler
    */
   useEffect(() => {
     const { current } = containerRef;
+    const timeout = setTimeout(() => {
+      scrolled = false;
+    }, 1000);
     const containerOnScroll = () => {
+      if (scrolled) {
+        clearTimeout(timeout);
+      }
+      scrolled = true;
       if (current) {
         if (current.scrollTop === 0 && count > messages.length) {
           setSkip(skip + CHAT_TAKE_MESSAGES);
-          current.scrollTo({ top: 1 });
+          scrollToTop(current);
         }
       }
     };
     if (current) {
-      if (current.clientTop === 0) {
-        current.scrollTo({ top: 1 });
-      }
       current.addEventListener('scroll', containerOnScroll);
     }
     return () => {
@@ -151,6 +171,13 @@ export const useMesages = ({
             where: {
               roomId: roomId.toString(),
             },
+            include: {
+              Unit: {
+                select: {
+                  name: true,
+                },
+              },
+            },
             orderBy: {
               created: 'desc',
             },
@@ -162,15 +189,6 @@ export const useMesages = ({
     }
     oldSkip = skip;
   }, [ws, roomId, chatUnit, userId, skip]);
-
-  /**
-   * Scroll to my new message
-   */
-  useEffect(() => {
-    if (containerRef.current) {
-      scrollToBottom(containerRef.current);
-    }
-  }, [myMessage, containerRef]);
 
   /**
    * Listen input Enter
@@ -298,7 +316,7 @@ export const useDialog = () => {
   const [dialog, setDialog] = useState<Omit<DialogProps, 'children'>>(DIALOG_DEFAULT);
   const [position, setPosition] = useState<ClickPosition>(CLICK_POSITION_DEFAULT);
   const messageContextWrapper =
-    (context: number) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       ev.preventDefault();
       const { clientX, clientY } = ev;
       setDialog({
@@ -327,7 +345,7 @@ export const useDialog = () => {
         open: false,
         clientY: position.clientX,
         clientX: position.clientY,
-        context: 0,
+        context: CONTEXT_DEFAULT,
       });
     });
     return () => {

@@ -18,6 +18,11 @@ import { Message, Prisma, Room, Unit } from '@prisma/client';
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type ArgumentTypes<F extends Function> = F extends (args: infer A) => any ? A : never;
 export type GetManyResult<T> = { result: T[]; skip: number; count: number; take: number };
+export type MessageFull = Message & {
+  Unit: {
+    name: string;
+  };
+};
 
 // eslint-disable-next-line no-unused-vars
 export enum LogLevel {
@@ -78,8 +83,9 @@ export namespace DataTypes {
       roomId: number | string;
       target: number | string;
     };
-    export type GetGuestId = {
+    export type GetUserId = {
       isRoom?: boolean;
+      userName?: string;
     };
     export type SetChangeRoomUnit = {
       target: number | string;
@@ -113,8 +119,8 @@ export namespace DataTypes {
       userId: string | number;
       message: string;
     };
-    export type SetRoomMessage = Message;
-    export type SetChatMessages = GetManyResult<Message>;
+    export type SetRoomMessage = MessageFull;
+    export type SetChatMessages = GetManyResult<MessageFull>;
     export type SetClosePeerConnection = {
       roomId: number | string;
       target: number | string;
@@ -154,7 +160,7 @@ export namespace DataTypes {
     : T extends MessageType.GET_CLOSE_PEER_CONNECTION
     ? DataTypes.MessageTypes.GetClosePeerConnection
     : T extends MessageType.GET_USER_ID
-    ? DataTypes.MessageTypes.GetGuestId
+    ? DataTypes.MessageTypes.GetUserId
     : T extends MessageType.SET_USER_ID
     ? DataTypes.MessageTypes.SetGuestId
     : T extends MessageType.GET_CHAT_UNIT
@@ -216,6 +222,42 @@ export namespace Signaling {
     ) => Promise<1 | 0>;
   }
 }
+
+export namespace Locale {
+  export type Value = 'en' | 'ru';
+  export const DEFAULT: Value = 'en';
+  export const SELECTOR: { value: Value; name: string; impl: boolean }[] = [
+    {
+      name: 'English',
+      value: 'en',
+      impl: true,
+    },
+    {
+      name: 'Русский',
+      value: 'ru',
+      impl: false,
+    },
+  ];
+  export interface Server {
+    error: string;
+  }
+
+  export interface Client {
+    shareScreen: string;
+    changeTheme: string;
+    send: string;
+    quote: string;
+    errorGetCamera: string;
+    errorGetDisplay: string;
+    erorGetSound: string;
+  }
+}
+
+export type LocaleServer = Locale.Server;
+export type LocaleClient = Locale.Client;
+export type LocaleValue = Locale.Value;
+export const LocaleDefault = Locale.DEFAULT;
+export const LocaleSelector = Locale.SELECTOR;
 
 export namespace Connection {
   export type AddTracksProps = {
@@ -329,17 +371,21 @@ export namespace Data {
     public abstract messageUpdate<T extends Prisma.MessageUpdateArgs>(
       args: Prisma.SelectSubset<T, Prisma.MessageUpdateArgs>,
       _connection?: WebSocket
-    ): Promise<Prisma.CheckSelect<T, Message, Prisma.MessageGetPayload<T>> | null>;
+    ): Promise<Prisma.CheckSelect<T, MessageFull, Prisma.MessageGetPayload<T>> | null>;
 
     public abstract messageCreate<T extends Prisma.MessageCreateArgs>(
       args: Prisma.SelectSubset<T, Prisma.MessageCreateArgs>,
       _connection?: WebSocket
-    ): Promise<Prisma.CheckSelect<T, Message, Prisma.MessageGetPayload<T>> | null>;
+    ): Promise<Prisma.CheckSelect<T, MessageFull, Prisma.MessageGetPayload<T>> | null>;
 
     public abstract messageFindMany<T extends Prisma.MessageFindManyArgs>(
       args: Prisma.SelectSubset<T, Prisma.MessageFindManyArgs>,
       _connection?: WebSocket
-    ): Promise<Prisma.CheckSelect<T, GetManyResult<Message>, Prisma.MessageGetPayload<T>> | null>;
+    ): Promise<Prisma.CheckSelect<
+      T,
+      GetManyResult<MessageFull>,
+      Prisma.MessageGetPayload<T>
+    > | null>;
   }
 }
 
@@ -352,39 +398,3 @@ export type WSInterface = Signaling.WSInterface;
 export type RTCInterface = Connection.RTCInterface;
 export type DBInterface = Data.DBInterface;
 export type AddTracksProps = Connection.AddTracksProps;
-
-export namespace Locale {
-  export type Value = 'en' | 'ru';
-  export const DEFAULT: Value = 'en';
-  export const SELECTOR: { value: Value; name: string; impl: boolean }[] = [
-    {
-      name: 'English',
-      value: 'en',
-      impl: true,
-    },
-    {
-      name: 'Русский',
-      value: 'ru',
-      impl: false,
-    },
-  ];
-  export interface Server {
-    error: string;
-  }
-
-  export interface Client {
-    shareScreen: string;
-    changeTheme: string;
-    send: string;
-    quote: string;
-    errorGetCamera: string;
-    errorGetDisplay: string;
-    erorGetSound: string;
-  }
-}
-
-export type LocaleServer = Locale.Server;
-export type LocaleClient = Locale.Client;
-export type LocaleValue = Locale.Value;
-export const LocaleDefault = Locale.DEFAULT;
-export const LocaleSelector = Locale.SELECTOR;

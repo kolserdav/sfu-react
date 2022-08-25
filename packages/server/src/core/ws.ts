@@ -37,11 +37,13 @@ class WS implements WSInterface {
     ws,
     connId,
     isRoom,
+    userName,
   }: {
     id: number | string;
     ws: WebSocket;
     connId: string;
     isRoom: boolean;
+    userName?: string;
   }) {
     const oldSock = Object.keys(this.sockets).find((item) => {
       const sock = item.split(this.delimiter);
@@ -66,6 +68,7 @@ class WS implements WSInterface {
               id,
             },
             data: {
+              name: userName,
               updated: new Date(),
             },
           });
@@ -73,6 +76,7 @@ class WS implements WSInterface {
           db.unitCreate({
             data: {
               id,
+              name: userName,
             },
           });
         }

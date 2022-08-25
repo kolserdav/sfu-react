@@ -16,7 +16,7 @@ import SendIcon from '../Icons/Send';
 import IconButton from './ui/IconButton';
 import { useMesages, useDialog } from './Chat.hooks';
 import { dateToTime, dateToString } from '../utils/lib';
-import { prepareMessage } from './Chat.lib';
+import { prepareMessage, getQuoteContext } from './Chat.lib';
 import Dialog from './ui/Dialog';
 import { ChatProps } from '../types';
 
@@ -52,10 +52,13 @@ function Chat({ server, port, roomId, userId, locale }: ChatProps) {
                 <p className={s.day}>{dateToString(new Date(item.created))}</p>
               )}
               <div
-                onContextMenu={messageContextWrapper(item.id)}
+                onContextMenu={messageContextWrapper(getQuoteContext(item))}
                 style={{ background: theme.colors.active, color: theme.colors.textActive }}
                 className={clsx(s.message, item.unitId === userId.toString() ? s.self : '')}
               >
+                {item.unitId !== userId.toString() && (
+                  <div className={s.name}>{item.Unit.name}</div>
+                )}
                 <div
                   className={s.text}
                   dangerouslySetInnerHTML={{ __html: prepareMessage(item.text) }}

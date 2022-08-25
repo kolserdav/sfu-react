@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { AlertProps } from './types';
-import { ALERT_DEFAULT } from './utils/constants';
+import { ALERT_DEFAULT, CONTEXT_DEFAULT } from './utils/constants';
 import { Colors, themes, Themes } from './Theme';
 import { changeColors } from './Main.lib';
 import { getLocale } from './utils/lib';
@@ -75,7 +75,7 @@ export const useListeners = ({ colors }: { colors?: Colors }) => {
           clickDocument: {
             clientX,
             clientY,
-            context: 0,
+            context: CONTEXT_DEFAULT,
           },
         })
       );

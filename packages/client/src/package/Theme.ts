@@ -50,13 +50,13 @@ const colors: Colors = {
     blue: 'blue',
   },
   light: {
-    red: 'red',
-    yellow: 'orange',
+    red: 'orange',
+    yellow: 'lightgoldenrodyellow',
     paper: '#fff',
     text: '#5d5e60',
     active: '#8d8d92',
     textActive: '#fff',
-    blue: 'blue',
+    blue: 'lightblue',
   },
 };
 

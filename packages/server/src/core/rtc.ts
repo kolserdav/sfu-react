@@ -677,7 +677,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
   };
 
   public getPeerConnectionKeys(roomId: string | number) {
-    return Object.keys(this.peerConnectionsServer[roomId]);
+    return Object.keys(this.peerConnectionsServer[roomId] || {});
   }
 
   public cleanConnections(roomId: string, userId: string) {
