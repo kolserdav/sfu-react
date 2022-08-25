@@ -41,9 +41,6 @@
   "bin": {
     "uyem": "bin/uyem.js"
   },
-  "prisma": {
-    "schema": "packages/server/orm/schema.prisma"
-  },
   "scripts": {
     "build:server": "cd packages/server && npm run build",
     "clean:server": "cd packages/server && npm run clean",
