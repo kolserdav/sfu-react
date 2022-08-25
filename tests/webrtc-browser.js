@@ -1,8 +1,8 @@
 // @ts-check
-const { chromium } = require('playwright');
+const puppeteer = require('puppeteer');
 
 (async () => {
-  const browser = await chromium.launch({
+  const browser = await puppeteer.launch({
     headless: false,
     args: [
       '--allow-file-access-from-files',
@@ -11,8 +11,7 @@ const { chromium } = require('playwright');
       '--use-fake-device-for-media-stream',
     ],
   });
-  const context = await browser.newContext();
-  const page = await context.newPage();
+  const page = await browser.newPage();
   const trickle = 'https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/';
   await page.goto('http://localhost:3000/1660351415964?uid=1660351522130');
 })();
