@@ -9,7 +9,7 @@ on:
     branches: [master]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     strategy:
@@ -17,10 +17,6 @@ jobs:
         node-version: [16.x]
 
     steps:
-      - uses: actions/checkout@v1
-      - uses: browser-actions/setup-chrome@latest
-        with:
-          chrome-version: dev
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
