@@ -20,7 +20,7 @@ import {
   CONTEXT_DEFAULT,
 } from '../utils/constants';
 import { ClickPosition, DialogProps } from '../types';
-import { scrollToBottom, scrollToTop } from './Chat.lib';
+import { checkQuote, cleanQuote, scrollToBottom, scrollToTop } from './Chat.lib';
 import storeAlert, { changeAlert } from '../store/alert';
 import storeClickDocument from '../store/clickDocument';
 
@@ -62,22 +62,30 @@ export const useMesages = ({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { target }: any = e;
     const { value } = target;
+    let _value = (value as string).slice();
+    const { current } = inputRef;
+    const quote = checkQuote(value);
+    if (current) {
+      if (current.selectionStart <= quote) {
+        _value = cleanQuote(value);
+      }
+    }
     let c = 1;
-    for (let i = 0; value[i]; i++) {
-      if (value[i] === '\n') {
+    for (let i = 0; _value[i]; i++) {
+      if (_value[i] === '\n') {
         c++;
       }
     }
     if (c <= TEXT_AREA_MAX_ROWS) {
       setRows(c);
     }
-    setMessage(value);
+    setMessage(_value);
   };
 
   const clickQuoteWrapper =
     (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       const quote = `[quote=${context}]\n`;
-      setMessage(quote);
+      setMessage(`${quote}${message}`);
       const { current } = inputRef;
       if (current) {
         current.select();

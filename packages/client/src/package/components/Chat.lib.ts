@@ -72,8 +72,19 @@ const getShortMess = (text: string) => {
   return result;
 };
 
+export const cleanQuote = (text: string) => text.replace(quoteRegex, '');
+
 export const getQuoteContext = (item: MessageFull) =>
   JSON.stringify({ id: item.id, name: item.Unit.name, shortMess: getShortMess(item.text) });
+
+export const checkQuote = (text: string) => {
+  const quote = text.match(quoteRegex);
+  let length = 0;
+  if (quote) {
+    length = quote[0].length;
+  }
+  return length;
+};
 
 export const parseQuoteContext = (
   text: string
