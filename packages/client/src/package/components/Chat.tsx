@@ -14,7 +14,7 @@ import ThemeContext from '../Theme.context';
 import s from './Chat.module.scss';
 import SendIcon from '../Icons/Send';
 import IconButton from './ui/IconButton';
-import { useMesages, useDialog } from './Chat.hooks';
+import { useMesages, useDialog, useScrollToQuote } from './Chat.hooks';
 import { dateToTime, dateToString } from '../utils/lib';
 import { prepareMessage, getQuoteContext } from './Chat.lib';
 import Dialog from './ui/Dialog';
@@ -26,17 +26,17 @@ function Chat({ server, port, roomId, userId, locale }: ChatProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const { message, messages, changeText, sendMessage, rows, clickQuoteWrapper } = useMesages({
-    port,
-    server,
-    userId,
-    roomId,
-    containerRef,
-    inputRef,
-  });
-
+  const { message, messages, changeText, sendMessage, rows, clickQuoteWrapper, count, scrolled } =
+    useMesages({
+      port,
+      server,
+      userId,
+      roomId,
+      containerRef,
+      inputRef,
+    });
   const { dialog, messageContextWrapper } = useDialog();
-
+  useScrollToQuote({ messages, count, containerRef });
   return (
     <div className={s.wrapper} style={{ background: theme.colors.paper }}>
       <div
@@ -46,7 +46,7 @@ function Chat({ server, port, roomId, userId, locale }: ChatProps) {
       >
         {messages &&
           messages.map((item, index) => (
-            <React.Fragment key={item.id}>
+            <div className={s.message__wrapper} key={item.id} id={item.id.toString()}>
               {new Date(item.created).getDay() !==
                 new Date(messages[index - 1]?.created).getDay() && (
                 <p className={s.day}>{dateToString(new Date(item.created))}</p>
@@ -65,7 +65,7 @@ function Chat({ server, port, roomId, userId, locale }: ChatProps) {
                 />
                 <div className={s.date}>{dateToTime(new Date(item.created))}</div>
               </div>
-            </React.Fragment>
+            </div>
           ))}
       </div>
       <div className={s.input}>

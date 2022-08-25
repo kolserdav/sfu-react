@@ -49,6 +49,12 @@ $wrapper-padding: 0.5rem;
   width: calc(100% - #{$wrapper-padding} * 2);
 }
 
+.message__wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
 .message {
   cursor: default;
   position: relative;
@@ -70,9 +76,18 @@ $wrapper-padding: 0.5rem;
     font-weight: bold;
   }
 
+  .text {
+    cursor: text;
+  }
+
   .quote {
     border-left: 1px solid cyan;
     padding-left: 1rem;
+  }
+
+  .quote__link {
+    color: inherit;
+    text-decoration: none;
   }
 
   .date {

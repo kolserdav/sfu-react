@@ -8,19 +8,21 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import WS from '../core/ws';
 import { log } from '../utils/lib';
-import { MessageFull, MessageType, SendMessageArgs } from '../types/interfaces';
+import { MessageType, SendMessageArgs } from '../types/interfaces';
 import {
   CHAT_TAKE_MESSAGES,
   TEXT_AREA_MAX_ROWS,
   DIALOG_DEFAULT,
   CLICK_POSITION_DEFAULT,
   CONTEXT_DEFAULT,
+  FIRST_MESSAGE_INDENT,
+  FOLOW_QUOTE_STYLE,
 } from '../utils/constants';
 import { ClickPosition, DialogProps } from '../types';
-import { checkQuote, cleanQuote, scrollToBottom, scrollToTop } from './Chat.lib';
+import { checkQuote, cleanQuote, scrollToBottom, scrollToTop, scrollTo } from './Chat.lib';
 import storeAlert, { changeAlert } from '../store/alert';
 import storeClickDocument from '../store/clickDocument';
 
@@ -48,7 +50,6 @@ export const useMesages = ({
   const [skip, setSkip] = useState<number>(0);
   const [count, setCount] = useState<number>(0);
   const [rows, setRows] = useState<number>(1);
-
   const [messages, setMessages] = useState<
     SendMessageArgs<MessageType.SET_CHAT_MESSAGES>['data']['result']
   >([]);
@@ -96,6 +97,7 @@ export const useMesages = ({
   const sendMessage = useMemo(
     () => () => {
       const mess = message.replace(/[\n\s]+/g, '');
+      // if message is not empty
       if (mess) {
         ws.sendMessage({
           type: MessageType.GET_ROOM_MESSAGE,
@@ -139,6 +141,7 @@ export const useMesages = ({
    */
   useEffect(() => {
     const { current } = containerRef;
+    // TODO attention here
     const timeout = setTimeout(() => {
       scrolled = false;
     }, 1000);
@@ -317,7 +320,7 @@ export const useMesages = ({
       };
     };
   }, [roomId, userId, ws, messages, message, myMessage, containerRef, skip]);
-  return { changeText, sendMessage, messages, message, rows, clickQuoteWrapper };
+  return { changeText, sendMessage, messages, message, rows, clickQuoteWrapper, count, scrolled };
 };
 
 export const useDialog = () => {
@@ -325,19 +328,22 @@ export const useDialog = () => {
   const [position, setPosition] = useState<ClickPosition>(CLICK_POSITION_DEFAULT);
   const messageContextWrapper =
     (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-      ev.preventDefault();
-      const { clientX, clientY } = ev;
-      setDialog({
-        open: true,
-        clientY,
-        clientX,
-        context,
-      });
-      setPosition({
-        clientX,
-        clientY,
-        context,
-      });
+      const { shiftKey } = ev;
+      if (!shiftKey) {
+        ev.preventDefault();
+        const { clientX, clientY } = ev;
+        setDialog({
+          open: true,
+          clientY,
+          clientX,
+          context,
+        });
+        setPosition({
+          clientX,
+          clientY,
+          context,
+        });
+      }
     };
 
   /**
@@ -362,4 +368,89 @@ export const useDialog = () => {
   }, [position]);
 
   return { dialog, messageContextWrapper };
+};
+
+let gettingPosition = false;
+
+export const useScrollToQuote = ({
+  containerRef,
+  messages,
+  count,
+}: {
+  containerRef: React.RefObject<HTMLDivElement>;
+  messages: SendMessageArgs<MessageType.SET_CHAT_MESSAGES>['data']['result'];
+  count: number;
+}) => {
+  const mounted = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    const hashChangeHandler = async () => {
+      const { hash } = window.location;
+      const messIdStr = hash.replace('#', '');
+      const messId = parseInt(messIdStr, 10);
+      const { current } = containerRef;
+      if (current && !Number.isNaN(messId)) {
+        let position = 0;
+        const getPosition = async () => {
+          gettingPosition = true;
+          const { children } = current;
+          for (let i = 0; children[i]; i++) {
+            const child = children[i];
+            const { id } = child;
+            if (id === messIdStr) {
+              const { top } = child.getBoundingClientRect();
+              const indent = top - FIRST_MESSAGE_INDENT;
+              position = indent < 1 ? top : indent;
+              const oldStyle = child.firstElementChild?.getAttribute('style');
+              child.firstElementChild?.setAttribute('style', `${oldStyle}${FOLOW_QUOTE_STYLE}`);
+              setTimeout(() => {
+                child.firstElementChild?.setAttribute('style', oldStyle || '');
+                window.location.hash = '';
+              }, 3000);
+              break;
+            }
+          }
+          if (position !== 0) {
+            gettingPosition = false;
+            return position;
+          }
+          await new Promise((resolve) => {
+            setTimeout(() => {
+              resolve(0);
+            }, 10);
+          });
+          position = await getPosition();
+          return position;
+        };
+        let check = false;
+        for (let i = 0; messages[i]; i++) {
+          const { id } = messages[i];
+          if (id === messId) {
+            check = true;
+            break;
+          }
+        }
+        if (check) {
+          const _position = await getPosition();
+          position = 0;
+          scrollTo(current, _position);
+        } else if (!gettingPosition) {
+          scrollTo(current, 0);
+        }
+      }
+    };
+    setTimeout(() => {
+      hashChangeHandler();
+    }, 0);
+    const onHashChange = () => {
+      hashChangeHandler();
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => {
+      window.removeEventListener('hashchange', onHashChange);
+      mounted.current = false;
+    };
+  }, [containerRef, messages]);
+
+  return {};
 };

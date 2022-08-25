@@ -42,7 +42,7 @@ const prepareQuotes = (text: string) => {
     }
     _text = _text.replace(
       _quote,
-      `<div class="${s.quote}"><div class="${s.name}">${name}</div><div className="${s.text}">${shortMess}</div></div>`
+      `<a class="${s.quote__link}" href="#${id}"><div class="${s.quote}"><div class="${s.name}">${name}</div><div className="${s.text}">${shortMess}</div></div></a>`
     );
   }
   return _text;
@@ -52,12 +52,16 @@ const prepareQuotes = (text: string) => {
 export const prepareMessage = (text: string) =>
   prepareQuotes(prepareLinks(text.replace(/\n/g, '<br>')));
 
+export const scrollTo = (element: HTMLDivElement, clientY: number) => {
+  element.scrollTo({ top: clientY, behavior: 'smooth' });
+};
+
 export const scrollToBottom = (element: HTMLDivElement) => {
-  element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' });
+  scrollTo(element, element.scrollHeight);
 };
 
 export const scrollToTop = (element: HTMLDivElement) => {
-  element.scrollTo({ top: 1, behavior: 'smooth' });
+  scrollTo(element, 1);
 };
 
 const getShortMess = (text: string) => {
