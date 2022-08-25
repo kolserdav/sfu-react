@@ -100,6 +100,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       },
       iceTransportPolicy: 'all',
       bundlePolicy: 'disable',
+      /*
       iceServers: [
         {
           urls: process.env.STUN_SERVER as string,
@@ -110,6 +111,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
           credential: process.env.TURN_SERVER_PASSWORD,
         },
       ],
+      */
     });
   };
 
