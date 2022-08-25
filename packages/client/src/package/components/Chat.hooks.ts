@@ -320,7 +320,7 @@ export const useMesages = ({
       };
     };
   }, [roomId, userId, ws, messages, message, myMessage, containerRef, skip]);
-  return { changeText, sendMessage, messages, message, rows, clickQuoteWrapper, count, scrolled };
+  return { changeText, sendMessage, messages, message, rows, clickQuoteWrapper, count};
 };
 
 export const useDialog = () => {
