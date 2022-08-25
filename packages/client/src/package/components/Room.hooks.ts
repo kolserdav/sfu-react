@@ -14,7 +14,7 @@ import WS from '../core/ws';
 import RTC from '../core/rtc';
 import { getCodec, log } from '../utils/lib';
 import { getWidthOfItem } from './Room.lib';
-import { MessageType, SendMessageArgs } from '../types/interfaces';
+import { LocaleClient, MessageType, SendMessageArgs } from '../types/interfaces';
 import { Stream } from '../types';
 import s from './Room.module.scss';
 import c from './ui/CloseButton.module.scss';
@@ -29,6 +29,7 @@ export const useConnection = ({
   server,
   port,
   cleanAudioAnalyzer,
+  locale,
 }: {
   id: number | string;
   roomId: number | string | null;
@@ -36,6 +37,7 @@ export const useConnection = ({
   server: string;
   port: string;
   cleanAudioAnalyzer: (uid: string | number) => void;
+  locale: LocaleClient;
 }) => {
   const [streams, setStreams] = useState<Stream[]>([]);
   const [shareScreen, setShareScreen] = useState<boolean>(false);
@@ -243,7 +245,7 @@ export const useConnection = ({
               iceServers,
               eventName: 'back',
             });
-            rtc.addTracks({ roomId, userId, target, connId }, (e) => {
+            rtc.addTracks({ roomId, userId, target, connId, locale }, (e) => {
               if (!e) {
                 if (eventName !== 'added' && target !== userId) {
                   ws.sendMessage({
@@ -337,7 +339,7 @@ export const useConnection = ({
               iceServers,
               eventName: 'check',
             });
-            rtc.addTracks({ roomId, userId: id, target: item, connId }, (e) => {
+            rtc.addTracks({ roomId, userId: id, target: item, connId, locale }, (e) => {
               if (e) {
                 log('warn', 'Failed add tracks', { roomId, userId: id, target: item, connId });
                 return;
@@ -445,7 +447,7 @@ export const useConnection = ({
             iceServers,
             eventName: 'first',
           });
-          rtc.addTracks({ userId: ws.userId, roomId, connId, target: 0 }, (e, stream) => {
+          rtc.addTracks({ userId: ws.userId, roomId, connId, target: 0, locale }, (e, stream) => {
             if (!e) {
               addStream({ target: ws.userId, stream, connId });
             } else if (localShareScreen) {

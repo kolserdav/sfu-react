@@ -11,12 +11,24 @@
 import { format } from 'date-fns';
 import { LOG_LEVEL, CODECS } from './constants';
 import { LocaleClient, LocaleDefault, LocaleValue, LogLevel } from '../types/interfaces';
+import storeAlert, { changeAlert } from '../store/alert';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const log = (type: keyof typeof LogLevel, text: string, data?: any) => {
+export const log = (type: keyof typeof LogLevel, text: string, data?: any, forUser = false) => {
   if (LogLevel[type] >= LOG_LEVEL) {
     // eslint-disable-next-line no-console
     console[type](type, text, data);
+    if (forUser) {
+      storeAlert.dispatch(
+        changeAlert({
+          alert: {
+            type,
+            children: text,
+            open: true,
+          },
+        })
+      );
+    }
   }
 };
 

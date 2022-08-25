@@ -15,6 +15,9 @@ const lang: LocaleClient = {
   changeTheme: 'Change theme',
   send: 'Send',
   quote: 'Quote',
+  erorGetSound: 'Share scren without sound',
+  errorGetCamera: 'Error get camera access',
+  errorGetDisplay: 'Error get display media',
 };
 
 export default lang;

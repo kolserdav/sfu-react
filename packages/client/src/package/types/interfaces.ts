@@ -223,6 +223,7 @@ export namespace Connection {
     connId: string;
     userId: number | string;
     target: number | string;
+    locale?: LocaleClient;
   };
   export abstract class RTCInterface {
     public abstract peerConnections: Record<string, RTCPeerConnection | undefined>;
@@ -376,6 +377,9 @@ export namespace Locale {
     changeTheme: string;
     send: string;
     quote: string;
+    errorGetCamera: string;
+    errorGetDisplay: string;
+    erorGetSound: string;
   }
 }
 

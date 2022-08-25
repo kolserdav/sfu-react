@@ -37,7 +37,7 @@ export const ALERT_DEFAULT: AlertProps = {
   children: '',
   type: 'log',
 };
-export const ALERT_TIMEOUT = 2000;
+export const ALERT_TIMEOUT = 3000;
 export const DIALOG_DEFAULT: DialogProps = {
   open: false,
   children: '',

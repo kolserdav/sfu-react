@@ -274,58 +274,61 @@ class RTC
     };
   };
 
-  public addTracks: RTCInterface['addTracks'] = ({ roomId, userId, target, connId }, cb) => {
+  public addTracks: RTCInterface['addTracks'] = async (
+    { roomId, userId, target, connId, locale },
+    cb
+  ) => {
     const peerId = this.getPeerId(roomId, target, connId);
     if (!this.peerConnections[peerId]) {
       log('warn', 'Set media without peer connection', { peerId });
       return;
     }
     if (!this.localStream) {
-      navigator.mediaDevices
+      const localStream = await navigator.mediaDevices
         .getUserMedia({
           video: true,
           audio: true,
         })
-        .then((localStream) => {
-          this.localStream = localStream;
-          if (!this.ws.shareScreen) {
-            log('info', '> Adding tracks to new local media stream', {
-              streamId: localStream.id,
-            });
-            localStream.getTracks().forEach((track) => {
-              this.peerConnections[peerId]!.addTrack(track, localStream);
-            });
-            cb(0, localStream);
-          } else {
-            navigator.mediaDevices
-              .getDisplayMedia({ video: true })
-              .then((videoStream) => {
-                this.localStream = videoStream;
-                const audio = localStream.getTracks().find((item) => item.kind === 'audio');
-                if (audio) {
-                  this.localStream.addTrack(audio);
-                  this.localStream.getTracks().forEach((track) => {
-                    if (this.localStream) {
-                      this.peerConnections[peerId]!.addTrack(track, this.localStream);
-                    } else {
-                      log('warn', 'Add share screen track without local stream', this.localStream);
-                    }
-                  });
-                } else {
-                  log('warn', 'Share screen without sound', audio);
-                }
-                cb(0, this.localStream);
-              })
-              .catch((e) => {
-                log('error', 'Error get display media', e);
-                cb(1, new MediaStream());
-              });
-          }
-        })
         .catch((err) => {
-          log('error', 'Error get self user media', err);
-          cb(1, new MediaStream());
+          log('error', locale?.errorGetCamera || 'Error get self user media', err, true);
+          const empStr = new MediaStream();
+          cb(1, empStr);
+          return empStr;
         });
+      this.localStream = localStream;
+      if (!this.ws.shareScreen) {
+        log('info', '> Adding tracks to new local media stream', {
+          streamId: localStream.id,
+        });
+        localStream.getTracks().forEach((track) => {
+          this.peerConnections[peerId]!.addTrack(track, localStream);
+        });
+        cb(0, localStream);
+      } else {
+        const videoStream = await navigator.mediaDevices
+          .getDisplayMedia({ video: true })
+          .catch((e) => {
+            log('error', locale?.errorGetDisplay || 'Error get display media', e, true);
+            const empStr = new MediaStream();
+            cb(1, empStr);
+            return empStr;
+          });
+        this.localStream = videoStream;
+        const audio = localStream.getTracks().find((item) => item.kind === 'audio');
+        if (audio) {
+          this.localStream.addTrack(audio);
+          this.localStream.getTracks().forEach((track) => {
+            if (this.localStream) {
+              this.peerConnections[peerId]!.addTrack(track, this.localStream);
+            } else {
+              log('warn', 'Add share screen track without local stream', this.localStream);
+            }
+          });
+        } else {
+          log('warn', locale?.erorGetSound || 'Share screen without sound', audio, true);
+        }
+        cb(0, this.localStream);
+      }
     } else {
       log('info', '> Adding tracks to current local media stream', {
         streamId: this.localStream.id,

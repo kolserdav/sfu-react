@@ -133,7 +133,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     connId,
   }) => {
     const peerId = this.getPeerId(roomId, userId, target, connId);
-    if (!this.peerConnectionsServer[roomId][peerId]) {
+    if (!this.peerConnectionsServer[roomId]?.[peerId]) {
       log('warn', 'Handle ice candidate without peerConnection', { peerId });
       return;
     }
@@ -238,7 +238,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       userId,
       target,
     });
-    if (!this.peerConnectionsServer[roomId][peerId]) {
+    if (!this.peerConnectionsServer[roomId]?.[peerId]) {
       log('warn', 'Skiping add ice candidate', {
         connId,
         id,
@@ -303,7 +303,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       ss: this.peerConnectionsServer[roomId][peerId]?.signalingState,
     };
     log('info', '--> Creating answer', opts);
-    if (!this.peerConnectionsServer[roomId][peerId]) {
+    if (!this.peerConnectionsServer[roomId]?.[peerId]) {
       log('warn', 'Handle offer message without peer connection', opts);
       return;
     }
@@ -319,7 +319,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       log('error', 'Error set remote description', { e: e.message, stack: e.stack, ...opts });
       error = true;
     });
-    if (!this.peerConnectionsServer[roomId][peerId]) {
+    if (!this.peerConnectionsServer[roomId]?.[peerId]) {
       log('warn', 'Create answer without peer connection', opts);
       return;
     }
@@ -340,7 +340,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       return;
     }
     log('info', '---> Setting local description after creating answer', { ...opts });
-    if (!this.peerConnectionsServer[roomId][peerId] || error) {
+    if (!this.peerConnectionsServer[roomId]?.[peerId] || error) {
       log('warn', 'Failed set local description fo answer', {
         error,
         ...opts,
@@ -442,8 +442,12 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
 
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, userId, target, connId }) => {
     const peerId = this.getPeerId(roomId, userId, target, connId);
-    delete this.streams[roomId][peerId];
-    if (!this.peerConnectionsServer[roomId][peerId]) {
+    if (this.streams[roomId]?.[peerId]) {
+      delete this.streams[roomId][peerId];
+    } else {
+      log('warn', 'Delete undefined stream', { peerId });
+    }
+    if (!this.peerConnectionsServer[roomId]?.[peerId]) {
       log('warn', 'Close video call without peer connection', { peerId });
       return;
     }

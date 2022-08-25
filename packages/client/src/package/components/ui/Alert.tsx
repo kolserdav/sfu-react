@@ -30,13 +30,21 @@ function Alert({ children, type, open }: AlertProps) {
     }, 0);
     if (!mouseMove && open) {
       timeout = setTimeout(() => {
-        storeAlert.dispatch(changeAlert({ alert: ALERT_DEFAULT }));
+        storeAlert.dispatch(
+          changeAlert({
+            alert: {
+              open: false,
+              type,
+              children,
+            },
+          })
+        );
       }, ALERT_TIMEOUT);
     }
     return () => {
       clearTimeout(timeout);
     };
-  }, [open, mouseMove]);
+  }, [open, mouseMove, children, type]);
 
   /**
    * On mouse move
@@ -85,6 +93,7 @@ function Alert({ children, type, open }: AlertProps) {
             : type === 'warn'
             ? theme.colors.yellow
             : theme.colors.blue,
+        color: theme.colors.text,
       }}
     >
       {children}

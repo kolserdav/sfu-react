@@ -33,7 +33,7 @@ import CameraOutlineIcon from '../Icons/CameraOutlineIcon';
 import CopyIcon from '../Icons/CopyIcon';
 import WarningIcon from '../Icons/ErrorIcon';
 
-function Room({ userId, iceServers, server, port, roomId }: RoomProps) {
+function Room({ userId, iceServers, server, port, roomId, locale }: RoomProps) {
   const container = useRef<HTMLDivElement>(null);
   const roomLink = useMemo(() => getRoomLink(roomId), [roomId]);
   const { createAudioAnalyzer, analyzeSoundLevel, cleanAudioAnalyzer, speaker } =
@@ -59,6 +59,7 @@ function Room({ userId, iceServers, server, port, roomId }: RoomProps) {
     server,
     port: port.toString(),
     cleanAudioAnalyzer,
+    locale,
   });
   const theme = useContext(ThemeContext);
   const setVideoDimensions = useVideoDimensions({
