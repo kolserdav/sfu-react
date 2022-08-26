@@ -35,6 +35,7 @@ function Chat({ server, port, roomId, userId, locale }: ChatProps) {
     rows,
     clickQuoteWrapper,
     clickEditWrapper,
+    clickDeleteWrapper,
     count,
     isEdit,
   } = useMesages({
@@ -125,7 +126,7 @@ function Chat({ server, port, roomId, userId, locale }: ChatProps) {
             <div
               tabIndex={-3}
               role="button"
-              onClick={clickQuoteWrapper(dialog.context)}
+              onClick={clickDeleteWrapper(dialog.context)}
               className={s.message__dialog__item}
             >
               {locale.delete}

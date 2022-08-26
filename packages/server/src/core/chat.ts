@@ -137,14 +137,36 @@ class Chat extends DB {
     data: { args, userId },
   }: SendMessageArgs<MessageType.GET_EDIT_MESSAGE>) {
     const res = await this.messageUpdate(args);
-    this.sendMessage({
-      roomId: id,
-      msg: {
-        type: MessageType.SET_EDIT_MESSAGE,
-        connId: '',
-        id: userId,
-        data: res,
-      },
+    const uKeys = Object.keys(this.users[id]);
+    uKeys.forEach((item) => {
+      this.sendMessage({
+        roomId: id,
+        msg: {
+          type: MessageType.SET_EDIT_MESSAGE,
+          connId: '',
+          id: item,
+          data: res,
+        },
+      });
+    });
+  }
+
+  public async handleDeleteMessage({
+    id,
+    data: { args, userId },
+  }: SendMessageArgs<MessageType.GET_DELETE_MESSAGE>) {
+    const res = await this.messageDelete(args);
+    const uKeys = Object.keys(this.users[id]);
+    uKeys.forEach((item) => {
+      this.sendMessage({
+        roomId: id,
+        msg: {
+          type: MessageType.SET_DELETE_MESSAGE,
+          connId: '',
+          id: item,
+          data: res,
+        },
+      });
     });
   }
 

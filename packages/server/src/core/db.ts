@@ -120,6 +120,19 @@ class DB implements DBInterface {
   };
 
   // eslint-disable-next-line class-methods-use-this
+  public messageDelete: DBInterface['messageDelete'] = async (args) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let result: any = null;
+    try {
+      result = await prisma.message.delete(args);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      log('error', 'DB Error delete message', { args, err });
+    }
+    return result;
+  };
+
+  // eslint-disable-next-line class-methods-use-this
   public messageFindMany: DBInterface['messageFindMany'] = async (args) => {
     const { where, skip, take } = args;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

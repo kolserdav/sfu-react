@@ -64,6 +64,8 @@ export enum MessageType {
   SET_CHAT_MESSAGES = 'SET_CHAT_MESSAGES',
   GET_EDIT_MESSAGE = 'GET_EDIT_MESSAGE',
   SET_EDIT_MESSAGE = 'SET_EDIT_MESSAGE',
+  GET_DELETE_MESSAGE = 'GET_DELETE_MESSAGE',
+  SET_DELETE_MESSAGE = 'SET_DELETE_MESSAGE',
 }
 
 export namespace DataTypes {
@@ -112,6 +114,10 @@ export namespace DataTypes {
       args: Prisma.MessageUpdateArgs;
       userId: string | number;
     };
+    export type GetDeleteMessage = {
+      args: Prisma.MessageDeleteArgs;
+      userId: string | number;
+    };
     export type SetRoom = undefined;
     export type SetError = {
       message: string;
@@ -127,6 +133,7 @@ export namespace DataTypes {
     };
     export type SetRoomMessage = MessageFull;
     export type SetEditMessage = MessageFull;
+    export type SetDeleteMessage = MessageFull;
     export type SetChatMessages = GetManyResult<MessageFull>;
     export type SetClosePeerConnection = {
       roomId: number | string;
@@ -196,6 +203,10 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.GetEditMessage
     : T extends MessageType.SET_EDIT_MESSAGE
     ? DataTypes.MessageTypes.SetEditMessage
+    : T extends MessageType.GET_DELETE_MESSAGE
+    ? DataTypes.MessageTypes.GetDeleteMessage
+    : T extends MessageType.SET_DELETE_MESSAGE
+    ? DataTypes.MessageTypes.SetDeleteMessage
     : T extends MessageType.SET_ROOM_MESSAGE
     ? DataTypes.MessageTypes.SetRoomMessage
     : T extends MessageType.SET_CLOSE_PEER_CONNECTION
@@ -389,6 +400,11 @@ export namespace Data {
 
     public abstract messageCreate<T extends Prisma.MessageCreateArgs>(
       args: Prisma.SelectSubset<T, Prisma.MessageCreateArgs>,
+      _connection?: WebSocket
+    ): Promise<Prisma.CheckSelect<T, MessageFull, Prisma.MessageGetPayload<T>> | null>;
+
+    public abstract messageDelete<T extends Prisma.MessageDeleteArgs>(
+      args: Prisma.SelectSubset<T, Prisma.MessageDeleteArgs>,
       _connection?: WebSocket
     ): Promise<Prisma.CheckSelect<T, MessageFull, Prisma.MessageGetPayload<T>> | null>;
 

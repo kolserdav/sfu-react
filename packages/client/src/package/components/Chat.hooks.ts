@@ -126,6 +126,24 @@ export const useMesages = ({
       }
     };
 
+  const clickDeleteWrapper =
+    (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      const { id } = JSON.parse(context);
+      ws.sendMessage({
+        type: MessageType.GET_DELETE_MESSAGE,
+        connId: '',
+        id: roomId,
+        data: {
+          args: {
+            where: {
+              id,
+            },
+          },
+          userId,
+        },
+      });
+    };
+
   const sendMessage = useMemo(
     () => () => {
       const mess = message.replace(/[\n\s]+/g, '');
@@ -145,6 +163,13 @@ export const useMesages = ({
                 data: {
                   text: cleanEdit(message),
                   updated: new Date(),
+                },
+                include: {
+                  Unit: {
+                    select: {
+                      name: true,
+                    },
+                  },
                 },
               },
               userId,
@@ -224,7 +249,7 @@ export const useMesages = ({
    * Get first chat messages
    */
   useEffect(() => {
-    if (chatUnit && skip - oldSkip !== 1) {
+    if (chatUnit && skip - oldSkip !== 1 && oldSkip - skip !== 1) {
       ws.sendMessage({
         type: MessageType.GET_CHAT_MESSAGES,
         id: roomId,
@@ -309,6 +334,14 @@ export const useMesages = ({
       setRows(1);
     };
 
+    const setDeleteMessageHandler = ({
+      data: { id },
+    }: SendMessageArgs<MessageType.SET_DELETE_MESSAGE>) => {
+      const _messages = messages.filter((item) => item.id !== id);
+      setMessages(_messages);
+      setSkip(skip - 1);
+    };
+
     const setErrorHandler = ({
       data: { message: children },
     }: SendMessageArgs<MessageType.SET_ERROR>) => {
@@ -363,6 +396,9 @@ export const useMesages = ({
         case MessageType.SET_EDIT_MESSAGE:
           setEditMessageHandler(rawMessage);
           break;
+        case MessageType.SET_DELETE_MESSAGE:
+          setDeleteMessageHandler(rawMessage);
+          break;
         case MessageType.SET_CHAT_UNIT:
           setChatUnit(true);
           break;
@@ -401,6 +437,7 @@ export const useMesages = ({
     rows,
     clickQuoteWrapper,
     clickEditWrapper,
+    clickDeleteWrapper,
     count,
     isEdit,
   };
