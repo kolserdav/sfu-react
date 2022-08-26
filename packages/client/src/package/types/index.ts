@@ -51,8 +51,9 @@ export interface DialogProps {
   clientX: number;
   clientY: number;
   context: string;
+  secure: boolean;
 }
 
 export type ThemeType = 'light' | 'dark';
 
-export type ClickPosition = Omit<DialogProps, 'open' | 'children'>;
+export type ClickPosition = { clientX: number; clientY: number };

@@ -32,6 +32,7 @@ export const CODECS = [
 export const SPEAKER_LEVEL = 0.4;
 export const CHAT_TAKE_MESSAGES = 10;
 export const TEXT_AREA_MAX_ROWS = 5;
+export const TEXT_AREA_ROW_LENGTH = 60;
 export const ALERT_DEFAULT: AlertProps = {
   open: false,
   children: '',
@@ -45,11 +46,11 @@ export const DIALOG_DEFAULT: DialogProps = {
   clientX: 0,
   clientY: 0,
   context: CONTEXT_DEFAULT,
+  secure: false,
 };
 export const CLICK_POSITION_DEFAULT: ClickPosition = {
   clientX: 0,
   clientY: 0,
-  context: CONTEXT_DEFAULT,
 };
 export const SHORT_MESS_LENGTH = 30;
 export const FIRST_MESSAGE_INDENT = 20;

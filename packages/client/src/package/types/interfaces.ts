@@ -62,6 +62,8 @@ export enum MessageType {
   SET_CHAT_UNIT = 'SET_CHAT_UNIT',
   GET_CHAT_MESSAGES = 'GET_CHAT_MESSAGES',
   SET_CHAT_MESSAGES = 'SET_CHAT_MESSAGES',
+  GET_EDIT_MESSAGE = 'GET_EDIT_MESSAGE',
+  SET_EDIT_MESSAGE = 'SET_EDIT_MESSAGE',
 }
 
 export namespace DataTypes {
@@ -106,6 +108,10 @@ export namespace DataTypes {
       args: Prisma.MessageFindManyArgs;
       userId: string | number;
     };
+    export type GetEditMessage = {
+      args: Prisma.MessageUpdateArgs;
+      userId: string | number;
+    };
     export type SetRoom = undefined;
     export type SetError = {
       message: string;
@@ -120,6 +126,7 @@ export namespace DataTypes {
       message: string;
     };
     export type SetRoomMessage = MessageFull;
+    export type SetEditMessage = MessageFull;
     export type SetChatMessages = GetManyResult<MessageFull>;
     export type SetClosePeerConnection = {
       roomId: number | string;
@@ -185,6 +192,10 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetChatMessages
     : T extends MessageType.GET_ROOM_MESSAGE
     ? DataTypes.MessageTypes.GetRoomMessage
+    : T extends MessageType.GET_EDIT_MESSAGE
+    ? DataTypes.MessageTypes.GetEditMessage
+    : T extends MessageType.SET_EDIT_MESSAGE
+    ? DataTypes.MessageTypes.SetEditMessage
     : T extends MessageType.SET_ROOM_MESSAGE
     ? DataTypes.MessageTypes.SetRoomMessage
     : T extends MessageType.SET_CLOSE_PEER_CONNECTION
@@ -193,6 +204,45 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetError
     : unknown;
 }
+
+export namespace Locale {
+  export type Value = 'en' | 'ru';
+  export const DEFAULT: Value = 'en';
+  export const SELECTOR: { value: Value; name: string; impl: boolean }[] = [
+    {
+      name: 'English',
+      value: 'en',
+      impl: true,
+    },
+    {
+      name: 'Русский',
+      value: 'ru',
+      impl: false,
+    },
+  ];
+  export interface Server {
+    error: string;
+  }
+
+  export interface Client {
+    shareScreen: string;
+    changeTheme: string;
+    send: string;
+    quote: string;
+    edit: string;
+    delete: string;
+    errorGetCamera: string;
+    errorGetDisplay: string;
+    erorGetSound: string;
+    edited: string;
+  }
+}
+
+export type LocaleServer = Locale.Server;
+export type LocaleClient = Locale.Client;
+export type LocaleValue = Locale.Value;
+export const LocaleDefault = Locale.DEFAULT;
+export const LocaleSelector = Locale.SELECTOR;
 
 export namespace Signaling {
   // eslint-disable-next-line @typescript-eslint/no-shadow
@@ -222,42 +272,6 @@ export namespace Signaling {
     ) => Promise<1 | 0>;
   }
 }
-
-export namespace Locale {
-  export type Value = 'en' | 'ru';
-  export const DEFAULT: Value = 'en';
-  export const SELECTOR: { value: Value; name: string; impl: boolean }[] = [
-    {
-      name: 'English',
-      value: 'en',
-      impl: true,
-    },
-    {
-      name: 'Русский',
-      value: 'ru',
-      impl: false,
-    },
-  ];
-  export interface Server {
-    error: string;
-  }
-
-  export interface Client {
-    shareScreen: string;
-    changeTheme: string;
-    send: string;
-    quote: string;
-    errorGetCamera: string;
-    errorGetDisplay: string;
-    erorGetSound: string;
-  }
-}
-
-export type LocaleServer = Locale.Server;
-export type LocaleClient = Locale.Client;
-export type LocaleValue = Locale.Value;
-export const LocaleDefault = Locale.DEFAULT;
-export const LocaleSelector = Locale.SELECTOR;
 
 export namespace Connection {
   export type AddTracksProps = {

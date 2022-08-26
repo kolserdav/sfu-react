@@ -15,6 +15,7 @@ import { SHORT_MESS_LENGTH } from '../utils/constants';
 import s from './Chat.module.scss';
 
 const quoteRegex = /\[quote=.+\]/;
+const editRegex = /\[edit=\d+\]/;
 
 const prepareLinks = (text: string) => {
   let _text = text.slice();
@@ -88,6 +89,26 @@ export const checkQuote = (text: string) => {
     length = quote[0].length;
   }
   return length;
+};
+
+export const checkEdit = (text: string) => {
+  const edit = text.match(editRegex);
+  let length = 0;
+  if (edit) {
+    length = edit[0].length;
+  }
+  return length;
+};
+
+export const cleanEdit = (text: string) => text.replace(editRegex, '').replace(/^\n/, '');
+
+export const getEditableMess = (text: string) => {
+  const edit = text.match(editRegex);
+  let id = 0;
+  if (edit) {
+    id = parseInt(edit[0].replace('[edit=', '').replace(']', ''), 10);
+  }
+  return id;
 };
 
 export const parseQuoteContext = (

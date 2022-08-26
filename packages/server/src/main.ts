@@ -111,6 +111,9 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
         case MessageType.GET_ROOM_MESSAGE:
           chat.handleRoomMessage(rawMessage);
           break;
+        case MessageType.GET_EDIT_MESSAGE:
+          chat.handleEditMessage(rawMessage);
+          break;
         case MessageType.GET_MUTE:
           const { muted, roomId } = wss.getMessage(MessageType.GET_MUTE, rawMessage).data;
           const index = rtc.muteds[roomId].indexOf(id.toString());

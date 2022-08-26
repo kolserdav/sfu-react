@@ -16,9 +16,10 @@ import SendIcon from '../Icons/Send';
 import IconButton from './ui/IconButton';
 import { useMesages, useDialog, useScrollToQuote } from './Chat.hooks';
 import { dateToTime, dateToString } from '../utils/lib';
-import { prepareMessage, getQuoteContext } from './Chat.lib';
+import { prepareMessage } from './Chat.lib';
 import Dialog from './ui/Dialog';
 import { ChatProps } from '../types';
+import CheckIcon from '../Icons/Check';
 
 function Chat({ server, port, roomId, userId, locale }: ChatProps) {
   const theme = useContext(ThemeContext);
@@ -26,15 +27,24 @@ function Chat({ server, port, roomId, userId, locale }: ChatProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const { message, messages, changeText, sendMessage, rows, clickQuoteWrapper, count } =
-    useMesages({
-      port,
-      server,
-      userId,
-      roomId,
-      containerRef,
-      inputRef,
-    });
+  const {
+    message,
+    messages,
+    changeText,
+    sendMessage,
+    rows,
+    clickQuoteWrapper,
+    clickEditWrapper,
+    count,
+    isEdit,
+  } = useMesages({
+    port,
+    server,
+    userId,
+    roomId,
+    containerRef,
+    inputRef,
+  });
   const { dialog, messageContextWrapper } = useDialog();
   useScrollToQuote({ messages, count, containerRef });
   return (
@@ -52,7 +62,7 @@ function Chat({ server, port, roomId, userId, locale }: ChatProps) {
                 <p className={s.day}>{dateToString(new Date(item.created))}</p>
               )}
               <div
-                onContextMenu={messageContextWrapper(getQuoteContext(item))}
+                onContextMenu={messageContextWrapper(item, item.unitId === userId.toString())}
                 style={{ background: theme.colors.active, color: theme.colors.textActive }}
                 className={clsx(s.message, item.unitId === userId.toString() ? s.self : '')}
               >
@@ -63,7 +73,16 @@ function Chat({ server, port, roomId, userId, locale }: ChatProps) {
                   className={s.text}
                   dangerouslySetInnerHTML={{ __html: prepareMessage(item.text) }}
                 />
-                <div className={s.date}>{dateToTime(new Date(item.created))}</div>
+                <div className={s.date}>
+                  {item.created !== item.updated ? (
+                    <span className={s.edited}>{locale.edited}</span>
+                  ) : (
+                    ''
+                  )}
+                  {dateToTime(
+                    new Date(item.created !== item.updated ? item.updated : item.created)
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -71,7 +90,11 @@ function Chat({ server, port, roomId, userId, locale }: ChatProps) {
       <div className={s.input}>
         <textarea rows={rows} ref={inputRef} onInput={changeText} value={message} />
         <IconButton title={locale.send} onClick={sendMessage}>
-          <SendIcon color={theme.colors.text} />
+          {isEdit ? (
+            <CheckIcon color={theme.colors.text} />
+          ) : (
+            <SendIcon color={theme.colors.text} />
+          )}
         </IconButton>
       </div>
       <Dialog {...dialog}>
@@ -85,6 +108,29 @@ function Chat({ server, port, roomId, userId, locale }: ChatProps) {
           >
             {locale.quote}
           </div>
+
+          {dialog.secure && (
+            // eslint-disable-next-line jsx-a11y/click-events-have-key-events
+            <div
+              tabIndex={-2}
+              role="button"
+              onClick={clickEditWrapper(dialog.context)}
+              className={s.message__dialog__item}
+            >
+              {locale.edit}
+            </div>
+          )}
+          {dialog.secure && (
+            // eslint-disable-next-line jsx-a11y/click-events-have-key-events
+            <div
+              tabIndex={-3}
+              role="button"
+              onClick={clickQuoteWrapper(dialog.context)}
+              className={s.message__dialog__item}
+            >
+              {locale.delete}
+            </div>
+          )}
         </div>
       </Dialog>
     </div>

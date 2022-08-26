@@ -93,6 +93,11 @@ $wrapper-padding: 0.5rem;
   .date {
     font-size: xx-small;
     margin: 5px 0 0 auto;
+
+    .edited {
+      margin-right: 0.5rem;
+      font-weight: 300;
+    }
   }
 
   .settings__button {
@@ -118,6 +123,7 @@ $wrapper-padding: 0.5rem;
   width: 100%;
   height: 100%;
   border-radius: 2px;
+  margin: 0.2rem;
 
   &:hover {
     background-color: rgb(0 0 0 / 10%);

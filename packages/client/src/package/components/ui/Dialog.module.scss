@@ -12,8 +12,8 @@
   border-radius: 6px;
 
   &.open {
-    width: 200px;
-    height: 30px;
+    width: 150px;
+    height: 100px;
     transition: width 0.3s ease-out, height 0.3s ease-out;
   }
 }

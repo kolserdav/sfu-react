@@ -132,6 +132,22 @@ class Chat extends DB {
     });
   }
 
+  public async handleEditMessage({
+    id,
+    data: { args, userId },
+  }: SendMessageArgs<MessageType.GET_EDIT_MESSAGE>) {
+    const res = await this.messageUpdate(args);
+    this.sendMessage({
+      roomId: id,
+      msg: {
+        type: MessageType.SET_EDIT_MESSAGE,
+        connId: '',
+        id: userId,
+        data: res,
+      },
+    });
+  }
+
   public async getChatMessages({
     id,
     data: { args, userId },

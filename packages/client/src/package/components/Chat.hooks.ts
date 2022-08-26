@@ -10,8 +10,8 @@
  ******************************************************************************************/
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import WS from '../core/ws';
-import { log } from '../utils/lib';
-import { MessageType, SendMessageArgs } from '../types/interfaces';
+import { getUTCDate, log } from '../utils/lib';
+import { MessageFull, MessageType, SendMessageArgs } from '../types/interfaces';
 import {
   CHAT_TAKE_MESSAGES,
   TEXT_AREA_MAX_ROWS,
@@ -22,7 +22,17 @@ import {
   FOLOW_QUOTE_STYLE,
 } from '../utils/constants';
 import { ClickPosition, DialogProps } from '../types';
-import { checkQuote, cleanQuote, scrollToBottom, scrollToTop, scrollTo } from './Chat.lib';
+import {
+  checkQuote,
+  cleanQuote,
+  scrollToBottom,
+  scrollToTop,
+  scrollTo,
+  getQuoteContext,
+  checkEdit,
+  getEditableMess,
+  cleanEdit,
+} from './Chat.lib';
 import storeAlert, { changeAlert } from '../store/alert';
 import storeClickDocument from '../store/clickDocument';
 
@@ -48,6 +58,7 @@ export const useMesages = ({
   const [chatUnit, setChatUnit] = useState<boolean>(false);
   const [myMessage, setMyMessage] = useState<boolean>(false);
   const [skip, setSkip] = useState<number>(0);
+  const [isEdit, setIsEdit] = useState<boolean>(false);
   const [count, setCount] = useState<number>(0);
   const [rows, setRows] = useState<number>(1);
   const [messages, setMessages] = useState<
@@ -79,13 +90,21 @@ export const useMesages = ({
     }
     if (c <= TEXT_AREA_MAX_ROWS) {
       setRows(c);
+    } else {
+      setRows(TEXT_AREA_MAX_ROWS);
+    }
+    const _isEdit = checkEdit(_value);
+    if (_isEdit && !isEdit) {
+      setIsEdit(true);
+    } else if (!isEdit && isEdit) {
+      setIsEdit(false);
     }
     setMessage(_value);
   };
 
   const clickQuoteWrapper =
     (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-      const quote = `[quote=${context}]\n`;
+      const quote = `[quote=${getQuoteContext(JSON.parse(context))}]\n`;
       setMessage(`${quote}${message}`);
       const { current } = inputRef;
       if (current) {
@@ -94,20 +113,54 @@ export const useMesages = ({
       }
     };
 
+  const clickEditWrapper =
+    (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      const { text, id } = JSON.parse(context);
+      const edit = `[edit=${id}]\n`;
+      const _message = `${edit}${text}`;
+      setMessage(_message);
+      const { current } = inputRef;
+      if (current) {
+        current.select();
+        current.selectionStart = _message.length;
+      }
+    };
+
   const sendMessage = useMemo(
     () => () => {
       const mess = message.replace(/[\n\s]+/g, '');
       // if message is not empty
       if (mess) {
-        ws.sendMessage({
-          type: MessageType.GET_ROOM_MESSAGE,
-          connId: '',
-          id: roomId,
-          data: {
-            message,
-            userId,
-          },
-        });
+        if (checkEdit(message)) {
+          const id = getEditableMess(message);
+          ws.sendMessage({
+            type: MessageType.GET_EDIT_MESSAGE,
+            connId: '',
+            id: roomId,
+            data: {
+              args: {
+                where: {
+                  id,
+                },
+                data: {
+                  text: cleanEdit(message),
+                  updated: new Date(),
+                },
+              },
+              userId,
+            },
+          });
+        } else {
+          ws.sendMessage({
+            type: MessageType.GET_ROOM_MESSAGE,
+            connId: '',
+            id: roomId,
+            data: {
+              message,
+              userId,
+            },
+          });
+        }
       } else {
         setRows(1);
         setMessage(mess);
@@ -239,6 +292,23 @@ export const useMesages = ({
       setMessages(_result);
     };
 
+    const setEditMessageHandler = ({ data }: SendMessageArgs<MessageType.SET_EDIT_MESSAGE>) => {
+      const { id } = data;
+      const _messages: MessageFull[] = [];
+      for (let i = 0; messages[i]; i++) {
+        const _message = messages[i];
+        if (_message.id === id) {
+          _messages.push(data);
+        } else {
+          _messages.push(_message);
+        }
+      }
+      setIsEdit(false);
+      setMessages(_messages);
+      setMessage('');
+      setRows(1);
+    };
+
     const setErrorHandler = ({
       data: { message: children },
     }: SendMessageArgs<MessageType.SET_ERROR>) => {
@@ -290,6 +360,9 @@ export const useMesages = ({
         case MessageType.SET_CHAT_MESSAGES:
           setChatMessagesHandler(rawMessage);
           break;
+        case MessageType.SET_EDIT_MESSAGE:
+          setEditMessageHandler(rawMessage);
+          break;
         case MessageType.SET_CHAT_UNIT:
           setChatUnit(true);
           break;
@@ -320,28 +393,39 @@ export const useMesages = ({
       };
     };
   }, [roomId, userId, ws, messages, message, myMessage, containerRef, skip]);
-  return { changeText, sendMessage, messages, message, rows, clickQuoteWrapper, count};
+  return {
+    changeText,
+    sendMessage,
+    messages,
+    message,
+    rows,
+    clickQuoteWrapper,
+    clickEditWrapper,
+    count,
+    isEdit,
+  };
 };
 
 export const useDialog = () => {
   const [dialog, setDialog] = useState<Omit<DialogProps, 'children'>>(DIALOG_DEFAULT);
   const [position, setPosition] = useState<ClickPosition>(CLICK_POSITION_DEFAULT);
   const messageContextWrapper =
-    (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    (item: MessageFull, secure: boolean) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       const { shiftKey } = ev;
       if (!shiftKey) {
         ev.preventDefault();
         const { clientX, clientY } = ev;
+        const context = JSON.stringify(item);
         setDialog({
           open: true,
           clientY,
           clientX,
           context,
+          secure,
         });
         setPosition({
           clientX,
           clientY,
-          context,
         });
       }
     };
@@ -360,6 +444,7 @@ export const useDialog = () => {
         clientY: position.clientX,
         clientX: position.clientY,
         context: CONTEXT_DEFAULT,
+        secure: false,
       });
     });
     return () => {
@@ -436,6 +521,8 @@ export const useScrollToQuote = ({
           scrollTo(current, _position);
         } else if (!gettingPosition) {
           scrollTo(current, 0);
+        } else {
+          log('warn', 'Unecesary scroll quote case', { check, gettingPosition });
         }
       }
     };
