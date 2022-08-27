@@ -521,7 +521,7 @@ export const useScrollToQuote = ({
             const { id } = child;
             if (id === messIdStr) {
               const { top } = child.getBoundingClientRect();
-              const indent = top - FIRST_MESSAGE_INDENT;
+              const indent = current.scrollTop + (top - FIRST_MESSAGE_INDENT);
               position = indent < 1 ? top : indent;
               const oldStyle = child.firstElementChild?.getAttribute('style');
               child.firstElementChild?.setAttribute('style', `${oldStyle}${FOLOW_QUOTE_STYLE}`);
@@ -565,7 +565,7 @@ export const useScrollToQuote = ({
     };
     setTimeout(() => {
       hashChangeHandler();
-    }, 0);
+    }, 200);
     const onHashChange = () => {
       hashChangeHandler();
     };
