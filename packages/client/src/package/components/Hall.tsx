@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { HallProps } from '../types';
 import ThemeContext from '../Theme.context';
@@ -21,10 +21,10 @@ import Select from './ui/Select';
 import { setLocalStorage, LocalStorageName } from '../utils/localStorage';
 import { getCookie, CookieName, setCookie } from '../utils/cookies';
 import CloseIcon from '../Icons/Close';
-
 import s from './Hall.module.scss';
 import IconButton from './ui/IconButton';
 import SettingsIcon from '../Icons/SettingsIcon';
+import storeStreams from '../store/streams';
 
 const changeThemeHandler = () => {
   const { theme } = storeTheme.getState();
@@ -47,6 +47,16 @@ function Hall({ open, locale, server, port, roomId, userId }: HallProps) {
   const openSettingsDialog = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     setOpenSettings(!openSettings);
   };
+
+  useEffect(() => {
+    const cleanSubs = storeStreams.subscribe(() => {
+      const state = storeStreams.getState();
+      console.log(state);
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, []);
 
   return (
     <div className={clsx(s.wrapper, open ? s.open : '')}>
