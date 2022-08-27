@@ -20,9 +20,11 @@ import storeLocale, { changeLocale } from '../store/locale';
 import Select from './ui/Select';
 import { setLocalStorage, LocalStorageName } from '../utils/localStorage';
 import { getCookie, CookieName, setCookie } from '../utils/cookies';
+import CloseIcon from '../Icons/Close';
 
 import s from './Hall.module.scss';
 import IconButton from './ui/IconButton';
+import SettingsIcon from '../Icons/SettingsIcon';
 
 const changeThemeHandler = () => {
   const { theme } = storeTheme.getState();
@@ -33,11 +35,17 @@ const changeThemeHandler = () => {
 function Hall({ open, locale, server, port, roomId, userId }: HallProps) {
   const [lang, setLang] = useState<LocaleValue>(getCookie(CookieName.lang) || LocaleDefault);
   const theme = useContext(ThemeContext);
+  const [openSettings, setOpenSettings] = useState<boolean>(false);
+
   const changeLang = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value as LocaleValue;
     setLang(value);
     setCookie(CookieName.lang, value);
     storeLocale.dispatch(changeLocale({ locale: value }));
+  };
+
+  const openSettingsDialog = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    setOpenSettings(!openSettings);
   };
 
   return (
@@ -46,7 +54,10 @@ function Hall({ open, locale, server, port, roomId, userId }: HallProps) {
         <div className={s.block}>
           <div className={s.users}>Users</div>
           <Chat locale={locale} userId={userId} roomId={roomId} server={server} port={port} />
-          <div className={s.settings}>
+          <div
+            style={{ background: theme.colors.active }}
+            className={clsx(s.settings, openSettings ? s.open : '')}
+          >
             <Select onChange={changeLang} value={lang}>
               {LocaleSelector}
             </Select>
@@ -54,6 +65,15 @@ function Hall({ open, locale, server, port, roomId, userId }: HallProps) {
               <ThemeIcon color={theme.colors.text} />
             </IconButton>
           </div>
+          {open && (
+            <IconButton onClick={openSettingsDialog} className={s.settings__button}>
+              {openSettings ? (
+                <CloseIcon color={theme.colors.text} />
+              ) : (
+                <SettingsIcon color={theme.colors.text} />
+              )}
+            </IconButton>
+          )}
         </div>
       </div>
     </div>

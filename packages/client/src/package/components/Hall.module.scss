@@ -56,7 +56,28 @@
   align-items: flex-end;
   flex-basis: 20%;
   height: 100%;
-  @media (max-width: $mobile-width) {
-    display: none;
+
+  &.open {
+    z-index: 105;
+    position: fixed;
+    right: 0;
+    border-radius: 6px;
+    align-items: flex-start;
+    border: 2px solid cyan;
+
+    @media (max-width: $mobile-width) {
+      width: 200px;
+      height: 100px;
+    }
   }
+  @media (max-width: $mobile-width) {
+    width: 0;
+    height: 0;
+  }
+}
+
+.settings__button {
+  z-index: 106;
+  position: fixed;
+  right: 0;
 }
