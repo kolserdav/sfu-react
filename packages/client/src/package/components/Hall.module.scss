@@ -80,4 +80,7 @@
   z-index: 106;
   position: fixed;
   right: 0;
+  @media (min-width: $mobile-width) {
+    display: none;
+  }
 }
