@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import React, { useEffect } from 'react';
+import React from 'react';
 import Main from './package/Main';
 import './App.scss';
 
@@ -16,22 +16,9 @@ const createRoom = () => {
   // Do not use the symbol "_" in room address
   window.location.href = `${new Date().getTime()}?uid=1`;
 };
-
 function App() {
   const isHall = window.location.pathname === '/';
-  /*
-  useEffect(() => {
-    window.navigator.mediaDevices.enumerateDevices().then((devices) => {
-      console.log(devices[1].deviceId);
-      window.navigator.mediaDevices
-        .getUserMedia({ audio: true, video: { deviceId: devices[0].deviceId } })
-        .then((media) => console.log(media))
-        .catch((error) => {
-          console.log(error);
-        });
-    });
-  }, []);
-  */
+
   return (
     <div>
       {isHall ? (
