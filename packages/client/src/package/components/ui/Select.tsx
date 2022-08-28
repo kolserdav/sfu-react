@@ -28,7 +28,7 @@ function Select({
       className={s.wrapper}
       onChange={onChange}
       value={value}
-      style={{ background: theme.colors.active, color: theme.colors.paper }}
+      style={{ background: theme.colors.active, color: theme.colors.text }}
     >
       {children.map((item) => (
         <option key={item.value} disabled={!item.impl} value={item.value}>

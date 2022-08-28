@@ -65,7 +65,13 @@ function Hall({ open, locale, server, port, roomId, userId }: HallProps) {
 
   return (
     <div className={clsx(s.wrapper, open ? s.open : '')}>
-      <div className={s.container} style={theme.container}>
+      <div
+        className={s.container}
+        style={{
+          background: theme.colors.paper,
+          color: theme.colors.text,
+        }}
+      >
         <div className={s.block}>
           <div className={s.users} style={{ color: theme.colors.text }}>
             {users.map((item) => (
@@ -76,7 +82,7 @@ function Hall({ open, locale, server, port, roomId, userId }: HallProps) {
           </div>
           <Chat locale={locale} userId={userId} roomId={roomId} server={server} port={port} />
           <div
-            style={{ background: theme.colors.active }}
+            style={{ background: theme.colors.paper }}
             className={clsx(s.settings, openSettings ? s.open : '')}
           >
             <Select onChange={changeLang} value={lang}>

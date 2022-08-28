@@ -49,7 +49,7 @@ function Chat({ server, port, roomId, userId, locale }: ChatProps) {
   const { dialog, messageContextWrapper } = useDialog();
   useScrollToQuote({ messages, count, containerRef });
   return (
-    <div className={s.wrapper} style={{ background: theme.colors.paper }}>
+    <div className={s.wrapper} style={{ background: theme.colors.active }}>
       <div
         className={s.container}
         ref={containerRef}
@@ -64,7 +64,7 @@ function Chat({ server, port, roomId, userId, locale }: ChatProps) {
               )}
               <div
                 onContextMenu={messageContextWrapper(item, item.unitId === userId.toString())}
-                style={{ background: theme.colors.active, color: theme.colors.textActive }}
+                style={{ background: theme.colors.paper, color: theme.colors.text }}
                 className={clsx(s.message, item.unitId === userId.toString() ? s.self : '')}
               >
                 {item.unitId !== userId.toString() && (
@@ -89,7 +89,13 @@ function Chat({ server, port, roomId, userId, locale }: ChatProps) {
           ))}
       </div>
       <div className={s.input}>
-        <textarea rows={rows} ref={inputRef} onInput={changeText} value={message} />
+        <textarea
+          style={{ background: theme.colors.paper, color: theme.colors.text }}
+          rows={rows}
+          ref={inputRef}
+          onInput={changeText}
+          value={message}
+        />
         <IconButton title={locale.send} onClick={sendMessage}>
           {isEdit ? (
             <CheckIcon color={theme.colors.text} />

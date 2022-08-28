@@ -81,7 +81,13 @@ function Room({ userId, iceServers, server, port, roomId, locale, name }: RoomPr
   const displayMediaSupported = useMemo(() => supportDisplayMedia(), []);
 
   return (
-    <div className={s.wrapper} style={theme.wrapper}>
+    <div
+      className={s.wrapper}
+      style={{
+        background: theme.colors.paper,
+        color: theme.colors.text,
+      }}
+    >
       <div className={s.container} ref={container}>
         {streams.map((item, index) => (
           <div id={item.stream.id} key={item.target} className={s.video} data-connid={item.connId}>

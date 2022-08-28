@@ -32,8 +32,6 @@ export interface Colors {
 
 // Additionals
 export interface Theme {
-  wrapper: React.CSSProperties;
-  container: React.CSSProperties;
   button: React.CSSProperties;
   link: React.CSSProperties;
   colors: Colors[ThemeType];
@@ -41,10 +39,10 @@ export interface Theme {
 
 const colors: Colors = {
   dark: {
-    paper: '#36413e',
+    paper: '#0f0f0f',
     text: '#d7d6d6',
-    active: '#beb2c8',
-    textActive: '#000',
+    active: '#36413e',
+    textActive: '#fff',
     red: 'red',
     yellow: 'yellow',
     blue: 'blue',
@@ -54,7 +52,7 @@ const colors: Colors = {
     yellow: 'lightgoldenrodyellow',
     paper: '#fff',
     text: '#5d5e60',
-    active: '#8d8d92',
+    active: 'rgb(182 181 181)',
     textActive: '#fff',
     blue: 'lightblue',
   },
@@ -62,16 +60,8 @@ const colors: Colors = {
 
 export const themes: Themes = {
   dark: {
-    wrapper: {
-      backgroundColor: colors.dark.paper,
-      color: colors.dark.text,
-    },
-    container: {
-      backgroundColor: colors.light.active,
-      color: colors.light.paper,
-    },
     button: {
-      backgroundColor: colors.dark.active,
+      backgroundColor: colors.light.active,
       color: colors.light.text,
     },
     link: {
@@ -80,16 +70,8 @@ export const themes: Themes = {
     colors: colors.dark,
   },
   light: {
-    wrapper: {
-      backgroundColor: colors.light.paper,
-      color: colors.light.text,
-    },
-    container: {
-      backgroundColor: colors.dark.active,
-      color: colors.dark.paper,
-    },
     button: {
-      backgroundColor: colors.light.active,
+      backgroundColor: colors.dark.active,
       color: colors.dark.text,
     },
     link: {
