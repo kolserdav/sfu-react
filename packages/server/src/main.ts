@@ -72,7 +72,9 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
           wss.sendMessage({
             type: MessageType.SET_USER_ID,
             id,
-            data: undefined,
+            data: {
+              name: userName,
+            },
             connId,
           });
           break;
@@ -130,7 +132,7 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
           rtc.rooms[roomId].forEach((item) => {
             wss.sendMessage({
               type: MessageType.SET_MUTE,
-              id: item,
+              id: item.id,
               connId: '',
               data: {
                 muteds: rtc.muteds[roomId],
@@ -173,7 +175,12 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
 
         const roomKeys = Object.keys(rtc.rooms);
         roomKeys.forEach((item) => {
-          const index = rtc.rooms[item].indexOf(userId);
+          let index = -1;
+          rtc.rooms[item].forEach((_item, i) => {
+            if (_item.id === userId) {
+              index = i;
+            }
+          });
           if (index !== -1) {
             chat.cleanChatUnit({ roomId: item, userId });
             const keys = rtc.getPeerConnectionKeys(item);
@@ -189,8 +196,8 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
               keys.forEach((i) => {
                 const peer = i.split(rtc.delimiter);
                 if (
-                  (peer[1] === _item && peer[2] === userId.toString()) ||
-                  (peer[1] === userId.toString() && peer[2] === _item)
+                  (peer[1] === _item.id && peer[2] === userId.toString()) ||
+                  (peer[1] === userId.toString() && peer[2] === _item.id)
                 ) {
                   // eslint-disable-next-line prefer-destructuring
                   _connId = peer[3];
@@ -198,11 +205,12 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
               });
               wss.sendMessage({
                 type: MessageType.SET_CHANGE_UNIT,
-                id: _item,
+                id: _item.id,
                 data: {
                   roomLength: rtc.rooms[item].length,
                   muteds: rtc.muteds[item],
                   target: userId,
+                  name: _item.name,
                   eventName: 'delete',
                 },
                 connId: _connId,

@@ -15,6 +15,14 @@
 import * as werift from 'werift';
 import { Message, Prisma, Room, Unit } from '@prisma/client';
 
+export interface UserItem {
+  name: string;
+  connId: string;
+}
+export interface RoomUser {
+  id: string | number;
+  name: string;
+}
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type ArgumentTypes<F extends Function> = F extends (args: infer A) => any ? A : never;
 export type GetManyResult<T> = { result: T[]; skip: number; count: number; take: number };
@@ -89,21 +97,24 @@ export namespace DataTypes {
     };
     export type GetUserId = {
       isRoom?: boolean;
-      userName?: string;
+      userName: string;
     };
     export type SetChangeRoomUnit = {
       target: number | string;
+      name: string;
       eventName: 'delete' | 'add' | 'added';
       roomLength: number;
       muteds: string[];
     };
-    export type SetGuestId = undefined;
+    export type SetUserId = {
+      name: string;
+    };
     export type GetRoom = {
       userId: number | string;
       mimeType: string;
     };
     export type SetRoomGuests = {
-      roomUsers: (number | string)[];
+      roomUsers: RoomUser[];
       muteds: string[];
     };
     export type GetChatMessages = {
@@ -176,7 +187,7 @@ export namespace DataTypes {
     : T extends MessageType.GET_USER_ID
     ? DataTypes.MessageTypes.GetUserId
     : T extends MessageType.SET_USER_ID
-    ? DataTypes.MessageTypes.SetGuestId
+    ? DataTypes.MessageTypes.SetUserId
     : T extends MessageType.GET_CHAT_UNIT
     ? DataTypes.MessageTypes.GetChatUnit
     : T extends MessageType.GET_ROOM

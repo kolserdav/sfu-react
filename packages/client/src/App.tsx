@@ -41,6 +41,7 @@ function App() {
               },
             ],
             userId: window.location.search.replace(/\?uid=/, ''),
+            name: 'John Doe',
           }}
         />
       )}

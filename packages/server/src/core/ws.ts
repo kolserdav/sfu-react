@@ -9,7 +9,7 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { WebSocketServer, Server, WebSocket, ServerOptions } from 'ws';
-import { WSInterface } from '../types/interfaces';
+import { WSInterface, UserItem } from '../types/interfaces';
 import { log } from '../utils/lib';
 import DB from './db';
 
@@ -22,7 +22,7 @@ class WS implements WSInterface {
 
   public readonly delimiter = '_';
 
-  public users: Record<number | string, string> = {};
+  public users: Record<number | string, UserItem> = {};
 
   public rooms: Record<number | string, string> = {};
 
@@ -81,7 +81,10 @@ class WS implements WSInterface {
           });
         }
       });
-      this.users[id] = connId;
+      this.users[id] = {
+        connId,
+        name: userName,
+      };
     } else {
       this.rooms[id] = connId;
     }
@@ -138,13 +141,13 @@ class WS implements WSInterface {
           data: args.data,
           type: args.type,
           u: this.users[id],
-          s: Object.keys(this.sockets[this.getSocketId(id, this.users[id])] || {}).length,
+          s: Object.keys(this.sockets[this.getSocketId(id, this.users[id]?.connId)] || {}).length,
           r: this.rooms[id],
           ss: Object.keys(this.sockets[this.getSocketId(id, this.rooms[id])] || {}).length,
         });
         let key = '';
-        if (this.users[id] && this.sockets[this.getSocketId(id, this.users[id])]) {
-          key = this.getSocketId(id, this.users[id]);
+        if (this.users[id]?.connId && this.sockets[this.getSocketId(id, this.users[id]?.connId)]) {
+          key = this.getSocketId(id, this.users[id].connId);
         } else if (this.rooms[id] && this.sockets[this.getSocketId(id, this.rooms[id])]) {
           key = this.getSocketId(id, this.rooms[id]);
         }

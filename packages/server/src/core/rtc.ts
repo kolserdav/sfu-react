@@ -11,7 +11,7 @@
 // eslint-disable-next-line import/no-relative-packages
 //import * as werift from '../werift-webrtc/packages/webrtc/lib/webrtc/src/index';
 import * as werift from 'werift';
-import { RTCInterface, MessageType, SendMessageArgs } from '../types/interfaces';
+import { RTCInterface, MessageType, SendMessageArgs, RoomUser } from '../types/interfaces';
 import { log } from '../utils/lib';
 import WS from './ws';
 import DB from './db';
@@ -23,7 +23,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
 
   public readonly delimiter = '_';
 
-  public rooms: Record<string | number, (string | number)[]> = {};
+  public rooms: Record<string | number, RoomUser[]> = {};
 
   public ssrcIntervals: Record<string, NodeJS.Timer> = {};
 
@@ -195,12 +195,13 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         const room = rooms[roomId];
         if (room && isNew) {
           setTimeout(() => {
-            room.forEach((id) => {
+            room.forEach((item) => {
               ws.sendMessage({
                 type: MessageType.SET_CHANGE_UNIT,
-                id,
+                id: item.id,
                 data: {
                   target: userId,
+                  name: item.name,
                   eventName: 'add',
                   roomLength: rooms[roomId]?.length || 0,
                   muteds: this.muteds[roomId],
@@ -585,11 +586,20 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         }
       });
     }
+    const { name } = this.ws.users[userId];
     if (!this.rooms[roomId]) {
-      this.rooms[roomId] = [userId];
+      this.rooms[roomId] = [
+        {
+          id: userId,
+          name,
+        },
+      ];
       this.muteds[roomId] = [];
-    } else if (this.rooms[roomId].indexOf(userId) === -1) {
-      this.rooms[roomId].push(userId);
+    } else if (!this.rooms[roomId].find((item) => userId === item.id)) {
+      this.rooms[roomId].push({
+        id: userId,
+        name,
+      });
     } else {
       log('info', 'Room exists and user added before.', { roomId, userId });
     }

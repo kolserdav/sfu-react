@@ -22,6 +22,7 @@ import {
 } from './Room.hooks';
 import ThemeContext from '../Theme.context';
 import { getRoomLink, onClickVideo, copyLink, supportDisplayMedia } from './Room.lib';
+import { DEFAULT_USER_NAME } from '../utils/constants';
 import CloseButton from './ui/CloseButton';
 import ScreenIcon from '../Icons/ScreeenIcon';
 import IconButton from './ui/IconButton';
@@ -33,7 +34,7 @@ import CameraOutlineIcon from '../Icons/CameraOutlineIcon';
 import CopyIcon from '../Icons/CopyIcon';
 import WarningIcon from '../Icons/ErrorIcon';
 
-function Room({ userId, iceServers, server, port, roomId, locale }: RoomProps) {
+function Room({ userId, iceServers, server, port, roomId, locale, name }: RoomProps) {
   const container = useRef<HTMLDivElement>(null);
   const roomLink = useMemo(() => getRoomLink(roomId), [roomId]);
   const { createAudioAnalyzer, analyzeSoundLevel, cleanAudioAnalyzer, speaker } =
@@ -60,6 +61,7 @@ function Room({ userId, iceServers, server, port, roomId, locale }: RoomProps) {
     port: port.toString(),
     cleanAudioAnalyzer,
     locale,
+    userName: name || DEFAULT_USER_NAME,
   });
   const theme = useContext(ThemeContext);
   const setVideoDimensions = useVideoDimensions({

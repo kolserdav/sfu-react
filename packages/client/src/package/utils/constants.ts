@@ -55,3 +55,4 @@ export const CLICK_POSITION_DEFAULT: ClickPosition = {
 export const SHORT_MESS_LENGTH = 30;
 export const FIRST_MESSAGE_INDENT = 20;
 export const FOLOW_QUOTE_STYLE = 'border: 3px solid lightblue';
+export const DEFAULT_USER_NAME = 'No Name';

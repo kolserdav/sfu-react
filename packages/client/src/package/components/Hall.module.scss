@@ -49,6 +49,11 @@
   }
 }
 
+.users__item {
+  margin: 1rem;
+  overflow-y: auto;
+}
+
 .settings {
   position: relative;
   display: flex;

@@ -18,6 +18,8 @@ class WS implements Types.WSInterface {
 
   public shareScreen: boolean;
 
+  public name = '';
+
   public readonly delimiter = '_';
 
   public setUserId(userId: number | string) {

@@ -15,7 +15,7 @@ import ThemeContext from '../Theme.context';
 import ThemeIcon from '../Icons/ThemeIcon';
 import Chat from './Chat';
 import storeTheme, { changeTheme } from '../store/theme';
-import { LocaleDefault, LocaleSelector, LocaleValue } from '../types/interfaces';
+import { LocaleDefault, LocaleSelector, LocaleValue, RoomUser } from '../types/interfaces';
 import storeLocale, { changeLocale } from '../store/locale';
 import Select from './ui/Select';
 import { setLocalStorage, LocalStorageName } from '../utils/localStorage';
@@ -36,6 +36,7 @@ function Hall({ open, locale, server, port, roomId, userId }: HallProps) {
   const [lang, setLang] = useState<LocaleValue>(getCookie(CookieName.lang) || LocaleDefault);
   const theme = useContext(ThemeContext);
   const [openSettings, setOpenSettings] = useState<boolean>(false);
+  const [users, setUsers] = useState<RoomUser[]>([]);
 
   const changeLang = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value as LocaleValue;
@@ -51,7 +52,11 @@ function Hall({ open, locale, server, port, roomId, userId }: HallProps) {
   useEffect(() => {
     const cleanSubs = storeStreams.subscribe(() => {
       const state = storeStreams.getState();
-      console.log(state);
+      const _users = state.streams.map((item) => ({
+        id: item.target,
+        name: item.name,
+      }));
+      setUsers(_users);
     });
     return () => {
       cleanSubs();
@@ -62,7 +67,13 @@ function Hall({ open, locale, server, port, roomId, userId }: HallProps) {
     <div className={clsx(s.wrapper, open ? s.open : '')}>
       <div className={s.container} style={theme.container}>
         <div className={s.block}>
-          <div className={s.users}>Users</div>
+          <div className={s.users} style={{ color: theme.colors.text }}>
+            {users.map((item) => (
+              <div key={item.id} className={s.users__item}>
+                {item.name}
+              </div>
+            ))}
+          </div>
           <Chat locale={locale} userId={userId} roomId={roomId} server={server} port={port} />
           <div
             style={{ background: theme.colors.active }}

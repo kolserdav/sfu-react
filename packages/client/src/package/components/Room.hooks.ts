@@ -28,6 +28,7 @@ export const useConnection = ({
   iceServers,
   server,
   port,
+  userName,
   cleanAudioAnalyzer,
   locale,
 }: {
@@ -36,6 +37,7 @@ export const useConnection = ({
   iceServers: RTCConfiguration['iceServers'];
   server: string;
   port: string;
+  userName: string;
   cleanAudioAnalyzer: (uid: string | number) => void;
   locale: LocaleClient;
 }) => {
@@ -184,9 +186,11 @@ export const useConnection = ({
       target,
       stream,
       connId,
+      name,
       change = false,
     }: {
       target: string | number;
+      name: string;
       stream: MediaStream;
       connId: string;
       change?: boolean;
@@ -194,6 +198,7 @@ export const useConnection = ({
       const _stream: Stream = {
         target,
         stream,
+        name,
         connId,
         ref: (node) => {
           if (node) {
@@ -214,7 +219,7 @@ export const useConnection = ({
      */
     const changeRoomUnitHandler = ({
       id: userId,
-      data: { target, eventName, roomLength, muteds: _muteds },
+      data: { target, eventName, roomLength, muteds: _muteds, name },
       connId,
     }: SendMessageArgs<MessageType.SET_CHANGE_UNIT>) => {
       if (lenght !== roomLength) {
@@ -240,7 +245,7 @@ export const useConnection = ({
               connId,
               onTrack: ({ addedUserId, stream }) => {
                 log('info', 'Added unit track', { addedUserId, s: stream.id, connId });
-                addStream({ target: addedUserId, stream, connId });
+                addStream({ target: addedUserId, stream, connId, name });
               },
               iceServers,
               eventName: 'back',
@@ -254,6 +259,7 @@ export const useConnection = ({
                     connId,
                     data: {
                       target: userId,
+                      name: ws.name,
                       roomLength,
                       eventName: 'added',
                       muteds: _muteds,
@@ -324,22 +330,22 @@ export const useConnection = ({
       setLenght(roomUsers.length);
       setMuteds(_muteds);
       roomUsers.forEach((item) => {
-        if (item !== id) {
-          const _isExists = _streams.filter((_item) => item === _item.target);
+        if (item.id !== id) {
+          const _isExists = _streams.filter((_item) => item.id === _item.target);
           if (!_isExists[0]) {
             log('info', `Check new user ${item}`, { uid: id });
             rtc.createPeerConnection({
               roomId,
-              target: item,
+              target: item.id,
               userId: id,
               connId,
               onTrack: ({ addedUserId, stream }) => {
-                addStream({ target: addedUserId, stream, connId });
+                addStream({ target: addedUserId, stream, connId, name: item.name });
               },
               iceServers,
               eventName: 'check',
             });
-            rtc.addTracks({ roomId, userId: id, target: item, connId, locale }, (e) => {
+            rtc.addTracks({ roomId, userId: id, target: item.id, connId, locale }, (e) => {
               if (e) {
                 log('warn', 'Failed add tracks', { roomId, userId: id, target: item, connId });
                 return;
@@ -363,7 +369,7 @@ export const useConnection = ({
       });
       // Remove disconnected
       streams.forEach((item) => {
-        const isExists = roomUsers.filter((_item) => _item === item.target);
+        const isExists = roomUsers.filter((_item) => _item.id === item.target);
         if (!isExists[0]) {
           Object.keys(rtc.peerConnections).forEach((__item) => {
             const peer = __item.split(rtc.delimiter);
@@ -390,7 +396,9 @@ export const useConnection = ({
         ws.sendMessage({
           type: MessageType.GET_USER_ID,
           id,
-          data: {},
+          data: {
+            userName,
+          },
           connId: '',
         });
       }, START_DELAY);
@@ -409,6 +417,7 @@ export const useConnection = ({
            */
           setConnectionId(connId);
           rtc.connId = connId;
+          ws.name = ws.getMessage(MessageType.SET_USER_ID, rawMessage).data.name;
           ws.sendMessage({
             type: MessageType.GET_ROOM,
             id: roomId,
@@ -449,7 +458,7 @@ export const useConnection = ({
           });
           rtc.addTracks({ userId: ws.userId, roomId, connId, target: 0, locale }, (e, stream) => {
             if (!e) {
-              addStream({ target: ws.userId, stream, connId });
+              addStream({ target: ws.userId, stream, connId, name: ws.name });
             } else if (localShareScreen) {
               ws.shareScreen = false;
               setLocalShareScreen(false);
@@ -458,7 +467,9 @@ export const useConnection = ({
                 ws.sendMessage({
                   type: MessageType.GET_USER_ID,
                   id,
-                  data: {},
+                  data: {
+                    userName,
+                  },
                   connId: '',
                 });
               };
