@@ -1,9 +1,9 @@
-import type { NextPage } from 'next';
+import React from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import styles from '../styles/Home.module.css';
 
-const Home: NextPage = () => {
+function Home() {
   const router = useRouter();
 
   /**
@@ -26,6 +26,6 @@ const Home: NextPage = () => {
       </button>
     </div>
   );
-};
+}
 
 export default Home;

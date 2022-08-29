@@ -8,27 +8,28 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import React, { useContext } from 'react';
+import React from 'react';
 import { LocaleSelector } from '../../types/interfaces';
-import ThemeContext from '../../Theme.context';
 import s from './Select.module.scss';
+import { Theme } from '../../Theme';
 
 function Select({
   value,
   children,
   onChange,
+  theme,
 }: {
   value: string;
   children: typeof LocaleSelector;
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  theme?: Theme;
 }) {
-  const theme = useContext(ThemeContext);
   return (
     <select
       className={s.wrapper}
       onChange={onChange}
       value={value}
-      style={{ background: theme.colors.active, color: theme.colors.text }}
+      style={{ background: theme?.colors.active, color: theme?.colors.text }}
     >
       {children.map((item) => (
         <option key={item.value} disabled={!item.impl} value={item.value}>
@@ -38,5 +39,9 @@ function Select({
     </select>
   );
 }
+
+Select.defaultProps = {
+  theme: undefined,
+};
 
 export default Select;

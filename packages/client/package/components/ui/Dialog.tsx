@@ -1,16 +1,14 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import clsx from 'clsx';
 import s from './Dialog.module.scss';
-import ThemeContext from '../../Theme.context';
 import { DialogProps } from '../../types';
 
-function Dialog({ open, children, clientY, clientX }: DialogProps) {
-  const theme = useContext(ThemeContext);
+function Dialog({ open, children, clientY, clientX, theme }: DialogProps) {
   return (
     <div
       style={{
-        background: theme.colors.text,
-        color: theme.colors.paper,
+        background: theme?.colors.text,
+        color: theme?.colors.paper,
         top: clientY,
         left: clientX,
       }}

@@ -29,6 +29,9 @@ export function getLocalStorage<T extends keyof typeof LocalStorageName>(
 ): LocalStorageValue<T> | null {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let result: any = null;
+  if (typeof localStorage === 'undefined') {
+    return null;
+  }
   const raw = localStorage.getItem(name);
   if (raw) {
     try {
@@ -44,5 +47,8 @@ export function setLocalStorage<T extends keyof typeof LocalStorageName>(
   name: T,
   value: LocalStorageValue<T>
 ) {
+  if (typeof localStorage === 'undefined') {
+    return;
+  }
   localStorage.setItem(name, JSON.stringify(value));
 }

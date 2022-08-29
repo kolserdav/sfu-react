@@ -32,7 +32,6 @@ function IconButton({
 }) {
   return (
     <div
-      style={{ width, height }}
       onClick={onClick}
       role="button"
       title={title}

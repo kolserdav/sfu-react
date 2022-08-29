@@ -15,7 +15,6 @@ import Room from './components/Room';
 import Hall from './components/Hall';
 import { RoomProps } from './types';
 import { getPathname, getRoomId } from './utils/lib';
-import ThemeContext from './Theme.context';
 import ChevronLeftIcon from './Icons/ChevronLeftIcon';
 import ChevronRightIcon from './Icons/ChevronRightIcon';
 import IconButton from './components/ui/IconButton';
@@ -26,25 +25,26 @@ import { useListeners } from './Main.hooks';
 function Main({ room }: { room: Omit<RoomProps, 'locale' | 'roomId'> }) {
   const pathname = getPathname();
   const roomId = useMemo(() => getRoomId(pathname || ''), [pathname]);
+
   const { colors } = room;
-
   const { locale, openMenu, theme, alert, hallOpen } = useListeners({ colors });
-
   return (
-    <ThemeContext.Provider value={theme}>
-      {locale && <Room {...room} roomId={roomId} locale={locale} />}
+    <div>
+      {locale && (
+        <Room {...room} theme={!room.theme ? theme : undefined} roomId={roomId} locale={locale} />
+      )}
       <div
         className={clsx(s.button, hallOpen ? s.active : '')}
         role="button"
-        style={theme.button}
+        style={theme?.button}
         tabIndex={0}
         onClick={openMenu}
       >
         <IconButton strict className={clsx(s.button__icon, hallOpen ? s.active : '')}>
           {hallOpen ? (
-            <ChevronRightIcon color={theme.colors.paper} />
+            <ChevronRightIcon color={theme?.colors.paper} />
           ) : (
-            <ChevronLeftIcon color={theme.colors.paper} />
+            <ChevronLeftIcon color={theme?.colors.paper} />
           )}
         </IconButton>
       </div>
@@ -56,12 +56,13 @@ function Main({ room }: { room: Omit<RoomProps, 'locale' | 'roomId'> }) {
           locale={locale}
           server={room.server}
           port={room.port}
+          theme={theme}
         />
       )}
       <Alert open={alert.open} type={alert.type}>
         {alert.children}
       </Alert>
-    </ThemeContext.Provider>
+    </div>
   );
 }
 

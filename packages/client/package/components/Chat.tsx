@@ -8,9 +8,8 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import React, { useContext, useRef } from 'react';
+import React, { useRef } from 'react';
 import clsx from 'clsx';
-import ThemeContext from '../Theme.context';
 import s from './Chat.module.scss';
 import SendIcon from '../Icons/Send';
 import IconButton from './ui/IconButton';
@@ -21,9 +20,7 @@ import Dialog from './ui/Dialog';
 import { ChatProps } from '../types';
 import CheckIcon from '../Icons/Check';
 
-function Chat({ server, port, roomId, userId, locale }: ChatProps) {
-  const theme = useContext(ThemeContext);
-
+function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -49,7 +46,7 @@ function Chat({ server, port, roomId, userId, locale }: ChatProps) {
   const { dialog, messageContextWrapper } = useDialog();
   useScrollToQuote({ messages, count, containerRef });
   return (
-    <div className={s.wrapper} style={{ background: theme.colors.active }}>
+    <div className={s.wrapper} style={{ background: theme?.colors.active }}>
       <div
         className={s.container}
         ref={containerRef}
@@ -64,7 +61,7 @@ function Chat({ server, port, roomId, userId, locale }: ChatProps) {
               )}
               <div
                 onContextMenu={messageContextWrapper(item, item.unitId === userId.toString())}
-                style={{ background: theme.colors.paper, color: theme.colors.text }}
+                style={{ background: theme?.colors.paper, color: theme?.colors.text }}
                 className={clsx(s.message, item.unitId === userId.toString() ? s.self : '')}
               >
                 {item.unitId !== userId.toString() && (
@@ -90,7 +87,7 @@ function Chat({ server, port, roomId, userId, locale }: ChatProps) {
       </div>
       <div className={s.input}>
         <textarea
-          style={{ background: theme.colors.paper, color: theme.colors.text }}
+          style={{ background: theme?.colors.paper, color: theme?.colors.text }}
           rows={rows}
           ref={inputRef}
           onInput={changeText}
@@ -98,9 +95,9 @@ function Chat({ server, port, roomId, userId, locale }: ChatProps) {
         />
         <IconButton title={locale.send} onClick={sendMessage}>
           {isEdit ? (
-            <CheckIcon color={theme.colors.text} />
+            <CheckIcon color={theme?.colors.text} />
           ) : (
-            <SendIcon color={theme.colors.text} />
+            <SendIcon color={theme?.colors.text} />
           )}
         </IconButton>
       </div>

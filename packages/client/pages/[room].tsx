@@ -1,9 +1,10 @@
+import React from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 
-const Uyem = dynamic(() => import('uyem'));
+const Uyem = dynamic(() => import('../package/Main'));
 
-const Room = () => {
+function Room() {
   const router = useRouter();
   return (
     <Uyem
@@ -24,6 +25,6 @@ const Room = () => {
       }}
     />
   );
-};
+}
 
 export default Room;

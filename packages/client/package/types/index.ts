@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import { Colors } from '../Theme';
+import { Colors, Theme } from '../Theme';
 import { LocaleClient, LogLevel } from './interfaces';
 
 interface GlobalProps {
@@ -17,6 +17,7 @@ interface GlobalProps {
   port: number;
   userId: string | number;
   name?: string;
+  theme?: Theme;
 }
 
 export type RoomProps = GlobalProps & {
@@ -44,6 +45,7 @@ export interface AlertProps {
   children: string;
   type: keyof typeof LogLevel;
   open: boolean;
+  theme?: Theme;
 }
 
 export interface DialogProps {
@@ -53,6 +55,7 @@ export interface DialogProps {
   clientY: number;
   context: string;
   secure: boolean;
+  theme?: Theme;
 }
 
 export type ThemeType = 'light' | 'dark';

@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import React, { useMemo, useContext, useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { log } from '../utils/lib';
 import s from './Room.module.scss';
 import { RoomProps } from '../types/index';
@@ -20,7 +20,6 @@ import {
   useVideoStarted,
   useAudioAnalyzer,
 } from './Room.hooks';
-import ThemeContext from '../Theme.context';
 import { getRoomLink, onClickVideo, copyLink, supportDisplayMedia } from './Room.lib';
 import { DEFAULT_USER_NAME } from '../utils/constants';
 import CloseButton from './ui/CloseButton';
@@ -32,9 +31,8 @@ import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
 import CameraOutlineOffIcon from '../Icons/CameraOutlineOffIcon';
 import CameraOutlineIcon from '../Icons/CameraOutlineIcon';
 import CopyIcon from '../Icons/CopyIcon';
-import WarningIcon from '../Icons/ErrorIcon';
 
-function Room({ userId, iceServers, server, port, roomId, locale, name }: RoomProps) {
+function Room({ userId, iceServers, server, port, roomId, locale, name, theme }: RoomProps) {
   const container = useRef<HTMLDivElement>(null);
   const roomLink = useMemo(() => getRoomLink(roomId), [roomId]);
   const { createAudioAnalyzer, analyzeSoundLevel, cleanAudioAnalyzer, speaker } =
@@ -62,7 +60,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name }: RoomPr
     locale,
     userName: name || DEFAULT_USER_NAME,
   });
-  const theme = useContext(ThemeContext);
+
   const setVideoDimensions = useVideoDimensions({
     container: container.current,
     lenght,
@@ -83,8 +81,8 @@ function Room({ userId, iceServers, server, port, roomId, locale, name }: RoomPr
     <div
       className={s.wrapper}
       style={{
-        background: theme.colors.paper,
-        color: theme.colors.text,
+        background: theme?.colors.paper,
+        color: theme?.colors.text,
       }}
     >
       <div className={s.container} ref={container}>
@@ -193,31 +191,31 @@ function Room({ userId, iceServers, server, port, roomId, locale, name }: RoomPr
           <div className={s.link__container}>
             <input disabled className={s.link__input} value={roomLink} />
             <IconButton onClick={() => copyLink(roomLink)}>
-              <CopyIcon color={theme.colors.text} />
+              <CopyIcon color={theme?.colors.text} />
             </IconButton>
           </div>
         )}
         {displayMediaSupported && (
           <IconButton onClick={screenShare}>
             {shareScreen ? (
-              <CameraIcon color={theme.colors.text} />
+              <CameraIcon color={theme?.colors.text} />
             ) : (
-              <ScreenIcon color={theme.colors.text} />
+              <ScreenIcon color={theme?.colors.text} />
             )}
           </IconButton>
         )}
         <IconButton onClick={changeMuted}>
           {muted ? (
-            <MicrophoneOffIcon color={theme.colors.text} />
+            <MicrophoneOffIcon color={theme?.colors.text} />
           ) : (
-            <MicrophoneIcon color={theme.colors.text} />
+            <MicrophoneIcon color={theme?.colors.text} />
           )}
         </IconButton>
         <IconButton onClick={changeVideo}>
           {video ? (
-            <CameraOutlineIcon color={theme.colors.text} />
+            <CameraOutlineIcon color={theme?.colors.text} />
           ) : (
-            <CameraOutlineOffIcon color={theme.colors.text} />
+            <CameraOutlineOffIcon color={theme?.colors.text} />
           )}
         </IconButton>
       </div>

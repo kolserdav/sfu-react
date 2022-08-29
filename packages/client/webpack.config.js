@@ -21,7 +21,7 @@ module.exports = (env) => {
   return {
     mode: NODE_ENV,
     context: __dirname,
-    entry: './src/package/Main.tsx',
+    entry: './package/Main.tsx',
     output: {
       path: path.resolve(__dirname, 'dist'),
       filename: 'Main.js',
@@ -40,7 +40,13 @@ module.exports = (env) => {
     ],
     module: {
       rules: [
-        { test: /\.tsx?$/, loader: 'ts-loader' },
+        {
+          test: /\.tsx?$/,
+          loader: 'ts-loader',
+          options: {
+            configFile: 'tsconfig.compile.json',
+          },
+        },
         { test: /\.js$/, loader: 'source-map-loader' },
         {
           test: /\.(scss|css)$/i,

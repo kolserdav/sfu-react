@@ -17,13 +17,10 @@ export const useListeners = ({ colors }: { colors?: Colors }) => {
   const savedTheme = getLocalStorage(LocalStorageName.THEME);
   const [currentTheme, setCurrentTheme] = useState<keyof Themes>(savedTheme || 'light');
   const _themes = useMemo(() => changeColors({ colors, themes }), [colors]);
-  const [theme, setTheme] = useState<Themes['dark' | 'light']>(_themes[savedTheme || 'light']);
+  const [theme, setTheme] = useState<Themes['dark' | 'light']>();
   const [alert, setAlert] = useState<AlertProps>(ALERT_DEFAULT);
-  const [hallOpen, setHallOpen] = useState<boolean>(
-    getLocalStorage(LocalStorageName.HALL_OPEN) || false
-  );
+  const [hallOpen, setHallOpen] = useState<boolean>(false);
   const [locale, setLocale] = useState<LocaleClient | null>(null);
-
   const openMenu = () => {
     setLocalStorage(LocalStorageName.HALL_OPEN, !hallOpen);
     setHallOpen(!hallOpen);
@@ -35,6 +32,13 @@ export const useListeners = ({ colors }: { colors?: Colors }) => {
   useEffect(() => {
     setTheme(_themes[currentTheme]);
   }, [currentTheme, _themes]);
+
+  /**
+   * set hall open after page load
+   */
+  useEffect(() => {
+    setHallOpen(getLocalStorage(LocalStorageName.HALL_OPEN) || false);
+  }, []);
 
   /**
    * Change locale

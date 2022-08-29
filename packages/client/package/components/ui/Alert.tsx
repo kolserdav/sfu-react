@@ -8,16 +8,14 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import React, { useContext, useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import clsx from 'clsx';
 import s from './Alert.module.scss';
-import ThemeContext from '../../Theme.context';
 import { AlertProps } from '../../types';
-import { ALERT_DEFAULT, ALERT_TIMEOUT } from '../../utils/constants';
+import { ALERT_TIMEOUT } from '../../utils/constants';
 import storeAlert, { changeAlert } from '../../store/alert';
 
-function Alert({ children, type, open }: AlertProps) {
-  const theme = useContext(ThemeContext);
+function Alert({ children, type, open, theme }: AlertProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const [mouseMove, setMouseMove] = useState<boolean>(false);
 
@@ -89,11 +87,11 @@ function Alert({ children, type, open }: AlertProps) {
       style={{
         background:
           type === 'error'
-            ? theme.colors.red
+            ? theme?.colors.red
             : type === 'warn'
-            ? theme.colors.yellow
-            : theme.colors.blue,
-        color: theme.colors.black,
+            ? theme?.colors.yellow
+            : theme?.colors.blue,
+        color: theme?.colors.black,
       }}
     >
       {children}
