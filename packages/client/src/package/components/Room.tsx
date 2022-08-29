@@ -52,7 +52,6 @@ function Room({ userId, iceServers, server, port, roomId, locale, name }: RoomPr
     ws,
     rtc,
     changeVideo,
-    error,
   } = useConnection({
     id: userId,
     roomId,
@@ -188,12 +187,6 @@ function Room({ userId, iceServers, server, port, roomId, locale, name }: RoomPr
             </div>
           </div>
         ))}
-        {error && (
-          <div className={s.error}>
-            <WarningIcon color={theme.colors.yellow} />
-            {error}
-          </div>
-        )}
       </div>
       <div className={s.actions}>
         {roomLink && (

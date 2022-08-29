@@ -12,7 +12,7 @@
 //import * as werift from '../werift-webrtc/packages/webrtc/lib/webrtc/src/index';
 import * as werift from 'werift';
 import { RTCInterface, MessageType, SendMessageArgs, RoomUser } from '../types/interfaces';
-import { log } from '../utils/lib';
+import { getLocale, log } from '../utils/lib';
 import WS from './ws';
 import DB from './db';
 
@@ -482,6 +482,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         id: roomId.toString(),
       },
     });
+    const locale = getLocale(this.ws.users[userId].locale);
     if (!room) {
       const authorId = userId.toString();
       db.roomCreate({
@@ -503,15 +504,8 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
             id: userId,
             connId: '',
             data: {
-              message: 'Room is inactive',
-              context: {
-                id: userId,
-                type: MessageType.SET_ROOM,
-                connId: '',
-                data: {
-                  roomId,
-                },
-              },
+              message: locale.roomInactive,
+              type: 'warn',
             },
           });
           if (!this.rooms[roomId]) {

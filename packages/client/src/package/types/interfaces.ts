@@ -15,9 +15,11 @@
 import * as werift from 'werift';
 import { Message, Prisma, Room, Unit } from '@prisma/client';
 
+export type LocaleValue = 'en' | 'ru';
 export interface UserItem {
   name: string;
   connId: string;
+  locale: LocaleValue;
 }
 export interface RoomUser {
   id: string | number;
@@ -90,6 +92,7 @@ export namespace DataTypes {
     };
     export type GetChatUnit = {
       userId: string | number;
+      locale: LocaleValue;
     };
     export type GetClosePeerConnection = {
       roomId: number | string;
@@ -98,6 +101,7 @@ export namespace DataTypes {
     export type GetUserId = {
       isRoom?: boolean;
       userName: string;
+      locale: LocaleValue;
     };
     export type SetChangeRoomUnit = {
       target: number | string;
@@ -133,7 +137,7 @@ export namespace DataTypes {
     export type SetError = {
       message: string;
       // eslint-disable-next-line no-use-before-define
-      context: SendMessageArgs<any>;
+      type: keyof typeof LogLevel;
     };
     export type SetMute = {
       muteds: string[];
@@ -228,9 +232,8 @@ export namespace DataTypes {
 }
 
 export namespace Locale {
-  export type Value = 'en' | 'ru';
-  export const DEFAULT: Value = 'en';
-  export const SELECTOR: { value: Value; name: string; impl: boolean }[] = [
+  export const DEFAULT: LocaleValue = 'en';
+  export const SELECTOR: { value: LocaleValue; name: string; impl: boolean }[] = [
     {
       name: 'English',
       value: 'en',
@@ -244,6 +247,8 @@ export namespace Locale {
   ];
   export interface Server {
     error: string;
+    roomInactive: string;
+    errorSendMessage: string;
   }
 
   export interface Client {
@@ -262,7 +267,6 @@ export namespace Locale {
 
 export type LocaleServer = Locale.Server;
 export type LocaleClient = Locale.Client;
-export type LocaleValue = Locale.Value;
 export const LocaleDefault = Locale.DEFAULT;
 export const LocaleSelector = Locale.SELECTOR;
 

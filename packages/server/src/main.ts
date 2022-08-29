@@ -49,12 +49,24 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
   wss.connection.on('connection', (ws, req) => {
     const { origin } = req.headers;
     const notAllowed = cors.split(',').indexOf(origin || '') === -1;
+    const connId = getConnectionId();
     if (cors && notAllowed) {
-      log('warn', 'Block CORS attempt', { headers: req.headers });
+      const message = 'Block CORS attempt';
+      log('warn', message, { headers: req.headers });
+      ws.send(
+        JSON.stringify({
+          type: MessageType.SET_ERROR,
+          connId,
+          data: {
+            message,
+            type: 'warn',
+          },
+        })
+      );
       ws.close();
       return;
     }
-    const connId = getConnectionId();
+
     ws.on('message', async (message) => {
       let _data = '';
       if (typeof message !== 'string') {
@@ -67,8 +79,11 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
       const { type, id } = rawMessage;
       switch (type) {
         case MessageType.GET_USER_ID:
-          const { isRoom, userName } = wss.getMessage(MessageType.GET_USER_ID, rawMessage).data;
-          await wss.setSocket({ id, ws, connId, isRoom: isRoom || false, userName });
+          const { isRoom, userName, locale } = wss.getMessage(
+            MessageType.GET_USER_ID,
+            rawMessage
+          ).data;
+          await wss.setSocket({ id, ws, connId, isRoom: isRoom || false, userName, locale });
           wss.sendMessage({
             type: MessageType.SET_USER_ID,
             id,
@@ -90,6 +105,7 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
             roomId: wss.getMessage(MessageType.GET_CHAT_UNIT, rawMessage).id,
             userId: wss.getMessage(MessageType.GET_CHAT_UNIT, rawMessage).data.userId,
             ws,
+            locale: wss.getMessage(MessageType.GET_CHAT_UNIT, rawMessage).data.locale,
           });
           break;
         case MessageType.GET_CHAT_MESSAGES:

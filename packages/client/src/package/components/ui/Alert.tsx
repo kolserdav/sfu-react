@@ -93,7 +93,7 @@ function Alert({ children, type, open }: AlertProps) {
             : type === 'warn'
             ? theme.colors.yellow
             : theme.colors.blue,
-        color: theme.colors.text,
+        color: theme.colors.black,
       }}
     >
       {children}

@@ -9,7 +9,7 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { WebSocketServer, Server, WebSocket, ServerOptions } from 'ws';
-import { WSInterface, UserItem } from '../types/interfaces';
+import { WSInterface, UserItem, LocaleValue } from '../types/interfaces';
 import { log } from '../utils/lib';
 import DB from './db';
 
@@ -38,12 +38,14 @@ class WS implements WSInterface {
     connId,
     isRoom,
     userName,
+    locale,
   }: {
     id: number | string;
     ws: WebSocket;
     connId: string;
     isRoom: boolean;
-    userName?: string;
+    locale: LocaleValue;
+    userName: string;
   }) {
     const oldSock = Object.keys(this.sockets).find((item) => {
       const sock = item.split(this.delimiter);
@@ -84,6 +86,7 @@ class WS implements WSInterface {
       this.users[id] = {
         connId,
         name: userName,
+        locale,
       };
     } else {
       this.rooms[id] = connId;

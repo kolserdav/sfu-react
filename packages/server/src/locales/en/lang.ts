@@ -12,6 +12,8 @@ import type { LocaleServer } from '../../types/interfaces';
 
 const lang: LocaleServer = {
   error: 'Server error',
+  roomInactive: 'Room is inactive',
+  errorSendMessage: 'Error send message',
 };
 
 export default lang;

@@ -14,12 +14,13 @@ import WS from '../core/ws';
 import RTC from '../core/rtc';
 import { getCodec, log } from '../utils/lib';
 import { getWidthOfItem } from './Room.lib';
-import { LocaleClient, MessageType, SendMessageArgs } from '../types/interfaces';
+import { LocaleClient, LocaleDefault, MessageType, SendMessageArgs } from '../types/interfaces';
 import { Stream } from '../types';
 import s from './Room.module.scss';
 import c from './ui/CloseButton.module.scss';
 import storeStreams, { changeStreams } from '../store/streams';
 import { START_DELAY, SPEAKER_LEVEL } from '../utils/constants';
+import { CookieName, getCookie } from '../utils/cookies';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -50,7 +51,6 @@ export const useConnection = ({
   const [muted, setMuted] = useState<boolean>(false);
   const [muteds, setMuteds] = useState<string[]>([]);
   const [video, setVideo] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const [connectionId, setConnectionId] = useState<string>('');
   const ws = useMemo(
     () => new WS({ shareScreen: localShareScreen, server, port }),
@@ -398,6 +398,7 @@ export const useConnection = ({
           id,
           data: {
             userName,
+            locale: getCookie(CookieName.lang) || LocaleDefault,
           },
           connId: '',
         });
@@ -469,6 +470,7 @@ export const useConnection = ({
                   id,
                   data: {
                     userName,
+                    locale: getCookie(CookieName.lang) || LocaleDefault,
                   },
                   connId: '',
                 });
@@ -484,10 +486,9 @@ export const useConnection = ({
           break;
         case MessageType.SET_ERROR:
           const {
-            data: { message },
+            data: { message, type: _type },
           } = ws.getMessage(MessageType.SET_ERROR, rawMessage);
-          setError(message);
-          log('warn', 'error', message);
+          log(_type, message, message, true);
           break;
         default:
       }
@@ -525,6 +526,8 @@ export const useConnection = ({
     iceServers,
     localShareScreen,
     rtc.lostStreamHandler,
+    locale,
+    userName,
   ]);
 
   /**
@@ -572,7 +575,6 @@ export const useConnection = ({
     muteds,
     video,
     changeVideo,
-    error,
   };
 };
 

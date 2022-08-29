@@ -45,6 +45,7 @@ export function setCookie<T extends keyof typeof CookieName>(
   }
   cookies.set(name, value, {
     expires: date,
+    path: '/',
     sameSite: true,
     secure: true,
   });

@@ -11,7 +11,7 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import WS from '../core/ws';
 import { getUTCDate, log } from '../utils/lib';
-import { MessageFull, MessageType, SendMessageArgs } from '../types/interfaces';
+import { LocaleDefault, MessageFull, MessageType, SendMessageArgs } from '../types/interfaces';
 import {
   CHAT_TAKE_MESSAGES,
   TEXT_AREA_MAX_ROWS,
@@ -35,6 +35,7 @@ import {
 } from './Chat.lib';
 import storeAlert, { changeAlert } from '../store/alert';
 import storeClickDocument from '../store/clickDocument';
+import { CookieName, getCookie } from '../utils/cookies';
 
 let oldSkip = 0;
 let scrolled = false;
@@ -343,17 +344,9 @@ export const useMesages = ({
     };
 
     const setErrorHandler = ({
-      data: { message: children },
+      data: { message: children, type },
     }: SendMessageArgs<MessageType.SET_ERROR>) => {
-      storeAlert.dispatch(
-        changeAlert({
-          alert: {
-            open: true,
-            children,
-            type: 'error',
-          },
-        })
-      );
+      log(type, children, {}, true);
     };
 
     const setRoomMessage = ({ data }: SendMessageArgs<MessageType.SET_ROOM_MESSAGE>) => {
@@ -376,6 +369,7 @@ export const useMesages = ({
         connId: '',
         data: {
           userId,
+          locale: getCookie(CookieName.lang) || LocaleDefault,
         },
       });
     };

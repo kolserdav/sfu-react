@@ -9,21 +9,23 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { WebSocket } from 'ws';
-import { MessageType, SendMessageArgs } from '../types/interfaces';
-import { log } from '../utils/lib';
+import { LocaleValue, MessageType, SendMessageArgs } from '../types/interfaces';
+import { getLocale, log } from '../utils/lib';
 import DB from './db';
 
 class Chat extends DB {
-  public users: Record<string, Record<string, WebSocket>> = {};
+  public users: Record<string, Record<string, { locale: LocaleValue; ws: WebSocket }>> = {};
 
   public setChatUnit({
     roomId,
     userId,
     ws,
+    locale,
   }: {
     roomId: string | number;
     userId: string | number;
     ws: WebSocket;
+    locale: LocaleValue;
   }) {
     if (!this.users[roomId]) {
       this.users[roomId] = {};
@@ -31,7 +33,10 @@ class Chat extends DB {
     if (this.users[roomId][userId]) {
       log('warn', 'Duplicate chat user', { roomId, userId });
     }
-    this.users[roomId][userId] = ws;
+    this.users[roomId][userId] = {
+      locale,
+      ws,
+    };
     this.sendMessage({
       roomId,
       msg: {
@@ -73,7 +78,7 @@ class Chat extends DB {
           log('error', 'Chat user not found', { roomId, id });
           resolve(1);
         }
-        this.users[roomId][id].send(res);
+        this.users[roomId][id].ws.send(res);
         resolve(0);
       }, 0);
     });
@@ -98,6 +103,7 @@ class Chat extends DB {
         },
       },
     });
+    const locale = getLocale(this.users[id][userId].locale);
     if (!res) {
       this.sendMessage({
         roomId: id,
@@ -106,13 +112,8 @@ class Chat extends DB {
           connId,
           id: userId,
           data: {
-            message: 'Error send message',
-            context: {
-              type: MessageType.SET_ROOM_MESSAGE,
-              connId,
-              id,
-              data: {},
-            },
+            message: locale.errorSendMessage,
+            type: 'error',
           },
         },
       });
