@@ -51,6 +51,7 @@
     "deploy": "npm run clean && npm run build",
     "prebuild:client": "cd packages/client && npm run build",
     "build:client": "cd packages/client && npm run compile",
+    "start:client": "cd packages/client && npm run start",
     "build": "npm run build:server && npm run build:client",
     "copy-interfaces": "node scripts/create-interfaces-symlink.js",
     "copy": "npm run copy-interfaces",

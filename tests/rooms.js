@@ -273,6 +273,24 @@ const startServer = async () => {
     const data = d.toString();
     console.log(data);
   });
+  await new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(0);
+    }, 4000);
+  });
+  log('log', 'Run command:', '"npm run start:client"', true);
+  res = spawn('npm', ['run', 'start:client'], {
+    env: {
+      PATH: process.env.PATH,
+    },
+  });
+  res.stdout.on('data', (d) => {
+    console.log(d.toString());
+  });
+  res.stderr.on('data', (d) => {
+    const data = d.toString();
+    console.log(data);
+  });
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve(0);

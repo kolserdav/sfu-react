@@ -2,7 +2,7 @@ import React from 'react';
 import { useRouter, NextRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 
-const Uyem = dynamic(() => import('../package/Main'));
+const Uyem = dynamic(() => import('../dist/Main'));
 
 const checkRouterIsLoad = (router: NextRouter) => !/\]/.test(router.asPath);
 
