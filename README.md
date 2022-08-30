@@ -54,10 +54,28 @@ See [docs/COTURN.md](docs/COTURN.md) for more details.
 npm run server
 ```
 
-## Include examples
+## Usage on client
 
-- [Client Hello World](examples/hello-world/src)
-- [Server](examples/server)
+- Import module styles:
+
+```javascript
+import 'uyem/packages/client/dist/styles.css';
+```
+
+- Import component:
+
+```javascript
+import Uyem from 'uyem';
+```
+
+## Client examples
+
+- [Client ReactJS](examples/hello-world/src)
+- [Client Next.js](examples/ssr-client/pages)
+
+## Server examples
+
+- [Include server](examples/server)
 
 ## Contributing
 

@@ -1,8 +1,10 @@
 // @ts-check
 
 import React from 'react';
-import Uyem from 'uyem';
+import 'uyem/packages/client/dist/styles.css';
 import './App.css';
+
+const Uyem = React.lazy(() => import('uyem'));
 
 /**
  * Application get roomId from latest path section

@@ -1,8 +1,6 @@
 import React from 'react';
 import { useRouter, NextRouter } from 'next/router';
-import dynamic from 'next/dynamic';
-
-const Uyem = dynamic(() => import('../dist/Main'));
+import Main from '../package/Main';
 
 const checkRouterIsLoad = (router: NextRouter) => !/\]/.test(router.asPath);
 
@@ -11,7 +9,7 @@ function Room() {
   return (
     <div>
       {checkRouterIsLoad(router) && (
-        <Uyem
+        <Main
           room={{
             server: 'localhost',
             port: 3001,
