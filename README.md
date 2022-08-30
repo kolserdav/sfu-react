@@ -70,8 +70,8 @@ import Uyem from 'uyem';
 
 ## Client examples
 
-- [Client ReactJS](examples/hello-world/src)
-- [Client Next.js](examples/ssr-client/pages)
+- [ReactJS](examples/hello-world/src)
+- [Next.js](examples/ssr-client/pages)
 
 ## Server examples
 
