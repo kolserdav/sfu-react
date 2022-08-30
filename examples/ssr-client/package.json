@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "server": "uyem --port 3002 --db mysql://arch:1234@127.0.0.1:3306/uyem_db"
   },
   "dependencies": {
     "next": "12.2.5",
