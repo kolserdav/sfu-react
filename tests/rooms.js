@@ -243,10 +243,12 @@ async function reloadPage(page) {
  */
 const startServer = async () => {
   log('log', 'Run command:', '"npm run prod:migrate"', true);
+  /**
+   * @type {any}
+   */
+  const env = { PATH: process.env.PATH };
   let res = spawn('npm', ['run', 'prod:migrate'], {
-    env: {
-      PATH: process.env.PATH,
-    },
+    env,
   });
   res.stdout.on('data', (d) => {
     console.log(d.toString());
@@ -262,9 +264,7 @@ const startServer = async () => {
   });
   log('log', 'Run command:', '"npm run start"', true);
   res = spawn('npm', ['run', 'start'], {
-    env: {
-      PATH: process.env.PATH,
-    },
+    env,
   });
   res.stdout.on('data', (d) => {
     console.log(d.toString());
@@ -280,9 +280,7 @@ const startServer = async () => {
   });
   log('log', 'Run command:', '"npm run start:client"', true);
   res = spawn('npm', ['run', 'start:client'], {
-    env: {
-      PATH: process.env.PATH,
-    },
+    env,
   });
   res.stdout.on('data', (d) => {
     console.log(d.toString());
