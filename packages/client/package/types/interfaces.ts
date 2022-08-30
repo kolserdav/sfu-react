@@ -91,7 +91,7 @@ export namespace Locale {
     {
       name: 'Русский',
       value: 'ru',
-      impl: true,
+      impl: false,
     },
   ];
   export interface Server {
