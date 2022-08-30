@@ -196,7 +196,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
           </div>
         )}
         {displayMediaSupported && (
-          <IconButton onClick={screenShare}>
+          <IconButton onClick={screenShare} title={locale.shareScreen}>
             {shareScreen ? (
               <CameraIcon color={theme?.colors.text} />
             ) : (

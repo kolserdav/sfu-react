@@ -9,10 +9,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "compile": "webpack --env NODE_ENV=production",
+    "compile": "next lint && webpack --env NODE_ENV=production",
     "start": "next start",
-    "lint": "next lint",
-    "bundle": "microbundle --no-compress --format cjs --tsconfig tsconfig.compile.json",
-    "rollup": "rollup -c"
+    "lint": "next lint"
   }
 }

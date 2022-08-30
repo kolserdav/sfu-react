@@ -82,6 +82,7 @@ export enum MessageType {
 
 export namespace Locale {
   export const DEFAULT: LocaleValue = 'en';
+  // Implements on packages/server/src/utils/lib.ts
   export const SELECTOR: { value: LocaleValue; name: string; impl: boolean }[] = [
     {
       name: 'English',
@@ -91,7 +92,7 @@ export namespace Locale {
     {
       name: 'Русский',
       value: 'ru',
-      impl: false,
+      impl: true,
     },
   ];
   export interface Server {

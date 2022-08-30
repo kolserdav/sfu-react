@@ -101,7 +101,7 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
           )}
         </IconButton>
       </div>
-      <Dialog {...dialog}>
+      <Dialog {...dialog} theme={theme}>
         <div className={s.message__dialog}>
           {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}
           <div

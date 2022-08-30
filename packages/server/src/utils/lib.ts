@@ -11,9 +11,11 @@
 import { LOG_LEVEL } from './constants';
 import { LocaleServer, LocaleDefault, LocaleValue } from '../types/interfaces';
 import en from '../locales/en/lang';
+import ru from '../locales/ru/lang';
 
 const locales: Record<string, LocaleServer> = {
   en,
+  ru,
 };
 
 // eslint-disable-next-line no-unused-vars
