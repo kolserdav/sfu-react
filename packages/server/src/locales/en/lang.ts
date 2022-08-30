@@ -11,9 +11,23 @@
 import type { LocaleServer } from '../../types/interfaces';
 
 const lang: LocaleServer = {
-  error: 'Server error',
-  roomInactive: 'Room is inactive',
-  errorSendMessage: 'Error send message',
+  server: {
+    error: 'Server error',
+    roomInactive: 'Room is inactive',
+    errorSendMessage: 'Error send message',
+  },
+  client: {
+    shareScreen: 'Share screen',
+    changeTheme: 'Change theme',
+    send: 'Send',
+    quote: 'Quote',
+    edit: 'Edit',
+    edited: 'edited',
+    delete: 'Delete',
+    erorGetSound: 'Share scren without sound',
+    errorGetCamera: 'Error get camera access',
+    errorGetDisplay: 'Error get display media',
+  },
 };
 
 export default lang;

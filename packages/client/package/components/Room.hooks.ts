@@ -14,7 +14,7 @@ import WS from '../core/ws';
 import RTC from '../core/rtc';
 import { getCodec, log } from '../utils/lib';
 import { getWidthOfItem } from './Room.lib';
-import { LocaleClient, LocaleDefault, MessageType, SendMessageArgs } from '../types/interfaces';
+import { LocaleServer, LocaleDefault, MessageType, SendMessageArgs } from '../types/interfaces';
 import { Stream } from '../types';
 import s from './Room.module.scss';
 import c from './ui/CloseButton.module.scss';
@@ -37,10 +37,10 @@ export const useConnection = ({
   roomId: number | string | null;
   iceServers: RTCConfiguration['iceServers'];
   server: string;
-  port: string;
+  port: number;
   userName: string;
   cleanAudioAnalyzer: (uid: string | number) => void;
-  locale: LocaleClient;
+  locale: LocaleServer['client'];
 }) => {
   const [streams, setStreams] = useState<Stream[]>([]);
   const [shareScreen, setShareScreen] = useState<boolean>(false);

@@ -82,7 +82,7 @@ class WS implements Types.WSInterface {
     local = false,
   }: {
     server: string;
-    port: string;
+    port: number;
     local?: boolean;
   }): WebSocket {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -99,7 +99,7 @@ class WS implements Types.WSInterface {
     return connection;
   }
 
-  public createConnection({ server, port }: { server: string; port: string }) {
+  public createConnection({ server, port }: { server: string; port: number }) {
     this.newConnection({ server, port });
     this.connection.onopen = (ev: Event) => {
       log('log', 'onOpen', ev);
@@ -126,7 +126,7 @@ class WS implements Types.WSInterface {
   }: {
     shareScreen: boolean;
     server: string;
-    port: string;
+    port: number;
   }) {
     this.connection = this.createConnection({ server, port });
     this.shareScreen = shareScreen;

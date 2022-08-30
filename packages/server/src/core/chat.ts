@@ -103,7 +103,7 @@ class Chat extends DB {
         },
       },
     });
-    const locale = getLocale(this.users[id][userId].locale);
+    const locale = getLocale(this.users[id][userId].locale).server;
     if (!res) {
       this.sendMessage({
         roomId: id,

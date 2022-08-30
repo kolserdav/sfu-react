@@ -17,7 +17,7 @@ dotenv.config();
 import WS from './core/ws';
 import RTC from './core/rtc';
 import { MessageType } from './types/interfaces';
-import { log } from './utils/lib';
+import { getLocale, log } from './utils/lib';
 import { PORT, CORS } from './utils/constants';
 import DB from './core/db';
 import Chat from './core/chat';
@@ -128,6 +128,17 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
           break;
         case MessageType.GET_ROOM_MESSAGE:
           chat.handleRoomMessage(rawMessage);
+          break;
+        case MessageType.GET_LOCALE:
+          ws.send(
+            JSON.stringify({
+              type: MessageType.SET_LOCALE,
+              data: {
+                locale: getLocale(wss.getMessage(MessageType.GET_LOCALE, rawMessage).data.locale)
+                  .client,
+              },
+            })
+          );
           break;
         case MessageType.GET_EDIT_MESSAGE:
           chat.handleEditMessage(rawMessage);

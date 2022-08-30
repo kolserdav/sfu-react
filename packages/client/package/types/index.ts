@@ -9,7 +9,7 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { Colors, Theme } from '../Theme';
-import { LocaleClient, LogLevel } from './interfaces';
+import { LocaleServer, LogLevel } from './interfaces';
 
 interface GlobalProps {
   server: string;
@@ -22,13 +22,13 @@ interface GlobalProps {
 
 export type RoomProps = GlobalProps & {
   iceServers?: RTCConfiguration['iceServers'];
-  locale: LocaleClient;
+  locale: LocaleServer['client'];
   colors?: Colors;
 };
 
 export type HallProps = GlobalProps & {
   open: boolean;
-  locale: LocaleClient;
+  locale: LocaleServer['client'];
 };
 
 export type ChatProps = Omit<HallProps, 'open'>;

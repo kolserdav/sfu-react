@@ -10,6 +10,11 @@
  ******************************************************************************************/
 import { LOG_LEVEL } from './constants';
 import { LocaleServer, LocaleDefault, LocaleValue } from '../types/interfaces';
+import en from '../locales/en/lang';
+
+const locales: Record<string, LocaleServer> = {
+  en,
+};
 
 // eslint-disable-next-line no-unused-vars
 enum LogLevel {
@@ -50,21 +55,5 @@ export const log = (type: keyof typeof LogLevel, text: string, data?: any, cons?
   }
 };
 
-const locales: Record<string, LocaleServer> = {};
-
-export const getLocale = (value: LocaleValue): LocaleServer => {
-  if (locales[value]) {
-    return locales[value];
-  }
-  try {
-    // eslint-disable-next-line global-require
-    locales[value] = require(`../locales/${value}/lang`).default;
-  } catch (e) {
-    if (!locales[LocaleDefault]) {
-      // eslint-disable-next-line global-require
-      locales[LocaleDefault] = require(`../locales/${LocaleDefault}/lang`).default;
-    }
-    return locales[LocaleDefault];
-  }
-  return locales[value];
-};
+export const getLocale = (value: LocaleValue): LocaleServer =>
+  locales[value] || locales[LocaleDefault];

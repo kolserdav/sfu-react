@@ -1,30 +1,87 @@
 import { useEffect, useState, useMemo } from 'react';
 import { AlertProps } from './types';
-import { ALERT_DEFAULT, CONTEXT_DEFAULT } from './utils/constants';
+import { ALERT_DEFAULT } from './utils/constants';
 import { Colors, themes, Themes } from './Theme';
 import { changeColors } from './Main.lib';
-import { getLocale } from './utils/lib';
 import storeTheme from './store/theme';
 import storeLocale from './store/locale';
-import { LocaleClient } from './types/interfaces';
+import { LocaleServer, MessageType } from './types/interfaces';
 import { getLocalStorage, LocalStorageName, setLocalStorage } from './utils/localStorage';
-import { CookieName, getCookie, setCookie } from './utils/cookies';
+import { CookieName, setCookie } from './utils/cookies';
 import storeDialog from './store/alert';
 import storeClickDocument, { changeClickDocument } from './store/clickDocument';
+import WS from './core/ws';
+import { log } from './utils/lib';
 
 // eslint-disable-next-line import/prefer-default-export
-export const useListeners = ({ colors }: { colors?: Colors }) => {
+export const useListeners = ({
+  colors,
+  port,
+  server,
+}: {
+  port: number;
+  server: string;
+  colors?: Colors;
+}) => {
+  const ws = useMemo(() => new WS({ port, server, shareScreen: false }), [port, server]);
   const savedTheme = getLocalStorage(LocalStorageName.THEME);
   const [currentTheme, setCurrentTheme] = useState<keyof Themes>(savedTheme || 'light');
   const _themes = useMemo(() => changeColors({ colors, themes }), [colors]);
   const [theme, setTheme] = useState<Themes['dark' | 'light']>();
   const [alert, setAlert] = useState<AlertProps>(ALERT_DEFAULT);
   const [hallOpen, setHallOpen] = useState<boolean>(false);
-  const [locale, setLocale] = useState<LocaleClient | null>(null);
+  const [locale, setLocale] = useState<LocaleServer['client'] | null>(null);
   const openMenu = () => {
     setLocalStorage(LocalStorageName.HALL_OPEN, !hallOpen);
     setHallOpen(!hallOpen);
   };
+
+  useEffect(() => {
+    ws.onOpen = () => {
+      ws.sendMessage({
+        type: MessageType.GET_LOCALE,
+        connId: '',
+        id: 0,
+        data: {
+          locale: storeLocale.getState().locale,
+        },
+      });
+    };
+    ws.onMessage = (ev) => {
+      const { data } = ev;
+      const rawMessage = ws.parseMessage(data);
+      if (!rawMessage) {
+        return;
+      }
+      const { type } = rawMessage;
+      switch (type) {
+        case MessageType.SET_LOCALE:
+          setLocale(ws.getMessage(MessageType.SET_LOCALE, rawMessage).data.locale);
+          break;
+        default:
+      }
+    };
+    ws.onError = (e) => {
+      log('error', 'Ws error on main', e);
+    };
+    ws.onClose = (e) => {
+      log('warn', 'Ws close on main', e);
+    };
+    return () => {
+      ws.onOpen = () => {
+        /** */
+      };
+      ws.onMessage = () => {
+        /** */
+      };
+      ws.onError = () => {
+        /** */
+      };
+      ws.onClose = () => {
+        /** */
+      };
+    };
+  }, [ws]);
 
   /**
    * Set theme
@@ -44,16 +101,22 @@ export const useListeners = ({ colors }: { colors?: Colors }) => {
    * Change locale
    */
   useEffect(() => {
-    // TODO change to saved locale
-    let _locale = getLocale(getCookie(CookieName.lang) || storeLocale.getState().locale);
-    setLocale(_locale);
-    storeLocale.subscribe(() => {
+    const cleanSubs = storeLocale.subscribe(() => {
       const state = storeLocale.getState();
-      _locale = getLocale(state.locale);
       setCookie(CookieName.lang, state.locale);
-      setLocale(_locale);
+      ws.sendMessage({
+        type: MessageType.GET_LOCALE,
+        connId: '',
+        id: 0,
+        data: {
+          locale: state.locale,
+        },
+      });
     });
-  }, []);
+    return () => {
+      cleanSubs();
+    };
+  }, [ws]);
 
   /**
    * Alert listener

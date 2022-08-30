@@ -10,10 +10,8 @@
  ******************************************************************************************/
 import { format } from 'date-fns';
 import { LOG_LEVEL, CODECS } from './constants';
-import { LocaleClient, LocaleDefault, LocaleValue, LogLevel } from '../types/interfaces';
+import { LocaleDefault, LocaleValue, LogLevel } from '../types/interfaces';
 import storeAlert, { changeAlert } from '../store/alert';
-import en from '../locales/en/lang';
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const log = (type: keyof typeof LogLevel, text: string, data?: any, forUser = false) => {
   if (LogLevel[type] >= LOG_LEVEL) {
@@ -83,25 +81,6 @@ export const getCodec = () => {
     mimeType = `video/${codecV}`;
   }
   return mimeType;
-};
-
-const locales: Record<string, LocaleClient> = {};
-
-export const getLocale = (value: LocaleValue): LocaleClient => {
-  if (locales[value]) {
-    return locales[value];
-  }
-  try {
-    // eslint-disable-next-line global-require
-    locales[value] = en;
-  } catch (e) {
-    if (!locales[LocaleDefault]) {
-      // eslint-disable-next-line global-require
-      locales[LocaleDefault] = en;
-    }
-    return locales[LocaleDefault];
-  }
-  return locales[value];
 };
 
 export const getPathname = (): string | null => {

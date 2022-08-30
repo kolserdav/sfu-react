@@ -23,11 +23,12 @@ import s from './Main.module.scss';
 import { useListeners } from './Main.hooks';
 
 function Main({ room }: { room: Omit<RoomProps, 'locale' | 'roomId'> }) {
+  const { port, server } = room;
   const pathname = getPathname();
   const roomId = useMemo(() => getRoomId(pathname || ''), [pathname]);
 
   const { colors } = room;
-  const { locale, openMenu, theme, alert, hallOpen } = useListeners({ colors });
+  const { locale, openMenu, theme, alert, hallOpen } = useListeners({ colors, port, server });
   return (
     <div>
       {locale && (

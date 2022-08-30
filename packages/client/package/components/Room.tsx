@@ -55,7 +55,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     roomId,
     iceServers,
     server,
-    port: port.toString(),
+    port,
     cleanAudioAnalyzer,
     locale,
     userName: name || DEFAULT_USER_NAME,

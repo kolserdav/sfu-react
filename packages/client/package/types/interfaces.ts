@@ -76,7 +76,50 @@ export enum MessageType {
   SET_EDIT_MESSAGE = 'SET_EDIT_MESSAGE',
   GET_DELETE_MESSAGE = 'GET_DELETE_MESSAGE',
   SET_DELETE_MESSAGE = 'SET_DELETE_MESSAGE',
+  GET_LOCALE = 'GET_LOCALE',
+  SET_LOCALE = 'SET_LOCALE',
 }
+
+export namespace Locale {
+  export const DEFAULT: LocaleValue = 'en';
+  export const SELECTOR: { value: LocaleValue; name: string; impl: boolean }[] = [
+    {
+      name: 'English',
+      value: 'en',
+      impl: true,
+    },
+    {
+      name: 'Русский',
+      value: 'ru',
+      impl: true,
+    },
+  ];
+  export interface Server {
+    error: string;
+    roomInactive: string;
+    errorSendMessage: string;
+  }
+
+  export interface Client {
+    shareScreen: string;
+    changeTheme: string;
+    send: string;
+    quote: string;
+    edit: string;
+    delete: string;
+    errorGetCamera: string;
+    errorGetDisplay: string;
+    erorGetSound: string;
+    edited: string;
+  }
+}
+
+export type LocaleServer = {
+  server: Locale.Server;
+  client: Locale.Client;
+};
+export const LocaleDefault = Locale.DEFAULT;
+export const LocaleSelector = Locale.SELECTOR;
 
 export namespace DataTypes {
   export namespace MessageTypes {
@@ -92,6 +135,9 @@ export namespace DataTypes {
     };
     export type GetChatUnit = {
       userId: string | number;
+      locale: LocaleValue;
+    };
+    export type GetLocale = {
       locale: LocaleValue;
     };
     export type GetClosePeerConnection = {
@@ -141,6 +187,9 @@ export namespace DataTypes {
     };
     export type SetMute = {
       muteds: string[];
+    };
+    export type SetLocale = {
+      locale: LocaleServer['client'];
     };
     export type GetRoomMessage = {
       userId: string | number;
@@ -198,6 +247,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.GetRoom
     : T extends MessageType.SET_ROOM
     ? DataTypes.MessageTypes.SetRoom
+    : T extends MessageType.GET_LOCALE
+    ? DataTypes.MessageTypes.GetLocale
     : T extends MessageType.GET_ROOM_GUESTS
     ? DataTypes.MessageTypes.GetRoomGuests
     : T extends MessageType.GET_CHAT_MESSAGES
@@ -226,49 +277,12 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetRoomMessage
     : T extends MessageType.SET_CLOSE_PEER_CONNECTION
     ? DataTypes.MessageTypes.SetClosePeerConnection
+    : T extends MessageType.SET_LOCALE
+    ? DataTypes.MessageTypes.SetLocale
     : T extends MessageType.SET_ERROR
     ? DataTypes.MessageTypes.SetError
     : unknown;
 }
-
-export namespace Locale {
-  export const DEFAULT: LocaleValue = 'en';
-  export const SELECTOR: { value: LocaleValue; name: string; impl: boolean }[] = [
-    {
-      name: 'English',
-      value: 'en',
-      impl: true,
-    },
-    {
-      name: 'Русский',
-      value: 'ru',
-      impl: false,
-    },
-  ];
-  export interface Server {
-    error: string;
-    roomInactive: string;
-    errorSendMessage: string;
-  }
-
-  export interface Client {
-    shareScreen: string;
-    changeTheme: string;
-    send: string;
-    quote: string;
-    edit: string;
-    delete: string;
-    errorGetCamera: string;
-    errorGetDisplay: string;
-    erorGetSound: string;
-    edited: string;
-  }
-}
-
-export type LocaleServer = Locale.Server;
-export type LocaleClient = Locale.Client;
-export const LocaleDefault = Locale.DEFAULT;
-export const LocaleSelector = Locale.SELECTOR;
 
 export namespace Signaling {
   // eslint-disable-next-line @typescript-eslint/no-shadow
@@ -305,7 +319,7 @@ export namespace Connection {
     connId: string;
     userId: number | string;
     target: number | string;
-    locale?: LocaleClient;
+    locale?: LocaleServer['client'];
   };
   export abstract class RTCInterface {
     public abstract peerConnections: Record<string, RTCPeerConnection | undefined>;

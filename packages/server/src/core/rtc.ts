@@ -482,7 +482,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         id: roomId.toString(),
       },
     });
-    const locale = getLocale(this.ws.users[userId].locale);
+    const locale = getLocale(this.ws.users[userId].locale).server;
     if (!room) {
       const authorId = userId.toString();
       db.roomCreate({
