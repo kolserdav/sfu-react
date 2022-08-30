@@ -2,11 +2,17 @@
   "name": "client",
   "version": "0.1.0",
   "private": true,
+  "source": "./package/Main.tsx",
+  "main": "./dist/Main.js",
+  "module": "./dist/Main.esm.js",
+  "types": "./dist/Main.d.ts",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "compile": "webpack --env NODE_ENV=production",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "bundle": "microbundle --no-compress --format cjs --tsconfig tsconfig.compile.json",
+    "rollup": "rollup -c"
   }
 }

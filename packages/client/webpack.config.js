@@ -15,6 +15,7 @@ const webpack = require('webpack');
 const path = require('path');
 const fs = require('fs');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = (env) => {
   const { NODE_ENV, PORT } = env;
@@ -37,6 +38,9 @@ module.exports = (env) => {
     plugins: [
       new CleanWebpackPlugin(),
       new webpack.BannerPlugin(fs.readFileSync(path.resolve(__dirname, '../../LICENSE'), 'utf8')),
+      new MiniCssExtractPlugin({
+        filename: 'styles.css',
+      }),
     ],
     module: {
       rules: [
@@ -50,7 +54,7 @@ module.exports = (env) => {
         { test: /\.js$/, loader: 'source-map-loader' },
         {
           test: /\.(scss|css)$/i,
-          use: ['style-loader', 'css-loader', 'sass-loader'],
+          use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader', 'sass-loader'],
         },
       ],
     },

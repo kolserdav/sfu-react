@@ -12,3 +12,8 @@ declare module '*.scss' {
   const content: Record<string, string>;
   export default content;
 }
+
+declare module '*dist/Main' {
+  const content: Record<string, string>;
+  export default content;
+}

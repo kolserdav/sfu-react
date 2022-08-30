@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { LOG_LEVEL, CODECS } from './constants';
 import { LocaleClient, LocaleDefault, LocaleValue, LogLevel } from '../types/interfaces';
 import storeAlert, { changeAlert } from '../store/alert';
+import en from '../locales/en/lang';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const log = (type: keyof typeof LogLevel, text: string, data?: any, forUser = false) => {
@@ -92,11 +93,11 @@ export const getLocale = (value: LocaleValue): LocaleClient => {
   }
   try {
     // eslint-disable-next-line global-require
-    locales[value] = require(`../locales/${value}/lang`).default;
+    locales[value] = en;
   } catch (e) {
     if (!locales[LocaleDefault]) {
       // eslint-disable-next-line global-require
-      locales[LocaleDefault] = require(`../locales/${LocaleDefault}/lang`).default;
+      locales[LocaleDefault] = en;
     }
     return locales[LocaleDefault];
   }
