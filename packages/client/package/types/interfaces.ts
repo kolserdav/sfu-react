@@ -37,6 +37,7 @@ export type MessageFull = Message & {
 export enum ErrorCode {
   initial = 'initial',
   roomIsInactive = 'roomIsInactive',
+  errorSendMessage = 'errorSendMessage',
 }
 
 // eslint-disable-next-line no-unused-vars

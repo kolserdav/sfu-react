@@ -9,7 +9,7 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { WebSocket } from 'ws';
-import { LocaleValue, MessageType, SendMessageArgs } from '../types/interfaces';
+import { ErrorCode, LocaleValue, MessageType, SendMessageArgs } from '../types/interfaces';
 import { getLocale, log } from '../utils/lib';
 import DB from './db';
 
@@ -114,6 +114,7 @@ class Chat extends DB {
           data: {
             message: locale.errorSendMessage,
             type: 'error',
+            code: ErrorCode.errorSendMessage,
           },
         },
       });
