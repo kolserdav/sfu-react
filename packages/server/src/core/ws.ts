@@ -59,30 +59,29 @@ class WS implements WSInterface {
     this.sockets[this.getSocketId(_id.toString(), connId)] = ws;
     const id = _id.toString();
     if (!isRoom) {
-      db.unitFindFirst({
+      const u = await db.unitFindFirst({
         where: {
           id,
         },
-      }).then((u) => {
-        if (u) {
-          db.unitUpdate({
-            where: {
-              id,
-            },
-            data: {
-              name: userName,
-              updated: new Date(),
-            },
-          });
-        } else {
-          db.unitCreate({
-            data: {
-              id,
-              name: userName,
-            },
-          });
-        }
       });
+      if (u) {
+        await db.unitUpdate({
+          where: {
+            id,
+          },
+          data: {
+            name: userName,
+            updated: new Date(),
+          },
+        });
+      } else {
+        await db.unitCreate({
+          data: {
+            id,
+            name: userName,
+          },
+        });
+      }
       this.users[id] = {
         connId,
         name: userName,
