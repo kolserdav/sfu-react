@@ -28,6 +28,7 @@ const lang: LocaleServer = {
     errorGetCamera: 'Ошибка получения доступа к камере',
     errorGetDisplay: 'Ошибка при попытке демонстрации экрана',
     noMessages: 'В настоящее время сообщения отсутствуют',
+    loading: 'Загружается ...',
   },
 };
 

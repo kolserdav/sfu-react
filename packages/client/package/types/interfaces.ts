@@ -34,6 +34,11 @@ export type MessageFull = Message & {
   };
 };
 
+export enum ErrorCode {
+  initial = 'initial',
+  roomIsInactive = 'roomIsInactive',
+}
+
 // eslint-disable-next-line no-unused-vars
 export enum LogLevel {
   // eslint-disable-next-line no-unused-vars
@@ -113,6 +118,7 @@ export namespace Locale {
     erorGetSound: string;
     edited: string;
     noMessages: string;
+    loading: string;
   }
 }
 
@@ -186,6 +192,7 @@ export namespace DataTypes {
       message: string;
       // eslint-disable-next-line no-use-before-define
       type: keyof typeof LogLevel;
+      code: keyof typeof ErrorCode;
     };
     export type SetMute = {
       muteds: string[];

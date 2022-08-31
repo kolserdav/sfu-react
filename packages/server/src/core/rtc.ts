@@ -11,7 +11,13 @@
 // eslint-disable-next-line import/no-relative-packages
 //import * as werift from '../werift-webrtc/packages/webrtc/lib/webrtc/src/index';
 import * as werift from 'werift';
-import { RTCInterface, MessageType, SendMessageArgs, RoomUser } from '../types/interfaces';
+import {
+  RTCInterface,
+  MessageType,
+  SendMessageArgs,
+  RoomUser,
+  ErrorCode,
+} from '../types/interfaces';
 import { getLocale, log } from '../utils/lib';
 import WS from './ws';
 import DB from './db';
@@ -484,6 +490,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       },
     });
     const locale = getLocale(this.ws.users[userId].locale).server;
+    const isOwner = room?.authorId === userId.toString();
     if (!room) {
       const authorId = userId.toString();
       db.roomCreate({
@@ -499,7 +506,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       });
     } else {
       if (room.archive) {
-        if (room.authorId !== userId.toString()) {
+        if (!isOwner) {
           this.ws.sendMessage({
             type: MessageType.SET_ERROR,
             id: userId,
@@ -507,6 +514,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
             data: {
               message: locale.roomInactive,
               type: 'warn',
+              code: ErrorCode.roomIsInactive,
             },
           });
           if (!this.rooms[roomId]) {
@@ -525,6 +533,16 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
           },
         });
       }
+      this.ws.sendMessage({
+        type: MessageType.SET_ERROR,
+        id: userId,
+        connId: '',
+        data: {
+          message: '',
+          type: 'log',
+          code: ErrorCode.initial,
+        },
+      });
       db.unitFindFirst({
         where: {
           id: userId.toString(),

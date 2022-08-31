@@ -28,6 +28,7 @@ const lang: LocaleServer = {
     errorGetCamera: 'Error get camera access',
     errorGetDisplay: 'Error get display media',
     noMessages: 'No messages yet',
+    loading: 'Loading ...',
   },
 };
 

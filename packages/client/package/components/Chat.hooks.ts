@@ -10,8 +10,14 @@
  ******************************************************************************************/
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import WS from '../core/ws';
-import { getUTCDate, log } from '../utils/lib';
-import { LocaleDefault, MessageFull, MessageType, SendMessageArgs } from '../types/interfaces';
+import { log } from '../utils/lib';
+import {
+  ErrorCode,
+  LocaleDefault,
+  MessageFull,
+  MessageType,
+  SendMessageArgs,
+} from '../types/interfaces';
 import {
   CHAT_TAKE_MESSAGES,
   TEXT_AREA_MAX_ROWS,
@@ -33,7 +39,7 @@ import {
   getEditableMess,
   cleanEdit,
 } from './Chat.lib';
-import storeAlert, { changeAlert } from '../store/alert';
+import storeError from '../store/error';
 import storeClickDocument from '../store/clickDocument';
 import { CookieName, getCookie } from '../utils/cookies';
 
@@ -59,6 +65,7 @@ export const useMesages = ({
   const [chatUnit, setChatUnit] = useState<boolean>(false);
   const [myMessage, setMyMessage] = useState<boolean>(false);
   const [skip, setSkip] = useState<number>(0);
+  const [error, setError] = useState<keyof typeof ErrorCode>();
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [count, setCount] = useState<number>(0);
   const [rows, setRows] = useState<number>(1);
@@ -193,6 +200,25 @@ export const useMesages = ({
   );
 
   /**
+   * Listen error
+   */
+  useEffect(() => {
+    const cleanSubs = storeError.subscribe(() => {
+      const { error: _error } = storeError.getState();
+      switch (_error) {
+        case ErrorCode.roomIsInactive:
+          setMessages([]);
+          break;
+        default:
+      }
+      setError(_error);
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, []);
+
+  /**
    * Scroll by load
    */
   useEffect(() => {
@@ -247,7 +273,8 @@ export const useMesages = ({
    * Get first chat messages
    */
   useEffect(() => {
-    if (chatUnit && skip - oldSkip !== 1 && oldSkip - skip !== 1) {
+    const nonScroll = skip - oldSkip !== 1 && oldSkip - skip !== 1;
+    if (chatUnit && nonScroll && ErrorCode.initial === error) {
       ws.sendMessage({
         type: MessageType.GET_CHAT_MESSAGES,
         id: roomId,
@@ -275,7 +302,7 @@ export const useMesages = ({
       });
     }
     oldSkip = skip;
-  }, [ws, roomId, chatUnit, userId, skip]);
+  }, [ws, roomId, chatUnit, userId, skip, error]);
 
   /**
    * Listen input Enter
@@ -431,6 +458,7 @@ export const useMesages = ({
     clickDeleteWrapper,
     count,
     isEdit,
+    error,
   };
 };
 

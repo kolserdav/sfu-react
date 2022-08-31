@@ -19,9 +19,9 @@ $border-radius: 8px;
   transition: bottom 0.3s ease-in;
 
   @media (max-width: $mobile-width) {
-    width: calc(100vw - #{$button-width} / 2);
+    width: 100vw;
     bottom: calc(100vh + #{$button-width});
-    right: calc(#{$button-width} / 2);
+    right: 0;
   }
 
   &.open {

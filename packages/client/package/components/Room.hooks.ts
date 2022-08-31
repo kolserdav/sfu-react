@@ -14,13 +14,20 @@ import WS from '../core/ws';
 import RTC from '../core/rtc';
 import { getCodec, log } from '../utils/lib';
 import { getWidthOfItem } from './Room.lib';
-import { LocaleServer, LocaleDefault, MessageType, SendMessageArgs } from '../types/interfaces';
+import {
+  LocaleServer,
+  LocaleDefault,
+  MessageType,
+  SendMessageArgs,
+  ErrorCode,
+} from '../types/interfaces';
 import { Stream } from '../types';
 import s from './Room.module.scss';
 import c from './ui/CloseButton.module.scss';
 import storeStreams, { changeStreams } from '../store/streams';
 import { START_DELAY, SPEAKER_LEVEL } from '../utils/constants';
 import { CookieName, getCookie } from '../utils/cookies';
+import storeError, { changeError } from '../store/error';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -295,6 +302,17 @@ export const useConnection = ({
       setMuteds(_muteds);
     };
 
+    const handleError = ({
+      data: { message, type: _type, code },
+    }: SendMessageArgs<MessageType.SET_ERROR>) => {
+      log(_type, message, message, true);
+      storeError.dispatch(
+        changeError({
+          error: code,
+        })
+      );
+    };
+
     const needReconnectHandler = ({
       data: { userId },
       connId,
@@ -485,10 +503,7 @@ export const useConnection = ({
           changeRoomUnitHandler(ws.getMessage(MessageType.SET_CHANGE_UNIT, rawMessage));
           break;
         case MessageType.SET_ERROR:
-          const {
-            data: { message, type: _type },
-          } = ws.getMessage(MessageType.SET_ERROR, rawMessage);
-          log(_type, message, message, true);
+          handleError(rawMessage);
           break;
         default:
       }
