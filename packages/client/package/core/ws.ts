@@ -60,7 +60,11 @@ class WS implements Types.WSInterface {
         log('warn', 'WS connection is', this.connection);
         resolve(1);
       }
-      this.connection.send(res);
+      try {
+        this.connection.send(res);
+      } catch (e) {
+        log('error', 'Error send message', e);
+      }
       resolve(0);
     });
 

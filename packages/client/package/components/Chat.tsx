@@ -14,7 +14,7 @@ import s from './Chat.module.scss';
 import SendIcon from '../Icons/Send';
 import IconButton from './ui/IconButton';
 import { useMesages, useDialog, useScrollToQuote } from './Chat.hooks';
-import { dateToTime, dateToString } from '../utils/lib';
+import { dateToTime, dateToString, isMobile } from '../utils/lib';
 import { prepareMessage } from './Chat.lib';
 import Dialog from './ui/Dialog';
 import { ChatProps } from '../types';
@@ -45,14 +45,15 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
   });
   const { dialog, messageContextWrapper } = useDialog();
   useScrollToQuote({ messages, count, containerRef });
+
   return (
     <div className={s.wrapper} style={{ background: theme?.colors.active }}>
       <div
         className={s.container}
         ref={containerRef}
-        style={{ height: `calc(90% - ${rows} * 1rem)` }}
+        style={{ height: `calc(90% - ${rows} * ${isMobile() ? '0.5rem' : '1rem'})` }}
       >
-        {messages &&
+        {messages.length ? (
           messages.map((item, index) => (
             <div className={s.message__wrapper} key={item.id} id={item.id.toString()}>
               {new Date(item.created).getDay() !==
@@ -83,7 +84,10 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
                 </div>
               </div>
             </div>
-          ))}
+          ))
+        ) : (
+          <div className={s.no__messages}>{locale.noMessages}</div>
+        )}
       </div>
       <div className={s.input}>
         <textarea

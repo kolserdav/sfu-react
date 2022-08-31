@@ -60,7 +60,7 @@ function Main({ room }: { room: Omit<RoomProps, 'locale' | 'roomId'> }) {
           theme={theme}
         />
       )}
-      <Alert open={alert.open} type={alert.type}>
+      <Alert open={alert.open} type={alert.type} theme={theme}>
         {alert.children}
       </Alert>
     </div>

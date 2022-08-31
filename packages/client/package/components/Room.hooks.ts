@@ -326,7 +326,7 @@ export const useConnection = ({
         id,
         st: _streams.map((i) => i.target),
       });
-      rtc.roomLength = roomUsers.length;
+      rtc.roomLength = roomUsers?.length || 0;
       setLenght(roomUsers.length);
       setMuteds(_muteds);
       roomUsers.forEach((item) => {

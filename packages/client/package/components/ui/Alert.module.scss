@@ -1,15 +1,14 @@
 @import '../../Main';
 
 $border-radius: 8px;
-$height: 50px;
 
 .wrapper {
   z-index: 101;
   position: fixed;
-  bottom: calc(#{$height} * -1);
+  bottom: calc((#{$button-width}) * -1);
   width: 300px;
-  right: 0;
-  height: $height;
+  right: calc(#{$button-width} / 2 + 1rem);
+  height: $button-width;
   display: flex;
   flex-direction: row;
   justify-content: space-around;
@@ -20,15 +19,16 @@ $height: 50px;
   transition: bottom 0.3s ease-in;
 
   @media (max-width: $mobile-width) {
-    width: 100%;
-    bottom: calc(100vh + #{$height});
+    width: calc(100vw - #{$button-width} / 2);
+    bottom: calc(100vh + #{$button-width});
+    right: calc(#{$button-width} / 2);
   }
 
   &.open {
-    bottom: 0;
+    bottom: calc(#{$button-width} / 2);
     transition: bottom 0.3s ease-out;
     @media (max-width: $mobile-width) {
-      bottom: calc(100vh - #{$height});
+      bottom: calc(100vh - #{$button-width} - #{$button-width} / 2);
     }
   }
 }

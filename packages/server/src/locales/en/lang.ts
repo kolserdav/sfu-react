@@ -27,6 +27,7 @@ const lang: LocaleServer = {
     erorGetSound: 'Share scren without sound',
     errorGetCamera: 'Error get camera access',
     errorGetDisplay: 'Error get display media',
+    noMessages: 'No messages yet',
   },
 };
 

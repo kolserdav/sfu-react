@@ -100,3 +100,11 @@ export function getUTCDate(date: string): Date {
   dt.setTime(dt.getTime() + dt.getTimezoneOffset() * 60 * 1000);
   return dt;
 }
+
+export const isMobile = () => {
+  let result = false;
+  if (typeof document !== 'undefined') {
+    result = document.body.clientWidth <= 760;
+  }
+  return result;
+};

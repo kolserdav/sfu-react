@@ -112,6 +112,7 @@ export namespace Locale {
     errorGetDisplay: string;
     erorGetSound: string;
     edited: string;
+    noMessages: string;
   }
 }
 
