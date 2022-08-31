@@ -11,7 +11,7 @@ function Home() {
    */
   const createRoom = () => {
     // Do not use the symbol "_" in room address
-    router.push(`/room-${new Date().getTime()}?uid=1`);
+    router.push(`/room-${new Date().getTime()}?uid=${new Date().getTime()}`);
   };
 
   return (

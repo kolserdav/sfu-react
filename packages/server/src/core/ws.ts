@@ -163,9 +163,6 @@ class WS implements WSInterface {
         } else {
           log('warn', 'Send message without conected socket', {
             args,
-            k: Object.keys(this.sockets),
-            u: this.users,
-            r: this.rooms,
           });
           resolve(1);
         }

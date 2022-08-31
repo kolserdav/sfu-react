@@ -73,6 +73,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     }
     if (this.peerConnectionsServer[roomId][peerId]) {
       log('warn', 'Duplicate peer connection', opts);
+      this.closeVideoCall({ roomId, userId, target, connId });
     } else {
       log('info', 'Creating peer connection', opts);
     }

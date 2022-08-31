@@ -391,7 +391,10 @@ class RTC
     };
     log('info', '----> Call recipient has accepted our call', opts);
     const desc = new RTCSessionDescription(sdp);
-    if (!this.peerConnections[peerId]) {
+    if (
+      !this.peerConnections[peerId] ||
+      this.peerConnections[peerId]?.signalingState === 'stable'
+    ) {
       log('warn', 'Skiping set remote desc for answer', opts);
       return;
     }
