@@ -58,6 +58,7 @@ export const useConnection = ({
   const [muted, setMuted] = useState<boolean>(false);
   const [muteds, setMuteds] = useState<string[]>([]);
   const [video, setVideo] = useState<boolean>(true);
+  const [error, setError] = useState<keyof typeof ErrorCode>();
   const [connectionId, setConnectionId] = useState<string>('');
   const ws = useMemo(
     () => new WS({ shareScreen: localShareScreen, server, port }),
@@ -306,6 +307,7 @@ export const useConnection = ({
       data: { message, type: _type, code },
     }: SendMessageArgs<MessageType.SET_ERROR>) => {
       log(_type, message, message, true);
+      setError(code);
       storeError.dispatch(
         changeError({
           error: code,
@@ -549,7 +551,7 @@ export const useConnection = ({
    * Check room list
    */
   useEffect(() => {
-    if (!roomId) {
+    if (!roomId || ErrorCode.initial !== error) {
       return () => {
         //
       };
@@ -575,7 +577,7 @@ export const useConnection = ({
     return () => {
       clearTimeout(interval);
     };
-  }, [roomId, ws, lenght, streams, connectionId, id, shareScreen]);
+  }, [roomId, ws, lenght, streams, connectionId, id, shareScreen, error]);
 
   return {
     streams,
