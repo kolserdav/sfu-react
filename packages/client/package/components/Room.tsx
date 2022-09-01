@@ -129,7 +129,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
                 }
               }}
               onEmptied={(e) => {
-                log('warn', 'Empty video data', {
+                log('info', 'Empty video data', {
                   stream: item.stream,
                   id: item.target,
                   tracks: item.stream.getTracks(),
@@ -150,7 +150,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
                 });
               }}
               onAbort={(e) => {
-                log('warn', 'Abort video data', {
+                log('info', 'Abort video data', {
                   stream: item.stream,
                   id: item.target,
                   tracks: item.stream.getTracks(),

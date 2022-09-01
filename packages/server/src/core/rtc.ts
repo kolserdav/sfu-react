@@ -78,10 +78,10 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       this.peerConnectionsServer[roomId] = {};
     }
     if (this.peerConnectionsServer[roomId][peerId]) {
-      log('warn', 'Duplicate peer connection', opts);
+      log('info', 'Duplicate peer connection', opts);
       this.closeVideoCall({ roomId, userId, target, connId });
     } else {
-      log('info', 'Creating peer connection', opts);
+      log('log', 'Creating peer connection', opts);
     }
     this.peerConnectionsServer[roomId][peerId] = new werift.RTCPeerConnection({
       codecs: {
@@ -177,6 +177,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         }
       }
     );
+    const isChanged = false;
     this.peerConnectionsServer[roomId][peerId]!.ontrack = (e) => {
       const peer = peerId.split(delimiter);
       const isRoom = peer[2] === '0';
@@ -200,7 +201,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         }
         this.streams[roomId][peerId].push(stream.getTracks()[0]);
         const room = rooms[roomId];
-        if (room && isNew) {
+        if (room && isNew && !isChanged) {
           setTimeout(() => {
             room.forEach((item) => {
               ws.sendMessage({

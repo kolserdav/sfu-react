@@ -69,10 +69,10 @@ class RTC
   }) {
     const peerId = this.getPeerId(roomId, target, connId);
     if (this.peerConnections[peerId]) {
-      log('warn', 'Duplicate peer connection', { peerId });
+      log('info', 'Duplicate peer connection', { peerId, eventName });
       this.closeVideoCall({ target, userId, roomId, connId });
     } else {
-      log('info', 'Creating peer connection', { peerId });
+      log('log', 'Creating peer connection', { peerId });
     }
     this.createRTC({ roomId, target, userId, connId, iceServers });
     this.onAddTrack[peerId] = (addedUserId, stream) => {
@@ -102,6 +102,13 @@ class RTC
 
   public getPeerId(roomId: number | string, target: number | string, connId: string) {
     return `${roomId}${this.delimiter}${target || 0}${this.delimiter}${connId}`;
+  }
+
+  public checkPeerConnection({ target }: { target: string | number }) {
+    return Object.keys(this.peerConnections).find((item) => {
+      const peer = item.split(this.delimiter);
+      return peer[1] === target.toString();
+    });
   }
 
   public handleIceCandidate: RTCInterface['handleIceCandidate'] = ({
@@ -279,8 +286,10 @@ class RTC
     cb
   ) => {
     const peerId = this.getPeerId(roomId, target, connId);
+    const empStr = this.localStream || new MediaStream();
     if (!this.peerConnections[peerId]) {
       log('warn', 'Set media without peer connection', { peerId });
+      cb(1, empStr);
       return;
     }
     if (!this.localStream) {
@@ -291,7 +300,6 @@ class RTC
         })
         .catch((err) => {
           log('error', locale?.errorGetCamera || 'Error get self user media', err, true);
-          const empStr = new MediaStream();
           cb(1, empStr);
           return empStr;
         });
@@ -301,39 +309,64 @@ class RTC
           streamId: localStream.id,
         });
         localStream.getTracks().forEach((track) => {
+          const sender = this.peerConnections[peerId]!.getSenders().find(
+            (item) => item.track?.kind === track.kind
+          );
+          if (sender) {
+            this.peerConnections[peerId]!.removeTrack(sender);
+          }
           this.peerConnections[peerId]!.addTrack(track, localStream);
         });
         cb(0, localStream);
       } else {
+        let error = false;
         const videoStream = await navigator.mediaDevices
           .getDisplayMedia({ video: true })
           .catch((e) => {
-            log('error', locale?.errorGetDisplay || 'Error get display media', e, true);
-            const empStr = new MediaStream();
+            if (e.message === 'Permission denied') {
+              log('warn', locale?.getDisplayCancelled || 'Get display cancelled', e, true);
+            } else {
+              log('error', locale?.errorGetDisplay || 'Error get display media', e, true);
+            }
             cb(1, empStr);
+            error = true;
             return empStr;
           });
-        this.localStream = videoStream;
-        const audio = localStream.getTracks().find((item) => item.kind === 'audio');
-        if (audio) {
-          this.localStream.addTrack(audio);
-          this.localStream.getTracks().forEach((track) => {
-            if (this.localStream) {
-              this.peerConnections[peerId]!.addTrack(track, this.localStream);
-            } else {
-              log('warn', 'Add share screen track without local stream', this.localStream);
-            }
-          });
-        } else {
-          log('warn', locale?.erorGetSound || 'Share screen without sound', audio, true);
+        if (!error) {
+          this.localStream = videoStream;
+          const audio = localStream.getTracks().find((item) => item.kind === 'audio');
+          if (audio) {
+            this.localStream.addTrack(audio);
+            this.localStream.getTracks().forEach((track) => {
+              if (this.localStream) {
+                const sender = this.peerConnections[peerId]!.getSenders().find(
+                  (item) => item.track?.kind === track.kind
+                );
+                if (sender) {
+                  this.peerConnections[peerId]!.removeTrack(sender);
+                }
+                this.peerConnections[peerId]!.addTrack(track, this.localStream);
+              } else {
+                log('warn', 'Add share screen track without local stream', this.localStream);
+              }
+            });
+          } else {
+            log('warn', locale?.erorGetSound || 'Share screen without sound', audio, true);
+          }
+          cb(0, this.localStream);
         }
-        cb(0, this.localStream);
       }
     } else {
       log('info', '> Adding tracks to current local media stream', {
         streamId: this.localStream.id,
       });
       this.localStream.getTracks().forEach((track) => {
+        const sender = this.peerConnections[peerId]!.getSenders().find(
+          (item) => item.track?.kind === track.kind
+        );
+        if (sender) {
+          this.peerConnections[peerId]!.removeTrack(sender);
+        }
         this.peerConnections[peerId]!.addTrack(track);
       });
       cb(0, this.localStream);

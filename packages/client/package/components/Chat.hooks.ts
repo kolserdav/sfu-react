@@ -73,7 +73,7 @@ export const useMesages = ({
     SendMessageArgs<MessageType.SET_CHAT_MESSAGES>['data']['result']
   >([]);
 
-  const ws = useMemo(() => new WS({ server, port, shareScreen: false }), [port, server]);
+  const ws = useMemo(() => new WS({ server, port }), [port, server]);
 
   const changeText = (e: React.FormEvent<HTMLTextAreaElement>) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

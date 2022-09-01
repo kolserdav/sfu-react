@@ -29,6 +29,7 @@ const lang: LocaleServer = {
     errorGetDisplay: 'Error get display media',
     noMessages: 'No messages yet',
     loading: 'Loading ...',
+    getDisplayCancelled: 'Share display cancelled',
   },
 };
 

@@ -29,6 +29,7 @@ const lang: LocaleServer = {
     errorGetDisplay: 'Ошибка при попытке демонстрации экрана',
     noMessages: 'В настоящее время сообщения отсутствуют',
     loading: 'Загружается ...',
+    getDisplayCancelled: 'Демонстрация экрана отменена',
   },
 };
 

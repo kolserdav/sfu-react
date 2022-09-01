@@ -120,6 +120,7 @@ export namespace Locale {
     edited: string;
     noMessages: string;
     loading: string;
+    getDisplayCancelled: string;
   }
 }
 

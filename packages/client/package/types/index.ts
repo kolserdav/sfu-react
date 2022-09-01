@@ -18,15 +18,15 @@ interface GlobalProps {
   userId: string | number;
   name?: string;
   theme?: Theme;
+  iceServers?: RTCConfiguration['iceServers'];
 }
 
 export type RoomProps = GlobalProps & {
-  iceServers?: RTCConfiguration['iceServers'];
   locale: LocaleServer['client'];
   colors?: Colors;
 };
 
-export type HallProps = GlobalProps & {
+export type HallProps = Omit<GlobalProps, 'iceServers'> & {
   open: boolean;
   locale: LocaleServer['client'];
 };

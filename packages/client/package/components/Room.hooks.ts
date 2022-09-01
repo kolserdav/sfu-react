@@ -51,7 +51,6 @@ export const useConnection = ({
 }) => {
   const [streams, setStreams] = useState<Stream[]>([]);
   const [shareScreen, setShareScreen] = useState<boolean>(false);
-  const [localShareScreen, setLocalShareScreen] = useState<boolean>(false);
   const [selfStream, setSelfStream] = useState<Stream | null>(null);
   const [roomIsSaved, setRoomIsSaved] = useState<boolean>(false);
   const [lenght, setLenght] = useState<number>(streams.length);
@@ -60,16 +59,78 @@ export const useConnection = ({
   const [video, setVideo] = useState<boolean>(true);
   const [error, setError] = useState<keyof typeof ErrorCode>();
   const [connectionId, setConnectionId] = useState<string>('');
-  const ws = useMemo(
-    () => new WS({ shareScreen: localShareScreen, server, port }),
-    [localShareScreen, server, port]
-  );
+  const ws = useMemo(() => new WS({ server, port }), [server, port]);
   const rtc = useMemo(() => new RTC({ ws }), [ws]);
+  const addStream = useMemo(
+    () =>
+      ({
+        target,
+        stream,
+        connId,
+        name,
+        change = false,
+      }: {
+        target: string | number;
+        name: string;
+        stream: MediaStream;
+        connId: string;
+        change?: boolean;
+      }) => {
+        const _stream: Stream = {
+          target,
+          stream,
+          name,
+          connId,
+          ref: (node) => {
+            if (node) {
+              // eslint-disable-next-line no-param-reassign
+              node.srcObject = stream;
+            }
+          },
+        };
+        storeStreams.dispatch(changeStreams({ type: 'add', stream: _stream, change }));
+        if (!selfStream && target === ws.userId) {
+          setSelfStream(_stream);
+        }
+        log('info', 'Add stream', { _stream });
+      },
+    [selfStream, ws.userId]
+  );
   const screenShare = useMemo(
     () => (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-      setShareScreen(!shareScreen);
+      if (!roomId) {
+        return;
+      }
+      ws.shareScreen = !shareScreen;
+      const oldStream = rtc.localStream || new MediaStream();
+      rtc.localStream = null;
+      rtc.addTracks(
+        { userId: ws.userId, roomId, connId: connectionId, target: 0, locale },
+        (err, stream) => {
+          if (!err) {
+            addStream({
+              target: ws.userId,
+              stream,
+              connId: connectionId,
+              name: ws.name,
+              change: true,
+            });
+          } else {
+            ws.shareScreen = !ws.shareScreen;
+            rtc.localStream = stream;
+            addStream({
+              target: ws.userId,
+              stream: oldStream,
+              connId: connectionId,
+              name: ws.name,
+              change: true,
+            });
+          }
+          setShareScreen(ws.shareScreen);
+        }
+      );
     },
-    [shareScreen]
+    [addStream, connectionId, locale, roomId, rtc, ws, shareScreen]
   );
 
   const changeMuted = () => {
@@ -99,30 +160,6 @@ export const useConnection = ({
       rtc.localStream.getVideoTracks()[0].enabled = _video;
     }
   };
-
-  /**
-   * Change media source
-   */
-  useEffect(() => {
-    if (!roomId) {
-      return;
-    }
-    if (localShareScreen !== shareScreen) {
-      if (selfStream) {
-        rtc.localStream = null;
-        rtc.closeAllConnections();
-        ws.connection.close();
-        setLocalShareScreen(shareScreen);
-        setRoomIsSaved(false);
-        storeStreams.dispatch(changeStreams({ type: 'clean', stream: selfStream }));
-        rtc.roomLength = 0;
-        setLenght(0);
-        setSelfStream(null);
-      } else {
-        log('warn', 'Change media source. Self stream is:', selfStream);
-      }
-    }
-  }, [shareScreen, localShareScreen, roomId, rtc, ws, selfStream]);
 
   /**
    * Set streams from store
@@ -190,38 +227,6 @@ export const useConnection = ({
 
     rtc.lostStreamHandler = lostStreamHandler;
 
-    const addStream = ({
-      target,
-      stream,
-      connId,
-      name,
-      change = false,
-    }: {
-      target: string | number;
-      name: string;
-      stream: MediaStream;
-      connId: string;
-      change?: boolean;
-    }) => {
-      const _stream: Stream = {
-        target,
-        stream,
-        name,
-        connId,
-        ref: (node) => {
-          if (node) {
-            // eslint-disable-next-line no-param-reassign
-            node.srcObject = stream;
-          }
-        },
-      };
-      storeStreams.dispatch(changeStreams({ type: 'add', stream: _stream, change }));
-      if (!selfStream && target === ws.userId) {
-        setSelfStream(_stream);
-      }
-      log('info', 'Add stream', { _stream });
-    };
-
     /**
      * 'add' send server/main.js and 'added' listen on Room.hooks.ts
      */
@@ -253,7 +258,7 @@ export const useConnection = ({
               connId,
               onTrack: ({ addedUserId, stream }) => {
                 log('info', 'Added unit track', { addedUserId, s: stream.id, connId });
-                addStream({ target: addedUserId, stream, connId, name });
+                addStream({ target: addedUserId, stream, connId, name, change: true });
               },
               iceServers,
               eventName: 'back',
@@ -360,7 +365,7 @@ export const useConnection = ({
               userId: id,
               connId,
               onTrack: ({ addedUserId, stream }) => {
-                addStream({ target: addedUserId, stream, connId, name: item.name });
+                addStream({ target: addedUserId, stream, connId, name: item.name, change: true });
               },
               iceServers,
               eventName: 'check',
@@ -479,22 +484,9 @@ export const useConnection = ({
           });
           rtc.addTracks({ userId: ws.userId, roomId, connId, target: 0, locale }, (e, stream) => {
             if (!e) {
-              addStream({ target: ws.userId, stream, connId, name: ws.name });
-            } else if (localShareScreen) {
-              ws.shareScreen = false;
-              setLocalShareScreen(false);
-              setShareScreen(false);
-              ws.onOpen = () => {
-                ws.sendMessage({
-                  type: MessageType.GET_USER_ID,
-                  id,
-                  data: {
-                    userName,
-                    locale: getCookie(CookieName.lang) || LocaleDefault,
-                  },
-                  connId: '',
-                });
-              };
+              addStream({ target: ws.userId, stream, connId, name: ws.name, change: true });
+            } else {
+              log('warn', 'Stream not added', e);
             }
           });
           break;
@@ -541,10 +533,10 @@ export const useConnection = ({
     lenght,
     selfStream,
     iceServers,
-    localShareScreen,
     rtc.lostStreamHandler,
     locale,
     userName,
+    addStream,
   ]);
 
   /**

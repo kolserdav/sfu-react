@@ -23,7 +23,7 @@ export const useListeners = ({
   server: string;
   colors?: Colors;
 }) => {
-  const ws = useMemo(() => new WS({ port, server, shareScreen: false }), [port, server]);
+  const ws = useMemo(() => new WS({ port, server }), [port, server]);
   const savedTheme = getLocalStorage(LocalStorageName.THEME);
   const [currentTheme, setCurrentTheme] = useState<keyof Themes>(savedTheme || 'light');
   const _themes = useMemo(() => changeColors({ colors, themes }), [colors]);
