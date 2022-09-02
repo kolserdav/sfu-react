@@ -11,6 +11,7 @@
 import React, { useMemo, useRef } from 'react';
 import { log } from '../utils/lib';
 import s from './Room.module.scss';
+import g from '../Global.module.scss';
 import { RoomProps } from '../types/index';
 import {
   useConnection,
@@ -20,6 +21,7 @@ import {
   useVideoStarted,
   useAudioAnalyzer,
   useVolumeDialog,
+  useSettingsDialog,
 } from './Room.hooks';
 import {
   getRoomLink,
@@ -42,6 +44,7 @@ import VolumeHeightIcon from '../Icons/VolumeHeight';
 import VolumeMediumIcon from '../Icons/VolumeMedium';
 import VolumeLowIcon from '../Icons/VolumeLow';
 import Dialog from './ui/Dialog';
+import MenuIcon from '../Icons/Menu';
 
 function Room({ userId, iceServers, server, port, roomId, locale, name, theme }: RoomProps) {
   const container = useRef<HTMLDivElement>(null);
@@ -61,6 +64,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     ws,
     rtc,
     changeVideo,
+    isOwner,
   } = useConnection({
     id: userId,
     roomId,
@@ -93,6 +97,9 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     userId,
   });
   const volumeUserId = useMemo(() => getVolumeContext(dialog.context).userId, [dialog.context]);
+
+  const { dialogSettings, clickToSettings } = useSettingsDialog();
+
   return (
     <div
       className={s.wrapper}
@@ -208,6 +215,11 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
                     <VolumeLowIcon color={theme?.colors.white} />
                   )}
                 </IconButton>
+                {isOwner && item.target !== userId && (
+                  <IconButton onClick={clickToSettings(item.target)}>
+                    <MenuIcon color={theme?.colors.white} />
+                  </IconButton>
+                )}
               </div>
             )}
             <div className={s.muted}>
@@ -260,6 +272,30 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
           min="0"
           max="10"
         />
+      </Dialog>
+      <Dialog {...dialogSettings} theme={theme}>
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}
+        <div
+          tabIndex={-1}
+          role="button"
+          onClick={() => {
+            console.log(dialogSettings.context);
+          }}
+          className={g.dialog__item}
+        >
+          {locale.mute}
+        </div>
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}
+        <div
+          tabIndex={-1}
+          role="button"
+          onClick={() => {
+            console.log(dialogSettings.context);
+          }}
+          className={g.dialog__item}
+        >
+          {locale.ban}
+        </div>
       </Dialog>
     </div>
   );

@@ -121,6 +121,10 @@ export namespace Locale {
     noMessages: string;
     loading: string;
     getDisplayCancelled: string;
+    mute: string;
+    unmute: string;
+    ban: string;
+    unban: string;
   }
 }
 
@@ -189,7 +193,9 @@ export namespace DataTypes {
       args: Prisma.MessageDeleteArgs;
       userId: string | number;
     };
-    export type SetRoom = undefined;
+    export type SetRoom = {
+      isOwner: boolean;
+    };
     export type SetError = {
       message: string;
       // eslint-disable-next-line no-use-before-define

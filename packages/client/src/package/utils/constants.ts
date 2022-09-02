@@ -62,6 +62,10 @@ export const DIALOG_MESSAGE_DIMENSION = {
   width: 150,
   height: 100,
 };
+export const DIALOG_SETTINGS_DIMENSION = {
+  width: 100,
+  height: 50,
+};
 export const SHORT_MESS_LENGTH = 30;
 export const FIRST_MESSAGE_INDENT = 20;
 export const FOLOW_QUOTE_STYLE = 'border: 3px solid lightblue';

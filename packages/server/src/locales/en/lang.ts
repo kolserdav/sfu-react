@@ -30,6 +30,10 @@ const lang: LocaleServer = {
     noMessages: 'No messages yet',
     loading: 'Loading ...',
     getDisplayCancelled: 'Share display cancelled',
+    mute: 'Mute',
+    unmute: 'Unmute',
+    ban: 'Ban',
+    unban: 'Unban',
   },
 };
 

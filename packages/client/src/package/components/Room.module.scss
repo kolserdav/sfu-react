@@ -64,6 +64,8 @@
   position: absolute;
   top: 0;
   right: 0;
+  display: flex;
+  flex-direction: row;
 }
 
 .video__volume__input {

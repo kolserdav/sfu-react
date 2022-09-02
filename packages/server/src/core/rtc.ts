@@ -496,7 +496,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     userId: number | string;
     roomId: number | string;
     onRoomOpen?: OnRoomOpen;
-  }): Promise<1 | 0> {
+  }): Promise<{ error: 1 | 0; isOwner: boolean }> {
     const room = await db.roomFindFirst({
       where: {
         id: roomId.toString(),
@@ -535,7 +535,10 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
             this.rooms[roomId] = [];
             this.muteds[roomId] = [];
           }
-          return 1;
+          return {
+            error: 1,
+            isOwner,
+          };
         }
         await db.roomUpdate({
           where: {
@@ -633,7 +636,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     if (isOwner && onRoomOpen) {
       onRoomOpen({ roomId, ownerId: userId });
     }
-    return 0;
+    return { error: 0, isOwner };
   }
 
   public async handleGetRoomMessage({
@@ -655,7 +658,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       id,
       connId,
     } = message;
-    const error = await this.addUserToRoom({
+    const { error, isOwner } = await this.addUserToRoom({
       roomId: id,
       userId: uid,
       onRoomOpen,
@@ -713,7 +716,9 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     this.ws.sendMessage({
       type: MessageType.SET_ROOM,
       id: uid,
-      data: undefined,
+      data: {
+        isOwner,
+      },
       connId,
     });
   }

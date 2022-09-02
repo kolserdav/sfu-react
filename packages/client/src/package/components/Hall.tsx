@@ -47,6 +47,15 @@ function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) 
     setOpenSettings(!openSettings);
   };
 
+  /**
+   * Listen close
+   */
+  useEffect(() => {
+    if (openSettings && !open) {
+      setOpenSettings(false);
+    }
+  }, [open, openSettings]);
+
   useEffect(() => {
     const cleanSubs = storeStreams.subscribe(() => {
       const state = storeStreams.getState();

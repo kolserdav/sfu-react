@@ -31,6 +31,7 @@ import {
   DIALOG_DEFAULT,
   DIALOG_VOLUME_DIMENSION,
   VOLUME_MIN,
+  DIALOG_SETTINGS_DIMENSION,
 } from '../utils/constants';
 import { CookieName, getCookie } from '../utils/cookies';
 import storeError, { changeError } from '../store/error';
@@ -65,6 +66,7 @@ export const useConnection = ({
   const [muted, setMuted] = useState<boolean>(false);
   const [muteds, setMuteds] = useState<string[]>([]);
   const [video, setVideo] = useState<boolean>(true);
+  const [isOwner, setIsOwner] = useState<boolean>(false);
   const [error, setError] = useState<keyof typeof ErrorCode>();
   const [connectionId, setConnectionId] = useState<string>('');
   const ws = useMemo(() => new WS({ server, port, protocol: 'room' }), [server, port]);
@@ -339,6 +341,32 @@ export const useConnection = ({
       });
     };
 
+    const setRoomHandler = ({
+      connId,
+      data: { isOwner: _isOwner },
+    }: SendMessageArgs<MessageType.SET_ROOM>) => {
+      setRoomIsSaved(true);
+      setIsOwner(_isOwner);
+      rtc.createPeerConnection({
+        userId: ws.userId,
+        target: 0,
+        connId,
+        roomId,
+        onTrack: ({ addedUserId, stream }) => {
+          log('info', '-> Added local stream to room', { addedUserId, id });
+        },
+        iceServers,
+        eventName: 'first',
+      });
+      rtc.addTracks({ userId: ws.userId, roomId, connId, target: 0, locale }, (e, stream) => {
+        if (!e) {
+          addStream({ target: ws.userId, stream, connId, name: ws.name, change: true });
+        } else {
+          log('warn', 'Stream not added', e);
+        }
+      });
+    };
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const changeRoomGuestsHandler = async ({
       rawMessage,
@@ -478,25 +506,7 @@ export const useConnection = ({
           rtc.handleVideoAnswerMsg(rawMessage);
           break;
         case MessageType.SET_ROOM:
-          setRoomIsSaved(true);
-          rtc.createPeerConnection({
-            userId: ws.userId,
-            target: 0,
-            connId,
-            roomId,
-            onTrack: ({ addedUserId, stream }) => {
-              log('info', '-> Added local stream to room', { addedUserId, id });
-            },
-            iceServers,
-            eventName: 'first',
-          });
-          rtc.addTracks({ userId: ws.userId, roomId, connId, target: 0, locale }, (e, stream) => {
-            if (!e) {
-              addStream({ target: ws.userId, stream, connId, name: ws.name, change: true });
-            } else {
-              log('warn', 'Stream not added', e);
-            }
-          });
+          setRoomHandler(rawMessage);
           break;
         case MessageType.GET_NEED_RECONNECT:
           needReconnectHandler(rawMessage);
@@ -592,6 +602,7 @@ export const useConnection = ({
     muteds,
     video,
     changeVideo,
+    isOwner,
   };
 };
 
@@ -1007,4 +1018,51 @@ export const useVolumeDialog = ({
   }, [dialog]);
 
   return { dialog, clickToVolume, changeVolumeWrapper, volumes };
+};
+
+export const useSettingsDialog = () => {
+  const [dialogSettings, setDialogSettings] =
+    useState<Omit<DialogProps, 'children'>>(DIALOG_DEFAULT);
+
+  const clickToSettings =
+    (targetId: string | number) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      const { clientX: _clientX, clientY: _clientY } = ev;
+      const { width, height } = DIALOG_SETTINGS_DIMENSION;
+      const { clientX, clientY } = getDialogPosition({ _clientX, _clientY, width, height });
+      setTimeout(() => {
+        setDialogSettings({
+          open: true,
+          clientX,
+          clientY,
+          context: createVolumeContext({ userId: targetId }),
+          width,
+          height,
+        });
+      }, 0);
+    };
+
+  /**
+   * Listen click document
+   */
+  useEffect(() => {
+    const cleanStore = storeClickDocument.subscribe(() => {
+      const {
+        clickDocument: { clientX, clientY },
+      } = storeClickDocument.getState();
+      setDialogSettings({
+        open: false,
+        clientY: dialogSettings.clientY,
+        clientX: dialogSettings.clientX,
+        width: 0,
+        height: 0,
+        context: DIALOG_DEFAULT.context,
+        secure: false,
+      });
+    });
+    return () => {
+      cleanStore();
+    };
+  }, [dialogSettings]);
+
+  return { dialogSettings, clickToSettings };
 };

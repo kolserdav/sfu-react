@@ -11,6 +11,7 @@
 import React, { useRef } from 'react';
 import clsx from 'clsx';
 import s from './Chat.module.scss';
+import g from '../Global.module.scss';
 import SendIcon from '../Icons/Send';
 import IconButton from './ui/IconButton';
 import { useMesages, useDialog, useScrollToQuote } from './Chat.hooks';
@@ -112,7 +113,7 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
             tabIndex={-1}
             role="button"
             onClick={clickQuoteWrapper(dialog.context)}
-            className={s.message__dialog__item}
+            className={g.dialog__item}
           >
             {locale.quote}
           </div>
@@ -123,7 +124,7 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
               tabIndex={-2}
               role="button"
               onClick={clickEditWrapper(dialog.context)}
-              className={s.message__dialog__item}
+              className={g.dialog__item}
             >
               {locale.edit}
             </div>
@@ -134,7 +135,7 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
               tabIndex={-3}
               role="button"
               onClick={clickDeleteWrapper(dialog.context)}
-              className={s.message__dialog__item}
+              className={g.dialog__item}
             >
               {locale.delete}
             </div>
