@@ -237,10 +237,6 @@ async function reloadPage(page) {
   await page.waitForSelector('video');
 }
 
-/**
- *
- * @returns {Promise<1 | 0>}
- */
 const startServer = async () => {
   log('log', 'Run command:', '"npm run prod:migrate"', true);
   /**
@@ -278,22 +274,24 @@ const startServer = async () => {
       resolve(0);
     }, 4000);
   });
-  log('log', 'Run command:', '"npm run start:client"', true);
-  res = spawn('npm', ['run', 'start:client'], {
-    env,
-  });
-  res.stdout.on('data', (d) => {
-    console.log(d.toString());
-  });
-  res.stderr.on('data', (d) => {
-    const data = d.toString();
-    console.log(data);
-  });
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(0);
-    }, 4000);
-  });
+  if (process.env.SSR) {
+    log('log', 'Run command:', '"npm run start:client"', true);
+    res = spawn('npm', ['run', 'start:client'], {
+      env,
+    });
+    res.stdout.on('data', (d) => {
+      console.log(d.toString());
+    });
+    res.stderr.on('data', (d) => {
+      const data = d.toString();
+      console.log(data);
+    });
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(0);
+      }, 4000);
+    });
+  }
 };
 
 (async () => {

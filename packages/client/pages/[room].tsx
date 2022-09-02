@@ -1,6 +1,6 @@
 import React from 'react';
 import { useRouter, NextRouter } from 'next/router';
-import Main from '../package/Main';
+import Main from '../src/package/Main';
 
 const checkRouterIsLoad = (router: NextRouter) => !/\]/.test(router.asPath);
 

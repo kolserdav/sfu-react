@@ -1,16 +1,37 @@
 {
   "name": "client",
   "version": "0.1.0",
-  "private": true,
-  "source": "./package/Main.tsx",
-  "main": "./dist/Main.js",
-  "module": "./dist/Main.esm.js",
-  "types": "./dist/Main.d.ts",
+  "private": false,
+  "source": "src/package/components/Room.tsx",
+  "main": "src/dist/Room.cjs",
+  "module": "src/dist/Room.esm.js",
+  "types": "src/dist/index.d.ts",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "compile": "next lint && webpack --env NODE_ENV=production",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "react-scripts start",
+    "compile": "webpack --env NODE_ENV=production",
+    "build": "cross-env CI=false react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "next:dev": "next dev",
+    "next:build": "next build",
+    "next:start": "next start"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }

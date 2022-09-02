@@ -22,6 +22,11 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
+      - name: nginx
+        run: |
+          sudo apt-get install nginx
+          sudo cp docs/resources/nginx.client.conf /etc/nginx/conf.d/app.conf
+          sudo systemctl restart nginx
       - name: application
         run: |
           docker-compose -f docker-compose.ci.yml up -d
@@ -36,5 +41,6 @@ jobs:
       - name: test
         env:
           CI: true
+          SSR: false
         run: |
           npm run test

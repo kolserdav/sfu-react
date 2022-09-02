@@ -33,7 +33,7 @@ import CameraOutlineOffIcon from '../Icons/CameraOutlineOffIcon';
 import CameraOutlineIcon from '../Icons/CameraOutlineIcon';
 import CopyIcon from '../Icons/CopyIcon';
 import VolumeHeightIcon from '../Icons/VolumeHeight';
-import Dialog from '../components/ui/Dialog';
+import Dialog from './ui/Dialog';
 
 function Room({ userId, iceServers, server, port, roomId, locale, name, theme }: RoomProps) {
   const container = useRef<HTMLDivElement>(null);
