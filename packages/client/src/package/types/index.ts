@@ -63,3 +63,5 @@ export interface DialogProps {
 export type ThemeType = 'light' | 'dark';
 
 export type ClickPosition = { clientX: number; clientY: number };
+
+export type Volumes = Record<string, number>;

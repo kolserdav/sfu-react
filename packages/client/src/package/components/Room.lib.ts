@@ -107,3 +107,11 @@ export const copyLink = (link: string) => {
 
 export const supportDisplayMedia = () =>
   typeof navigator.mediaDevices.getDisplayMedia !== 'undefined';
+
+export const createVolumeContext = ({ userId }: { userId: string | number }) =>
+  JSON.stringify({
+    userId,
+  });
+
+export const getVolumeContext = (context: string): { userId: string | number } =>
+  JSON.parse(context);

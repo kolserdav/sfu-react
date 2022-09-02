@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import { ThemeType } from '../types';
+import { ThemeType, Volumes } from '../types';
 import { log } from './lib';
 
 export enum LocalStorageName {
@@ -16,12 +16,16 @@ export enum LocalStorageName {
   THEME = 'THEME',
   // eslint-disable-next-line no-unused-vars
   HALL_OPEN = 'HALL_OPEN',
+  // eslint-disable-next-line no-unused-vars
+  VOLUMES = 'VOLUMES',
 }
 
 type LocalStorageValue<T extends keyof typeof LocalStorageName> = T extends LocalStorageName.THEME
   ? ThemeType
   : T extends LocalStorageName.HALL_OPEN
   ? boolean
+  : T extends LocalStorageName.VOLUMES
+  ? Record<string, Volumes>
   : never;
 
 export function getLocalStorage<T extends keyof typeof LocalStorageName>(

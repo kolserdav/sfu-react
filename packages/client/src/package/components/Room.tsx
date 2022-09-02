@@ -21,7 +21,13 @@ import {
   useAudioAnalyzer,
   useVolumeDialog,
 } from './Room.hooks';
-import { getRoomLink, onClickVideo, copyLink, supportDisplayMedia } from './Room.lib';
+import {
+  getRoomLink,
+  onClickVideo,
+  copyLink,
+  supportDisplayMedia,
+  getVolumeContext,
+} from './Room.lib';
 import { DEFAULT_USER_NAME } from '../utils/constants';
 import CloseButton from './ui/CloseButton';
 import ScreenIcon from '../Icons/ScreeenIcon';
@@ -33,6 +39,8 @@ import CameraOutlineOffIcon from '../Icons/CameraOutlineOffIcon';
 import CameraOutlineIcon from '../Icons/CameraOutlineIcon';
 import CopyIcon from '../Icons/CopyIcon';
 import VolumeHeightIcon from '../Icons/VolumeHeight';
+import VolumeMediumIcon from '../Icons/VolumeMedium';
+import VolumeLowIcon from '../Icons/VolumeLow';
 import Dialog from './ui/Dialog';
 
 function Room({ userId, iceServers, server, port, roomId, locale, name, theme }: RoomProps) {
@@ -79,8 +87,12 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     lostStreamHandler,
   });
   const displayMediaSupported = useMemo(() => supportDisplayMedia(), []);
-  const { dialog, clickToVolume } = useVolumeDialog();
-
+  const { dialog, clickToVolume, changeVolumeWrapper, volumes } = useVolumeDialog({
+    roomId,
+    container,
+    userId,
+  });
+  const volumeUserId = useMemo(() => getVolumeContext(dialog.context).userId, [dialog.context]);
   return (
     <div
       className={s.wrapper}
@@ -188,7 +200,13 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
             {item.target !== userId && (
               <div className={s.video__actions}>
                 <IconButton onClick={clickToVolume(item.target)}>
-                  <VolumeHeightIcon color={theme?.colors.white} />
+                  {volumes[item.target] === undefined || volumes[item.target] >= 8 ? (
+                    <VolumeHeightIcon color={theme?.colors.white} />
+                  ) : volumes[item.target] >= 3 ? (
+                    <VolumeMediumIcon color={theme?.colors.white} />
+                  ) : (
+                    <VolumeLowIcon color={theme?.colors.white} />
+                  )}
                 </IconButton>
               </div>
             )}
@@ -235,11 +253,9 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
       </div>
       <Dialog {...dialog} theme={theme}>
         <input
-          onChange={(e) => {
-            console.log(e.target.value);
-            const { current } = container;
-          }}
+          onChange={changeVolumeWrapper(volumeUserId)}
           className={s.video__volume__input}
+          value={volumes[volumeUserId] || 10}
           type="range"
           min="0"
           max="10"

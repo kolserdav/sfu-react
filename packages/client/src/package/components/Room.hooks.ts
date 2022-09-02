@@ -13,7 +13,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import WS from '../core/ws';
 import RTC from '../core/rtc';
 import { getCodec, getDialogPosition, log, isClickByDialog } from '../utils/lib';
-import { getWidthOfItem } from './Room.lib';
+import { createVolumeContext, getWidthOfItem } from './Room.lib';
 import {
   LocaleServer,
   LocaleDefault,
@@ -21,7 +21,7 @@ import {
   SendMessageArgs,
   ErrorCode,
 } from '../types/interfaces';
-import { Stream, DialogProps } from '../types';
+import { Stream, DialogProps, Volumes } from '../types';
 import s from './Room.module.scss';
 import c from './ui/CloseButton.module.scss';
 import storeStreams, { changeStreams } from '../store/streams';
@@ -30,10 +30,12 @@ import {
   SPEAKER_LEVEL,
   DIALOG_DEFAULT,
   DIALOG_VOLUME_DIMENSION,
+  VOLUME_MIN,
 } from '../utils/constants';
 import { CookieName, getCookie } from '../utils/cookies';
 import storeError, { changeError } from '../store/error';
 import storeClickDocument from '../store/clickDocument';
+import { getLocalStorage, LocalStorageName, setLocalStorage } from '../utils/localStorage';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -913,11 +915,56 @@ export const useAudioAnalyzer = () => {
   return { analyzeSoundLevel, createAudioAnalyzer, cleanAudioAnalyzer, speaker };
 };
 
-export const useVolumeDialog = () => {
+export const useVolumeDialog = ({
+  roomId,
+  container,
+  userId,
+}: {
+  roomId: string | number;
+  container: React.MutableRefObject<HTMLDivElement | null>;
+  userId: string | number;
+}) => {
   const [dialog, setDialog] = useState<Omit<DialogProps, 'children'>>(DIALOG_DEFAULT);
+  const savedVolumes = useMemo(() => {
+    const ls = getLocalStorage(LocalStorageName.VOLUMES);
+    if (!ls) {
+      return null;
+    }
+    return ls[roomId] || null;
+  }, [roomId]);
+  const [volumes, setVolumes] = useState<Volumes>(savedVolumes || {});
+
+  /**
+   * Change volume
+   * TODO test it
+   */
+  useMemo(() => {
+    const { current } = container;
+    if (current) {
+      const videos = current.querySelectorAll('video');
+      for (let i = 0; videos[i]; i++) {
+        const video = videos[i];
+        if (volumes[video.id] && video.id !== userId) {
+          video.volume = volumes[video.id] / 10;
+        }
+      }
+    }
+  }, [volumes, container, userId]);
+
+  const changeVolumeWrapper =
+    (targetId: number | string) => (ev: React.ChangeEvent<HTMLInputElement>) => {
+      const { value } = ev.target;
+      const _volumes = { ...volumes };
+      const volumeNum = parseInt(value, 10);
+      _volumes[targetId] = volumeNum >= VOLUME_MIN ? volumeNum : VOLUME_MIN;
+      setVolumes(_volumes);
+      setLocalStorage(LocalStorageName.VOLUMES, {
+        [roomId]: _volumes,
+      });
+    };
 
   const clickToVolume =
-    (userId: string | number) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    (targetId: string | number) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       const { clientX: _clientX, clientY: _clientY } = ev;
       const { width, height } = DIALOG_VOLUME_DIMENSION;
       const { clientX, clientY } = getDialogPosition({ _clientX, _clientY, width, height });
@@ -926,9 +973,7 @@ export const useVolumeDialog = () => {
           open: true,
           clientX,
           clientY,
-          context: JSON.stringify({
-            userId,
-          }),
+          context: createVolumeContext({ userId: targetId }),
           width,
           height,
         });
@@ -961,5 +1006,5 @@ export const useVolumeDialog = () => {
     };
   }, [dialog]);
 
-  return { dialog, clickToVolume };
+  return { dialog, clickToVolume, changeVolumeWrapper, volumes };
 };
