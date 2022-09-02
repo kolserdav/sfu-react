@@ -12,7 +12,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import WS from '../core/ws';
 import RTC from '../core/rtc';
-import { getCodec, log } from '../utils/lib';
+import { getCodec, getDialogPosition, log, isClickByDialog } from '../utils/lib';
 import { getWidthOfItem } from './Room.lib';
 import {
   LocaleServer,
@@ -21,13 +21,19 @@ import {
   SendMessageArgs,
   ErrorCode,
 } from '../types/interfaces';
-import { Stream } from '../types';
+import { Stream, DialogProps } from '../types';
 import s from './Room.module.scss';
 import c from './ui/CloseButton.module.scss';
 import storeStreams, { changeStreams } from '../store/streams';
-import { START_DELAY, SPEAKER_LEVEL } from '../utils/constants';
+import {
+  START_DELAY,
+  SPEAKER_LEVEL,
+  DIALOG_DEFAULT,
+  DIALOG_VOLUME_DIMENSION,
+} from '../utils/constants';
 import { CookieName, getCookie } from '../utils/cookies';
 import storeError, { changeError } from '../store/error';
+import storeClickDocument from '../store/clickDocument';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -628,8 +634,6 @@ export const useVideoDimensions = ({
                         : Math.floor(clientWidth / coeff);
                     _width = Math.floor(_height * coeff);
                   }
-                  target.setAttribute('width', _width.toString());
-                  target.setAttribute('height', _height.toString());
                 } else {
                   _width = Math.floor(width * coeff);
                   if (isFull) {
@@ -639,14 +643,29 @@ export const useVideoDimensions = ({
                         : Math.floor(clientHeight * coeff);
                     _height = Math.floor(_width / coeff);
                   }
-                  target.setAttribute('width', _width.toString());
-                  target.setAttribute('height', _height.toString());
+                }
+                target.setAttribute('width', _width.toString());
+                target.setAttribute('height', _height.toString());
+                if (isFull) {
+                  target.parentElement?.setAttribute('style', `width: 100%;height: 100%`);
+                  const { nextElementSibling: actions } = target;
+                  const isActions =
+                    actions?.getAttribute('class')?.indexOf(s.video__actions) !== -1;
+                  if (isActions) {
+                    // 10px - padding of IconButton, 1rem - right of CloseButton
+                    actions?.setAttribute('style', 'top: 40px; right: calc(1rem - 10px);');
+                  }
+                } else {
+                  target.parentElement?.setAttribute(
+                    'style',
+                    `width: ${_width}px;height: ${_height}px;`
+                  );
                 }
                 target.parentElement?.parentElement?.setAttribute(
                   'style',
                   `grid-template-columns: repeat(${cols}, auto);
                   grid-template-rows: repeat(${rows}, auto);
-                  transition: width 0.3s ease-in`
+                  transition: width 0.3s ease-in;`
                 );
                 item
                   .applyConstraints(coeff < 1 ? { height: _height } : { width: _width })
@@ -892,4 +911,55 @@ export const useAudioAnalyzer = () => {
   }, []);
 
   return { analyzeSoundLevel, createAudioAnalyzer, cleanAudioAnalyzer, speaker };
+};
+
+export const useVolumeDialog = () => {
+  const [dialog, setDialog] = useState<Omit<DialogProps, 'children'>>(DIALOG_DEFAULT);
+
+  const clickToVolume =
+    (userId: string | number) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      const { clientX: _clientX, clientY: _clientY } = ev;
+      const { width, height } = DIALOG_VOLUME_DIMENSION;
+      const { clientX, clientY } = getDialogPosition({ _clientX, _clientY, width, height });
+      setTimeout(() => {
+        setDialog({
+          open: true,
+          clientX,
+          clientY,
+          context: JSON.stringify({
+            userId,
+          }),
+          width,
+          height,
+        });
+      }, 0);
+    };
+
+  /**
+   * Listen click document
+   */
+  useEffect(() => {
+    const cleanStore = storeClickDocument.subscribe(() => {
+      const {
+        clickDocument: { clientX, clientY },
+      } = storeClickDocument.getState();
+      const isTarget = isClickByDialog({ clientX, clientY, dialog });
+      if (!isTarget) {
+        setDialog({
+          open: false,
+          clientY: dialog.clientY,
+          clientX: dialog.clientX,
+          width: 0,
+          height: 0,
+          context: DIALOG_DEFAULT.context,
+          secure: false,
+        });
+      }
+    });
+    return () => {
+      cleanStore();
+    };
+  }, [dialog]);
+
+  return { dialog, clickToVolume };
 };

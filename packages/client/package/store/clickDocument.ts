@@ -1,5 +1,6 @@
 import { createSlice, configureStore } from '@reduxjs/toolkit';
 import { ClickPosition } from '../types';
+import { CLICK_POSITION_DEFAULT } from '../utils/constants';
 
 interface State {
   clickDocument: ClickPosition;
@@ -12,10 +13,7 @@ interface Action {
 const slice = createSlice({
   name: 'clickDocument',
   initialState: {
-    clickDocument: {
-      clientX: 0,
-      clientY: 0,
-    },
+    clickDocument: CLICK_POSITION_DEFAULT,
   } as State,
   reducers: {
     changeClickDocument: (state: State, action: Action) => {

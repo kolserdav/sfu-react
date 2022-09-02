@@ -1,9 +1,8 @@
 import React from 'react';
-import clsx from 'clsx';
 import s from './Dialog.module.scss';
 import { DialogProps } from '../../types';
 
-function Dialog({ open, children, clientY, clientX, theme }: DialogProps) {
+function Dialog({ open, children, clientY, clientX, theme, width, height }: DialogProps) {
   return (
     <div
       style={{
@@ -11,8 +10,10 @@ function Dialog({ open, children, clientY, clientX, theme }: DialogProps) {
         color: theme?.colors.paper,
         top: clientY,
         left: clientX,
+        width: open ? `${width}px` : 0,
+        height: open ? `${height}px` : 0,
       }}
-      className={clsx(s.wrapper, open ? s.open : '')}
+      className={s.wrapper}
     >
       {children}
     </div>

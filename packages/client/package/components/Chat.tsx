@@ -33,7 +33,6 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
     clickQuoteWrapper,
     clickEditWrapper,
     clickDeleteWrapper,
-    count,
     isEdit,
     error,
   } = useMesages({
@@ -45,7 +44,7 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
     inputRef,
   });
   const { dialog, messageContextWrapper } = useDialog();
-  useScrollToQuote({ messages, count, containerRef });
+  useScrollToQuote({ messages, containerRef });
 
   return (
     <div className={s.wrapper} style={{ background: theme?.colors.active }}>

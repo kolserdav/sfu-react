@@ -10,7 +10,8 @@
  ******************************************************************************************/
 import { format } from 'date-fns';
 import { LOG_LEVEL, CODECS } from './constants';
-import { LocaleDefault, LocaleValue, LogLevel } from '../types/interfaces';
+import { LogLevel } from '../types/interfaces';
+import { DialogProps } from '../types';
 import storeAlert, { changeAlert } from '../store/alert';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const log = (type: keyof typeof LogLevel, text: string, data?: any, forUser = false) => {
@@ -107,4 +108,35 @@ export const isMobile = () => {
     result = document.body.clientWidth <= 760;
   }
   return result;
+};
+
+export const getDialogPosition = ({
+  _clientX,
+  _clientY,
+  width,
+  height,
+}: {
+  _clientX: number;
+  _clientY: number;
+  width: number;
+  height: number;
+}) => {
+  const { clientWidth, clientHeight } = document.body;
+  const clientX = clientWidth / 2 < _clientX ? _clientX - width : _clientX;
+  const clientY = clientHeight / 2 < _clientY ? _clientY - height : _clientY;
+  return { clientX, clientY };
+};
+
+export const isClickByDialog = ({
+  clientY,
+  clientX,
+  dialog,
+}: {
+  clientX: number;
+  clientY: number;
+  dialog: Omit<DialogProps, 'children'>;
+}) => {
+  const isX = clientX > dialog.clientX && clientX < dialog.clientX + dialog.width;
+  const isY = clientY > dialog.clientY && clientY < dialog.clientY + dialog.height;
+  return isX && isY;
 };

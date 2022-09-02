@@ -45,6 +45,7 @@
   min-height: 0;
   min-width: 0;
   transition: width 0.3s ease-in;
+  margin: auto;
 }
 
 .video__fixed {
@@ -57,6 +58,16 @@
   width: 100vw;
   height: 100vh;
   background-color: rgb(0 0 0 / 95%);
+}
+
+.video__actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.video__volume__input {
+  transform: rotate(-90deg);
 }
 
 .actions {

@@ -19,6 +19,7 @@ import {
   usePressEscape,
   useVideoStarted,
   useAudioAnalyzer,
+  useVolumeDialog,
 } from './Room.hooks';
 import { getRoomLink, onClickVideo, copyLink, supportDisplayMedia } from './Room.lib';
 import { DEFAULT_USER_NAME } from '../utils/constants';
@@ -31,6 +32,8 @@ import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
 import CameraOutlineOffIcon from '../Icons/CameraOutlineOffIcon';
 import CameraOutlineIcon from '../Icons/CameraOutlineIcon';
 import CopyIcon from '../Icons/CopyIcon';
+import VolumeHeightIcon from '../Icons/VolumeHeight';
+import Dialog from '../components/ui/Dialog';
 
 function Room({ userId, iceServers, server, port, roomId, locale, name, theme }: RoomProps) {
   const container = useRef<HTMLDivElement>(null);
@@ -76,6 +79,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     lostStreamHandler,
   });
   const displayMediaSupported = useMemo(() => supportDisplayMedia(), []);
+  const { dialog, clickToVolume } = useVolumeDialog();
 
   return (
     <div
@@ -180,8 +184,18 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
                 createAudioAnalyzer(item);
               }}
             />
+            {/** actions is strong third child */}
+            {item.target !== userId && (
+              <div className={s.video__actions}>
+                <IconButton onClick={clickToVolume(item.target)}>
+                  <VolumeHeightIcon color={theme?.colors.white} />
+                </IconButton>
+              </div>
+            )}
             <div className={s.muted}>
-              {muteds.indexOf(item.target.toString()) !== -1 && <MicrophoneOffIcon color="#fff" />}
+              {muteds.indexOf(item.target.toString()) !== -1 && (
+                <MicrophoneOffIcon color={theme?.colors.white} />
+              )}
             </div>
           </div>
         ))}
@@ -219,6 +233,18 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
           )}
         </IconButton>
       </div>
+      <Dialog {...dialog} theme={theme}>
+        <input
+          onChange={(e) => {
+            console.log(e.target.value);
+            const { current } = container;
+          }}
+          className={s.video__volume__input}
+          type="range"
+          min="0"
+          max="10"
+        />
+      </Dialog>
     </div>
   );
 }

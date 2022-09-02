@@ -10,7 +10,7 @@
  ******************************************************************************************/
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import WS from '../core/ws';
-import { log } from '../utils/lib';
+import { log, getDialogPosition } from '../utils/lib';
 import {
   ErrorCode,
   LocaleDefault,
@@ -22,12 +22,12 @@ import {
   CHAT_TAKE_MESSAGES,
   TEXT_AREA_MAX_ROWS,
   DIALOG_DEFAULT,
-  CLICK_POSITION_DEFAULT,
   CONTEXT_DEFAULT,
   FIRST_MESSAGE_INDENT,
   FOLOW_QUOTE_STYLE,
+  DIALOG_MESSAGE_DIMENSION,
 } from '../utils/constants';
-import { ClickPosition, DialogProps } from '../types';
+import { DialogProps } from '../types';
 import {
   checkQuote,
   cleanQuote,
@@ -456,7 +456,6 @@ export const useMesages = ({
     clickQuoteWrapper,
     clickEditWrapper,
     clickDeleteWrapper,
-    count,
     isEdit,
     error,
   };
@@ -464,24 +463,23 @@ export const useMesages = ({
 
 export const useDialog = () => {
   const [dialog, setDialog] = useState<Omit<DialogProps, 'children'>>(DIALOG_DEFAULT);
-  const [position, setPosition] = useState<ClickPosition>(CLICK_POSITION_DEFAULT);
   const messageContextWrapper =
     (item: MessageFull, secure: boolean) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       const { shiftKey } = ev;
       if (!shiftKey) {
         ev.preventDefault();
-        const { clientX, clientY } = ev;
+        const { clientX: _clientX, clientY: _clientY } = ev;
+        const { width, height } = DIALOG_MESSAGE_DIMENSION;
+        const { clientX, clientY } = getDialogPosition({ _clientX, _clientY, width, height });
         const context = JSON.stringify(item);
         setDialog({
           open: true,
           clientY,
           clientX,
+          width,
+          height,
           context,
           secure,
-        });
-        setPosition({
-          clientX,
-          clientY,
         });
       }
     };
@@ -497,8 +495,10 @@ export const useDialog = () => {
       } = storeClickDocument.getState();
       setDialog({
         open: false,
-        clientY: position.clientX,
-        clientX: position.clientY,
+        clientY: dialog.clientY,
+        clientX: dialog.clientX,
+        width: 0,
+        height: 0,
         context: CONTEXT_DEFAULT,
         secure: false,
       });
@@ -506,7 +506,7 @@ export const useDialog = () => {
     return () => {
       cleanStore();
     };
-  }, [position]);
+  }, [dialog]);
 
   return { dialog, messageContextWrapper };
 };
@@ -516,11 +516,9 @@ let gettingPosition = false;
 export const useScrollToQuote = ({
   containerRef,
   messages,
-  count,
 }: {
   containerRef: React.RefObject<HTMLDivElement>;
   messages: SendMessageArgs<MessageType.SET_CHAT_MESSAGES>['data']['result'];
-  count: number;
 }) => {
   const mounted = useRef(false);
   useEffect(() => {

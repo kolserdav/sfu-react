@@ -45,12 +45,22 @@ export const DIALOG_DEFAULT: DialogProps = {
   children: '',
   clientX: 0,
   clientY: 0,
+  width: 0,
+  height: 0,
   context: CONTEXT_DEFAULT,
   secure: false,
 };
 export const CLICK_POSITION_DEFAULT: ClickPosition = {
   clientX: 0,
   clientY: 0,
+};
+export const DIALOG_VOLUME_DIMENSION = {
+  width: 40,
+  height: 150,
+};
+export const DIALOG_MESSAGE_DIMENSION = {
+  width: 150,
+  height: 100,
 };
 export const SHORT_MESS_LENGTH = 30;
 export const FIRST_MESSAGE_INDENT = 20;

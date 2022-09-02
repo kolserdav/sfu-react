@@ -53,8 +53,10 @@ export interface DialogProps {
   children: React.ReactNode;
   clientX: number;
   clientY: number;
+  width: number;
+  height: number;
   context: string;
-  secure: boolean;
+  secure?: boolean;
   theme?: Theme;
 }
 
