@@ -14,13 +14,16 @@ import { v4 } from 'uuid';
 import dotenv from 'dotenv';
 
 dotenv.config();
-import WS from './core/ws';
-import RTC from './core/rtc';
+import { PrismaClient } from '@prisma/client';
+import WS, { ServerCallback } from './core/ws';
+import RTC, { OnRoomConnect, OnRoomOpen } from './core/rtc';
 import { MessageType } from './types/interfaces';
 import { getLocale, log } from './utils/lib';
 import { PORT, CORS } from './utils/constants';
 import DB from './core/db';
 import Chat from './core/chat';
+
+export const prisma = new PrismaClient();
 
 const db = new DB();
 const chat = new Chat();
@@ -31,12 +34,29 @@ process.on('uncaughtException', (err: Error) => {
 process.on('unhandledRejection', (err: Error) => {
   log('error', 'unhandledRejection', err);
 });
-
 /**
  * Create SFU WebRTC server
  */
-function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: string }) {
-  const wss = new WS({ port });
+export function createServer(
+  {
+    port = PORT,
+    cors = CORS,
+    onRoomOpen,
+    onRoomClose,
+    onRoomConnect,
+    onRoomDisconnect,
+  }: {
+    port?: number;
+    cors?: string;
+    onRoomOpen?: OnRoomOpen;
+    // eslint-disable-next-line no-unused-vars
+    onRoomClose?: (args: { roomId: string | number }) => void;
+    onRoomConnect?: OnRoomConnect;
+    onRoomDisconnect?: OnRoomConnect;
+  },
+  cb?: ServerCallback
+) {
+  const wss = new WS({ port }, cb);
   const rtc: RTC | null = new RTC({ ws: wss });
 
   const getConnectionId = (): string => {
@@ -48,6 +68,7 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
   };
   wss.connection.on('connection', (ws, req) => {
     const { origin } = req.headers;
+    const protocol = req.headers['sec-websocket-protocol'];
     const notAllowed = cors.split(',').indexOf(origin || '') === -1;
     const connId = getConnectionId();
     if (cors && notAllowed) {
@@ -98,6 +119,8 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
             message: wss.getMessage(MessageType.GET_ROOM, rawMessage),
             port,
             cors,
+            onRoomConnect,
+            onRoomOpen,
           });
           break;
         case MessageType.GET_CHAT_UNIT:
@@ -186,7 +209,10 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
     };
 
     // eslint-disable-next-line no-param-reassign
-    ws.onclose = async () => {
+    ws.on('close', async () => {
+      if (protocol !== 'room') {
+        return;
+      }
       const userId = getUserId(connId);
       if (userId) {
         const socketId = wss.getSocketId(userId, connId);
@@ -213,6 +239,9 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
             const keys = rtc.getPeerConnectionKeys(item);
             rtc.cleanConnections(item, userId.toString());
             rtc.rooms[item].splice(index, 1);
+            if (onRoomDisconnect) {
+              onRoomDisconnect({ roomId: item, userId, roomUsers: rtc.rooms[item] });
+            }
             const mute = rtc.muteds[item].indexOf(userId.toString());
             if (mute !== -1) {
               rtc.muteds[item].splice(mute, 1);
@@ -244,6 +273,9 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
               });
             });
             if (rtc.rooms[item].length === 0) {
+              if (onRoomClose) {
+                onRoomClose({ roomId: item });
+              }
               delete rtc.rooms[item];
               delete rtc.streams[item];
               delete rtc.peerConnectionsServer[item];
@@ -255,10 +287,9 @@ function createServer({ port = PORT, cors = CORS }: { port?: number; cors?: stri
           }
         });
       }
-    };
+    });
   });
 }
-export default createServer;
 
 if (require.main === module) {
   createServer({ port: PORT, cors: CORS });

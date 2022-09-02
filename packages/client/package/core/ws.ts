@@ -11,6 +11,8 @@
 import * as Types from '../types/interfaces';
 import { log } from '../utils/lib';
 
+type Protocol = 'room' | 'chat' | 'check';
+
 class WS implements Types.WSInterface {
   public connection: WebSocket;
 
@@ -88,17 +90,19 @@ class WS implements Types.WSInterface {
     server,
     port,
     local = false,
+    protocol = 'check',
   }: {
     server: string;
     port: number;
     local?: boolean;
+    protocol?: Protocol;
   }): WebSocket {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let connection: any;
     if (typeof window !== 'undefined') {
       connection = new WebSocket(
         `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${server}:${port}`,
-        'json'
+        protocol
       );
     }
     if (!local && connection !== null) {
@@ -107,8 +111,16 @@ class WS implements Types.WSInterface {
     return connection;
   }
 
-  public createConnection({ server, port }: { server: string; port: number }) {
-    this.newConnection({ server, port });
+  public createConnection({
+    server,
+    port,
+    protocol,
+  }: {
+    server: string;
+    port: number;
+    protocol?: Protocol;
+  }) {
+    this.newConnection({ server, port, protocol });
     this.connection.onopen = (ev: Event) => {
       log('log', 'onOpen', ev);
       this.onOpen(ev);
@@ -127,8 +139,8 @@ class WS implements Types.WSInterface {
     return this.connection;
   }
 
-  constructor({ server, port }: { server: string; port: number }) {
-    this.connection = this.createConnection({ server, port });
+  constructor({ server, port, protocol }: { server: string; port: number; protocol?: Protocol }) {
+    this.connection = this.createConnection({ server, port, protocol });
   }
 }
 

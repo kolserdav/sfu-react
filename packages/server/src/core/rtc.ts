@@ -24,6 +24,16 @@ import DB from './db';
 
 const db = new DB();
 
+// eslint-disable-next-line no-unused-vars
+export type OnRoomConnect = (args: {
+  roomId: string | number;
+  userId: string | number;
+  roomUsers: RoomUser[];
+}) => void;
+
+// eslint-disable-next-line no-unused-vars
+export type OnRoomOpen = (args: { roomId: string | number; ownerId: string | number }) => void;
+
 class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handleVideoAnswerMsg'> {
   public peerConnectionsServer: RTCInterface['peerConnectionsServer'] = {};
 
@@ -481,9 +491,11 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
   public async addUserToRoom({
     userId,
     roomId,
+    onRoomOpen,
   }: {
     userId: number | string;
     roomId: number | string;
+    onRoomOpen?: OnRoomOpen;
   }): Promise<1 | 0> {
     const room = await db.roomFindFirst({
       where: {
@@ -491,7 +503,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       },
     });
     const locale = getLocale(this.ws.users[userId].locale).server;
-    const isOwner = room?.authorId === userId.toString();
+    let isOwner = room?.authorId === userId.toString();
     if (!room) {
       const authorId = userId.toString();
       db.roomCreate({
@@ -505,6 +517,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
           },
         },
       });
+      isOwner = true;
     } else {
       if (room.archive) {
         if (!isOwner) {
@@ -617,6 +630,9 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     } else {
       log('info', 'Room exists and user added before.', { roomId, userId });
     }
+    if (isOwner && onRoomOpen) {
+      onRoomOpen({ roomId, ownerId: userId });
+    }
     return 0;
   }
 
@@ -624,10 +640,14 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     message,
     port,
     cors,
+    onRoomConnect,
+    onRoomOpen,
   }: {
     message: SendMessageArgs<MessageType.GET_ROOM>;
     port: number;
     cors: string;
+    onRoomConnect?: OnRoomConnect;
+    onRoomOpen?: OnRoomOpen;
   }) {
     log('log', 'Get room message', message);
     const {
@@ -638,6 +658,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     const error = await this.addUserToRoom({
       roomId: id,
       userId: uid,
+      onRoomOpen,
     });
     if (error) {
       this.ws.sendMessage({
@@ -682,6 +703,13 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         }
       };
     };
+    if (onRoomConnect) {
+      onRoomConnect({
+        roomId: id,
+        userId: uid,
+        roomUsers: this.rooms[id],
+      });
+    }
     this.ws.sendMessage({
       type: MessageType.SET_ROOM,
       id: uid,

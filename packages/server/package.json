@@ -14,6 +14,7 @@
     "rmdist": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\"",
     "clean": "npm run rmdist",
     "dev": "concurrently \"npm run watch\" \"npm run dev:start\"",
+    "dev:server": "concurrently \"npm run watch\" \"nodemon dist/server.js\"",
     "build": "eslint ./src --fix -c .eslintrc && tsc -p .",
     "dev:migrate": "npm run format && npm run generate && prisma migrate dev --preview-feature",
     "migrate": "npm run generate && prisma migrate deploy --preview-feature",

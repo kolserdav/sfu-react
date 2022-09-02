@@ -59,7 +59,7 @@ export const useConnection = ({
   const [video, setVideo] = useState<boolean>(true);
   const [error, setError] = useState<keyof typeof ErrorCode>();
   const [connectionId, setConnectionId] = useState<string>('');
-  const ws = useMemo(() => new WS({ server, port }), [server, port]);
+  const ws = useMemo(() => new WS({ server, port, protocol: 'room' }), [server, port]);
   const rtc = useMemo(() => new RTC({ ws }), [ws]);
   const addStream = useMemo(
     () =>

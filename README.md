@@ -76,6 +76,8 @@ import Uyem from 'uyem';
 ## Server examples
 
 - [Include server](examples/server)
+- [WS listener, database access](examples/server-ws)
+- [Event handlers](examples/server-handlers)
 
 ## Contributing
 

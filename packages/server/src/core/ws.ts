@@ -15,6 +15,9 @@ import DB from './db';
 
 const db = new DB();
 
+// eslint-disable-next-line no-unused-vars
+export type ServerCallback = (args: Server<WebSocket>) => void;
+
 class WS implements WSInterface {
   public connection: Server<WebSocket>;
 
@@ -28,8 +31,8 @@ class WS implements WSInterface {
 
   public WebSocket = WebSocket;
 
-  constructor(connectionArgs: ServerOptions | undefined) {
-    this.connection = this.createConnection(connectionArgs);
+  constructor(connectionArgs: ServerOptions | undefined, cb?: ServerCallback) {
+    this.connection = this.createConnection(connectionArgs, cb);
   }
 
   public async setSocket({
@@ -100,9 +103,16 @@ class WS implements WSInterface {
     return Object.keys(this.sockets).find((item) => item.split(this.delimiter)[0] === id) || null;
   }
 
-  public createConnection = (args: ServerOptions | undefined) => {
+  public createConnection = (
+    args: ServerOptions | undefined,
+    // eslint-disable-next-line no-unused-vars
+    cb?: ServerCallback
+  ) => {
     this.connection = new WebSocketServer(args, () => {
       log('info', 'Server listen at port:', args.port, true);
+      if (cb) {
+        cb(this.connection);
+      }
     });
     return this.connection;
   };
