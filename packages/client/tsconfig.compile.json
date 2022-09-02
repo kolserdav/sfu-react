@@ -12,7 +12,7 @@
     "noFallthroughCasesInSwitch": true,
     "module": "esnext",
     "outDir": "./dist",
-    "rootDir": "./package",
+    "rootDir": "./src/package",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
