@@ -22,5 +22,5 @@
     "jsxFragmentFactory": ""
   },
   "exclude": ["node_modules"],
-  "include": ["package/locales/**/*.ts", "src/types/*.ts", "declarations.d.ts"]
+  "include": ["declarations.d.ts"]
 }
