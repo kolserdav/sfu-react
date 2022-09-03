@@ -8,22 +8,20 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import clsx from 'clsx';
 import { HallProps } from '../types';
 import ThemeIcon from '../Icons/ThemeIcon';
 import Chat from './Chat';
 import storeTheme, { changeTheme } from '../store/theme';
-import { LocaleDefault, LocaleSelector, LocaleValue, RoomUser } from '../types/interfaces';
-import storeLocale, { changeLocale } from '../store/locale';
+import { LocaleSelector } from '../types/interfaces';
 import Select from './ui/Select';
 import { setLocalStorage, LocalStorageName } from '../utils/localStorage';
-import { getCookie, CookieName, setCookie } from '../utils/cookies';
 import CloseIcon from '../Icons/Close';
 import s from './Hall.module.scss';
 import IconButton from './ui/IconButton';
 import SettingsIcon from '../Icons/SettingsIcon';
-import storeStreams from '../store/streams';
+import { useLang, useSettings, useUsers } from './Hall.hooks';
 
 const changeThemeHandler = () => {
   const { theme } = storeTheme.getState();
@@ -32,44 +30,9 @@ const changeThemeHandler = () => {
 };
 
 function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) {
-  const [lang, setLang] = useState<LocaleValue>(getCookie(CookieName.lang) || LocaleDefault);
-  const [openSettings, setOpenSettings] = useState<boolean>(false);
-  const [users, setUsers] = useState<RoomUser[]>([]);
-
-  const changeLang = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value as LocaleValue;
-    setLang(value);
-    setCookie(CookieName.lang, value);
-    storeLocale.dispatch(changeLocale({ locale: value }));
-  };
-
-  const openSettingsDialog = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    setOpenSettings(!openSettings);
-  };
-
-  /**
-   * Listen close
-   */
-  useEffect(() => {
-    if (openSettings && !open) {
-      setOpenSettings(false);
-    }
-  }, [open, openSettings]);
-
-  useEffect(() => {
-    const cleanSubs = storeStreams.subscribe(() => {
-      const state = storeStreams.getState();
-      const _users = state.streams.map((item) => ({
-        id: item.target,
-        name: item.name,
-        isOwner: item.isOwner,
-      }));
-      setUsers(_users);
-    });
-    return () => {
-      cleanSubs();
-    };
-  }, []);
+  const { lang, changeLang } = useLang();
+  const { openSettings, openSettingsDialog } = useSettings({ open });
+  const { users } = useUsers();
 
   return (
     <div className={clsx(s.wrapper, open ? s.open : '')}>

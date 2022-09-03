@@ -17,6 +17,7 @@ import {
   SendMessageArgs,
   RoomUser,
   ErrorCode,
+  RoomList,
 } from '../types/interfaces';
 import { getLocale, log } from '../utils/lib';
 import WS from './ws';
@@ -43,11 +44,11 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
 
   public ssrcIntervals: Record<string, NodeJS.Timer> = {};
 
-  public muteds: Record<string, (string | number)[]> = {};
+  public muteds: RoomList = {};
 
-  public adminMuteds: Record<string, (string | number)[]> = {};
+  public adminMuteds: RoomList = {};
 
-  public banneds: Record<string, (string | number)[]> = {};
+  public banneds: RoomList = {};
 
   private ws: WS;
 

@@ -26,6 +26,7 @@ export interface RoomUser {
   name: string;
   isOwner: boolean;
 }
+export type RoomList = Record<string, (string | number)[]>;
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type ArgumentTypes<F extends Function> = F extends (args: infer A) => any ? A : never;
 export type GetManyResult<T> = { result: T[]; skip: number; count: number; take: number };
@@ -90,6 +91,8 @@ export enum MessageType {
   GET_TO_BAN = 'GET_TO_BAN',
   GET_TO_UNMUTE = 'GET_TO_UNMUTE',
   GET_TO_UNBAN = 'GET_TO_UNBAN',
+  SET_BAN_LIST = 'SET_BAN_LIST',
+  SET_MUTE_LIST = 'SET_BAN_LIST',
 }
 
 export namespace Locale {
@@ -193,6 +196,7 @@ export namespace DataTypes {
     };
     export type GetToBan = {
       target: string | number;
+      userId: string | number;
     };
     export type GetToUnMute = {
       target: string | number;
@@ -219,6 +223,13 @@ export namespace DataTypes {
     };
     export type SetRoom = {
       isOwner: boolean;
+    };
+    export type SetBanList = {
+      banneds: RoomList[any];
+    };
+    export type SetMuteList = {
+      muteds: RoomList[any];
+      adminMuteds: RoomList[any];
     };
     export type SetError = {
       message: string;
@@ -325,6 +336,10 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetDeleteMessage
     : T extends MessageType.SET_ROOM_MESSAGE
     ? DataTypes.MessageTypes.SetRoomMessage
+    : T extends MessageType.SET_BAN_LIST
+    ? DataTypes.MessageTypes.SetBanList
+    : T extends MessageType.SET_MUTE_LIST
+    ? DataTypes.MessageTypes.SetMuteList
     : T extends MessageType.SET_CLOSE_PEER_CONNECTION
     ? DataTypes.MessageTypes.SetClosePeerConnection
     : T extends MessageType.SET_LOCALE

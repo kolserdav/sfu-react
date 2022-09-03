@@ -227,6 +227,7 @@ export const useConnection = ({
         id: roomId,
         data: {
           target: toBan,
+          userId: ws.userId,
         },
       });
       setToBan(0);
