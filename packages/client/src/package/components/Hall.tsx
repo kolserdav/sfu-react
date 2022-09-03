@@ -62,6 +62,7 @@ function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) 
       const _users = state.streams.map((item) => ({
         id: item.target,
         name: item.name,
+        isOwner: item.isOwner,
       }));
       setUsers(_users);
     });

@@ -264,6 +264,7 @@ export function createServer(
                   target: userId,
                   name: _item.name,
                   eventName: 'delete',
+                  isOwner: _item.isOwner,
                 },
                 connId: _connId,
               });

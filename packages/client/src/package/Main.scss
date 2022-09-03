@@ -6,6 +6,9 @@ $container-transition: 0.3s;
 $mobile-width: 720px;
 $button-width: 40px;
 
+// see dependencies in packages/client/src/package/components/ui/IconButton.module.scss
+$crown-padding: 10px;
+
 // colors. It's for example, implements in Theme.ts
 .colors {
   color: lightblue;

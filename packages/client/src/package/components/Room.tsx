@@ -46,6 +46,7 @@ import VolumeMediumIcon from '../Icons/VolumeMedium';
 import VolumeLowIcon from '../Icons/VolumeLow';
 import Dialog from './ui/Dialog';
 import MenuIcon from '../Icons/Menu';
+import CrownIcon from '../Icons/Crown';
 
 function Room({ userId, iceServers, server, port, roomId, locale, name, theme }: RoomProps) {
   const container = useRef<HTMLDivElement>(null);
@@ -231,8 +232,17 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
               }}
             />
             {/** actions is strong third child */}
-            {item.target !== userId && (
-              <div className={s.video__actions}>
+
+            <div className={s.video__actions}>
+              {item.isOwner && (
+                <div
+                  className={s.crown__icon}
+                  title={isOwner ? locale.youAreAdminOfRoom : locale.isAdminOfRoom}
+                >
+                  <CrownIcon color={theme?.colors.yellow} />
+                </div>
+              )}
+              {item.target !== userId && (
                 <IconButton onClick={clickToVolume(item.target)}>
                   {volumes[item.target] === undefined || volumes[item.target] >= 8 ? (
                     <VolumeHeightIcon color={theme?.colors.white} />
@@ -242,13 +252,13 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
                     <VolumeLowIcon color={theme?.colors.white} />
                   )}
                 </IconButton>
-                {isOwner && item.target !== userId && (
-                  <IconButton onClick={clickToSettingsWrapper(item.target)}>
-                    <MenuIcon color={theme?.colors.white} />
-                  </IconButton>
-                )}
-              </div>
-            )}
+              )}
+              {isOwner && item.target !== userId && (
+                <IconButton onClick={clickToSettingsWrapper(item.target)}>
+                  <MenuIcon color={theme?.colors.white} />
+                </IconButton>
+              )}
+            </div>
             <div className={s.muted}>
               {muteds.indexOf(item.target.toString()) !== -1 && (
                 <MicrophoneOffIcon color={theme?.colors.white} />

@@ -24,6 +24,7 @@ export interface UserItem {
 export interface RoomUser {
   id: string | number;
   name: string;
+  isOwner: boolean;
 }
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type ArgumentTypes<F extends Function> = F extends (args: infer A) => any ? A : never;
@@ -131,6 +132,8 @@ export namespace Locale {
     unmute: string;
     ban: string;
     unban: string;
+    isAdminOfRoom: string;
+    youAreAdminOfRoom: string;
   }
 }
 
@@ -174,6 +177,7 @@ export namespace DataTypes {
       name: string;
       eventName: 'delete' | 'add' | 'added';
       roomLength: number;
+      isOwner: boolean;
       muteds: (string | number)[];
       adminMuteds: (string | number)[];
     };

@@ -228,6 +228,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
                   roomLength: rooms[roomId]?.length || 0,
                   muteds: this.muteds[roomId],
                   adminMuteds: this.adminMuteds[roomId],
+                  isOwner: this.rooms[roomId]?.find((_item) => _item.id === userId).isOwner,
                 },
                 connId,
               });
@@ -628,6 +629,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         {
           id: userId,
           name,
+          isOwner,
         },
       ];
       this.muteds[roomId] = [];
@@ -636,6 +638,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       this.rooms[roomId].push({
         id: userId,
         name,
+        isOwner,
       });
     } else {
       log('info', 'Room exists and user added before.', { roomId, userId });

@@ -36,6 +36,7 @@ export type ChatProps = Omit<HallProps, 'open'>;
 export interface Stream {
   target: number | string;
   name: string;
+  isOwner: boolean;
   stream: MediaStream;
   connId: string;
   ref: React.Ref<HTMLVideoElement>;

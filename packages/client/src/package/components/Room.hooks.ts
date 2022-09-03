@@ -101,12 +101,14 @@ export const useConnection = ({
         stream,
         connId,
         name,
+        isOwner: _isOwner,
         change = false,
       }: {
         target: string | number;
         name: string;
         stream: MediaStream;
         connId: string;
+        isOwner: boolean;
         change?: boolean;
       }) => {
         const _stream: Stream = {
@@ -114,6 +116,7 @@ export const useConnection = ({
           stream,
           name,
           connId,
+          isOwner: _isOwner,
           ref: (node) => {
             if (node) {
               // eslint-disable-next-line no-param-reassign
@@ -147,6 +150,7 @@ export const useConnection = ({
               connId: connectionId,
               name: ws.name,
               change: true,
+              isOwner,
             });
           } else {
             ws.shareScreen = !ws.shareScreen;
@@ -157,13 +161,14 @@ export const useConnection = ({
               connId: connectionId,
               name: ws.name,
               change: true,
+              isOwner,
             });
           }
           setShareScreen(ws.shareScreen);
         }
       );
     },
-    [addStream, connectionId, locale, roomId, rtc, ws, shareScreen]
+    [addStream, connectionId, locale, roomId, rtc, ws, shareScreen, isOwner]
   );
 
   const changeMuted = () => {
@@ -333,7 +338,15 @@ export const useConnection = ({
      */
     const changeRoomUnitHandler = ({
       id: userId,
-      data: { target, eventName, roomLength, muteds: _muteds, name, adminMuteds },
+      data: {
+        target,
+        eventName,
+        roomLength,
+        muteds: _muteds,
+        name,
+        adminMuteds,
+        isOwner: _isOwner,
+      },
       connId,
     }: SendMessageArgs<MessageType.SET_CHANGE_UNIT>) => {
       if (lenght !== roomLength) {
@@ -360,7 +373,14 @@ export const useConnection = ({
               connId,
               onTrack: ({ addedUserId, stream }) => {
                 log('info', 'Added unit track', { addedUserId, s: stream.id, connId });
-                addStream({ target: addedUserId, stream, connId, name, change: true });
+                addStream({
+                  target: addedUserId,
+                  stream,
+                  connId,
+                  name,
+                  change: true,
+                  isOwner: _isOwner,
+                });
               },
               iceServers,
               eventName: 'back',
@@ -379,6 +399,7 @@ export const useConnection = ({
                       eventName: 'added',
                       muteds: _muteds,
                       adminMuteds,
+                      isOwner,
                     },
                   });
                 }
@@ -463,7 +484,14 @@ export const useConnection = ({
       });
       rtc.addTracks({ userId: ws.userId, roomId, connId, target: 0, locale }, (e, stream) => {
         if (!e) {
-          addStream({ target: ws.userId, stream, connId, name: ws.name, change: true });
+          addStream({
+            target: ws.userId,
+            stream,
+            connId,
+            name: ws.name,
+            change: true,
+            isOwner: _isOwner,
+          });
         } else {
           log('warn', 'Stream not added', e);
         }
@@ -505,7 +533,14 @@ export const useConnection = ({
               userId: id,
               connId,
               onTrack: ({ addedUserId, stream }) => {
-                addStream({ target: addedUserId, stream, connId, name: item.name, change: true });
+                addStream({
+                  target: addedUserId,
+                  stream,
+                  connId,
+                  name: item.name,
+                  change: true,
+                  isOwner: item.isOwner,
+                });
               },
               iceServers,
               eventName: 'check',
@@ -659,6 +694,7 @@ export const useConnection = ({
     locale,
     userName,
     addStream,
+    isOwner,
   ]);
 
   /**

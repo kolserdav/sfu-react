@@ -35,6 +35,8 @@ const lang: LocaleServer = {
     unmute: 'Вкл. звук',
     ban: 'Забанить',
     unban: 'Разбанить',
+    isAdminOfRoom: 'Админимтратор комнаты',
+    youAreAdminOfRoom: 'Вы администратор комнаты',
   },
 };
 

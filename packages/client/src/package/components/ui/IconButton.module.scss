@@ -9,7 +9,7 @@
   border-radius: 50%;
 
   // Dependency of Room.hooks.ts actions?.setAttribute('style', 'top: 40px; right: calc(1rem - 10px);');
-  padding: 10px;
+  padding: $crown-padding;
 
   &:hover {
     background-color: rgb(0 0 0 / 20%);
