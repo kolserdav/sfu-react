@@ -27,6 +27,7 @@ export interface RoomUser {
   isOwner: boolean;
 }
 export type RoomList = Record<string, (string | number)[]>;
+export type Banneds = Record<string, RoomUser[]>;
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type ArgumentTypes<F extends Function> = F extends (args: infer A) => any ? A : never;
 export type GetManyResult<T> = { result: T[]; skip: number; count: number; take: number };
@@ -92,7 +93,7 @@ export enum MessageType {
   GET_TO_UNMUTE = 'GET_TO_UNMUTE',
   GET_TO_UNBAN = 'GET_TO_UNBAN',
   SET_BAN_LIST = 'SET_BAN_LIST',
-  SET_MUTE_LIST = 'SET_BAN_LIST',
+  SET_MUTE_LIST = 'SET_MUTE_LIST',
 }
 
 export namespace Locale {
@@ -225,7 +226,7 @@ export namespace DataTypes {
       isOwner: boolean;
     };
     export type SetBanList = {
-      banneds: RoomList[any];
+      banneds: Banneds[any];
     };
     export type SetMuteList = {
       muteds: RoomList[any];

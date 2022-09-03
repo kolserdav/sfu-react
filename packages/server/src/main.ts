@@ -275,6 +275,7 @@ export function createServer(
               }
               delete rtc.rooms[item];
               delete rtc.streams[item];
+              delete rtc.banneds[item];
               delete rtc.peerConnectionsServer[item];
               db.changeRoomArchive({ userId: item.toString(), archive: true });
               delete rtc.muteds[item];

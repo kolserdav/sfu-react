@@ -48,7 +48,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
 
   public adminMuteds: RoomList = {};
 
-  public banneds: RoomList = {};
+  public banneds: Record<string, RoomUser[]> = {};
 
   private ws: WS;
 
@@ -495,6 +495,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     }
   };
 
+  // TODO check errors
   public async addUserToRoom({
     userId,
     roomId,
@@ -542,6 +543,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
             this.rooms[roomId] = [];
             this.muteds[roomId] = [];
             this.adminMuteds[roomId] = [];
+            this.banneds[roomId] = [];
           }
           return {
             error: 1,
@@ -635,6 +637,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       ];
       this.muteds[roomId] = [];
       this.adminMuteds[roomId] = [];
+      this.banneds[roomId] = [];
     } else if (!this.rooms[roomId].find((item) => userId === item.id)) {
       this.rooms[roomId].push({
         id: userId,
@@ -732,6 +735,25 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       },
       connId,
     });
+    this.ws.sendMessage({
+      type: MessageType.SET_MUTE_LIST,
+      id: uid,
+      data: {
+        muteds: this.muteds[id],
+        adminMuteds: this.adminMuteds[id],
+      },
+      connId,
+    });
+    if (isOwner) {
+      this.ws.sendMessage({
+        type: MessageType.SET_BAN_LIST,
+        id: uid,
+        data: {
+          banneds: this.banneds[id],
+        },
+        connId,
+      });
+    }
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -784,6 +806,15 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
           adminMuteds: this.adminMuteds[roomId],
         },
       });
+      this.ws.sendMessage({
+        type: MessageType.SET_MUTE_LIST,
+        id: item.id,
+        data: {
+          muteds: this.muteds[id],
+          adminMuteds: this.adminMuteds[id],
+        },
+        connId: '',
+      });
     });
   }
 
@@ -809,20 +840,49 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
           adminMuteds: this.adminMuteds[roomId],
         },
       });
+      this.ws.sendMessage({
+        type: MessageType.SET_MUTE_LIST,
+        id: item.id,
+        data: {
+          muteds: this.muteds[roomId],
+          adminMuteds: this.adminMuteds[roomId],
+        },
+        connId: '',
+      });
     });
   }
 
-  public handleGetToBan({ id: roomId, data: { target } }: SendMessageArgs<MessageType.GET_TO_BAN>) {
+  public handleGetToBan({
+    id: roomId,
+    data: { target, userId },
+  }: SendMessageArgs<MessageType.GET_TO_BAN>) {
     if (!this.banneds[roomId]) {
       this.banneds[roomId] = [];
     }
-    if (this.banneds[roomId].indexOf(target) === -1) {
-      this.banneds[roomId].push(target);
+    let index = -1;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let item: RoomUser = {} as any;
+    this.banneds[roomId].forEach((it, i) => {
+      if (it.id === target) {
+        index = i;
+        item = it;
+      }
+    });
+    if (index === -1) {
+      this.banneds[roomId].push(item);
     } else {
       log('warn', 'Duplicate to ban command', { roomId, target });
     }
     const locale = getLocale(this.ws.users[target].locale).server;
     const connId = this.ws.users[target]?.connId;
+    this.ws.sendMessage({
+      type: MessageType.SET_BAN_LIST,
+      id: userId,
+      data: {
+        banneds: this.banneds[roomId],
+      },
+      connId: '',
+    });
     this.ws.sendMessage(
       {
         type: MessageType.SET_ERROR,
@@ -869,6 +929,15 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
           adminMuteds: this.adminMuteds[roomId],
         },
       });
+      this.ws.sendMessage({
+        type: MessageType.SET_MUTE_LIST,
+        id: item.id,
+        data: {
+          muteds: this.muteds[roomId],
+          adminMuteds: this.adminMuteds[roomId],
+        },
+        connId: '',
+      });
     });
   }
 
@@ -879,7 +948,12 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     if (!this.banneds[roomId]) {
       this.banneds[roomId] = [];
     }
-    const index = this.banneds[roomId].indexOf(target);
+    let index = -1;
+    this.banneds[roomId].forEach((it, i) => {
+      if (it.id === target) {
+        index = i;
+      }
+    });
     if (index !== -1) {
       this.banneds[roomId].splice(index, 1);
     } else {

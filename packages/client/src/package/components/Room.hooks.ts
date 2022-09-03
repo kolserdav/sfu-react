@@ -43,6 +43,7 @@ import { CookieName, getCookie } from '../utils/cookies';
 import storeError, { changeError } from '../store/error';
 import storeClickDocument from '../store/clickDocument';
 import { getLocalStorage, LocalStorageName, setLocalStorage } from '../utils/localStorage';
+import storeUserList, { changeUserList } from '../store/userList';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -466,6 +467,38 @@ export const useConnection = ({
       });
     };
 
+    const changeMuteList = ({
+      data: { muteds: _muteds, adminMuteds },
+    }: SendMessageArgs<MessageType.SET_MUTE_LIST>) => {
+      const {
+        userList: { banneds },
+      } = storeUserList.getState();
+      storeUserList.dispatch(
+        changeUserList({
+          userList: {
+            banneds,
+            muteds: _muteds,
+            adminMuteds,
+          },
+        })
+      );
+    };
+
+    const changeBanList = ({ data: { banneds } }: SendMessageArgs<MessageType.SET_BAN_LIST>) => {
+      const {
+        userList: { muteds: _muteds, adminMuteds },
+      } = storeUserList.getState();
+      storeUserList.dispatch(
+        changeUserList({
+          userList: {
+            banneds,
+            muteds: _muteds,
+            adminMuteds,
+          },
+        })
+      );
+    };
+
     const setRoomHandler = ({
       connId,
       data: { isOwner: _isOwner },
@@ -640,7 +673,7 @@ export const useConnection = ({
           removeStreamHandler(rawMessage);
           break;
         case MessageType.SET_MUTE:
-          changeMuteHandler(ws.getMessage(MessageType.SET_MUTE, rawMessage));
+          changeMuteHandler(rawMessage);
           break;
         case MessageType.ANSWER:
           rtc.handleVideoAnswerMsg(rawMessage);
@@ -652,7 +685,13 @@ export const useConnection = ({
           needReconnectHandler(rawMessage);
           break;
         case MessageType.SET_CHANGE_UNIT:
-          changeRoomUnitHandler(ws.getMessage(MessageType.SET_CHANGE_UNIT, rawMessage));
+          changeRoomUnitHandler(rawMessage);
+          break;
+        case MessageType.SET_MUTE_LIST:
+          changeMuteList(rawMessage);
+          break;
+        case MessageType.SET_BAN_LIST:
+          changeBanList(rawMessage);
           break;
         case MessageType.SET_ERROR:
           handleError(rawMessage);

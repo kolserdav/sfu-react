@@ -3,6 +3,7 @@ import storeLocale, { changeLocale } from '../store/locale';
 import { LocaleDefault, LocaleValue, RoomUser } from '../types/interfaces';
 import { getCookie, CookieName, setCookie } from '../utils/cookies';
 import storeStreams from '../store/streams';
+import storeUserList from '../store/userList';
 
 export const useLang = () => {
   const [lang, setLang] = useState<LocaleValue>(getCookie(CookieName.lang) || LocaleDefault);
@@ -50,6 +51,22 @@ export const useUsers = () => {
         isOwner: item.isOwner,
       }));
       setUsers(_users);
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, []);
+
+  /**
+   * Listen user list
+   */
+  useEffect(() => {
+    const cleanSubs = storeUserList.subscribe(() => {
+      const {
+        userList: { banneds, muteds, adminMuteds },
+      } = storeUserList.getState();
+      // TODO user list
+      console.log(adminMuteds);
     });
     return () => {
       cleanSubs();
