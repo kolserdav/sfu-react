@@ -79,7 +79,7 @@ async function openRoom(room, uid) {
   const _url = `${url}/${room}?uid=${uid}`;
   page.on('console', (message) => {
     const text = message.text();
-    if (!/DevTools/.test(text)) {
+    if (!/DevTools/.test(text) && !/webpack-dev-server/.test(text)) {
       log('warn', `Message on room: ${room} for user: ${uid}:`, message.text(), true);
     }
   });
