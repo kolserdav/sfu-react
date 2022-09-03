@@ -24,7 +24,7 @@ class RTC
 
   public connId = '';
 
-  public muteds: string[] = [];
+  public muteds: (string | number)[] = [];
 
   public localTrackSettings: MediaTrackSettings | null = null;
 

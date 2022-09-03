@@ -115,3 +115,11 @@ export const createVolumeContext = ({ userId }: { userId: string | number }) =>
 
 export const getVolumeContext = (context: string): { userId: string | number } =>
   JSON.parse(context);
+
+export const createSettingsContext = ({ userId }: { userId: string | number }) =>
+  JSON.stringify({
+    userId,
+  });
+
+export const getSettingsContext = (context: string): { userId: string | number } =>
+  JSON.parse(context);

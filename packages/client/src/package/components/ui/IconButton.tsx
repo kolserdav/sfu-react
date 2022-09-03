@@ -21,6 +21,7 @@ function IconButton({
   height,
   strict,
   onClick,
+  disabled,
 }: {
   children: JSX.Element;
   title?: string;
@@ -29,14 +30,25 @@ function IconButton({
   className?: string;
   strict?: boolean;
   onClick?: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
+  disabled?: boolean;
 }) {
   return (
     <div
-      onClick={onClick}
+      onClick={
+        disabled
+          ? () => {
+              /** */
+            }
+          : onClick
+      }
       role="button"
       title={title}
       tabIndex={0}
-      className={clsx(!strict ? s.wrapper : className, strict ? '' : className)}
+      className={clsx(
+        !strict ? s.wrapper : className,
+        strict ? '' : className,
+        disabled ? s.disabled : ''
+      )}
     >
       {children}
     </div>
@@ -51,6 +63,7 @@ IconButton.defaultProps = {
   onClick: () => {
     /** */
   },
+  disabled: false,
 };
 
 export default IconButton;

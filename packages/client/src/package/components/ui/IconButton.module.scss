@@ -14,4 +14,12 @@
   &:hover {
     background-color: rgb(0 0 0 / 20%);
   }
+
+  &.disabled {
+    opacity: 0.5;
+
+    &:hover {
+      background-color: inherit;
+    }
+  }
 }

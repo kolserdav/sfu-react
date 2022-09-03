@@ -13,7 +13,12 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import WS from '../core/ws';
 import RTC from '../core/rtc';
 import { getCodec, getDialogPosition, log, isClickByDialog } from '../utils/lib';
-import { createVolumeContext, getWidthOfItem } from './Room.lib';
+import {
+  createSettingsContext,
+  createVolumeContext,
+  getSettingsContext,
+  getWidthOfItem,
+} from './Room.lib';
 import {
   LocaleServer,
   LocaleDefault,
@@ -32,6 +37,7 @@ import {
   DIALOG_VOLUME_DIMENSION,
   VOLUME_MIN,
   DIALOG_SETTINGS_DIMENSION,
+  ALERT_TIMEOUT,
 } from '../utils/constants';
 import { CookieName, getCookie } from '../utils/cookies';
 import storeError, { changeError } from '../store/error';
@@ -48,6 +54,14 @@ export const useConnection = ({
   userName,
   cleanAudioAnalyzer,
   locale,
+  toBan,
+  toMute,
+  toUnBan,
+  toUnMute,
+  setToMute,
+  setToUnMute,
+  setToBan,
+  setToUnBan,
 }: {
   id: number | string;
   roomId: number | string | null;
@@ -57,6 +71,14 @@ export const useConnection = ({
   userName: string;
   cleanAudioAnalyzer: (uid: string | number) => void;
   locale: LocaleServer['client'];
+  toBan: string | number;
+  toMute: string | number;
+  toUnBan: string | number;
+  toUnMute: string | number;
+  setToMute: React.Dispatch<React.SetStateAction<string | number>>;
+  setToUnMute: React.Dispatch<React.SetStateAction<string | number>>;
+  setToBan: React.Dispatch<React.SetStateAction<string | number>>;
+  setToUnBan: React.Dispatch<React.SetStateAction<string | number>>;
 }) => {
   const [streams, setStreams] = useState<Stream[]>([]);
   const [shareScreen, setShareScreen] = useState<boolean>(false);
@@ -64,7 +86,8 @@ export const useConnection = ({
   const [roomIsSaved, setRoomIsSaved] = useState<boolean>(false);
   const [lenght, setLenght] = useState<number>(streams.length);
   const [muted, setMuted] = useState<boolean>(false);
-  const [muteds, setMuteds] = useState<string[]>([]);
+  const [adminMuted, setAdminMuted] = useState<boolean>(false);
+  const [muteds, setMuteds] = useState<(string | number)[]>([]);
   const [video, setVideo] = useState<boolean>(true);
   const [isOwner, setIsOwner] = useState<boolean>(false);
   const [error, setError] = useState<keyof typeof ErrorCode>();
@@ -172,6 +195,74 @@ export const useConnection = ({
   };
 
   /**
+   * Listen toMute
+   */
+  useEffect(() => {
+    if (toMute && roomId) {
+      ws.sendMessage({
+        type: MessageType.GET_TO_MUTE,
+        connId: connectionId,
+        id: roomId,
+        data: {
+          target: toMute,
+        },
+      });
+      setToMute(0);
+    }
+  }, [toMute, connectionId, ws, roomId, setToMute]);
+
+  /**
+   * Listen toBan
+   */
+  useEffect(() => {
+    if (toBan && roomId) {
+      ws.sendMessage({
+        type: MessageType.GET_TO_BAN,
+        connId: connectionId,
+        id: roomId,
+        data: {
+          target: toBan,
+        },
+      });
+      setToBan(0);
+    }
+  }, [toBan, connectionId, ws, roomId, setToBan]);
+
+  /**
+   * Listen toUnMute
+   */
+  useEffect(() => {
+    if (toUnMute && roomId) {
+      ws.sendMessage({
+        type: MessageType.GET_TO_UNMUTE,
+        connId: connectionId,
+        id: roomId,
+        data: {
+          target: toUnMute,
+        },
+      });
+      setToUnMute(0);
+    }
+  }, [toUnMute, connectionId, ws, roomId, setToUnMute]);
+
+  /**
+   * Listen toUnBan
+   */
+  useEffect(() => {
+    if (toUnBan && roomId) {
+      ws.sendMessage({
+        type: MessageType.GET_TO_UNBAN,
+        connId: connectionId,
+        id: roomId,
+        data: {
+          target: toUnBan,
+        },
+      });
+      setToUnBan(0);
+    }
+  }, [toUnBan, connectionId, ws, roomId, setToUnBan]);
+
+  /**
    * Set streams from store
    */
   useEffect(() => {
@@ -242,14 +333,15 @@ export const useConnection = ({
      */
     const changeRoomUnitHandler = ({
       id: userId,
-      data: { target, eventName, roomLength, muteds: _muteds, name },
+      data: { target, eventName, roomLength, muteds: _muteds, name, adminMuteds },
       connId,
     }: SendMessageArgs<MessageType.SET_CHANGE_UNIT>) => {
       if (lenght !== roomLength) {
         setLenght(roomLength);
       }
-      rtc.muteds = _muteds;
-      setMuteds(_muteds);
+      rtc.muteds = _muteds.concat(adminMuteds);
+      setMuteds(rtc.muteds);
+      setAdminMuted(adminMuteds.indexOf(userId) !== -1);
       switch (eventName) {
         case 'add':
         case 'added':
@@ -286,6 +378,7 @@ export const useConnection = ({
                       roomLength,
                       eventName: 'added',
                       muteds: _muteds,
+                      adminMuteds,
                     },
                   });
                 }
@@ -312,22 +405,32 @@ export const useConnection = ({
 
     const changeMuteHandler = (args: SendMessageArgs<MessageType.SET_MUTE>) => {
       const {
-        data: { muteds: _muteds },
+        id: userId,
+        data: { muteds: _muteds, adminMuteds },
       } = args;
-      rtc.muteds = _muteds;
-      setMuteds(_muteds);
+      rtc.muteds = _muteds.concat(adminMuteds);
+      setMuteds(rtc.muteds);
+      setAdminMuted(adminMuteds.indexOf(userId) !== -1);
     };
 
     const handleError = ({
       data: { message, type: _type, code },
     }: SendMessageArgs<MessageType.SET_ERROR>) => {
-      log(_type, message, message, true);
+      log(_type, message, { _type, code }, true);
       setError(code);
       storeError.dispatch(
         changeError({
           error: code,
         })
       );
+      switch (code) {
+        case ErrorCode.youAreBanned:
+          setTimeout(() => {
+            window.history.go(-1);
+          }, ALERT_TIMEOUT);
+          break;
+        default:
+      }
     };
 
     const needReconnectHandler = ({
@@ -377,10 +480,10 @@ export const useConnection = ({
         return;
       }
       const {
-        data: { roomUsers, muteds: _muteds },
+        data: { roomUsers, muteds: _muteds, adminMuteds },
         connId,
       } = ws.getMessage(MessageType.SET_ROOM_GUESTS, rawMessage);
-      rtc.muteds = _muteds;
+      rtc.muteds = _muteds.concat(adminMuteds);
       const _streams: Stream[] = storeStreams.getState().streams as Stream[];
       log('info', 'Run change room gusets handler', {
         roomUsers,
@@ -389,7 +492,8 @@ export const useConnection = ({
       });
       rtc.roomLength = roomUsers?.length || 0;
       setLenght(roomUsers.length);
-      setMuteds(_muteds);
+      setMuteds(rtc.muteds);
+      setAdminMuted(adminMuteds.indexOf(id) !== -1);
       roomUsers.forEach((item) => {
         if (item.id !== id) {
           const _isExists = _streams.filter((_item) => item.id === _item.target);
@@ -603,6 +707,7 @@ export const useConnection = ({
     video,
     changeVideo,
     isOwner,
+    adminMuted,
   };
 };
 
@@ -1021,10 +1126,15 @@ export const useVolumeDialog = ({
 };
 
 export const useSettingsDialog = () => {
+  const [toMute, setToMute] = useState<number | string>(0);
+  const [toBan, setToBan] = useState<number | string>(0);
+  const [toUnMute, setToUnMute] = useState<number | string>(0);
+  const [toUnBan, setToUnBan] = useState<number | string>(0);
+
   const [dialogSettings, setDialogSettings] =
     useState<Omit<DialogProps, 'children'>>(DIALOG_DEFAULT);
 
-  const clickToSettings =
+  const clickToSettingsWrapper =
     (targetId: string | number) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       const { clientX: _clientX, clientY: _clientY } = ev;
       const { width, height } = DIALOG_SETTINGS_DIMENSION;
@@ -1034,11 +1144,35 @@ export const useSettingsDialog = () => {
           open: true,
           clientX,
           clientY,
-          context: createVolumeContext({ userId: targetId }),
+          context: createSettingsContext({ userId: targetId }),
           width,
           height,
         });
       }, 0);
+    };
+
+  const clickToMuteWrapper =
+    (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      const { userId } = getSettingsContext(context);
+      setToMute(userId);
+    };
+
+  const clickToBanWrapper =
+    (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      const { userId } = getSettingsContext(context);
+      setToBan(userId);
+    };
+
+  const clickToUnMuteWrapper =
+    (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      const { userId } = getSettingsContext(context);
+      setToUnMute(userId);
+    };
+
+  const clickToUnBanWrapper =
+    (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      const { userId } = getSettingsContext(context);
+      setToUnBan(userId);
     };
 
   /**
@@ -1046,9 +1180,6 @@ export const useSettingsDialog = () => {
    */
   useEffect(() => {
     const cleanStore = storeClickDocument.subscribe(() => {
-      const {
-        clickDocument: { clientX, clientY },
-      } = storeClickDocument.getState();
       setDialogSettings({
         open: false,
         clientY: dialogSettings.clientY,
@@ -1064,5 +1195,20 @@ export const useSettingsDialog = () => {
     };
   }, [dialogSettings]);
 
-  return { dialogSettings, clickToSettings };
+  return {
+    dialogSettings,
+    clickToSettingsWrapper,
+    clickToMuteWrapper,
+    clickToBanWrapper,
+    clickToUnBanWrapper,
+    clickToUnMuteWrapper,
+    toMute,
+    toBan,
+    toUnBan,
+    toUnMute,
+    setToMute,
+    setToUnMute,
+    setToBan,
+    setToUnBan,
+  };
 };

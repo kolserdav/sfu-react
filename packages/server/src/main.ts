@@ -142,6 +142,7 @@ export function createServer(
             data: {
               roomUsers: rtc.rooms[_roomId],
               muteds: rtc.muteds[_roomId],
+              adminMuteds: rtc.adminMuteds[_roomId],
             },
             connId,
           });
@@ -169,26 +170,20 @@ export function createServer(
         case MessageType.GET_DELETE_MESSAGE:
           chat.handleDeleteMessage(rawMessage);
           break;
+        case MessageType.GET_TO_MUTE:
+          rtc.handleGetToMute(rawMessage);
+          break;
+        case MessageType.GET_TO_BAN:
+          rtc.handleGetToBan(rawMessage);
+          break;
+        case MessageType.GET_TO_UNMUTE:
+          rtc.handleGetToUnMute(rawMessage);
+          break;
+        case MessageType.GET_TO_UNBAN:
+          rtc.handleGetToUnBan(rawMessage);
+          break;
         case MessageType.GET_MUTE:
-          const { muted, roomId } = wss.getMessage(MessageType.GET_MUTE, rawMessage).data;
-          const index = rtc.muteds[roomId].indexOf(id.toString());
-          if (muted) {
-            if (index === -1) {
-              rtc.muteds[roomId].push(id.toString());
-            }
-          } else {
-            rtc.muteds[roomId].splice(index, 1);
-          }
-          rtc.rooms[roomId].forEach((item) => {
-            wss.sendMessage({
-              type: MessageType.SET_MUTE,
-              id: item.id,
-              connId: '',
-              data: {
-                muteds: rtc.muteds[roomId],
-              },
-            });
-          });
+          rtc.handleGetMute(rawMessage);
           break;
         default:
           wss.sendMessage(rawMessage);
@@ -265,6 +260,7 @@ export function createServer(
                 data: {
                   roomLength: rtc.rooms[item].length,
                   muteds: rtc.muteds[item],
+                  adminMuteds: rtc.adminMuteds[item],
                   target: userId,
                   name: _item.name,
                   eventName: 'delete',
@@ -281,6 +277,7 @@ export function createServer(
               delete rtc.peerConnectionsServer[item];
               db.changeRoomArchive({ userId: item.toString(), archive: true });
               delete rtc.muteds[item];
+              delete rtc.adminMuteds[item];
             }
             db.deleteGuest({ userId, roomId: item });
             delete wss.users[userId];

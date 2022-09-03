@@ -15,6 +15,7 @@ const lang: LocaleServer = {
     error: 'Server error',
     roomInactive: 'Room is inactive',
     errorSendMessage: 'Error send message',
+    youAreBanned: 'You are banned',
   },
   client: {
     shareScreen: 'Share screen',

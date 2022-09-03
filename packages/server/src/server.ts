@@ -1,3 +1,6 @@
+/**
+ * This file only for testing the "npm run dev:next" script
+ */
 import { createServer } from './main';
 
 const onRoomOpen = (args) => {

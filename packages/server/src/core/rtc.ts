@@ -43,7 +43,11 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
 
   public ssrcIntervals: Record<string, NodeJS.Timer> = {};
 
-  public muteds: Record<string, string[]> = {};
+  public muteds: Record<string, (string | number)[]> = {};
+
+  public adminMuteds: Record<string, (string | number)[]> = {};
+
+  public banneds: Record<string, (string | number)[]> = {};
 
   private ws: WS;
 
@@ -223,6 +227,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
                   eventName: 'add',
                   roomLength: rooms[roomId]?.length || 0,
                   muteds: this.muteds[roomId],
+                  adminMuteds: this.adminMuteds[roomId],
                 },
                 connId,
               });
@@ -534,6 +539,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
           if (!this.rooms[roomId]) {
             this.rooms[roomId] = [];
             this.muteds[roomId] = [];
+            this.adminMuteds[roomId] = [];
           }
           return {
             error: 1,
@@ -625,6 +631,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         },
       ];
       this.muteds[roomId] = [];
+      this.adminMuteds[roomId] = [];
     } else if (!this.rooms[roomId].find((item) => userId === item.id)) {
       this.rooms[roomId].push({
         id: userId,
@@ -752,6 +759,128 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         });
       }
     });
+  }
+
+  public handleGetMute({ id, data: { muted, roomId } }: SendMessageArgs<MessageType.GET_MUTE>) {
+    const index = this.muteds[roomId].indexOf(id);
+    if (muted) {
+      if (index === -1) {
+        this.muteds[roomId].push(id);
+      }
+    } else {
+      this.muteds[roomId].splice(index, 1);
+    }
+    this.rooms[roomId].forEach((item) => {
+      this.ws.sendMessage({
+        type: MessageType.SET_MUTE,
+        id: item.id,
+        connId: '',
+        data: {
+          muteds: this.muteds[roomId],
+          adminMuteds: this.adminMuteds[roomId],
+        },
+      });
+    });
+  }
+
+  public handleGetToMute({
+    id: roomId,
+    data: { target },
+  }: SendMessageArgs<MessageType.GET_TO_MUTE>) {
+    if (!this.adminMuteds[roomId]) {
+      this.adminMuteds[roomId] = [];
+    }
+    if (this.adminMuteds[roomId].indexOf(target) === -1) {
+      this.adminMuteds[roomId].push(target);
+    } else {
+      log('warn', 'Duplicate to mute command', { roomId, target });
+    }
+    this.rooms[roomId].forEach((item) => {
+      this.ws.sendMessage({
+        type: MessageType.SET_MUTE,
+        id: item.id,
+        connId: '',
+        data: {
+          muteds: this.muteds[roomId],
+          adminMuteds: this.adminMuteds[roomId],
+        },
+      });
+    });
+  }
+
+  public handleGetToBan({ id: roomId, data: { target } }: SendMessageArgs<MessageType.GET_TO_BAN>) {
+    if (!this.banneds[roomId]) {
+      this.banneds[roomId] = [];
+    }
+    if (this.banneds[roomId].indexOf(target) === -1) {
+      this.banneds[roomId].push(target);
+    } else {
+      log('warn', 'Duplicate to ban command', { roomId, target });
+    }
+    const locale = getLocale(this.ws.users[target].locale).server;
+    const connId = this.ws.users[target]?.connId;
+    this.ws.sendMessage(
+      {
+        type: MessageType.SET_ERROR,
+        id: target,
+        connId,
+        data: {
+          type: 'warn',
+          code: ErrorCode.youAreBanned,
+          message: locale.youAreBanned,
+        },
+      },
+      false,
+      () => {
+        const socketId = this.ws.getSocketId(target, connId);
+        if (connId && socketId) {
+          this.ws.sockets[socketId].close();
+        } else {
+          log('warn', 'Banned for not connected', { target, connId, socketId });
+        }
+      }
+    );
+  }
+
+  public handleGetToUnMute({
+    id: roomId,
+    data: { target },
+  }: SendMessageArgs<MessageType.GET_TO_UNMUTE>) {
+    if (!this.adminMuteds[roomId]) {
+      this.adminMuteds[roomId] = [];
+    }
+    const index = this.adminMuteds[roomId].indexOf(target);
+    if (index !== -1) {
+      this.adminMuteds[roomId].splice(index, 1);
+    } else {
+      log('warn', 'Unmute of not muted', { roomId, target });
+    }
+    this.rooms[roomId].forEach((item) => {
+      this.ws.sendMessage({
+        type: MessageType.SET_MUTE,
+        id: item.id,
+        connId: '',
+        data: {
+          muteds: this.muteds[roomId],
+          adminMuteds: this.adminMuteds[roomId],
+        },
+      });
+    });
+  }
+
+  public handleGetToUnBan({
+    id: roomId,
+    data: { target },
+  }: SendMessageArgs<MessageType.GET_TO_UNBAN>) {
+    if (!this.banneds[roomId]) {
+      this.banneds[roomId] = [];
+    }
+    const index = this.banneds[roomId].indexOf(target);
+    if (index !== -1) {
+      this.banneds[roomId].splice(index, 1);
+    } else {
+      log('warn', 'Unban of not banned', { roomId, target });
+    }
   }
 }
 

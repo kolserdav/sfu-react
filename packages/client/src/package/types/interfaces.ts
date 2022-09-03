@@ -38,6 +38,7 @@ export enum ErrorCode {
   initial = 'initial',
   roomIsInactive = 'roomIsInactive',
   errorSendMessage = 'errorSendMessage',
+  youAreBanned = 'youAreBanned',
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -84,6 +85,10 @@ export enum MessageType {
   SET_DELETE_MESSAGE = 'SET_DELETE_MESSAGE',
   GET_LOCALE = 'GET_LOCALE',
   SET_LOCALE = 'SET_LOCALE',
+  GET_TO_MUTE = 'GET_TO_MUTE',
+  GET_TO_BAN = 'GET_TO_BAN',
+  GET_TO_UNMUTE = 'GET_TO_UNMUTE',
+  GET_TO_UNBAN = 'GET_TO_UNBAN',
 }
 
 export namespace Locale {
@@ -105,6 +110,7 @@ export namespace Locale {
     error: string;
     roomInactive: string;
     errorSendMessage: string;
+    youAreBanned: string;
   }
 
   export interface Client {
@@ -168,7 +174,8 @@ export namespace DataTypes {
       name: string;
       eventName: 'delete' | 'add' | 'added';
       roomLength: number;
-      muteds: string[];
+      muteds: (string | number)[];
+      adminMuteds: (string | number)[];
     };
     export type SetUserId = {
       name: string;
@@ -177,9 +184,22 @@ export namespace DataTypes {
       userId: number | string;
       mimeType: string;
     };
+    export type GetToMute = {
+      target: string | number;
+    };
+    export type GetToBan = {
+      target: string | number;
+    };
+    export type GetToUnMute = {
+      target: string | number;
+    };
+    export type GetToUnBan = {
+      target: string | number;
+    };
     export type SetRoomGuests = {
       roomUsers: RoomUser[];
-      muteds: string[];
+      muteds: (string | number)[];
+      adminMuteds: (string | number)[];
     };
     export type GetChatMessages = {
       args: Prisma.MessageFindManyArgs;
@@ -203,7 +223,8 @@ export namespace DataTypes {
       code: keyof typeof ErrorCode;
     };
     export type SetMute = {
-      muteds: string[];
+      muteds: (string | number)[];
+      adminMuteds: (string | number)[];
     };
     export type SetLocale = {
       locale: LocaleServer['client'];
@@ -262,6 +283,14 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.GetChatUnit
     : T extends MessageType.GET_ROOM
     ? DataTypes.MessageTypes.GetRoom
+    : T extends MessageType.GET_TO_MUTE
+    ? DataTypes.MessageTypes.GetToMute
+    : T extends MessageType.GET_TO_BAN
+    ? DataTypes.MessageTypes.GetToBan
+    : T extends MessageType.GET_TO_UNMUTE
+    ? DataTypes.MessageTypes.GetToUnMute
+    : T extends MessageType.GET_TO_UNBAN
+    ? DataTypes.MessageTypes.GetToUnBan
     : T extends MessageType.SET_ROOM
     ? DataTypes.MessageTypes.SetRoom
     : T extends MessageType.GET_LOCALE
@@ -298,7 +327,7 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetLocale
     : T extends MessageType.SET_ERROR
     ? DataTypes.MessageTypes.SetError
-    : unknown;
+    : never;
 }
 
 export namespace Signaling {
@@ -325,7 +354,8 @@ export namespace Signaling {
 
     public abstract sendMessage: <T extends keyof typeof MessageType>(
       args: SendMessageArgs<T>,
-      second?: boolean
+      second?: boolean,
+      cb?: () => void
     ) => Promise<1 | 0>;
   }
 }

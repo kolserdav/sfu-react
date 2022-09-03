@@ -29,6 +29,7 @@ import {
   copyLink,
   supportDisplayMedia,
   getVolumeContext,
+  getSettingsContext,
 } from './Room.lib';
 import { DEFAULT_USER_NAME } from '../utils/constants';
 import CloseButton from './ui/CloseButton';
@@ -52,6 +53,22 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
   const { createAudioAnalyzer, analyzeSoundLevel, cleanAudioAnalyzer, speaker } =
     useAudioAnalyzer();
   const {
+    dialogSettings,
+    clickToSettingsWrapper,
+    clickToBanWrapper,
+    clickToMuteWrapper,
+    clickToUnBanWrapper,
+    clickToUnMuteWrapper,
+    toBan,
+    toMute,
+    toUnBan,
+    toUnMute,
+    setToMute,
+    setToUnMute,
+    setToBan,
+    setToUnBan,
+  } = useSettingsDialog();
+  const {
     streams,
     lenght,
     lostStreamHandler,
@@ -65,6 +82,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     rtc,
     changeVideo,
     isOwner,
+    adminMuted,
   } = useConnection({
     id: userId,
     roomId,
@@ -74,6 +92,14 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     cleanAudioAnalyzer,
     locale,
     userName: name || DEFAULT_USER_NAME,
+    toMute,
+    toBan,
+    toUnBan,
+    toUnMute,
+    setToMute,
+    setToUnMute,
+    setToBan,
+    setToUnBan,
   });
 
   const setVideoDimensions = useVideoDimensions({
@@ -97,9 +123,10 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     userId,
   });
   const volumeUserId = useMemo(() => getVolumeContext(dialog.context).userId, [dialog.context]);
-
-  const { dialogSettings, clickToSettings } = useSettingsDialog();
-
+  const settingsUserId = useMemo(
+    () => getSettingsContext(dialogSettings.context).userId,
+    [dialogSettings.context]
+  );
   return (
     <div
       className={s.wrapper}
@@ -216,7 +243,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
                   )}
                 </IconButton>
                 {isOwner && item.target !== userId && (
-                  <IconButton onClick={clickToSettings(item.target)}>
+                  <IconButton onClick={clickToSettingsWrapper(item.target)}>
                     <MenuIcon color={theme?.colors.white} />
                   </IconButton>
                 )}
@@ -248,8 +275,8 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
             )}
           </IconButton>
         )}
-        <IconButton onClick={changeMuted}>
-          {muted ? (
+        <IconButton onClick={changeMuted} disabled={adminMuted}>
+          {muted || adminMuted ? (
             <MicrophoneOffIcon color={theme?.colors.text} />
           ) : (
             <MicrophoneIcon color={theme?.colors.text} />
@@ -278,20 +305,20 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
         <div
           tabIndex={-1}
           role="button"
-          onClick={() => {
-            console.log(dialogSettings.context);
-          }}
+          onClick={
+            rtc.muteds.indexOf(settingsUserId) === -1
+              ? clickToMuteWrapper(dialogSettings.context)
+              : clickToUnMuteWrapper(dialogSettings.context)
+          }
           className={g.dialog__item}
         >
-          {locale.mute}
+          {rtc.muteds.indexOf(settingsUserId) === -1 ? locale.mute : locale.unmute}
         </div>
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}
         <div
           tabIndex={-1}
           role="button"
-          onClick={() => {
-            console.log(dialogSettings.context);
-          }}
+          onClick={clickToBanWrapper(dialogSettings.context)}
           className={g.dialog__item}
         >
           {locale.ban}
