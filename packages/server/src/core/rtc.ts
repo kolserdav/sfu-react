@@ -20,7 +20,7 @@ import {
   RoomList,
 } from '../types/interfaces';
 import { checkSignallingState, getLocale, log } from '../utils/lib';
-import { STUN_SERVER } from '../utils/constants';
+import { STUN_SERVER, SENT_RTCP_INTERVAL } from '../utils/constants';
 import WS from './ws';
 import DB from './db';
 
@@ -189,7 +189,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
           const [track] = await transceiver.onTrack.asPromise();
           this.ssrcIntervals[peerId] = setInterval(() => {
             transceiver.receiver.sendRtcpPLI(track.ssrc);
-          }, 250);
+          }, SENT_RTCP_INTERVAL);
         }
       }
     );

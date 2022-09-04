@@ -2,7 +2,7 @@
   "url": "http://127.0.0.1:3000",
   "headless": true,
   "rooms": 2,
-  "users": 2,
+  "users": 4,
   "singleRoom": false,
   "delay": 4000
 }

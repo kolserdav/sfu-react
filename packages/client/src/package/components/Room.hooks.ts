@@ -562,7 +562,7 @@ export const useConnection = ({
           const _isExists = _streams.filter((_item) => item.id === _item.target);
           if (!_isExists[0]) {
             log('info', `Check new user ${item}`, { uid: id });
-            rtc.createPeerConnection({
+            const skip = rtc.createPeerConnection({
               roomId,
               target: item.id,
               userId: id,
@@ -580,6 +580,9 @@ export const useConnection = ({
               iceServers,
               eventName: 'check',
             });
+            if (skip) {
+              return;
+            }
             rtc.addTracks({ roomId, userId: id, target: item.id, connId, locale }, (e) => {
               if (e) {
                 log('warn', 'Failed add tracks', { roomId, userId: id, target: item, connId });

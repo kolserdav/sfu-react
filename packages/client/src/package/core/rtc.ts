@@ -70,6 +70,9 @@ class RTC
     const peerId = this.getPeerId(roomId, target, connId);
     if (this.peerConnections[peerId]) {
       log('info', 'Duplicate peer connection', { peerId, eventName });
+      if (eventName === 'check') {
+        return 1;
+      }
       this.closeVideoCall({ target, userId, roomId, connId });
     } else {
       log('log', 'Creating peer connection', { peerId });
@@ -88,6 +91,7 @@ class RTC
       onTrack({ addedUserId, stream, connId });
     };
     this.handleIceCandidate({ connId, roomId, userId, target });
+    return 0;
   }
 
   public createRTC: RTCInterface['createRTC'] = ({ connId, roomId, target, iceServers = [] }) => {
@@ -241,6 +245,8 @@ class RTC
         userId,
         target,
         state: core.peerConnections[peerId]!.signalingState,
+        cs: core.peerConnections[peerId]!.signalingState,
+        is: core.peerConnections[peerId]!.iceConnectionState,
       });
       core.peerConnections[peerId]!.createOffer()
         .then((offer): 1 | void | PromiseLike<void> => {

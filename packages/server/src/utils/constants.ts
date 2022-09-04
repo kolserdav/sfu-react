@@ -34,3 +34,4 @@ export const DATABASE_URL = env.DATABASE_URL || '';
 export const CORS = env.CORS || '';
 export const APP_URL = env.APP_URL || '';
 export const STUN_SERVER = env.STUN_SERVER || '';
+export const SENT_RTCP_INTERVAL = 1000;

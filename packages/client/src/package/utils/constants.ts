@@ -11,7 +11,7 @@
 import { AlertProps, ClickPosition, DialogProps } from '../types';
 
 export const WS_TTL = 1;
-export const LOG_LEVEL = 2;
+export const LOG_LEVEL = 1;
 export const START_DELAY = 1999;
 export const CODECS = [
   'video/webm;codecs=H264',
