@@ -58,16 +58,13 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     clickToSettingsWrapper,
     clickToBanWrapper,
     clickToMuteWrapper,
-    clickToUnBanWrapper,
     clickToUnMuteWrapper,
     toBan,
     toMute,
-    toUnBan,
     toUnMute,
     setToMute,
     setToUnMute,
     setToBan,
-    setToUnBan,
   } = useSettingsDialog();
   const {
     streams,
@@ -96,12 +93,10 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     userName: name || DEFAULT_USER_NAME,
     toMute,
     toBan,
-    toUnBan,
     toUnMute,
     setToMute,
     setToUnMute,
     setToBan,
-    setToUnBan,
   });
 
   const setVideoDimensions = useVideoDimensions({

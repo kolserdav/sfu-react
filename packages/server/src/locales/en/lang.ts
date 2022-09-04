@@ -37,6 +37,7 @@ const lang: LocaleServer = {
     unban: 'Unban',
     isAdminOfRoom: 'Is admin of room',
     youAreAdminOfRoom: 'You are admin of room',
+    banneds: 'Banned users',
   },
 };
 

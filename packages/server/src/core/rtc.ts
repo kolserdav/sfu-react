@@ -861,15 +861,18 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     }
     let index = -1;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let item: RoomUser = {} as any;
-    this.banneds[roomId].forEach((it, i) => {
-      if (it.id === target) {
+    this.banneds[roomId].forEach((item, i) => {
+      if (item.id === target) {
         index = i;
-        item = it;
       }
     });
     if (index === -1) {
-      this.banneds[roomId].push(item);
+      const user = this.rooms[roomId].find((item) => item.id === target);
+      if (user) {
+        this.banneds[roomId].push(user);
+      } else {
+        log('warn', 'Banned user not found in room', { userId, target });
+      }
     } else {
       log('warn', 'Duplicate to ban command', { roomId, target });
     }

@@ -34,8 +34,7 @@ const changeThemeHandler = () => {
 function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) {
   const { lang, changeLang } = useLang();
   const { openSettings, openSettingsDialog } = useSettings({ open });
-  const { users, isOwner } = useUsers({ userId });
-
+  const { users, isOwner, banneds } = useUsers({ userId });
   return (
     <div className={clsx(s.wrapper, open ? s.open : '')}>
       <div
@@ -51,7 +50,7 @@ function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) 
               <div key={item.id} className={s.users__item}>
                 <div className={s.user__name}>{item.name}</div>
                 <div className={s.user__actions}>
-                  {item.muted || item.adminMuted ? (
+                  {(item.muted || item.adminMuted) && (
                     <MicrophoneOffIcon
                       width={16}
                       height={16}
@@ -63,12 +62,20 @@ function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) 
                           : theme?.colors.text
                       }
                     />
-                  ) : (
-                    ''
                   )}
                 </div>
               </div>
             ))}
+            {isOwner && banneds.length !== 0 && (
+              <div className={s.users}>
+                <div className={s.title}>{locale.banneds}</div>
+                {banneds.map((item) => (
+                  <div key={`${item.id}-ban`} className={s.users__item}>
+                    {item.name}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <Chat
             theme={theme}

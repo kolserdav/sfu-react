@@ -57,12 +57,10 @@ export const useConnection = ({
   locale,
   toBan,
   toMute,
-  toUnBan,
   toUnMute,
   setToMute,
   setToUnMute,
   setToBan,
-  setToUnBan,
 }: {
   id: number | string;
   roomId: number | string | null;
@@ -74,12 +72,10 @@ export const useConnection = ({
   locale: LocaleServer['client'];
   toBan: string | number;
   toMute: string | number;
-  toUnBan: string | number;
   toUnMute: string | number;
   setToMute: React.Dispatch<React.SetStateAction<string | number>>;
   setToUnMute: React.Dispatch<React.SetStateAction<string | number>>;
   setToBan: React.Dispatch<React.SetStateAction<string | number>>;
-  setToUnBan: React.Dispatch<React.SetStateAction<string | number>>;
 }) => {
   const [streams, setStreams] = useState<Stream[]>([]);
   const [shareScreen, setShareScreen] = useState<boolean>(false);
@@ -254,21 +250,11 @@ export const useConnection = ({
   }, [toUnMute, connectionId, ws, roomId, setToUnMute]);
 
   /**
-   * Listen toUnBan
+   * Listen message
    */
   useEffect(() => {
-    if (toUnBan && roomId) {
-      ws.sendMessage({
-        type: MessageType.GET_TO_UNBAN,
-        connId: connectionId,
-        id: roomId,
-        data: {
-          target: toUnBan,
-        },
-      });
-      setToUnBan(0);
-    }
-  }, [toUnBan, connectionId, ws, roomId, setToUnBan]);
+    // TODO
+  }, []);
 
   /**
    * Set streams from store
@@ -1210,7 +1196,6 @@ export const useSettingsDialog = () => {
   const [toMute, setToMute] = useState<number | string>(0);
   const [toBan, setToBan] = useState<number | string>(0);
   const [toUnMute, setToUnMute] = useState<number | string>(0);
-  const [toUnBan, setToUnBan] = useState<number | string>(0);
 
   const [dialogSettings, setDialogSettings] =
     useState<Omit<DialogProps, 'children'>>(DIALOG_DEFAULT);
@@ -1250,12 +1235,6 @@ export const useSettingsDialog = () => {
       setToUnMute(userId);
     };
 
-  const clickToUnBanWrapper =
-    (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-      const { userId } = getSettingsContext(context);
-      setToUnBan(userId);
-    };
-
   /**
    * Listen click document
    */
@@ -1281,15 +1260,12 @@ export const useSettingsDialog = () => {
     clickToSettingsWrapper,
     clickToMuteWrapper,
     clickToBanWrapper,
-    clickToUnBanWrapper,
     clickToUnMuteWrapper,
     toMute,
     toBan,
-    toUnBan,
     toUnMute,
     setToMute,
     setToUnMute,
     setToBan,
-    setToUnBan,
   };
 };

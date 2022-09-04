@@ -100,5 +100,5 @@ export const useUsers = ({ userId }: { userId: string | number }) => {
     };
   }, []);
 
-  return { users, isOwner };
+  return { users, isOwner, banneds };
 };

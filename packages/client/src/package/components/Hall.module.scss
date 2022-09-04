@@ -44,6 +44,13 @@
   position: relative;
   flex-basis: 20%;
   height: 100%;
+
+  .title {
+    margin-top: 1rem;
+    text-decoration: underline;
+    text-align: center;
+  }
+
   @media (max-width: $mobile-width) {
     display: none;
   }

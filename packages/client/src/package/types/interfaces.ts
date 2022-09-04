@@ -142,6 +142,7 @@ export namespace Locale {
     unban: string;
     isAdminOfRoom: string;
     youAreAdminOfRoom: string;
+    banneds: string;
   }
 }
 
