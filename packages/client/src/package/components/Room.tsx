@@ -18,7 +18,6 @@ import {
   useVideoDimensions,
   useOnclickClose,
   usePressEscape,
-  useVideoStarted,
   useAudioAnalyzer,
   useVolumeDialog,
   useSettingsDialog,
@@ -105,14 +104,6 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
   });
   const onClickClose = useOnclickClose({ container: container.current, lenght });
   const onPressEscape = usePressEscape();
-  const { played, setPlayed } = useVideoStarted({
-    streams,
-    ws,
-    rtc,
-    container: container.current,
-    roomId,
-    lostStreamHandler,
-  });
   const displayMediaSupported = useMemo(() => supportDisplayMedia(), []);
   const { dialog, clickToVolume, changeVolumeWrapper, volumes } = useVolumeDialog({
     roomId,
@@ -155,11 +146,6 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
                   });
                 } else {
                   setVideoDimensions(e, item.stream);
-                  if (!played[item.target]) {
-                    const _played = { ...played };
-                    _played[item.target] = true;
-                    setPlayed(_played);
-                  }
                 }
               }}
               onClick={onClickVideo}
@@ -219,11 +205,6 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
               }}
               onLoadedMetadata={() => {
                 log('info', 'Meta data loaded', { ...item });
-                if (!played[item.target]) {
-                  const _played = { ...played };
-                  _played[item.target] = true;
-                  setPlayed(_played);
-                }
                 createAudioAnalyzer(item);
               }}
             />

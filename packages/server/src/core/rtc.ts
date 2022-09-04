@@ -189,7 +189,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
           const [track] = await transceiver.onTrack.asPromise();
           this.ssrcIntervals[peerId] = setInterval(() => {
             transceiver.receiver.sendRtcpPLI(track.ssrc);
-          }, 1000);
+          }, 250);
         }
       }
     );
@@ -345,7 +345,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     }
     const { signalingState } = this.peerConnectionsServer[roomId][peerId];
     if (!checkSignallingState(signalingState)) {
-      log('warn', 'Skiping create answer', { signalingState, peerId, roomId });
+      log('info', 'Skiping create answer', { signalingState, peerId, roomId });
       return;
     }
     const answ = await this.peerConnectionsServer[roomId][peerId]!.createAnswer().catch((e) => {
