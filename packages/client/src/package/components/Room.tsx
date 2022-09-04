@@ -215,7 +215,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
             <div ref={videoActionsRef} className={s.video__actions}>
               {item.isOwner && (
                 <PseudoButton
-                  refActions={videoActionsRef}
+                  refActions={videoActionsRef as React.MutableRefObject<HTMLDivElement>}
                   title={isOwner ? locale.youAreAdminOfRoom : locale.isAdminOfRoom}
                 >
                   <CrownIcon color={theme?.colors.yellow} />
