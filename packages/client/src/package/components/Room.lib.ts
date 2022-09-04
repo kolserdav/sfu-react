@@ -68,6 +68,14 @@ export const getWidthOfItem = ({
       case 9:
         dims = horizontal ? { cols: 3, rows: 3 } : { cols: 2, rows: 4 };
         break;
+      case 10:
+        dims = horizontal ? { cols: 5, rows: 2 } : { cols: 2, rows: 5 };
+        break;
+      case 11:
+      case 12:
+      case 13:
+        dims = horizontal ? { cols: 5, rows: 3 } : { cols: 3, rows: 5 };
+        break;
       default:
       // TODO other counts
     }
@@ -88,6 +96,7 @@ export const getWidthOfItem = ({
 };
 
 export const onClickVideo = (e: React.MouseEvent<HTMLVideoElement, MouseEvent>) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { target }: { target: HTMLVideoElement } = e as any;
   const { videoWidth, videoHeight } = target;
   const { outerWidth } = window;

@@ -32,7 +32,7 @@ let { rooms, users, headless, singleRoom, url, delay } = importErr ? exConfig : 
 
 process.setMaxListeners(0);
 
-let id = 0;
+let id = 1;
 
 // Settings
 const ROOMS = singleRoom ? 1 : rooms;
