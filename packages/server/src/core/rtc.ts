@@ -704,7 +704,9 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       this.ws.sendMessage({
         type: MessageType.SET_ROOM,
         id: uid,
-        data: undefined,
+        data: {
+          isOwner,
+        },
         connId,
       });
       log('warn', 'Can not add user to room', { id, uid });

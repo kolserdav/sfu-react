@@ -46,9 +46,11 @@ import VolumeLowIcon from '../Icons/VolumeLow';
 import Dialog from './ui/Dialog';
 import MenuIcon from '../Icons/Menu';
 import CrownIcon from '../Icons/Crown';
+import PseudoButton from './ui/PseudoButton';
 
 function Room({ userId, iceServers, server, port, roomId, locale, name, theme }: RoomProps) {
   const container = useRef<HTMLDivElement>(null);
+  const videoActionsRef = useRef<HTMLDivElement>(null);
   const roomLink = useMemo(() => getRoomLink(roomId), [roomId]);
   const { createAudioAnalyzer, analyzeSoundLevel, cleanAudioAnalyzer, speaker } =
     useAudioAnalyzer();
@@ -210,14 +212,14 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
             />
             {/** actions is strong third child */}
 
-            <div className={s.video__actions}>
+            <div ref={videoActionsRef} className={s.video__actions}>
               {item.isOwner && (
-                <div
-                  className={g.preudo__button}
+                <PseudoButton
+                  refActions={videoActionsRef}
                   title={isOwner ? locale.youAreAdminOfRoom : locale.isAdminOfRoom}
                 >
                   <CrownIcon color={theme?.colors.yellow} />
-                </div>
+                </PseudoButton>
               )}
               {item.target !== userId && (
                 <IconButton onClick={clickToVolume(item.target)}>

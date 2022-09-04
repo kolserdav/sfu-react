@@ -15,9 +15,10 @@ export interface IconProps {
   width?: number;
   height?: number;
   color?: string;
+  className?: string;
 }
 
-function Icon({ color, children, width, height }: IconProps) {
+function Icon({ color, children, width, height, className }: IconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -25,6 +26,7 @@ function Icon({ color, children, width, height }: IconProps) {
       width={`${width}px`}
       height={`${height}px`}
       viewBox="0 0 24 24"
+      className={className}
     >
       <path fill={`${color}`} d={children} />
     </svg>
@@ -35,6 +37,7 @@ Icon.defaultProps = {
   color: '#000',
   width: 24,
   height: 24,
+  className: '',
 };
 
 export default Icon;

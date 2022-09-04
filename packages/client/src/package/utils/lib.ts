@@ -140,3 +140,6 @@ export const isClickByDialog = ({
   const isY = clientY > dialog.clientY && clientY < dialog.clientY + dialog.height;
   return isX && isY;
 };
+
+export const rangeRandom = ({ min, max }: { min: number; max: number }) =>
+  Math.floor(Math.random() * (max - min) + min);

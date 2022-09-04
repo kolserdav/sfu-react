@@ -67,6 +67,8 @@
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: flex-end;
+  width: 100%;
 }
 
 .video__volume__input {

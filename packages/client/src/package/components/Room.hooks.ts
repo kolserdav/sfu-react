@@ -38,6 +38,7 @@ import {
   VOLUME_MIN,
   DIALOG_SETTINGS_DIMENSION,
   ALERT_TIMEOUT,
+  VIDEO_ACTIONS_STYLE,
 } from '../utils/constants';
 import { CookieName, getCookie } from '../utils/cookies';
 import storeError, { changeError } from '../store/error';
@@ -845,16 +846,18 @@ export const useVideoDimensions = ({
                 }
                 target.setAttribute('width', _width.toString());
                 target.setAttribute('height', _height.toString());
+                target.parentElement?.setAttribute('style', `width: 100%;height: 100%`);
+                const { nextElementSibling: actions } = target;
+                const isActions = actions?.getAttribute('class')?.indexOf(s.video__actions) !== -1;
                 if (isFull) {
-                  target.parentElement?.setAttribute('style', `width: 100%;height: 100%`);
-                  const { nextElementSibling: actions } = target;
-                  const isActions =
-                    actions?.getAttribute('class')?.indexOf(s.video__actions) !== -1;
                   if (isActions) {
                     // 10px - padding of IconButton, 1rem - right of CloseButton
-                    actions?.setAttribute('style', 'top: 40px; right: calc(1rem - 10px);');
+                    actions?.setAttribute('style', `top: 40px; ${VIDEO_ACTIONS_STYLE}`);
                   }
                 } else {
+                  if (isActions) {
+                    actions?.setAttribute('style', `top: 0;${VIDEO_ACTIONS_STYLE}`);
+                  }
                   target.parentElement?.setAttribute(
                     'style',
                     `width: ${_width}px;height: ${_height}px;`
