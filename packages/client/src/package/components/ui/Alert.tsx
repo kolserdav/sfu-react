@@ -18,6 +18,7 @@ import storeAlert, { changeAlert } from '../../store/alert';
 function Alert({ children, type, open, theme }: AlertProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const [mouseMove, setMouseMove] = useState<boolean>(false);
+  const [opened, setOpened] = useState<boolean>(false);
 
   /**
    * Close alert
@@ -37,6 +38,9 @@ function Alert({ children, type, open, theme }: AlertProps) {
             },
           })
         );
+        setTimeout(() => {
+          setOpened(false);
+        }, ALERT_TIMEOUT);
       }, ALERT_TIMEOUT);
     }
     return () => {
@@ -92,6 +96,7 @@ function Alert({ children, type, open, theme }: AlertProps) {
             ? theme?.colors.yellow
             : theme?.colors.blue,
         color: theme?.colors.black,
+        display: opened ? 'flex' : 'none',
       }}
     >
       {children}

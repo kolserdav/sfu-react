@@ -209,6 +209,7 @@ export namespace DataTypes {
     };
     export type GetToUnBan = {
       target: string | number;
+      userId: string | number;
     };
     export type SetRoomGuests = {
       roomUsers: RoomUser[];
@@ -354,6 +355,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetError
     : never;
 }
+
+export type ArgsSubset<T> = DataTypes.ArgsSubset<T>;
 
 export namespace Signaling {
   // eslint-disable-next-line @typescript-eslint/no-shadow

@@ -9,34 +9,39 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { createSlice, configureStore } from '@reduxjs/toolkit';
-import { SendMessageArgs } from '../types/interfaces';
+import { MessageType, SendMessageArgs, ArgsSubset } from '../types/interfaces';
 
-interface State {
+interface Action<T extends keyof typeof MessageType> {
   message: {
     type: 'room';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    value: SendMessageArgs<any>;
+    value: Omit<SendMessageArgs<any>, 'data' | 'type'> & {
+      type: T;
+      data: ArgsSubset<T>;
+    };
   };
 }
 
-interface Action {
-  payload: State;
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ChangeMessage = <T extends keyof typeof MessageType>(action: Action<T>) => any;
 
 const slice = createSlice({
   name: 'message',
   initialState: {
     message: {},
-  } as State,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any,
   reducers: {
-    changeMessage: (state: State, action: Action) => {
+    changeMessage: (state, action) => {
       // eslint-disable-next-line no-param-reassign
       state.message = action.payload.message;
     },
   },
 });
 
-export const { changeMessage } = slice.actions;
+export const { changeMessage } = slice.actions as {
+  changeMessage: ChangeMessage;
+};
 
 const storeMessage = configureStore({
   reducer: slice.reducer,

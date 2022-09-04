@@ -542,12 +542,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
               code: ErrorCode.roomIsInactive,
             },
           });
-          if (!this.rooms[roomId]) {
-            this.rooms[roomId] = [];
-            this.muteds[roomId] = [];
-            this.adminMuteds[roomId] = [];
-            this.banneds[roomId] = [];
-          }
           return {
             error: 1,
             isOwner,
@@ -675,6 +669,32 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       id,
       connId,
     } = message;
+    if (!this.rooms[id]) {
+      this.rooms[id] = [];
+      this.muteds[id] = [];
+      this.adminMuteds[id] = [];
+      this.banneds[id] = [];
+    }
+    let index = -1;
+    this.banneds[id].forEach((item, i) => {
+      if (item.id === uid) {
+        index = i;
+      }
+    });
+    const locale = getLocale(this.ws.users[uid].locale).server;
+    if (index !== -1) {
+      this.ws.sendMessage({
+        type: MessageType.SET_ERROR,
+        id: uid,
+        connId,
+        data: {
+          type: 'warn',
+          code: ErrorCode.youAreBanned,
+          message: locale.youAreBanned,
+        },
+      });
+      return;
+    }
     const { error, isOwner } = await this.addUserToRoom({
       roomId: id,
       userId: uid,
@@ -949,7 +969,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
 
   public handleGetToUnBan({
     id: roomId,
-    data: { target },
+    data: { target, userId },
   }: SendMessageArgs<MessageType.GET_TO_UNBAN>) {
     if (!this.banneds[roomId]) {
       this.banneds[roomId] = [];
@@ -965,6 +985,14 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     } else {
       log('warn', 'Unban of not banned', { roomId, target });
     }
+    this.ws.sendMessage({
+      type: MessageType.SET_BAN_LIST,
+      id: userId,
+      data: {
+        banneds: this.banneds[roomId],
+      },
+      connId: '',
+    });
   }
 }
 

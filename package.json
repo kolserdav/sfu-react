@@ -27,6 +27,10 @@
   ],
   "bugs": "https://github.com/kolserdav/werift-sfu-react/issues",
   "license": "MIT",
+  "engines": {
+    "npm": ">=8.0.0",
+    "node": ">=16.0.0"
+  },
   "main": "packages/client/dist/Main.js",
   "types": "packages/client/dist/Main.d.ts",
   "files": [

@@ -5,7 +5,7 @@ $border-radius: 8px;
 .wrapper {
   z-index: 101;
   position: fixed;
-  bottom: calc((#{$button-width}) * -1);
+  bottom: calc((#{$button-width}) * -1 - 10px);
   width: 300px;
   right: calc(#{$button-width} / 2 + 1rem);
   height: $button-width;
@@ -16,7 +16,7 @@ $border-radius: 8px;
   border-radius: $border-radius;
   box-shadow: -2px -2px $border-radius rgb(0 0 0 / 30%);
   font-size: large;
-  transition: bottom 0.3s ease-in;
+  transition: bottom $alert-transition ease-in;
 
   @media (max-width: $mobile-width) {
     width: 100vw;
@@ -26,7 +26,7 @@ $border-radius: 8px;
 
   &.open {
     bottom: calc(#{$button-width} / 2);
-    transition: bottom 0.3s ease-out;
+    transition: bottom $alert-transition ease-out;
     @media (max-width: $mobile-width) {
       bottom: calc(100vh - #{$button-width} - #{$button-width} / 2);
     }

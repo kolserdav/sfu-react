@@ -71,3 +71,5 @@ export const FIRST_MESSAGE_INDENT = 20;
 export const FOLOW_QUOTE_STYLE = 'border: 3px solid lightblue';
 export const DEFAULT_USER_NAME = 'No Name';
 export const VOLUME_MIN = 1;
+// dependency $alert-transition packages/client/src/package/Main.scss
+export const ALERT_TRANSITION = 350;

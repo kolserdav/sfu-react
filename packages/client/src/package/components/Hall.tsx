@@ -33,7 +33,7 @@ const changeThemeHandler = () => {
 function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) {
   const { lang, changeLang } = useLang();
   const { openSettings, openSettingsDialog } = useSettings({ open });
-  const { users, isOwner, banneds } = useUsers({ userId });
+  const { users, isOwner, banneds, unBanWrapper } = useUsers({ userId, roomId });
   return (
     <div className={clsx(s.wrapper, open ? s.open : '')}>
       <div
@@ -72,7 +72,7 @@ function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) 
                   <div key={`${item.id}-ban`} className={s.users__item}>
                     <div className={s.users__name}>{item.name}</div>
                     <div className={s.users__actions}>
-                      <IconButton>
+                      <IconButton onClick={unBanWrapper(item.id)}>
                         <CloseIcon width={16} height={16} color={theme?.colors.red} />
                       </IconButton>
                     </div>

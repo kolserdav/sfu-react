@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import storeLocale, { changeLocale } from '../store/locale';
-import { LocaleDefault, LocaleValue, RoomUser, UserList } from '../types/interfaces';
+import { LocaleDefault, LocaleValue, MessageType, RoomUser, UserList } from '../types/interfaces';
 import { getCookie, CookieName, setCookie } from '../utils/cookies';
 import storeStreams from '../store/streams';
 import storeUserList from '../store/userList';
+import storeMessage, { changeMessage } from '../store/message';
 
 export const useLang = () => {
   const [lang, setLang] = useState<LocaleValue>(getCookie(CookieName.lang) || LocaleDefault);
@@ -36,13 +37,39 @@ export const useSettings = ({ open }: { open: boolean }) => {
   return { openSettings, openSettingsDialog };
 };
 
-export const useUsers = ({ userId }: { userId: string | number }) => {
+export const useUsers = ({
+  userId,
+  roomId,
+}: {
+  userId: string | number;
+  roomId: string | number;
+}) => {
   const [isOwner, setIsOwner] = useState<boolean>(false);
   const [roomUsers, setRoomUsers] = useState<RoomUser[]>([]);
   const [users, setUsers] = useState<UserList[]>([]);
   const [banneds, setBanneds] = useState<RoomUser[]>([]);
   const [muteds, setMuteds] = useState<(string | number)[]>([]);
   const [adminMuteds, setAdminMuteds] = useState<(string | number)[]>([]);
+
+  const unBanWrapper =
+    (target: string | number) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      storeMessage.dispatch(
+        changeMessage({
+          message: {
+            type: 'room',
+            value: {
+              type: MessageType.GET_TO_UNBAN,
+              id: roomId,
+              connId: '',
+              data: {
+                target,
+                userId,
+              },
+            },
+          },
+        })
+      );
+    };
 
   /**
    * Listen change users
@@ -100,5 +127,5 @@ export const useUsers = ({ userId }: { userId: string | number }) => {
     };
   }, []);
 
-  return { users, isOwner, banneds };
+  return { users, isOwner, banneds, unBanWrapper };
 };
