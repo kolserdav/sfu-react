@@ -12,16 +12,18 @@ import React from 'react';
 
 export interface IconProps {
   children: string;
+  width?: number;
+  height?: number;
   color?: string;
 }
 
-function Icon({ color, children }: IconProps) {
+function Icon({ color, children, width, height }: IconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       version="1.1"
-      width="24px"
-      height="24px"
+      width={`${width}px`}
+      height={`${height}px`}
       viewBox="0 0 24 24"
     >
       <path fill={`${color}`} d={children} />
@@ -31,6 +33,8 @@ function Icon({ color, children }: IconProps) {
 
 Icon.defaultProps = {
   color: '#000',
+  width: 24,
+  height: 24,
 };
 
 export default Icon;

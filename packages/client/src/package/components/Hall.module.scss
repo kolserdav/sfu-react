@@ -49,9 +49,18 @@
   }
 }
 
+$user-item-padding: 1rem;
+
 .users__item {
-  margin: 1rem;
+  padding: 0 $user-item-padding;
+  position: relative;
+  width: calc(100% - #{$user-item-padding});
   overflow-y: auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  line-height: 1.6;
 }
 
 .settings {

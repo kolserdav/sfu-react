@@ -810,8 +810,8 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         type: MessageType.SET_MUTE_LIST,
         id: item.id,
         data: {
-          muteds: this.muteds[id],
-          adminMuteds: this.adminMuteds[id],
+          muteds: this.muteds[roomId],
+          adminMuteds: this.adminMuteds[roomId],
         },
         connId: '',
       });

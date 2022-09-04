@@ -89,6 +89,7 @@ export const useConnection = ({
   const [muted, setMuted] = useState<boolean>(false);
   const [adminMuted, setAdminMuted] = useState<boolean>(false);
   const [muteds, setMuteds] = useState<(string | number)[]>([]);
+  const [adminMuteds, setAdminMuteds] = useState<(string | number)[]>([]);
   const [video, setVideo] = useState<boolean>(true);
   const [isOwner, setIsOwner] = useState<boolean>(false);
   const [error, setError] = useState<keyof typeof ErrorCode>();
@@ -346,7 +347,7 @@ export const useConnection = ({
         roomLength,
         muteds: _muteds,
         name,
-        adminMuteds,
+        adminMuteds: _adminMuteds,
         isOwner: _isOwner,
       },
       connId,
@@ -354,9 +355,10 @@ export const useConnection = ({
       if (lenght !== roomLength) {
         setLenght(roomLength);
       }
-      rtc.muteds = _muteds.concat(adminMuteds);
+      rtc.muteds = _muteds.concat(_adminMuteds);
       setMuteds(rtc.muteds);
-      setAdminMuted(adminMuteds.indexOf(userId) !== -1);
+      setAdminMuteds(_adminMuteds);
+      setAdminMuted(_adminMuteds.indexOf(userId) !== -1);
       switch (eventName) {
         case 'add':
         case 'added':
@@ -400,7 +402,7 @@ export const useConnection = ({
                       roomLength,
                       eventName: 'added',
                       muteds: _muteds,
-                      adminMuteds,
+                      adminMuteds: _adminMuteds,
                       isOwner,
                     },
                   });
@@ -429,11 +431,12 @@ export const useConnection = ({
     const changeMuteHandler = (args: SendMessageArgs<MessageType.SET_MUTE>) => {
       const {
         id: userId,
-        data: { muteds: _muteds, adminMuteds },
+        data: { muteds: _muteds, adminMuteds: _adminMuteds },
       } = args;
-      rtc.muteds = _muteds.concat(adminMuteds);
+      rtc.muteds = _muteds.concat(_adminMuteds);
+      setAdminMuteds(_adminMuteds);
       setMuteds(rtc.muteds);
-      setAdminMuted(adminMuteds.indexOf(userId) !== -1);
+      setAdminMuted(_adminMuteds.indexOf(userId) !== -1);
     };
 
     const handleError = ({
@@ -468,7 +471,7 @@ export const useConnection = ({
     };
 
     const changeMuteList = ({
-      data: { muteds: _muteds, adminMuteds },
+      data: { muteds: _muteds, adminMuteds: _adminMuteds },
     }: SendMessageArgs<MessageType.SET_MUTE_LIST>) => {
       const {
         userList: { banneds },
@@ -478,7 +481,7 @@ export const useConnection = ({
           userList: {
             banneds,
             muteds: _muteds,
-            adminMuteds,
+            adminMuteds: _adminMuteds,
           },
         })
       );
@@ -486,14 +489,14 @@ export const useConnection = ({
 
     const changeBanList = ({ data: { banneds } }: SendMessageArgs<MessageType.SET_BAN_LIST>) => {
       const {
-        userList: { muteds: _muteds, adminMuteds },
+        userList: { muteds: _muteds, adminMuteds: _adminMuteds },
       } = storeUserList.getState();
       storeUserList.dispatch(
         changeUserList({
           userList: {
             banneds,
             muteds: _muteds,
-            adminMuteds,
+            adminMuteds: _adminMuteds,
           },
         })
       );
@@ -542,10 +545,10 @@ export const useConnection = ({
         return;
       }
       const {
-        data: { roomUsers, muteds: _muteds, adminMuteds },
+        data: { roomUsers, muteds: _muteds, adminMuteds: _adminMuteds },
         connId,
       } = ws.getMessage(MessageType.SET_ROOM_GUESTS, rawMessage);
-      rtc.muteds = _muteds.concat(adminMuteds);
+      rtc.muteds = _muteds.concat(_adminMuteds);
       const _streams: Stream[] = storeStreams.getState().streams as Stream[];
       log('info', 'Run change room gusets handler', {
         roomUsers,
@@ -554,8 +557,9 @@ export const useConnection = ({
       });
       rtc.roomLength = roomUsers?.length || 0;
       setLenght(roomUsers.length);
+      setAdminMuteds(_adminMuteds);
       setMuteds(rtc.muteds);
-      setAdminMuted(adminMuteds.indexOf(id) !== -1);
+      setAdminMuted(_adminMuteds.indexOf(id) !== -1);
       roomUsers.forEach((item) => {
         if (item.id !== id) {
           const _isExists = _streams.filter((_item) => item.id === _item.target);
@@ -784,6 +788,7 @@ export const useConnection = ({
     changeVideo,
     isOwner,
     adminMuted,
+    adminMuteds,
   };
 };
 

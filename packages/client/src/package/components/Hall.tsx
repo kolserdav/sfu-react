@@ -19,9 +19,11 @@ import Select from './ui/Select';
 import { setLocalStorage, LocalStorageName } from '../utils/localStorage';
 import CloseIcon from '../Icons/Close';
 import s from './Hall.module.scss';
+import g from '../Global.module.scss';
 import IconButton from './ui/IconButton';
 import SettingsIcon from '../Icons/SettingsIcon';
 import { useLang, useSettings, useUsers } from './Hall.hooks';
+import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
 
 const changeThemeHandler = () => {
   const { theme } = storeTheme.getState();
@@ -32,7 +34,7 @@ const changeThemeHandler = () => {
 function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) {
   const { lang, changeLang } = useLang();
   const { openSettings, openSettingsDialog } = useSettings({ open });
-  const { users } = useUsers();
+  const { users, isOwner } = useUsers({ userId });
 
   return (
     <div className={clsx(s.wrapper, open ? s.open : '')}>
@@ -47,7 +49,24 @@ function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) 
           <div className={s.users} style={{ color: theme?.colors.text }}>
             {users.map((item) => (
               <div key={item.id} className={s.users__item}>
-                {item.name}
+                <div className={s.user__name}>{item.name}</div>
+                <div className={s.user__actions}>
+                  {item.muted || item.adminMuted ? (
+                    <MicrophoneOffIcon
+                      width={16}
+                      height={16}
+                      color={
+                        !item.adminMuted
+                          ? theme?.colors.text
+                          : isOwner
+                          ? theme?.colors.blue
+                          : theme?.colors.text
+                      }
+                    />
+                  ) : (
+                    ''
+                  )}
+                </div>
               </div>
             ))}
           </div>

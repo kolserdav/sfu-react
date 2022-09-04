@@ -84,6 +84,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     changeVideo,
     isOwner,
     adminMuted,
+    adminMuteds,
   } = useConnection({
     id: userId,
     roomId,
@@ -236,7 +237,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
             <div className={s.video__actions}>
               {item.isOwner && (
                 <div
-                  className={s.crown__icon}
+                  className={g.preudo__button}
                   title={isOwner ? locale.youAreAdminOfRoom : locale.isAdminOfRoom}
                 >
                   <CrownIcon color={theme?.colors.yellow} />
@@ -261,7 +262,14 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
             </div>
             <div className={s.muted}>
               {muteds.indexOf(item.target.toString()) !== -1 && (
-                <MicrophoneOffIcon color={theme?.colors.white} />
+                <MicrophoneOffIcon
+                  color={
+                    adminMuteds.indexOf(item.target.toString()) !== -1 &&
+                    (isOwner || userId === item.target)
+                      ? theme?.colors.blue
+                      : theme?.colors.white
+                  }
+                />
               )}
             </div>
           </div>

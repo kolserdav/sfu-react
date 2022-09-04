@@ -26,6 +26,10 @@ export interface RoomUser {
   name: string;
   isOwner: boolean;
 }
+export interface UserList extends RoomUser {
+  muted: boolean;
+  adminMuted: boolean;
+}
 export type RoomList = Record<string, (string | number)[]>;
 export type Banneds = Record<string, RoomUser[]>;
 // eslint-disable-next-line @typescript-eslint/ban-types
