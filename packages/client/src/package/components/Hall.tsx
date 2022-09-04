@@ -19,7 +19,6 @@ import Select from './ui/Select';
 import { setLocalStorage, LocalStorageName } from '../utils/localStorage';
 import CloseIcon from '../Icons/Close';
 import s from './Hall.module.scss';
-import g from '../Global.module.scss';
 import IconButton from './ui/IconButton';
 import SettingsIcon from '../Icons/SettingsIcon';
 import { useLang, useSettings, useUsers } from './Hall.hooks';
@@ -71,7 +70,12 @@ function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) 
                 <div className={s.title}>{locale.banneds}</div>
                 {banneds.map((item) => (
                   <div key={`${item.id}-ban`} className={s.users__item}>
-                    {item.name}
+                    <div className={s.users__name}>{item.name}</div>
+                    <div className={s.users__actions}>
+                      <IconButton>
+                        <CloseIcon width={16} height={16} color={theme?.colors.red} />
+                      </IconButton>
+                    </div>
                   </div>
                 ))}
               </div>

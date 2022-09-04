@@ -17,7 +17,20 @@ export const VIEWPORT = {
   height: 400,
 };
 
-export const PORT = parseInt(process.env.PORT || DEFAULT_PORT, 10);
-export const DATABASE_URL = process.env.DATABASE_URL as string;
-export const CORS = process.env.CORS as string;
-export const APP_URL = process.env.APP_URL as string;
+const {
+  env,
+}: {
+  env: NodeJS.ProcessEnv & {
+    PORT?: string;
+    DATABASE_URL?: string;
+    CORS?: string;
+    APP_URL?: string;
+    STUN_SERVER?: string;
+  };
+} = process as any;
+
+export const PORT = parseInt(env.PORT || DEFAULT_PORT, 10);
+export const DATABASE_URL = env.DATABASE_URL || '';
+export const CORS = env.CORS || '';
+export const APP_URL = env.APP_URL || '';
+export const STUN_SERVER = env.STUN_SERVER || '';

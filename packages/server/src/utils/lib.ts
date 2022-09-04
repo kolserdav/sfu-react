@@ -8,6 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
+import werift from 'werift';
 import { LOG_LEVEL } from './constants';
 import { LocaleServer, LocaleDefault, LocaleValue } from '../types/interfaces';
 import en from '../locales/en/lang';
@@ -59,3 +60,6 @@ export const log = (type: keyof typeof LogLevel, text: string, data?: any, cons?
 
 export const getLocale = (value: LocaleValue): LocaleServer =>
   locales[value] || locales[LocaleDefault];
+
+export const checkSignallingState = (signallingState: werift.RTCPeerConnection['signalingState']) =>
+  ['have-remote-offer', 'have-local-pranswer'].includes(signallingState);

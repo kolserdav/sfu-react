@@ -19,7 +19,8 @@ import {
   ErrorCode,
   RoomList,
 } from '../types/interfaces';
-import { getLocale, log } from '../utils/lib';
+import { checkSignallingState, getLocale, log } from '../utils/lib';
+import { STUN_SERVER } from '../utils/constants';
 import WS from './ws';
 import DB from './db';
 
@@ -124,7 +125,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       bundlePolicy: 'disable',
       iceServers: [
         {
-          urls: process.env.STUN_SERVER as string,
+          urls: STUN_SERVER,
         },
       ],
     });
@@ -342,6 +343,11 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       log('warn', 'Create answer without peer connection', opts);
       return;
     }
+    const { signalingState } = this.peerConnectionsServer[roomId][peerId];
+    if (!checkSignallingState(signalingState)) {
+      log('warn', 'Skiping create answer', { signalingState, peerId, roomId });
+      return;
+    }
     const answ = await this.peerConnectionsServer[roomId][peerId]!.createAnswer().catch((e) => {
       log('error', 'Error create answer', {
         e: e.message,
@@ -351,10 +357,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       error = true;
     });
     if (!answ) {
-      log('warn', 'Failed set remote description for answer.', {
-        answ,
-        ...opts,
-      });
       error = true;
       return;
     }
@@ -369,6 +371,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     await this.peerConnectionsServer[roomId][peerId]!.setLocalDescription(answ).catch((err) => {
       log('error', 'Error set local description for answer', {
         message: err.message,
+        stack: err.stack,
         ...opts,
       });
       error = true;

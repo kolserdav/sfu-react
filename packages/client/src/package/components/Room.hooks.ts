@@ -44,6 +44,7 @@ import storeError, { changeError } from '../store/error';
 import storeClickDocument from '../store/clickDocument';
 import { getLocalStorage, LocalStorageName, setLocalStorage } from '../utils/localStorage';
 import storeUserList, { changeUserList } from '../store/userList';
+import storeMessage from '../store/message';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -250,11 +251,21 @@ export const useConnection = ({
   }, [toUnMute, connectionId, ws, roomId, setToUnMute]);
 
   /**
-   * Listen message
+   * Send message from storeMessage
    */
   useEffect(() => {
-    // TODO
-  }, []);
+    const cleanSubs = storeMessage.subscribe(() => {
+      const {
+        message: { type, value },
+      } = storeMessage.getState();
+      if (type === 'room') {
+        ws.sendMessage(value);
+      }
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, [ws]);
 
   /**
    * Set streams from store
@@ -974,7 +985,7 @@ export const useVideoStarted = ({
           }
           if (_attempts[item.target] === 1) {
             if (!played[item.target] && mounted) {
-              lostStreamHandler({ ...item, eventName: 'not-played' });
+              // lostStreamHandler({ ...item, eventName: 'not-played' });
               log('warn', `Video not played ${item.target}`, {
                 target: item.target,
                 streamL: item.stream.getTracks().length,
