@@ -22,6 +22,7 @@ try {
     )} not specified, use default ${path.resolve(__dirname, '../rooms.example.json')}`,
     {
       CI: Boolean(process.env.CI),
+      SSR: Boolean(process.env.SSR),
     }
   );
   importErr = true;
