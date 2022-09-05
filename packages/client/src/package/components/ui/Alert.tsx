@@ -12,7 +12,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import clsx from 'clsx';
 import s from './Alert.module.scss';
 import { AlertProps } from '../../types';
-import { ALERT_TIMEOUT } from '../../utils/constants';
+import { ALERT_TIMEOUT, ALERT_TRANSITION } from '../../utils/constants';
 import storeAlert, { changeAlert } from '../../store/alert';
 
 function Alert({ children, type, open, theme }: AlertProps) {
@@ -27,26 +27,32 @@ function Alert({ children, type, open, theme }: AlertProps) {
     let timeout = setTimeout(() => {
       /** */
     }, 0);
-    if (!mouseMove && open) {
-      timeout = setTimeout(() => {
-        storeAlert.dispatch(
-          changeAlert({
-            alert: {
-              open: false,
-              type,
-              children,
-            },
-          })
-        );
+    if (!mouseMove && opened) {
+      timeout = setTimeout(async () => {
+        setOpened(false);
         setTimeout(() => {
-          setOpened(false);
-        }, ALERT_TIMEOUT);
+          storeAlert.dispatch(
+            changeAlert({
+              alert: {
+                open: false,
+                type,
+                children,
+              },
+            })
+          );
+        }, ALERT_TRANSITION);
       }, ALERT_TIMEOUT);
     }
     return () => {
       clearTimeout(timeout);
     };
-  }, [open, mouseMove, children, type]);
+  }, [open, mouseMove, children, type, opened]);
+
+  useEffect(() => {
+    if (open) {
+      setOpened(true);
+    }
+  }, [open]);
 
   /**
    * On mouse move
@@ -87,7 +93,7 @@ function Alert({ children, type, open, theme }: AlertProps) {
   return (
     <div
       ref={dialogRef}
-      className={clsx(s.wrapper, open ? s.open : '')}
+      className={clsx(s.wrapper, opened ? s.open : '')}
       style={{
         background:
           type === 'error'
@@ -96,7 +102,7 @@ function Alert({ children, type, open, theme }: AlertProps) {
             ? theme?.colors.yellow
             : theme?.colors.blue,
         color: theme?.colors.black,
-        display: opened ? 'flex' : 'none',
+        display: open ? 'flex' : 'none',
       }}
     >
       {children}

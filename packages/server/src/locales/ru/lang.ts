@@ -38,6 +38,9 @@ const lang: LocaleServer = {
     isAdminOfRoom: 'Админимтратор комнаты',
     youAreAdminOfRoom: 'Вы администратор комнаты',
     banneds: 'Забаненые гости',
+    recordVideo: 'Запись видео',
+    recordVideoStop: 'Остановить запись видео',
+    videoRecording: 'Видео записывается',
   },
 };
 

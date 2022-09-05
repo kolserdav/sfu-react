@@ -434,7 +434,7 @@ class RTC
       !this.peerConnections[peerId] ||
       this.peerConnections[peerId]?.signalingState === 'stable'
     ) {
-      log('warn', 'Skiping set remote desc for answer', opts);
+      log('info', 'Skiping set remote desc for answer', opts);
       return;
     }
     this.peerConnections[peerId]!.setRemoteDescription(desc)
@@ -461,8 +461,8 @@ class RTC
 
   public closeByPeer = (peerId: string) => {
     if (!this.peerConnections[peerId]) {
-      log('warn', `Close video call without peer connection ${peerId}`, {
-        r: Object.keys(this.peerConnections),
+      log('info', `Close video call without peer connection ${peerId}`, {
+        pcL: Object.keys(this.peerConnections)?.length,
       });
       return;
     }

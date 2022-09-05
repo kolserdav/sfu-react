@@ -39,6 +39,7 @@ import {
   DIALOG_SETTINGS_DIMENSION,
   ALERT_TIMEOUT,
   VIDEO_ACTIONS_STYLE,
+  VIDEO_STARTED_HOOK_TIMEOUT,
 } from '../utils/constants';
 import { CookieName, getCookie } from '../utils/cookies';
 import storeError, { changeError } from '../store/error';
@@ -79,6 +80,7 @@ export const useConnection = ({
   setToUnMute: React.Dispatch<React.SetStateAction<string | number>>;
   setToBan: React.Dispatch<React.SetStateAction<string | number>>;
 }) => {
+  const ws = useMemo(() => new WS({ server, port, protocol: 'room' }), [server, port]);
   const [streams, setStreams] = useState<Stream[]>([]);
   const [shareScreen, setShareScreen] = useState<boolean>(false);
   const [selfStream, setSelfStream] = useState<Stream | null>(null);
@@ -92,7 +94,7 @@ export const useConnection = ({
   const [isOwner, setIsOwner] = useState<boolean>(false);
   const [error, setError] = useState<keyof typeof ErrorCode>();
   const [connectionId, setConnectionId] = useState<string>('');
-  const ws = useMemo(() => new WS({ server, port, protocol: 'room' }), [server, port]);
+
   const rtc = useMemo(() => new RTC({ ws }), [ws]);
   const addStream = useMemo(
     () =>
@@ -777,7 +779,6 @@ export const useConnection = ({
   return {
     streams,
     lenght,
-    ws,
     rtc,
     lostStreamHandler: rtc.lostStreamHandler,
     screenShare,
@@ -970,17 +971,17 @@ export const useAudioAnalyzer = () => {
     if (analyzer[uid]) {
       delete analyzer[uid];
     } else {
-      log('warn', 'Audio analyzer not found', uid);
+      log('info', 'Audio analyzer not found', uid);
     }
     if (freqs[uid]) {
       delete freqs[uid];
     } else {
-      log('warn', 'Audio analyzer freqs not found', uid);
+      log('info', 'Audio analyzer freqs not found', uid);
     }
     if (audioLevels[uid]) {
       delete audioLevels[uid];
     } else {
-      log('warn', 'Audio analyzer levels not found', uid);
+      log('info', 'Audio analyzer levels not found', uid);
     }
   };
 
@@ -1189,4 +1190,94 @@ export const useSettingsDialog = () => {
     setToUnMute,
     setToBan,
   };
+};
+
+export const useVideoStarted = ({
+  streams,
+  rtc,
+  lostStreamHandler,
+}: {
+  streams: Stream[];
+  rtc: RTC;
+  lostStreamHandler: typeof rtc.lostStreamHandler;
+}) => {
+  const [played, setPlayed] = useState<Record<string, boolean>>({});
+  const [timeStart, setTimeStart] = useState<boolean>(false);
+  const [attempts, setAttempts] = useState<Record<string | number, number>>({});
+
+  /**
+   * Clean played
+   */
+  useEffect(() => {
+    if (!timeStart) {
+      setTimeStart(true);
+      const _played = { ...played };
+      streams.forEach((item) => {
+        _played[item.target] = false;
+      });
+      setPlayed(_played);
+    }
+  }, [streams, timeStart, played]);
+
+  /**
+   * Check not played
+   */
+  useEffect(() => {
+    let mounted = true;
+    const timeout = setInterval(() => {
+      if (timeStart) {
+        const diffs: Stream[] = [];
+        if (Object.keys(played).length === streams.length) {
+          streams.forEach((item) => {
+            const that = Object.keys(played).find(
+              (_item) => _item === item.target.toString() && !played[_item]
+            );
+            if (that) {
+              diffs.push(item);
+            }
+          });
+        } else {
+          streams.forEach((item) => {
+            const that = Object.keys(played).find((_item) => _item === item.target.toString());
+            if (!that) {
+              diffs.push(item);
+            }
+          });
+        }
+        const _attempts = { ...attempts };
+        diffs.forEach((item) => {
+          if (!_attempts[item.target]) {
+            _attempts[item.target] = 0;
+          }
+          if (_attempts[item.target] === 1) {
+            if (!played[item.target] && mounted) {
+              lostStreamHandler({ ...item, eventName: 'not-played' });
+              log('warn', `Video not played ${item.target}`, {
+                target: item.target,
+                streamL: item.stream.getTracks().length,
+              });
+            }
+          } else {
+            log('info', `${_attempts[item.target]} attempts of restart:`, { target: item.target });
+            if (_attempts[item.target] === 5) {
+              // _attempts[item.target] = 0;
+            }
+          }
+
+          if (_attempts[item.target] !== undefined) {
+            _attempts[item.target] += 1;
+          } else {
+            _attempts[item.target] = 1;
+          }
+        });
+        setAttempts(_attempts);
+      }
+    }, VIDEO_STARTED_HOOK_TIMEOUT);
+    return () => {
+      clearInterval(timeout);
+      mounted = false;
+    };
+  }, [played, streams, lostStreamHandler, attempts, timeStart, rtc.muteds, rtc.roomLength]);
+
+  return { played, setPlayed };
 };

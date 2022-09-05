@@ -60,6 +60,11 @@ export enum LogLevel {
   error = 3,
 }
 
+export enum RecordCommand {
+  start = 'start',
+  stop = 'stop',
+}
+
 // eslint-disable-next-line no-shadow
 export enum MessageType {
   GET_USER_ID = 'GET_USER_ID',
@@ -98,6 +103,7 @@ export enum MessageType {
   GET_TO_UNBAN = 'GET_TO_UNBAN',
   SET_BAN_LIST = 'SET_BAN_LIST',
   SET_MUTE_LIST = 'SET_MUTE_LIST',
+  GET_RECORD = 'GET_RECORD',
 }
 
 export namespace Locale {
@@ -143,6 +149,9 @@ export namespace Locale {
     isAdminOfRoom: string;
     youAreAdminOfRoom: string;
     banneds: string;
+    recordVideo: string;
+    videoRecording: string;
+    recordVideoStop: string;
   }
 }
 
@@ -222,6 +231,10 @@ export namespace DataTypes {
     };
     export type GetEditMessage = {
       args: Prisma.MessageUpdateArgs;
+      userId: string | number;
+    };
+    export type GetRecord = {
+      command: keyof typeof RecordCommand;
       userId: string | number;
     };
     export type GetDeleteMessage = {
@@ -313,6 +326,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.GetToUnMute
     : T extends MessageType.GET_TO_UNBAN
     ? DataTypes.MessageTypes.GetToUnBan
+    : T extends MessageType.GET_RECORD
+    ? DataTypes.MessageTypes.GetRecord
     : T extends MessageType.SET_ROOM
     ? DataTypes.MessageTypes.SetRoom
     : T extends MessageType.GET_LOCALE

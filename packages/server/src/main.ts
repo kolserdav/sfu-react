@@ -179,6 +179,9 @@ export function createServer(
         case MessageType.GET_TO_UNMUTE:
           rtc.handleGetToUnMute(rawMessage);
           break;
+        case MessageType.GET_RECORD:
+          console.log(rawMessage);
+          break;
         case MessageType.GET_TO_UNBAN:
           rtc.handleGetToUnBan(rawMessage);
           break;

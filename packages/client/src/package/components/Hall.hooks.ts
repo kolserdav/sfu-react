@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import storeLocale, { changeLocale } from '../store/locale';
-import { LocaleDefault, LocaleValue, MessageType, RoomUser, UserList } from '../types/interfaces';
+import {
+  LocaleDefault,
+  LocaleValue,
+  MessageType,
+  RecordCommand,
+  RoomUser,
+  UserList,
+} from '../types/interfaces';
 import { getCookie, CookieName, setCookie } from '../utils/cookies';
 import storeStreams from '../store/streams';
 import storeUserList from '../store/userList';
@@ -128,4 +135,35 @@ export const useUsers = ({
   }, []);
 
   return { users, isOwner, banneds, unBanWrapper };
+};
+
+export const useVideoRecord = ({
+  roomId,
+  userId,
+}: {
+  roomId: string | number;
+  userId: string | number;
+}) => {
+  const videoRecordWrapper =
+    ({ command }: { command: keyof typeof RecordCommand }) =>
+    (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      storeMessage.dispatch(
+        changeMessage<MessageType.GET_RECORD>({
+          message: {
+            type: 'room',
+            value: {
+              type: MessageType.GET_RECORD,
+              connId: '',
+              id: roomId,
+              data: {
+                command,
+                userId,
+              },
+            },
+          },
+        })
+      );
+    };
+
+  return { videoRecordWrapper };
 };

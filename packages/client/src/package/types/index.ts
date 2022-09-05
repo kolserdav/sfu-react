@@ -8,10 +8,11 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
+import WS from '../core/ws';
 import { Colors, Theme } from '../Theme';
 import { LocaleServer, LogLevel } from './interfaces';
 
-interface GlobalProps {
+export interface GlobalProps {
   server: string;
   roomId: string | number;
   port: number;
@@ -19,11 +20,11 @@ interface GlobalProps {
   name?: string;
   theme?: Theme;
   iceServers?: RTCConfiguration['iceServers'];
+  colors?: Colors;
 }
 
 export type RoomProps = GlobalProps & {
   locale: LocaleServer['client'];
-  colors?: Colors;
 };
 
 export type HallProps = Omit<GlobalProps, 'iceServers'> & {

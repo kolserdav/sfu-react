@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { log } from '../utils/lib';
 import s from './Room.module.scss';
 import g from '../Global.module.scss';
@@ -21,6 +21,7 @@ import {
   useAudioAnalyzer,
   useVolumeDialog,
   useSettingsDialog,
+  useVideoStarted,
 } from './Room.hooks';
 import {
   getRoomLink,
@@ -76,7 +77,6 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     changeMuted,
     muteds,
     video,
-    ws,
     rtc,
     changeVideo,
     isOwner,
@@ -105,6 +105,11 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
   });
   const onClickClose = useOnclickClose({ container: container.current, lenght });
   const onPressEscape = usePressEscape();
+  const { played, setPlayed } = useVideoStarted({
+    streams,
+    rtc,
+    lostStreamHandler,
+  });
   const displayMediaSupported = useMemo(() => supportDisplayMedia(), []);
   const { dialog, clickToVolume, changeVolumeWrapper, volumes } = useVolumeDialog({
     roomId,
@@ -146,6 +151,11 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
                     eventName: 'stream-not-active',
                   });
                 } else {
+                  if (!played[item.target]) {
+                    const _played = { ...played };
+                    _played[item.target] = true;
+                    setPlayed(_played);
+                  }
                   setVideoDimensions(e, item.stream);
                 }
               }}
@@ -207,6 +217,11 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
               onLoadedMetadata={() => {
                 log('info', 'Meta data loaded', { ...item });
                 createAudioAnalyzer(item);
+                if (!played[item.target]) {
+                  const _played = { ...played };
+                  _played[item.target] = true;
+                  setPlayed(_played);
+                }
               }}
             />
             {/** actions is strong third child */}

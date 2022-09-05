@@ -21,8 +21,9 @@ import CloseIcon from '../Icons/Close';
 import s from './Hall.module.scss';
 import IconButton from './ui/IconButton';
 import SettingsIcon from '../Icons/SettingsIcon';
-import { useLang, useSettings, useUsers } from './Hall.hooks';
+import { useLang, useSettings, useUsers, useVideoRecord } from './Hall.hooks';
 import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
+import RecIcon from '../Icons/Rec';
 
 const changeThemeHandler = () => {
   const { theme } = storeTheme.getState();
@@ -34,6 +35,7 @@ function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) 
   const { lang, changeLang } = useLang();
   const { openSettings, openSettingsDialog } = useSettings({ open });
   const { users, isOwner, banneds, unBanWrapper } = useUsers({ userId, roomId });
+  const { videoRecordWrapper } = useVideoRecord({ roomId, userId });
   return (
     <div className={clsx(s.wrapper, open ? s.open : '')}>
       <div
@@ -98,6 +100,12 @@ function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) 
             </Select>
             <IconButton onClick={changeThemeHandler} title={locale.changeTheme}>
               <ThemeIcon color={theme?.colors.text} />
+            </IconButton>
+            <IconButton
+              title={locale.recordVideo}
+              onClick={videoRecordWrapper({ command: 'start' })}
+            >
+              <RecIcon color={theme?.colors.red} />
             </IconButton>
           </div>
           {open && (

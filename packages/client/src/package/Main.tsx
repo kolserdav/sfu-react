@@ -13,7 +13,7 @@ import React, { useMemo } from 'react';
 import clsx from 'clsx';
 import Room from './components/Room';
 import Hall from './components/Hall';
-import { RoomProps } from './types';
+import { GlobalProps } from './types';
 import { getPathname, getRoomId } from './utils/lib';
 import ChevronLeftIcon from './Icons/ChevronLeftIcon';
 import ChevronRightIcon from './Icons/ChevronRightIcon';
@@ -21,12 +21,12 @@ import IconButton from './components/ui/IconButton';
 import Alert from './components/ui/Alert';
 import s from './Main.module.scss';
 import { useListeners } from './Main.hooks';
+import WS from './core/ws';
 
-function Main({ room }: { room: Omit<RoomProps, 'locale' | 'roomId'> }) {
+function Main({ room }: { room: Omit<GlobalProps, 'locale' | 'roomId'> }) {
   const { port, server } = room;
   const pathname = getPathname();
   const roomId = useMemo(() => getRoomId(pathname || ''), [pathname]);
-
   const { colors } = room;
   const { locale, openMenu, theme, alert, hallOpen } = useListeners({ colors, port, server });
   return (
