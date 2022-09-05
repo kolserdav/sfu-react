@@ -24,6 +24,7 @@ import SettingsIcon from '../Icons/SettingsIcon';
 import { useLang, useSettings, useUsers, useVideoRecord } from './Hall.hooks';
 import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
 import RecIcon from '../Icons/Rec';
+import { checkIsRecord } from '../utils/lib';
 
 const changeThemeHandler = () => {
   const { theme } = storeTheme.getState();
@@ -47,26 +48,30 @@ function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) 
       >
         <div className={s.block}>
           <div className={s.users} style={{ color: theme?.colors.text }}>
-            {users.map((item) => (
-              <div key={item.id} className={s.users__item}>
-                <div className={s.user__name}>{item.name}</div>
-                <div className={s.user__actions}>
-                  {(item.muted || item.adminMuted) && (
-                    <MicrophoneOffIcon
-                      width={16}
-                      height={16}
-                      color={
-                        !item.adminMuted
-                          ? theme?.colors.text
-                          : isOwner
-                          ? theme?.colors.blue
-                          : theme?.colors.text
-                      }
-                    />
-                  )}
+            {users.map((item) =>
+              checkIsRecord(item.id.toString()) ? (
+                ''
+              ) : (
+                <div key={item.id} className={s.users__item}>
+                  <div className={s.user__name}>{item.name}</div>
+                  <div className={s.user__actions}>
+                    {(item.muted || item.adminMuted) && (
+                      <MicrophoneOffIcon
+                        width={16}
+                        height={16}
+                        color={
+                          !item.adminMuted
+                            ? theme?.colors.text
+                            : isOwner
+                            ? theme?.colors.blue
+                            : theme?.colors.text
+                        }
+                      />
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            )}
             {isOwner && banneds.length !== 0 && (
               <div className={s.users}>
                 <div className={s.title}>{locale.banneds}</div>

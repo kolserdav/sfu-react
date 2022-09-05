@@ -22,6 +22,7 @@ import { getLocale, log } from './utils/lib';
 import { PORT, CORS } from './utils/constants';
 import DB from './core/db';
 import Chat from './core/chat';
+import RecordVideo from './core/recordVideo';
 
 export const prisma = new PrismaClient();
 
@@ -57,6 +58,7 @@ export function createServer(
   cb?: ServerCallback
 ) {
   const wss = new WS({ port }, cb);
+  const recordVideo = new RecordVideo({ ws: wss });
   const rtc: RTC | null = new RTC({ ws: wss });
 
   const getConnectionId = (): string => {
@@ -180,7 +182,7 @@ export function createServer(
           rtc.handleGetToUnMute(rawMessage);
           break;
         case MessageType.GET_RECORD:
-          console.log(rawMessage);
+          recordVideo.startRecord(rawMessage);
           break;
         case MessageType.GET_TO_UNBAN:
           rtc.handleGetToUnBan(rawMessage);

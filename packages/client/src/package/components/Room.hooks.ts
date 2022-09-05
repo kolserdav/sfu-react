@@ -12,7 +12,14 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import WS from '../core/ws';
 import RTC from '../core/rtc';
-import { getCodec, getDialogPosition, log, isClickByDialog } from '../utils/lib';
+import {
+  getCodec,
+  getDialogPosition,
+  log,
+  isClickByDialog,
+  parseQueryString,
+  checkIsRecord,
+} from '../utils/lib';
 import {
   createSettingsContext,
   createVolumeContext,
@@ -134,6 +141,21 @@ export const useConnection = ({
       },
     [selfStream, ws.userId]
   );
+  const { isRecord } = useMemo(() => {
+    const qS = parseQueryString();
+    return {
+      isRecord: qS?.record === '1',
+    };
+  }, []);
+  const { isRecording } = useMemo(() => {
+    let check = false;
+    streams.forEach((item) => {
+      if (checkIsRecord(item.target.toString())) {
+        check = true;
+      }
+    });
+    return { isRecording: check };
+  }, [streams]);
   const screenShare = useMemo(
     () => (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       if (!roomId) {
@@ -353,7 +375,7 @@ export const useConnection = ({
       connId,
     }: SendMessageArgs<MessageType.SET_CHANGE_UNIT>) => {
       if (lenght !== roomLength) {
-        setLenght(roomLength);
+        setLenght(isRecord || isRecording ? roomLength - 1 : roomLength);
       }
       rtc.muteds = _muteds.concat(_adminMuteds);
       setMuteds(rtc.muteds);
@@ -437,6 +459,10 @@ export const useConnection = ({
       setAdminMuteds(_adminMuteds);
       setMuteds(rtc.muteds);
       setAdminMuted(_adminMuteds.indexOf(userId) !== -1);
+    };
+
+    const changeTime = (args: SendMessageArgs<MessageType.SET_RECORDING>) => {
+      console.log(args);
     };
 
     const handleError = ({
@@ -556,7 +582,7 @@ export const useConnection = ({
         st: _streams.map((i) => i.target),
       });
       rtc.roomLength = roomUsers?.length || 0;
-      setLenght(roomUsers.length);
+      setLenght(isRecord || isRecording ? roomUsers.length - 1 : roomUsers.length);
       setAdminMuteds(_adminMuteds);
       setMuteds(rtc.muteds);
       setAdminMuted(_adminMuteds.indexOf(id) !== -1);
@@ -700,6 +726,9 @@ export const useConnection = ({
         case MessageType.SET_BAN_LIST:
           changeBanList(rawMessage);
           break;
+        case MessageType.SET_RECORDING:
+          changeTime(rawMessage);
+          break;
         case MessageType.SET_ERROR:
           handleError(rawMessage);
           break;
@@ -742,6 +771,8 @@ export const useConnection = ({
     userName,
     addStream,
     isOwner,
+    isRecord,
+    isRecording,
   ]);
 
   /**
@@ -791,6 +822,8 @@ export const useConnection = ({
     isOwner,
     adminMuted,
     adminMuteds,
+    isRecord,
+    isRecording,
   };
 };
 

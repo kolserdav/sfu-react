@@ -21,7 +21,6 @@ import IconButton from './components/ui/IconButton';
 import Alert from './components/ui/Alert';
 import s from './Main.module.scss';
 import { useListeners } from './Main.hooks';
-import WS from './core/ws';
 
 function Main({ room }: { room: Omit<GlobalProps, 'locale' | 'roomId'> }) {
   const { port, server } = room;

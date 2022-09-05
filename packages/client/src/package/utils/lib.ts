@@ -48,7 +48,8 @@ export const parseMessage = (message: string): object => {
   return result;
 };
 
-export const parseQueryString = (query: string): Record<string, string> | null => {
+export const parseQueryString = (): Record<string, string> | null => {
+  const query = typeof window !== 'undefined' ? window.location.search : '';
   const arr = query.replace(/\??/, '').split('&');
   let res: Record<string, string> | null = null;
   arr.forEach((item) => {
@@ -143,3 +144,5 @@ export const isClickByDialog = ({
 
 export const rangeRandom = ({ min, max }: { min: number; max: number }) =>
   Math.floor(Math.random() * (max - min) + min);
+
+export const checkIsRecord = (uid: string) => /record=/.test(uid);

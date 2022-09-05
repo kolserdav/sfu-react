@@ -104,6 +104,7 @@ export enum MessageType {
   SET_BAN_LIST = 'SET_BAN_LIST',
   SET_MUTE_LIST = 'SET_MUTE_LIST',
   GET_RECORD = 'GET_RECORD',
+  SET_RECORDING = 'SET_RECORDING',
 }
 
 export namespace Locale {
@@ -268,6 +269,10 @@ export namespace DataTypes {
       userId: string | number;
       message: string;
     };
+    export type SetRecording = {
+      command: keyof typeof RecordCommand;
+      time: number;
+    };
     export type SetRoomMessage = MessageFull;
     export type SetEditMessage = MessageFull;
     export type SetDeleteMessage = MessageFull;
@@ -366,6 +371,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetClosePeerConnection
     : T extends MessageType.SET_LOCALE
     ? DataTypes.MessageTypes.SetLocale
+    : T extends MessageType.SET_RECORDING
+    ? DataTypes.MessageTypes.SetRecording
     : T extends MessageType.SET_ERROR
     ? DataTypes.MessageTypes.SetError
     : never;

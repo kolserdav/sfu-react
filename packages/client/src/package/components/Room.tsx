@@ -9,7 +9,7 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import React, { useMemo, useRef } from 'react';
-import { log } from '../utils/lib';
+import { log, checkIsRecord } from '../utils/lib';
 import s from './Room.module.scss';
 import g from '../Global.module.scss';
 import { RoomProps } from '../types/index';
@@ -82,6 +82,8 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     isOwner,
     adminMuted,
     adminMuteds,
+    isRecord,
+    isRecording,
   } = useConnection({
     id: userId,
     roomId,
@@ -98,7 +100,6 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     setToUnMute,
     setToBan,
   });
-
   const setVideoDimensions = useVideoDimensions({
     container: container.current,
     lenght,
@@ -130,139 +131,149 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
       }}
     >
       <div className={s.container} ref={container}>
-        {streams.map((item, index) => (
-          <div id={item.stream.id} key={item.target} className={s.video} data-connid={item.connId}>
-            {/** CloseButton is strong first child */}
-            <CloseButton onClick={onClickClose} onKeyDown={onPressEscape} tabindex={index} />
-            {/** video is strong second child */}
-            <video
-              className={speaker === item.target ? s.speaker : ''}
-              muted={item.target === userId || muteds.indexOf(item.target.toString()) !== -1}
-              onTimeUpdate={(e) => {
-                analyzeSoundLevel(item.target);
-                if (item.stream.active === false) {
-                  log('warn', `Stream is not active ${item.target}`, {
-                    uid: item.target,
+        {streams.map((item, index) =>
+          (isRecord && item.target === userId) ||
+          (isRecording && checkIsRecord(item.target.toString())) ? (
+            ''
+          ) : (
+            <div
+              id={item.stream.id}
+              key={item.target}
+              className={s.video}
+              data-connid={item.connId}
+            >
+              {/** CloseButton is strong first child */}
+              <CloseButton onClick={onClickClose} onKeyDown={onPressEscape} tabindex={index} />
+              {/** video is strong second child */}
+              <video
+                className={speaker === item.target ? s.speaker : ''}
+                muted={item.target === userId || muteds.indexOf(item.target.toString()) !== -1}
+                onTimeUpdate={(e) => {
+                  analyzeSoundLevel(item.target);
+                  if (item.stream.active === false) {
+                    log('warn', `Stream is not active ${item.target}`, {
+                      uid: item.target,
+                      stream: item.stream,
+                    });
+                    lostStreamHandler({
+                      target: item.target,
+                      connId: item.connId,
+                      eventName: 'stream-not-active',
+                    });
+                  } else {
+                    if (!played[item.target]) {
+                      const _played = { ...played };
+                      _played[item.target] = true;
+                      setPlayed(_played);
+                    }
+                    setVideoDimensions(e, item.stream);
+                  }
+                }}
+                onClick={onClickVideo}
+                ref={item.ref}
+                title={item.target.toString()}
+                id={item.target.toString()}
+                onLoadedData={(e) => {
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const { target }: { target: HTMLVideoElement } = e as any;
+                  target.play();
+                  const tracks = item.stream.getTracks();
+                  if (tracks.length < 2) {
+                    log('warn', 'Stream have less than 2 tracks', { item, tracks });
+                  }
+                }}
+                onEmptied={(e) => {
+                  log('info', 'Empty video data', {
                     stream: item.stream,
+                    id: item.target,
+                    tracks: item.stream.getTracks(),
                   });
-                  lostStreamHandler({
-                    target: item.target,
-                    connId: item.connId,
-                    eventName: 'stream-not-active',
+                }}
+                onSuspend={() => {
+                  log('info', 'Suspend video data', {
+                    stream: item.stream,
+                    id: item.target,
+                    tracks: item.stream.getTracks(),
                   });
-                } else {
+                }}
+                onStalled={(e) => {
+                  log('warn', 'Stalled video data', {
+                    stream: item.stream,
+                    id: item.target,
+                    tracks: item.stream.getTracks(),
+                  });
+                }}
+                onAbort={(e) => {
+                  log('info', 'Abort video data', {
+                    stream: item.stream,
+                    id: item.target,
+                    tracks: item.stream.getTracks(),
+                  });
+                }}
+                onEnded={(e) => {
+                  log('warn', 'End video data', {
+                    stream: item.stream,
+                    id: item.target,
+                    tracks: item.stream.getTracks(),
+                  });
+                }}
+                onWaiting={(e) => {
+                  log('warn', 'Waiting video data', {
+                    active: item.stream.active,
+                    id: item.target,
+                    t: (e.target as HTMLVideoElement).played,
+                  });
+                }}
+                onLoadedMetadata={() => {
+                  log('info', 'Meta data loaded', { ...item });
+                  createAudioAnalyzer(item);
                   if (!played[item.target]) {
                     const _played = { ...played };
                     _played[item.target] = true;
                     setPlayed(_played);
                   }
-                  setVideoDimensions(e, item.stream);
-                }
-              }}
-              onClick={onClickVideo}
-              ref={item.ref}
-              title={item.target.toString()}
-              id={item.target.toString()}
-              onLoadedData={(e) => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { target }: { target: HTMLVideoElement } = e as any;
-                target.play();
-                const tracks = item.stream.getTracks();
-                if (tracks.length < 2) {
-                  log('warn', 'Stream have less than 2 tracks', { item, tracks });
-                }
-              }}
-              onEmptied={(e) => {
-                log('info', 'Empty video data', {
-                  stream: item.stream,
-                  id: item.target,
-                  tracks: item.stream.getTracks(),
-                });
-              }}
-              onSuspend={() => {
-                log('info', 'Suspend video data', {
-                  stream: item.stream,
-                  id: item.target,
-                  tracks: item.stream.getTracks(),
-                });
-              }}
-              onStalled={(e) => {
-                log('warn', 'Stalled video data', {
-                  stream: item.stream,
-                  id: item.target,
-                  tracks: item.stream.getTracks(),
-                });
-              }}
-              onAbort={(e) => {
-                log('info', 'Abort video data', {
-                  stream: item.stream,
-                  id: item.target,
-                  tracks: item.stream.getTracks(),
-                });
-              }}
-              onEnded={(e) => {
-                log('warn', 'End video data', {
-                  stream: item.stream,
-                  id: item.target,
-                  tracks: item.stream.getTracks(),
-                });
-              }}
-              onWaiting={(e) => {
-                log('warn', 'Waiting video data', {
-                  active: item.stream.active,
-                  id: item.target,
-                  t: (e.target as HTMLVideoElement).played,
-                });
-              }}
-              onLoadedMetadata={() => {
-                log('info', 'Meta data loaded', { ...item });
-                createAudioAnalyzer(item);
-                if (!played[item.target]) {
-                  const _played = { ...played };
-                  _played[item.target] = true;
-                  setPlayed(_played);
-                }
-              }}
-            />
-            {/** actions is strong third child */}
+                }}
+              />
+              {/** actions is strong third child */}
 
-            <div className={s.video__actions}>
-              {item.isOwner && (
-                <PseudoButton title={isOwner ? locale.youAreAdminOfRoom : locale.isAdminOfRoom}>
-                  <CrownIcon color={theme?.colors.yellow} />
-                </PseudoButton>
-              )}
-              {item.target !== userId && (
-                <IconButton onClick={clickToVolume(item.target)}>
-                  {volumes[item.target] === undefined || volumes[item.target] >= 8 ? (
-                    <VolumeHeightIcon color={theme?.colors.white} />
-                  ) : volumes[item.target] >= 3 ? (
-                    <VolumeMediumIcon color={theme?.colors.white} />
-                  ) : (
-                    <VolumeLowIcon color={theme?.colors.white} />
-                  )}
-                </IconButton>
-              )}
-              {isOwner && item.target !== userId && (
-                <IconButton onClick={clickToSettingsWrapper(item.target)}>
-                  <MenuIcon color={theme?.colors.white} />
-                </IconButton>
-              )}
+              <div className={s.video__actions}>
+                {item.isOwner && (
+                  <PseudoButton title={isOwner ? locale.youAreAdminOfRoom : locale.isAdminOfRoom}>
+                    <CrownIcon color={theme?.colors.yellow} />
+                  </PseudoButton>
+                )}
+                {item.target !== userId && (
+                  <IconButton onClick={clickToVolume(item.target)}>
+                    {volumes[item.target] === undefined || volumes[item.target] >= 8 ? (
+                      <VolumeHeightIcon color={theme?.colors.white} />
+                    ) : volumes[item.target] >= 3 ? (
+                      <VolumeMediumIcon color={theme?.colors.white} />
+                    ) : (
+                      <VolumeLowIcon color={theme?.colors.white} />
+                    )}
+                  </IconButton>
+                )}
+                {isOwner && item.target !== userId && (
+                  <IconButton onClick={clickToSettingsWrapper(item.target)}>
+                    <MenuIcon color={theme?.colors.white} />
+                  </IconButton>
+                )}
+              </div>
+              <div className={s.muted}>
+                {muteds.indexOf(item.target.toString()) !== -1 && (
+                  <MicrophoneOffIcon
+                    color={
+                      adminMuteds.indexOf(item.target.toString()) !== -1 &&
+                      (isOwner || userId === item.target)
+                        ? theme?.colors.blue
+                        : theme?.colors.white
+                    }
+                  />
+                )}
+              </div>
             </div>
-            <div className={s.muted}>
-              {muteds.indexOf(item.target.toString()) !== -1 && (
-                <MicrophoneOffIcon
-                  color={
-                    adminMuteds.indexOf(item.target.toString()) !== -1 &&
-                    (isOwner || userId === item.target)
-                      ? theme?.colors.blue
-                      : theme?.colors.white
-                  }
-                />
-              )}
-            </div>
-          </div>
-        ))}
+          )
+        )}
       </div>
       <div className={s.actions}>
         {roomLink && (
