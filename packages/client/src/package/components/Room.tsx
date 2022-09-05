@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { log } from '../utils/lib';
 import s from './Room.module.scss';
 import g from '../Global.module.scss';
@@ -50,7 +50,6 @@ import PseudoButton from './ui/PseudoButton';
 
 function Room({ userId, iceServers, server, port, roomId, locale, name, theme }: RoomProps) {
   const container = useRef<HTMLDivElement>(null);
-  const videoActionsRef = useRef<HTMLDivElement>(null);
   const roomLink = useMemo(() => getRoomLink(roomId), [roomId]);
   const { createAudioAnalyzer, analyzeSoundLevel, cleanAudioAnalyzer, speaker } =
     useAudioAnalyzer();
@@ -212,12 +211,9 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
             />
             {/** actions is strong third child */}
 
-            <div ref={videoActionsRef} className={s.video__actions}>
+            <div className={s.video__actions}>
               {item.isOwner && (
-                <PseudoButton
-                  refActions={videoActionsRef as React.MutableRefObject<HTMLDivElement>}
-                  title={isOwner ? locale.youAreAdminOfRoom : locale.isAdminOfRoom}
-                >
+                <PseudoButton title={isOwner ? locale.youAreAdminOfRoom : locale.isAdminOfRoom}>
                   <CrownIcon color={theme?.colors.yellow} />
                 </PseudoButton>
               )}
