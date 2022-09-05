@@ -7,7 +7,7 @@ Selective Forwarding Unit (SFU) is a WebRTC web application library, the server 
 <details>
   <summary>WebRTC SFU Server</summary>
 
-![docs\resources\images\sfu1.png](./docs\resources\images\sfu1.png)
+![docs/resources/images/sfu1.png](./docs/resources/images/sfu1.png)
 
 ## </details>
 
@@ -36,7 +36,7 @@ docker-compose up -d
 - [docker-compose.ci.yml](./docker-compose.ci.yml) + [Coturn](https://github.com/coturn/coturn) + [Mariadb](https://mariadb.org/)
 - [docker-compose.yml](./docker-compose.yml) + [PhpMyAdmin](https://www.phpmyadmin.net/)
 
-## ![docs\resources\images\DockerContainersDBTurn.png](./docs\resources\images\DockerContainersDBTurn.png)
+![docs/resources/images/DockerContainersDBTurn.png](./docs/resources/images/DockerContainersDBTurn.png)
 
 ## </details>
 
