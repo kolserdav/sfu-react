@@ -19,7 +19,7 @@ export const getTime = (time: number) => {
 
   const { seconds, minutes, hours } = duration;
 
-  return `${hours.toString().length === 1 ? `0${hours}` : hours}:${
-    minutes.toString().length === 1 ? `0${minutes}` : minutes
-  }:${seconds.toString().length === 1 ? `0${seconds}` : seconds}`;
+  return `${hours?.toString().length === 1 ? `0${hours}` : hours}:${
+    minutes?.toString().length === 1 ? `0${minutes}` : minutes
+  }:${seconds?.toString().length === 1 ? `0${seconds}` : seconds}`;
 };
