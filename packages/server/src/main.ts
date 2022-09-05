@@ -182,7 +182,7 @@ export function createServer(
           rtc.handleGetToUnMute(rawMessage);
           break;
         case MessageType.GET_RECORD:
-          recordVideo.startRecord(rawMessage);
+          recordVideo.handleVideoRecord(rawMessage);
           break;
         case MessageType.GET_TO_UNBAN:
           rtc.handleGetToUnBan(rawMessage);

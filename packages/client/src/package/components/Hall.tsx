@@ -13,30 +13,25 @@ import clsx from 'clsx';
 import { HallProps } from '../types';
 import ThemeIcon from '../Icons/ThemeIcon';
 import Chat from './Chat';
-import storeTheme, { changeTheme } from '../store/theme';
 import { LocaleSelector } from '../types/interfaces';
 import Select from './ui/Select';
-import { setLocalStorage, LocalStorageName } from '../utils/localStorage';
 import CloseIcon from '../Icons/Close';
 import s from './Hall.module.scss';
 import IconButton from './ui/IconButton';
 import SettingsIcon from '../Icons/SettingsIcon';
-import { useLang, useSettings, useUsers, useVideoRecord } from './Hall.hooks';
+import { useLang, useSettings, useUsers, useVideoRecord, useTimeRecord } from './Hall.hooks';
 import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
 import RecIcon from '../Icons/Rec';
 import { checkIsRecord } from '../utils/lib';
-
-const changeThemeHandler = () => {
-  const { theme } = storeTheme.getState();
-  storeTheme.dispatch(changeTheme({ theme }));
-  setLocalStorage(LocalStorageName.THEME, theme === 'dark' ? 'light' : 'dark');
-};
+import { changeThemeHandler } from './Hall.lib';
 
 function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) {
   const { lang, changeLang } = useLang();
   const { openSettings, openSettingsDialog } = useSettings({ open });
   const { users, isOwner, banneds, unBanWrapper } = useUsers({ userId, roomId });
   const { videoRecordWrapper } = useVideoRecord({ roomId, userId });
+  const { time } = useTimeRecord();
+
   return (
     <div className={clsx(s.wrapper, open ? s.open : '')}>
       <div
@@ -110,7 +105,10 @@ function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) 
               title={locale.recordVideo}
               onClick={videoRecordWrapper({ command: 'start' })}
             >
-              <RecIcon color={theme?.colors.red} />
+              <div className={s.record}>
+                <div className={s.time}>{time}</div>
+                <RecIcon color={theme?.colors.red} />
+              </div>
             </IconButton>
           </div>
           {open && (

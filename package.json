@@ -81,6 +81,7 @@
   "dependencies": {
     "@prisma/client": "^4.2.1",
     "@reduxjs/toolkit": "^1.8.2",
+    "cancelable-promise": "^4.3.0",
     "clsx": "^1.1.1",
     "dotenv": "^16.0.1",
     "prisma": "^4.2.1",

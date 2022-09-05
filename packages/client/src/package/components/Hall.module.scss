@@ -73,10 +73,11 @@ $user-item-padding: 1rem;
 .settings {
   position: relative;
   display: flex;
-  flex-direction: column;
+  flex-flow: row wrap;
   align-items: flex-end;
   flex-basis: 20%;
   height: 100%;
+  padding-top: 2rem;
 
   &.open {
     z-index: 105;

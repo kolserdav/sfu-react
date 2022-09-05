@@ -54,6 +54,7 @@ import storeClickDocument from '../store/clickDocument';
 import { getLocalStorage, LocalStorageName, setLocalStorage } from '../utils/localStorage';
 import storeUserList, { changeUserList } from '../store/userList';
 import storeMessage from '../store/message';
+import storeTimeRecord, { changeTimeRecord } from '../store/timeRecord';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -461,8 +462,15 @@ export const useConnection = ({
       setAdminMuted(_adminMuteds.indexOf(userId) !== -1);
     };
 
-    const changeTime = (args: SendMessageArgs<MessageType.SET_RECORDING>) => {
-      console.log(args);
+    const handleRecordingTime = (args: SendMessageArgs<MessageType.SET_RECORDING>) => {
+      storeTimeRecord.dispatch(
+        changeTimeRecord<MessageType.SET_RECORDING>({
+          message: {
+            type: 'recording',
+            value: args,
+          },
+        })
+      );
     };
 
     const handleError = ({
@@ -574,7 +582,7 @@ export const useConnection = ({
         data: { roomUsers, muteds: _muteds, adminMuteds: _adminMuteds },
         connId,
       } = ws.getMessage(MessageType.SET_ROOM_GUESTS, rawMessage);
-      rtc.muteds = _muteds.concat(_adminMuteds);
+      rtc.muteds = (_muteds || []).concat(_adminMuteds || []);
       const _streams: Stream[] = storeStreams.getState().streams as Stream[];
       log('info', 'Run change room gusets handler', {
         roomUsers,
@@ -727,7 +735,7 @@ export const useConnection = ({
           changeBanList(rawMessage);
           break;
         case MessageType.SET_RECORDING:
-          changeTime(rawMessage);
+          handleRecordingTime(rawMessage);
           break;
         case MessageType.SET_ERROR:
           handleError(rawMessage);

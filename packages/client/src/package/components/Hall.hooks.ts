@@ -12,6 +12,8 @@ import { getCookie, CookieName, setCookie } from '../utils/cookies';
 import storeStreams from '../store/streams';
 import storeUserList from '../store/userList';
 import storeMessage, { changeMessage } from '../store/message';
+import storeTimeRecord, { RootState } from '../store/timeRecord';
+import { getTime } from './Hall.lib';
 
 export const useLang = () => {
   const [lang, setLang] = useState<LocaleValue>(getCookie(CookieName.lang) || LocaleDefault);
@@ -166,4 +168,27 @@ export const useVideoRecord = ({
     };
 
   return { videoRecordWrapper };
+};
+
+export const useTimeRecord = () => {
+  const [time, setTime] = useState<string>('');
+
+  useEffect(() => {
+    const { subscribe }: any = storeTimeRecord;
+    const cleanSubs = subscribe(() => {
+      const {
+        message: {
+          value: {
+            data: { time: _time },
+          },
+        },
+      }: RootState<MessageType.SET_RECORDING> = storeTimeRecord.getState() as any;
+      setTime(getTime(_time));
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, []);
+
+  return { time };
 };
