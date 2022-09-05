@@ -2,6 +2,46 @@
 
 Selective Forwarding Unit (SFU) is a WebRTC web application library, the server part of which is written in Node, and the client part is a ReactJS/Next.js shared component.
 
+## Know-how
+
+<details>
+  <summary>WebRTC SFU Server</summary>
+
+![docs\resources\images\sfu1.png](./docs\resources\images\sfu1.png)
+
+## </details>
+
+## Dependencies,
+
+---
+
+- NodeJS v^16.\*
+- MariaDB v^10.\*
+- Coturn @latest
+
+---
+
+## ... or
+
+- NodeJS v^16.\*
+- docker-compose @latest
+
+<details>
+  <summary>Docker Environment</summary>
+  
+ ```sh
+docker-compose up -d
+```
+
+- [docker-compose.ci.yml](./docker-compose.ci.yml) + [Coturn](https://github.com/coturn/coturn) + [Mariadb](https://mariadb.org/)
+- [docker-compose.yml](./docker-compose.yml) + [PhpMyAdmin](https://www.phpmyadmin.net/)
+
+## ![docs\resources\images\DockerContainersDBTurn.png](./docs\resources\images\DockerContainersDBTurn.png)
+
+## </details>
+
+---
+
 ## Installation
 
 - Install source:
