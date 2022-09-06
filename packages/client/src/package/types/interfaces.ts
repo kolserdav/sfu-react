@@ -153,6 +153,9 @@ export namespace Locale {
     recordVideo: string;
     videoRecording: string;
     recordVideoStop: string;
+    linkCopied: string;
+    generalSettings: string;
+    recordActions: string;
   }
 }
 

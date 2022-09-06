@@ -98,7 +98,7 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
           onInput={changeText}
           value={message}
         />
-        <IconButton title={locale.send} onClick={sendMessage}>
+        <IconButton className={s.send__icon} title={locale.send} onClick={sendMessage}>
           {isEdit ? (
             <CheckIcon color={theme?.colors.text} />
           ) : (

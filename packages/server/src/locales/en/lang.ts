@@ -41,6 +41,9 @@ const lang: LocaleServer = {
     recordVideo: 'Record video',
     recordVideoStop: 'Stop video record',
     videoRecording: 'Video recording',
+    linkCopied: 'Room link copied',
+    generalSettings: 'General settings',
+    recordActions: 'Record actions',
   },
 };
 

@@ -277,12 +277,9 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
       </div>
       <div className={s.actions}>
         {roomLink && (
-          <div className={s.link__container}>
-            <input disabled className={s.link__input} value={roomLink} />
-            <IconButton onClick={() => copyLink(roomLink)}>
-              <CopyIcon color={theme?.colors.text} />
-            </IconButton>
-          </div>
+          <IconButton onClick={() => copyLink(roomLink, locale.linkCopied)}>
+            <CopyIcon color={theme?.colors.text} />
+          </IconButton>
         )}
         {displayMediaSupported && (
           <IconButton onClick={screenShare} title={locale.shareScreen}>

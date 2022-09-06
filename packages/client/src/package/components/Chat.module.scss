@@ -40,6 +40,8 @@ $wrapper-padding: 0.5rem;
 }
 
 $text-area-padding: 1rem;
+$input-mb-desktop: 0.5rem;
+$input-mb-mobile: 1rem;
 
 .input {
   textarea {
@@ -58,13 +60,16 @@ $text-area-padding: 1rem;
   }
 
   position: absolute;
-  margin-bottom: 0.5rem;
+  margin-bottom: $input-mb-desktop;
   bottom: $wrapper-padding;
   display: flex;
   flex-direction: row;
   justify-content: space-around;
   align-items: center;
   width: calc(100% - #{$wrapper-padding} * 2);
+  @media (max-width: $mobile-width) {
+    margin-bottom: $input-mb-mobile;
+  }
 }
 
 .message__wrapper {
@@ -135,4 +140,11 @@ $text-area-padding: 1rem;
   flex-direction: column;
   justify-content: center;
   width: 100%;
+}
+
+.send__icon {
+  margin-bottom: $input-mb-desktop;
+  @media (max-width: $mobile-width) {
+    margin-bottom: $input-mb-mobile;
+  }
 }

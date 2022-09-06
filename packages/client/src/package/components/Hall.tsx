@@ -95,21 +95,27 @@ function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) 
             style={{ background: theme?.colors.paper }}
             className={clsx(s.settings, openSettings ? s.open : '')}
           >
-            <Select theme={theme} onChange={changeLang} value={lang}>
-              {LocaleSelector}
-            </Select>
-            <IconButton onClick={changeThemeHandler} title={locale.changeTheme}>
-              <ThemeIcon color={theme?.colors.text} />
-            </IconButton>
-            <IconButton
-              title={locale.recordVideo}
-              onClick={videoRecordWrapper({ command: 'start' })}
-            >
-              <div className={s.record}>
-                <div className={s.time}>{time}</div>
-                <RecIcon color={theme?.colors.red} />
-              </div>
-            </IconButton>
+            <div className={s.settings__item}>
+              <h5 className={s.settings__item__title}>General settings</h5>
+              <Select theme={theme} onChange={changeLang} value={lang}>
+                {LocaleSelector}
+              </Select>
+              <IconButton onClick={changeThemeHandler} title={locale.changeTheme}>
+                <ThemeIcon color={theme?.colors.text} />
+              </IconButton>
+            </div>
+            <div className={s.settings__item}>
+              <h5 className={s.settings__item__title}>Record actions</h5>
+              <IconButton
+                title={locale.recordVideo}
+                onClick={videoRecordWrapper({ command: 'start' })}
+              >
+                <div className={s.record}>
+                  <div className={s.time}>{time}</div>
+                  <RecIcon color={theme?.colors.red} />
+                </div>
+              </IconButton>
+            </div>
           </div>
           {open && (
             <IconButton onClick={openSettingsDialog} className={s.settings__button}>

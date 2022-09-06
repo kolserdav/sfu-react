@@ -82,9 +82,13 @@ export const useMesages = ({
     let _value = (value as string).slice();
     const { current } = inputRef;
     const quote = checkQuote(value);
+    const edit = checkEdit(value);
     if (current) {
       if (current.selectionStart <= quote) {
         _value = cleanQuote(value);
+      }
+      if (current.selectionStart <= edit) {
+        _value = cleanEdit(value);
       }
     }
     let c = 1;

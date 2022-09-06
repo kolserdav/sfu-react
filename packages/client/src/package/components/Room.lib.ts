@@ -8,6 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
+import storeAlert, { changeAlert } from '../store/alert';
 import s from './Room.module.scss';
 import c from './ui/CloseButton.module.scss';
 
@@ -109,8 +110,17 @@ export const onClickVideo = (e: React.MouseEvent<HTMLVideoElement, MouseEvent>) 
   target.setAttribute('height', height.toString());
 };
 
-export const copyLink = (link: string) => {
+export const copyLink = (link: string, children: string) => {
   navigator.clipboard.writeText(link);
+  storeAlert.dispatch(
+    changeAlert({
+      alert: {
+        type: 'info',
+        children,
+        open: true,
+      },
+    })
+  );
 };
 
 export const supportDisplayMedia = () =>

@@ -72,12 +72,11 @@ $user-item-padding: 1rem;
 
 .settings {
   position: relative;
-  display: flex;
-  flex-flow: row wrap;
-  align-items: flex-end;
   flex-basis: 20%;
-  height: 100%;
-  padding-top: 2rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
 
   &.open {
     z-index: 105;
@@ -95,6 +94,19 @@ $user-item-padding: 1rem;
   @media (max-width: $mobile-width) {
     width: 0;
     height: 0;
+  }
+
+  .settings__item {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    .settings__item__title {
+      text-align: center;
+    }
   }
 }
 

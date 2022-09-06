@@ -41,6 +41,9 @@ const lang: LocaleServer = {
     recordVideo: 'Запись видео',
     recordVideoStop: 'Остановить запись видео',
     videoRecording: 'Видео записывается',
+    linkCopied: 'Адрес комнаты скопирован',
+    generalSettings: 'Основные настройки',
+    recordActions: 'Видеозапись',
   },
 };
 
