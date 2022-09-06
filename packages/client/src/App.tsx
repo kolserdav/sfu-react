@@ -11,6 +11,7 @@
 import React from 'react';
 import Main from './package/Main';
 
+const isTest = process.env.NODE_ENV === 'test';
 const createRoom = () => {
   // Do not use the symbol "_" in room address
   window.location.href = `${new Date().getTime()}?uid=1`;
@@ -27,14 +28,24 @@ function App() {
       ) : (
         <Main
           room={{
-            server: process.env.REACT_APP_SERVER as string,
+            server: isTest
+              ? (process.env.REACT_APP_SERVER_TEST as string)
+              : (process.env.REACT_APP_SERVER as string),
             port: parseInt(process.env.REACT_APP_PORT as string, 10),
             iceServers: [
               {
-                urls: [process.env.REACT_APP_STUN_SERVER as string],
+                urls: [
+                  isTest
+                    ? (process.env.REACT_APP_STUN_SERVER_TEST as string)
+                    : (process.env.REACT_APP_STUN_SERVER as string),
+                ],
               },
               {
-                urls: [process.env.REACT_APP_TURN_SERVER as string],
+                urls: [
+                  isTest
+                    ? (process.env.REACT_APP_TURN_SERVER_TEST as string)
+                    : (process.env.REACT_APP_TURN_SERVER as string),
+                ],
                 username: process.env.REACT_APP_TURN_SERVER_USER,
                 credential: process.env.REACT_APP_TURN_SERVER_PASSWORD,
               },

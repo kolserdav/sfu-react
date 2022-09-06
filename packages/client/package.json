@@ -8,6 +8,7 @@
   "types": "src/dist/index.d.ts",
   "scripts": {
     "dev": "cross-env BROWSER=none react-scripts start",
+    "dev:test": "cross-env BROWSER=none NODE_ENV=test react-scripts start",
     "compile": "webpack --env NODE_ENV=production",
     "build": "cross-env CI=false react-scripts build",
     "test": "react-scripts test",

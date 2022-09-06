@@ -12,7 +12,7 @@ import { MessageType, SendMessageArgs } from '../types/interfaces';
 
 export const LOG_LEVEL = 2;
 export const DEFAULT_PORT = '3001';
-export const HEADLESS = false;
+export const HEADLESS = true;
 export const VIEWPORT = {
   width: 800,
   height: 400,

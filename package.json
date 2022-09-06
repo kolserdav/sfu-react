@@ -65,6 +65,8 @@
     "dev:server-server": "cd packages/server && npm run dev:server",
     "dev:client": "cd packages/client && npm run dev",
     "dev:client-next": "cd packages/client && npm run next:dev",
+    "dev:test-client": "cd packages/client && npm run dev:test",
+    "dev:test": "concurrently \"npm run dev:server\" \"npm run dev:test-client\"",
     "env:server": "cp packages/server/.env.example packages/server/.env",
     "env:client": "cp packages/client/.env.example packages/client/.env",
     "env": "npm run env:server && npm run env:client",
