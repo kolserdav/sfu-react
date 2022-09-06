@@ -9,15 +9,18 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import puppeteer from 'puppeteer';
-import { cancelable, CancelablePromise } from 'cancelable-promise';
+import { CancelablePromise } from 'cancelable-promise';
 import path from 'path';
 import { PuppeteerScreenRecorder } from 'puppeteer-screen-recorder';
 import { HEADLESS, VIEWPORT, APP_URL } from '../utils/constants';
-import { MessageType, SendMessageArgs } from '../types/interfaces';
+import { ErrorCode, MessageType, SendMessageArgs } from '../types/interfaces';
 import WS from './ws';
+import { getLocale, log } from '../utils/lib';
 
 class RecordVideo {
-  public recordPages: Record<string, puppeteer.Page> = {};
+  public recordPages: Record<string, SendMessageArgs<MessageType.SET_RECORDING>> = {};
+
+  public pages: Record<string, { page: puppeteer.Page; browser: puppeteer.Browser }> = {};
 
   public ws: WS;
 
@@ -45,7 +48,15 @@ class RecordVideo {
       ],
     });
     const [page] = await browser.pages();
-    this.recordPages[roomId] = page;
+    page.on('close', () => {
+      log('warn', 'Record page on close', {});
+    });
+    if (!this.pages[roomId]) {
+      this.pages[roomId] = {
+        page,
+        browser,
+      };
+    }
     await page.setViewport(VIEWPORT);
     // TODO get uid
     await page.goto(`${APP_URL}/${roomId}?uid=record-${new Date().getTime()}&record=1`);
@@ -62,7 +73,7 @@ class RecordVideo {
     await recorder.start(savePath);
     let intervaToClean = setInterval(() => {
       /** */
-    }, Infinity);
+    }, 10000000);
     const cancelablePromise = new CancelablePromise((_) => {
       let time = 0;
       intervaToClean = setInterval(() => {
@@ -73,7 +84,7 @@ class RecordVideo {
           connId: '',
           data: {
             time,
-            command: 'start',
+            command: this.recordPages[roomId]?.data.command || 'stop',
           },
         });
       }, 1000);
@@ -82,9 +93,61 @@ class RecordVideo {
   }
 
   public async handleVideoRecord(args: SendMessageArgs<MessageType.GET_RECORD>) {
+    const {
+      id,
+      data: { userId, command },
+      connId,
+    } = args;
     const prom = this.startRecord(args);
-    prom.then(({ cancelablePromise, intervaToClean }) => {
-      console.log(cancelablePromise);
+    const locale = getLocale(this.ws.users[userId].locale).server;
+    this.recordPages[id] = {
+      id,
+      data: {
+        command,
+        time: 0,
+      },
+      connId: '',
+      type: MessageType.SET_RECORDING,
+    };
+    let interval = setInterval(() => {
+      /** */
+    }, 100000000);
+    prom.then(async ({ cancelablePromise, recorder, intervaToClean }) => {
+      await new Promise((resolve) => {
+        interval = setInterval(() => {
+          const {
+            data: { command: _command },
+          } = this.recordPages[id];
+          switch (_command) {
+            case 'stop':
+              cancelablePromise.cancel();
+              clearInterval(interval);
+              recorder.stop();
+              clearInterval(intervaToClean);
+              this.ws.sendMessage({
+                type: MessageType.SET_ERROR,
+                id: userId,
+                connId,
+                data: {
+                  type: 'info',
+                  code: ErrorCode.videoRecordStop,
+                  message: locale.videoRecordStop,
+                },
+              });
+              if (this.pages[id]) {
+                this.pages[id].page.close().then(() => {
+                  this.pages[id].browser.close();
+                  delete this.pages[id];
+                });
+              } else {
+                log('warn', 'Record page not found', { id });
+              }
+              resolve(0);
+              break;
+            default:
+          }
+        }, 1000);
+      });
     });
   }
 }

@@ -46,6 +46,7 @@ export enum ErrorCode {
   roomIsInactive = 'roomIsInactive',
   errorSendMessage = 'errorSendMessage',
   youAreBanned = 'youAreBanned',
+  videoRecordStop = 'videoRecordStop',
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -127,6 +128,7 @@ export namespace Locale {
     roomInactive: string;
     errorSendMessage: string;
     youAreBanned: string;
+    videoRecordStop: string;
   }
 
   export interface Client {
@@ -156,6 +158,11 @@ export namespace Locale {
     linkCopied: string;
     generalSettings: string;
     recordActions: string;
+    changeLang: string;
+    darkTheme: string;
+    startRecord: string;
+    recording: string;
+    stopRecord: string;
   }
 }
 

@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import storeLocale, { changeLocale } from '../store/locale';
 import {
   LocaleDefault,
   LocaleValue,
   MessageType,
-  RecordCommand,
   RoomUser,
+  SendMessageArgs,
   UserList,
 } from '../types/interfaces';
 import { getCookie, CookieName, setCookie } from '../utils/cookies';
@@ -13,7 +13,8 @@ import storeStreams from '../store/streams';
 import storeUserList from '../store/userList';
 import storeMessage, { changeMessage } from '../store/message';
 import storeTimeRecord, { RootState } from '../store/timeRecord';
-import { getTime } from './Hall.lib';
+import { getTime, videoRecordWrapper } from './Hall.lib';
+import { LocalStorageName } from '../utils/localStorage';
 
 export const useLang = () => {
   const [lang, setLang] = useState<LocaleValue>(getCookie(CookieName.lang) || LocaleDefault);
@@ -29,7 +30,11 @@ export const useLang = () => {
 };
 
 export const useSettings = ({ open }: { open: boolean }) => {
-  const [openSettings, setOpenSettings] = useState<boolean>(false);
+  const defaultOpenSettings = useMemo(
+    () => typeof localStorage.getItem(LocalStorageName.SETTINGS_OPEN) === 'string',
+    []
+  );
+  const [openSettings, setOpenSettings] = useState<boolean>(defaultOpenSettings);
   const openSettingsDialog = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     setOpenSettings(!openSettings);
   };
@@ -146,49 +151,44 @@ export const useVideoRecord = ({
   roomId: string | number;
   userId: string | number;
 }) => {
-  const videoRecordWrapper =
-    ({ command }: { command: keyof typeof RecordCommand }) =>
-    (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-      storeMessage.dispatch(
-        changeMessage<MessageType.GET_RECORD>({
-          message: {
-            type: 'room',
-            value: {
-              type: MessageType.GET_RECORD,
-              connId: '',
-              id: roomId,
-              data: {
-                command,
-                userId,
-              },
-            },
-          },
-        })
-      );
-    };
+  const recordStartHandler = (
+    command: SendMessageArgs<MessageType.GET_RECORD>['data']['command']
+  ) => videoRecordWrapper({ command, userId, roomId });
 
-  return { videoRecordWrapper };
+  return { recordStartHandler };
 };
 
 export const useTimeRecord = () => {
   const [time, setTime] = useState<string>('');
+  const [started, setStarted] = useState<boolean>(false);
 
+  /**
+   * Listen change time
+   */
   useEffect(() => {
     const { subscribe }: any = storeTimeRecord;
     const cleanSubs = subscribe(() => {
       const {
         message: {
           value: {
-            data: { time: _time },
+            data: { time: _time, command },
           },
         },
-      }: RootState<MessageType.SET_RECORDING> = storeTimeRecord.getState() as any;
+      }: // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      RootState<MessageType.SET_RECORDING> = storeTimeRecord.getState() as any;
+      const _started = command === 'start';
+      if (_started && !started) {
+        setStarted(true);
+      }
+      if (!_started && started) {
+        setStarted(false);
+      }
       setTime(getTime(_time));
     });
     return () => {
       cleanSubs();
     };
-  }, []);
+  }, [started]);
 
-  return { time };
+  return { time, started };
 };

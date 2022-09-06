@@ -22,6 +22,7 @@ import SettingsIcon from '../Icons/SettingsIcon';
 import { useLang, useSettings, useUsers, useVideoRecord, useTimeRecord } from './Hall.hooks';
 import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
 import RecIcon from '../Icons/Rec';
+import StopIcon from '../Icons/Stop';
 import { checkIsRecord } from '../utils/lib';
 import { changeThemeHandler } from './Hall.lib';
 
@@ -29,9 +30,8 @@ function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) 
   const { lang, changeLang } = useLang();
   const { openSettings, openSettingsDialog } = useSettings({ open });
   const { users, isOwner, banneds, unBanWrapper } = useUsers({ userId, roomId });
-  const { videoRecordWrapper } = useVideoRecord({ roomId, userId });
-  const { time } = useTimeRecord();
-
+  const { recordStartHandler } = useVideoRecord({ roomId, userId });
+  const { time, started } = useTimeRecord();
   return (
     <div className={clsx(s.wrapper, open ? s.open : '')}>
       <div
@@ -95,26 +95,50 @@ function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) 
             style={{ background: theme?.colors.paper }}
             className={clsx(s.settings, openSettings ? s.open : '')}
           >
-            <div className={s.settings__item}>
-              <h5 className={s.settings__item__title}>General settings</h5>
-              <Select theme={theme} onChange={changeLang} value={lang}>
+            <div
+              className={s.settings__item}
+              style={{ boxShadow: `1px 3px 1px ${theme?.colors.active}` }}
+            >
+              <h5 className={s.settings__item__title}>{locale.generalSettings}</h5>
+
+              <Select theme={theme} onChange={changeLang} value={lang} title={locale.changeLang}>
                 {LocaleSelector}
               </Select>
-              <IconButton onClick={changeThemeHandler} title={locale.changeTheme}>
-                <ThemeIcon color={theme?.colors.text} />
-              </IconButton>
-            </div>
-            <div className={s.settings__item}>
-              <h5 className={s.settings__item__title}>Record actions</h5>
-              <IconButton
-                title={locale.recordVideo}
-                onClick={videoRecordWrapper({ command: 'start' })}
-              >
-                <div className={s.record}>
-                  <div className={s.time}>{time}</div>
-                  <RecIcon color={theme?.colors.red} />
+
+              <div className={s.settings__item__row}>
+                <h6 className={s.settings__item__title}>{locale.darkTheme}</h6>
+                <div className={s.settings__item__actions}>
+                  <IconButton onClick={changeThemeHandler} title={locale.changeTheme}>
+                    <ThemeIcon color={theme?.colors.text} />
+                  </IconButton>
                 </div>
-              </IconButton>
+              </div>
+            </div>
+            <div
+              className={s.settings__item}
+              style={{ boxShadow: `1px 3px 1px ${theme?.colors.active}` }}
+            >
+              <h5 className={s.settings__item__title}>{locale.recordActions}</h5>
+              <div className={s.settings__item__row}>
+                <h6 className={s.settings__item__title}>{locale.recordVideo}</h6>
+                <div className={s.settings__item__actions}>
+                  <IconButton
+                    title={started ? locale.stopRecord : locale.startRecord}
+                    className={started ? s.text__button : ''}
+                    onClick={recordStartHandler(started ? 'stop' : 'start')}
+                    disabled={!isOwner}
+                  >
+                    <div className={s.record}>
+                      {started && <div className={s.time}>{time}</div>}
+                      {started ? (
+                        <StopIcon color={theme?.colors.red} />
+                      ) : (
+                        <RecIcon color={theme?.colors.red} />
+                      )}
+                    </div>
+                  </IconButton>
+                </div>
+              </div>
             </div>
           </div>
           {open && (

@@ -16,6 +16,7 @@ const lang: LocaleServer = {
     roomInactive: 'Room is inactive',
     errorSendMessage: 'Error send message',
     youAreBanned: 'You are banned',
+    videoRecordStop: 'Video record stop',
   },
   client: {
     shareScreen: 'Share screen',
@@ -44,6 +45,11 @@ const lang: LocaleServer = {
     linkCopied: 'Room link copied',
     generalSettings: 'General settings',
     recordActions: 'Record actions',
+    changeLang: 'Change panel lang',
+    darkTheme: 'Dark theme',
+    startRecord: 'Start record',
+    recording: 'Recording ...',
+    stopRecord: 'Stop record',
   },
 };
 

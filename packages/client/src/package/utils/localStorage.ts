@@ -18,6 +18,8 @@ export enum LocalStorageName {
   HALL_OPEN = 'HALL_OPEN',
   // eslint-disable-next-line no-unused-vars
   VOLUMES = 'VOLUMES',
+  // eslint-disable-next-line no-unused-vars
+  SETTINGS_OPEN = 'SETTINGS_OPEN',
 }
 
 type LocalStorageValue<T extends keyof typeof LocalStorageName> = T extends LocalStorageName.THEME

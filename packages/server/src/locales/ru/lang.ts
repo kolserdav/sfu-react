@@ -16,6 +16,7 @@ const lang: LocaleServer = {
     roomInactive: 'Комната не активна',
     errorSendMessage: 'Ошибка отправки сообщения',
     youAreBanned: 'Вы забанены',
+    videoRecordStop: 'Видеозапись остановлена',
   },
   client: {
     shareScreen: 'Демонстрация экрана',
@@ -44,6 +45,11 @@ const lang: LocaleServer = {
     linkCopied: 'Адрес комнаты скопирован',
     generalSettings: 'Основные настройки',
     recordActions: 'Видеозапись',
+    changeLang: 'Сменить язык панели',
+    darkTheme: 'Темная тема',
+    startRecord: 'Старт записи',
+    recording: 'Записывает ...',
+    stopRecord: 'Остановить запись',
   },
 };
 

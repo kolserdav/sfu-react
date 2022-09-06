@@ -8,8 +8,9 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-export const LOG_LEVEL = 2;
+import { MessageType, SendMessageArgs } from '../types/interfaces';
 
+export const LOG_LEVEL = 2;
 export const DEFAULT_PORT = '3001';
 export const HEADLESS = false;
 export const VIEWPORT = {
@@ -35,3 +36,12 @@ export const CORS = env.CORS || '';
 export const APP_URL = env.APP_URL || '';
 export const STUN_SERVER = env.STUN_SERVER || '';
 export const SENT_RTCP_INTERVAL = 1000;
+export const STOP_RECORDING_MESSAGE: SendMessageArgs<MessageType.SET_RECORDING> = {
+  type: MessageType.SET_RECORDING,
+  id: 0,
+  connId: '',
+  data: {
+    time: 0,
+    command: 'stop',
+  },
+};

@@ -18,14 +18,17 @@ function Select({
   children,
   onChange,
   theme,
+  title,
 }: {
   value: string;
   children: typeof LocaleSelector;
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   theme?: Theme;
+  title?: string;
 }) {
   return (
     <select
+      title={title}
       className={s.wrapper}
       onChange={onChange}
       value={value}
@@ -42,6 +45,7 @@ function Select({
 
 Select.defaultProps = {
   theme: undefined,
+  title: '',
 };
 
 export default Select;

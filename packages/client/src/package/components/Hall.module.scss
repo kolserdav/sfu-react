@@ -57,6 +57,7 @@
 }
 
 $user-item-padding: 1rem;
+$settings-item-padding: 1rem;
 
 .users__item {
   padding: 0 $user-item-padding;
@@ -70,11 +71,23 @@ $user-item-padding: 1rem;
   line-height: 1.6;
 }
 
+.text__button {
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+
+  .text__button__title {
+    display: table-cell;
+    vertical-align: middle;
+  }
+}
+
 .settings {
   position: relative;
-  flex-basis: 20%;
+  max-width: calc(20% + #{$settings-item-padding} * 2);
+  margin-left: $settings-item-padding;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 
@@ -87,8 +100,13 @@ $user-item-padding: 1rem;
     border: 2px solid cyan;
 
     @media (max-width: $mobile-width) {
-      width: 200px;
-      height: 100px;
+      width: 500px;
+      height: 500px;
+    }
+
+    @media (max-width: $small-width) {
+      width: $small-width;
+      height: 500px;
     }
   }
   @media (max-width: $mobile-width) {
@@ -101,11 +119,28 @@ $user-item-padding: 1rem;
     width: 100%;
     height: 100%;
     display: flex;
+    padding: $settings-item-padding;
     flex-direction: column;
     align-items: flex-start;
 
     .settings__item__title {
       text-align: center;
+    }
+
+    .settings__item__actions {
+      position: relative;
+      display: block;
+      margin-right: $settings-item-padding;
+    }
+
+    .settings__item__row {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      justify-content: space-between;
+      align-items: center;
+      /* stylelint-disable-next-line declaration-block-no-redundant-longhand-properties */
+      flex-wrap: nowrap;
     }
   }
 }
@@ -117,4 +152,9 @@ $user-item-padding: 1rem;
   @media (min-width: $mobile-width) {
     display: none;
   }
+}
+
+.record {
+  display: flex;
+  align-items: center;
 }
