@@ -278,6 +278,22 @@ export function createServer(
               if (onRoomClose) {
                 onRoomClose({ roomId: item });
               }
+              if (recordVideo.recordPages[item]) {
+                recordVideo.recordPages[item] = {
+                  id: item,
+                  connId,
+                  type: MessageType.SET_RECORDING,
+                  data: {
+                    command: 'stop',
+                    time: 0,
+                  },
+                };
+                setTimeout(() => {
+                  if (recordVideo.recordPages[item].data.command === 'stop') {
+                    delete recordVideo.recordPages[item];
+                  }
+                }, 5000);
+              }
               delete rtc.rooms[item];
               delete rtc.streams[item];
               delete rtc.banneds[item];

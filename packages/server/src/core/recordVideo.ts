@@ -69,7 +69,7 @@ class RecordVideo {
       aspectRatio: '16:9',
     };
     const recorder = new PuppeteerScreenRecorder(page, Config);
-    const savePath = path.resolve(__dirname, `../../tmp/${roomId}.mp4`);
+    const savePath = path.resolve(__dirname, `../../rec/${roomId}.mp4`);
     await recorder.start(savePath);
     let intervaToClean = setInterval(() => {
       /** */

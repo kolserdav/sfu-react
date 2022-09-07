@@ -2,7 +2,7 @@ node_modules
 
 dist
 
-tmp
+rec
 
 .env
 

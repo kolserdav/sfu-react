@@ -146,3 +146,18 @@ export const rangeRandom = ({ min, max }: { min: number; max: number }) =>
   Math.floor(Math.random() * (max - min) + min);
 
 export const checkIsRecord = (uid: string) => /record=/.test(uid);
+
+export const getTime = (startTime?: number) => {
+  const nowTime = new Date().getTime();
+  const diffTime = nowTime - startTime || new Date().getTime();
+  const seconds = Math.floor(diffTime / 1000);
+  const minutes = Math.floor(diffTime / 1000 / 60);
+  const hours = Math.floor(diffTime / 1000 / 3600);
+  const _seconds =
+    seconds % 60 < 1 && seconds % 60 !== 0 ? seconds : seconds % 60 === 0 ? 0 : seconds % 60;
+  const _minutes =
+    minutes % 60 < 1 && minutes % 60 !== 0 ? minutes : minutes % 60 === 0 ? 0 : minutes % 60;
+  return `${hours.toString().length === 1 ? '0' : ''}${hours}:${
+    _minutes.toString().length === 1 ? '0' : ''
+  }${_minutes}:${_seconds.toString().length === 1 ? '0' : ''}${_seconds}`;
+};

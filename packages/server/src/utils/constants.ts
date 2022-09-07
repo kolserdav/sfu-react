@@ -14,8 +14,8 @@ export const LOG_LEVEL = 2;
 export const DEFAULT_PORT = '3001';
 export const HEADLESS = true;
 export const VIEWPORT = {
-  width: 800,
-  height: 400,
+  width: 1920,
+  height: 1080,
 };
 
 const {
