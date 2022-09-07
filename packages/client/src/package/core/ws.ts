@@ -101,7 +101,13 @@ class WS implements Types.WSInterface {
     let connection: any;
     if (typeof window !== 'undefined') {
       connection = new WebSocket(
-        `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${server}:${port}`,
+        `${
+          window.location.protocol === 'https:'
+            ? 'wss'
+            : process.env.NODE_ENV === 'test'
+            ? 'wss'
+            : 'ws'
+        }://${server}:${port}`,
         protocol
       );
     }

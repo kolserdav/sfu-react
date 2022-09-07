@@ -9,8 +9,11 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { WebSocketServer, Server, WebSocket, ServerOptions } from 'ws';
+import { createServer } from 'https';
+import { readFileSync } from 'fs';
 import { WSInterface, UserItem, LocaleValue } from '../types/interfaces';
 import { log } from '../utils/lib';
+import { CERT_PEM, KEY_PEM } from '../utils/constants';
 import DB from './db';
 
 const db = new DB();
@@ -29,10 +32,15 @@ class WS implements WSInterface {
 
   public rooms: Record<number | string, string> = {};
 
+  public server: ServerOptions['server'] | undefined;
+
   public WebSocket = WebSocket;
 
   constructor(connectionArgs: ServerOptions | undefined, cb?: ServerCallback) {
     this.connection = this.createConnection(connectionArgs, cb);
+    if (process.env.NODE_ENV === 'test' && this.server) {
+      this.server.listen(3001);
+    }
   }
 
   public async setSocket({
@@ -108,7 +116,15 @@ class WS implements WSInterface {
     // eslint-disable-next-line no-unused-vars
     cb?: ServerCallback
   ) => {
-    this.connection = new WebSocketServer(args, () => {
+    const _args = { ...args };
+    if (process.env.NODE_ENV === 'test') {
+      _args.server = createServer({
+        cert: readFileSync(CERT_PEM),
+        key: readFileSync(KEY_PEM),
+      });
+    }
+    this.server = _args.server;
+    this.connection = new WebSocketServer(_args, () => {
       log('info', 'Server listen at port:', args.port, true);
       if (cb) {
         cb(this.connection);

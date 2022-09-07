@@ -27,6 +27,8 @@ const {
     CORS?: string;
     APP_URL?: string;
     STUN_SERVER?: string;
+    CERT_PEM?: string;
+    KEY_PEM?: string;
   };
 } = process as any;
 
@@ -45,3 +47,5 @@ export const STOP_RECORDING_MESSAGE: SendMessageArgs<MessageType.SET_RECORDING> 
     command: 'stop',
   },
 };
+export const CERT_PEM = env.CERT_PEM as string;
+export const KEY_PEM = env.KEY_PEM as string;

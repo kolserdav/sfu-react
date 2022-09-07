@@ -11,21 +11,6 @@ export const changeThemeHandler = () => {
   setLocalStorage(LocalStorageName.THEME, theme === 'dark' ? 'light' : 'dark');
 };
 
-export const getTime = (time: number) => {
-  const end = new Date().getTime();
-  const start = end - time * 10000;
-  const duration = intervalToDuration({
-    start,
-    end,
-  });
-
-  const { seconds, minutes, hours } = duration;
-
-  return `${hours?.toString().length === 1 ? `0${hours}` : hours}:${
-    minutes?.toString().length === 1 ? `0${minutes}` : minutes
-  }:${seconds?.toString().length === 1 ? `0${seconds}` : seconds}`;
-};
-
 export const videoRecordWrapper =
   ({
     command,

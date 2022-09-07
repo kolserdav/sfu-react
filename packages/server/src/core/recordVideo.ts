@@ -66,7 +66,6 @@ class RecordVideo {
       fps: 25,
       ffmpeg_Path: null,
       videoFrame: VIEWPORT,
-      aspectRatio: '16:9',
     };
     const recorder = new PuppeteerScreenRecorder(page, Config);
     const savePath = path.resolve(__dirname, `../../tmp/${roomId}.mp4`);

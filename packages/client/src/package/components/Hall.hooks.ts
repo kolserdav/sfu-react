@@ -13,8 +13,9 @@ import storeStreams from '../store/streams';
 import storeUserList from '../store/userList';
 import storeMessage, { changeMessage } from '../store/message';
 import storeTimeRecord, { RootState } from '../store/timeRecord';
-import { getTime, videoRecordWrapper } from './Hall.lib';
+import { videoRecordWrapper } from './Hall.lib';
 import { LocalStorageName } from '../utils/localStorage';
+import { getTime } from '../utils/lib';
 
 export const useLang = () => {
   const [lang, setLang] = useState<LocaleValue>(getCookie(CookieName.lang) || LocaleDefault);
@@ -183,7 +184,7 @@ export const useTimeRecord = () => {
       if (!_started && started) {
         setStarted(false);
       }
-      setTime(getTime(_time));
+      setTime(getTime(new Date().getTime() - _time * 1000));
     });
     return () => {
       cleanSubs();
