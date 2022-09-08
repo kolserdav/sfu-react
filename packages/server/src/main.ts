@@ -19,7 +19,7 @@ import WS, { ServerCallback } from './core/ws';
 import RTC, { OnRoomConnect, OnRoomOpen } from './core/rtc';
 import { MessageType } from './types/interfaces';
 import { getLocale, log } from './utils/lib';
-import { PORT, CORS } from './utils/constants';
+import { PORT, CORS, SSL_KEY_DEFAULT_PATH, SSL_CERT_DEFAULT_PATH } from './utils/constants';
 import DB from './core/db';
 import Chat from './core/chat';
 import RecordVideo from './core/recordVideo';
@@ -36,17 +36,21 @@ process.on('unhandledRejection', (err: Error) => {
   log('error', 'unhandledRejection', err);
 });
 /**
- * Create SFU WebRTC server
+ * Create WebRTC SFU server
  */
 export function createServer(
   {
     port = PORT,
     cors = CORS,
+    keyPem = SSL_KEY_DEFAULT_PATH,
+    certPem = SSL_CERT_DEFAULT_PATH,
     onRoomOpen,
     onRoomClose,
     onRoomConnect,
     onRoomDisconnect,
   }: {
+    keyPem?: string;
+    certPem?: string;
     port?: number;
     cors?: string;
     onRoomOpen?: OnRoomOpen;
@@ -59,7 +63,7 @@ export function createServer(
 ) {
   const wss = new WS({ port }, cb);
   const recordVideo = new RecordVideo({ ws: wss });
-  const rtc: RTC | null = new RTC({ ws: wss });
+  const rtc: RTC | null = new RTC({ ws: wss, keyPem, certPem });
 
   const getConnectionId = (): string => {
     const connId = v4();
@@ -68,6 +72,8 @@ export function createServer(
     }
     return connId;
   };
+  rtc.certPem = certPem;
+  rtc.keyPem = keyPem;
   wss.connection.on('connection', (ws, req) => {
     const { origin } = req.headers;
     const protocol = req.headers['sec-websocket-protocol'];
@@ -312,5 +318,5 @@ export function createServer(
 }
 
 if (require.main === module) {
-  createServer({ port: PORT, cors: CORS });
+  createServer({ port: PORT, cors: CORS, keyPem: '', certPem: '' });
 }

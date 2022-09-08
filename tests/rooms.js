@@ -12,7 +12,12 @@ let importErr = false;
  */
 let config;
 try {
+  // @ts-ignore
   config = require('./rooms.json');
+  log('info', `Config file ${path.resolve(__dirname, 'rooms.json')} used.`, {
+    CI: Boolean(process.env.CI),
+    SSR: Boolean(process.env.SSR),
+  });
 } catch (e) {
   log(
     'warn',

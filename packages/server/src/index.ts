@@ -26,8 +26,11 @@ const DEFAULT_PARAMS = {
   db: 'mysql://user:password@127.0.0.1:3306/uyem_db',
 };
 const ARGS = {
+  help: 'This document',
   port: 'Server websocket port',
   cors: 'Allowed origins',
+  'ssl-cert': 'Abs path to SSL certificate cert.pem',
+  'ssl-key': 'Abs path to SSL private key key.pem',
   db: `Database url ${DEFAULT_PARAMS.db}`,
   version: 'Show installed version',
   migrate: 'Run only migrate script',
@@ -42,6 +45,7 @@ processArgs.forEach((item, index) => {
 const args = Object.keys(argv);
 
 const migrate = async (): Promise<number> => {
+  log('info', 'Running "npm run prod:migrate" command...', '', true);
   const res = spawn('npm', ['run', 'prod:migrate'], {
     env: process.env,
     cwd: path.resolve(__dirname, '../../..'),
@@ -83,10 +87,19 @@ let port = 3000;
 let cors = '';
 let code = 0;
 let db = '';
+let certPem = '';
+let keyPem = '';
+let skipMigrate = false;
 (async () => {
   for (let n = 0; args[n]; n++) {
     const arg: string = args[n];
     switch (arg) {
+      case 'help':
+        log('info', `$ uyem --[option] [value]`, '>', true);
+        log('info', 'Options:', ARGS, true);
+        code = 0;
+        skipMigrate = true;
+        break;
       case 'port':
         port = parseInt(argv.port || DEFAULT_PARAMS.port, 10);
         if (Number.isNaN(port)) {
@@ -102,16 +115,20 @@ let db = '';
       case 'db':
         log('info', 'Set up database url:', argv.db);
         db = argv.db || DEFAULT_PARAMS.db;
-        if (db === DEFAULT_PARAMS.db) {
+        if (db === DEFAULT_PARAMS.db && !skipMigrate) {
           log('warn', 'Parameter "db" not specified, using default:', DEFAULT_PARAMS.db, true);
-        } else {
+        } else if (!skipMigrate) {
           log('info', 'Using database url:', db, true);
         }
         process.env.DATABASE_URL = db;
         break;
-      case 'help':
-        log('info', `$ uyem [option] [value] > options:`, ARGS, true);
-        code = 0;
+      case 'ssl-cert':
+        log('info', `SSL certificate path:`, argv['ssl-cert'], true);
+        certPem = argv['ssl-cert'];
+        break;
+      case 'ssl-key':
+        log('info', `SSL key path:`, argv['ssl-key'], true);
+        keyPem = argv['ssl-key'];
         break;
       case 'migrate':
         log('info', 'Start migrate only script...', '', true);
@@ -128,21 +145,23 @@ let db = '';
         code = 1;
     }
   }
-  log('info', 'Running "npm run prod:migrate" command...', '', true);
   if (code !== 0) {
     log('warn', 'Script end with code:', code, true);
   } else {
-    code = await migrate();
-    if (process.argv.indexOf('--migrate') !== -1) {
-      log(code ? 'warn' : 'info', 'Migrate exit with code', code, true);
-      return;
+    if (!skipMigrate) {
+      code = await migrate();
+      if (process.argv.indexOf('--migrate') !== -1) {
+        log(code ? 'warn' : 'info', 'Migrate exit with code', code, true);
+        return;
+      }
     }
     if (code !== 0) {
       log('warn', 'Script end with code:', code, true);
-    } else {
+    } else if (!skipMigrate) {
       // eslint-disable-next-line global-require
-      const Server = require('./main').default;
-      Server({ port, cors });
+      import('./main').then(({ createServer }) => {
+        createServer({ port, cors, certPem, keyPem });
+      });
     }
   }
 })();
