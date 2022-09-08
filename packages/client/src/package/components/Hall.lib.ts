@@ -1,4 +1,3 @@
-import { formatDuration, intervalToDuration } from 'date-fns';
 import storeTheme, { changeTheme } from '../store/theme';
 import { setLocalStorage, LocalStorageName } from '../utils/localStorage';
 import { RecordCommand, MessageType } from '../types/interfaces';

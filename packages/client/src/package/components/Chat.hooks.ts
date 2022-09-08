@@ -309,26 +309,6 @@ export const useMesages = ({
   }, [ws, roomId, chatUnit, userId, skip, error]);
 
   /**
-   * Listen input Enter
-   */
-  useEffect(() => {
-    const { current } = inputRef;
-    const onPressButton = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        sendMessage();
-      }
-    };
-    if (current) {
-      current.addEventListener('keypress', onPressButton);
-    }
-    return () => {
-      if (current) {
-        current.removeEventListener('keypress', onPressButton);
-      }
-    };
-  }, [inputRef, sendMessage, message]);
-
-  /**
    * Handle messages
    */
   useEffect(() => {

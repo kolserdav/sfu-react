@@ -29,6 +29,11 @@ $wrapper-padding: 0.5rem;
   overflow-y: auto;
   overflow-x: hidden;
   margin-bottom: calc(#{$wrapper-padding} * 4);
+
+  @media (max-width: $mobile-width) {
+    padding-right: 1rem;
+    width: calc(100% - #{$wrapper-padding} * 4);
+  }
 }
 
 .no__messages {
@@ -55,7 +60,7 @@ $input-mb-mobile: 1rem;
     border-width: 1px;
     margin-bottom: $text-area-padding;
     @media (max-width: $mobile-width) {
-      padding-top: 0.2rem;
+      padding-top: 0.3rem;
     }
   }
 

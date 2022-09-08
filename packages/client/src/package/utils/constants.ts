@@ -63,8 +63,8 @@ export const DIALOG_MESSAGE_DIMENSION = {
   height: 100,
 };
 export const DIALOG_SETTINGS_DIMENSION = {
-  width: 320,
-  height: 500,
+  width: 120,
+  height: 60,
 };
 export const SHORT_MESS_LENGTH = 30;
 export const FIRST_MESSAGE_INDENT = 20;
