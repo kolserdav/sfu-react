@@ -37,6 +37,7 @@
     "packages/client/dist",
     "packages/server/dist",
     "bin",
+    "docs/resources",
     "server.js",
     "server.d.ts",
     "packages/server/orm",

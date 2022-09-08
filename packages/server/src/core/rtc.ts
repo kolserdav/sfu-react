@@ -81,6 +81,8 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     this.keyPem = _keyPem;
     if (_certPem === SSL_CERT_DEFAULT_PATH || _keyPem === SSL_KEY_DEFAULT_PATH) {
       log('warn', 'The default certificate can be compromised!', _certPem);
+    } else {
+      log('info', 'Sertificate and key is:', { certPem: this.certPem, keyPem: this.keyPem }, true);
     }
   }
 

@@ -318,5 +318,10 @@ export function createServer(
 }
 
 if (require.main === module) {
-  createServer({ port: PORT, cors: CORS, keyPem: '', certPem: '' });
+  createServer({
+    port: PORT,
+    cors: CORS,
+    keyPem: SSL_KEY_DEFAULT_PATH,
+    certPem: SSL_CERT_DEFAULT_PATH,
+  });
 }
