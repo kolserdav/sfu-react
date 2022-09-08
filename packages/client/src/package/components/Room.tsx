@@ -146,7 +146,13 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
               <CloseButton onClick={onClickClose} onKeyDown={onPressEscape} tabindex={index} />
               {/** video is strong second child */}
               <video
-                className={speaker === item.target ? s.speaker : ''}
+                style={
+                  speaker === item.target
+                    ? {
+                        border: theme?.colors.blue,
+                      }
+                    : {}
+                }
                 muted={item.target === userId || muteds.indexOf(item.target.toString()) !== -1}
                 onTimeUpdate={(e) => {
                   analyzeSoundLevel(item.target);

@@ -147,9 +147,9 @@ export const rangeRandom = ({ min, max }: { min: number; max: number }) =>
 
 export const checkIsRecord = (uid: string) => /record=/.test(uid);
 
-export const getTime = (startTime?: number) => {
+export const getTime = (startTime: number) => {
   const nowTime = new Date().getTime();
-  const diffTime = nowTime - startTime || new Date().getTime();
+  const diffTime = nowTime - startTime;
   const seconds = Math.floor(diffTime / 1000);
   const minutes = Math.floor(diffTime / 1000 / 60);
   const hours = Math.floor(diffTime / 1000 / 3600);
