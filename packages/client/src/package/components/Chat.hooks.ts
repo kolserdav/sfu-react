@@ -114,11 +114,12 @@ export const useMesages = ({
   const clickQuoteWrapper =
     (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       const quote = `[quote=${getQuoteContext(JSON.parse(context))}]\n`;
-      setMessage(`${quote}${message}`);
+      setMessage(`${quote}${cleanQuote(message)}`);
+      setRows(message.length > 300 ? 5 : 3);
       const { current } = inputRef;
       if (current) {
         current.select();
-        current.selectionStart = quote.length;
+        current.selectionStart = quote.length + 1;
       }
     };
 
@@ -126,8 +127,9 @@ export const useMesages = ({
     (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       const { text, id } = JSON.parse(context);
       const edit = `[edit=${id}]\n`;
-      const _message = `${edit}${text}`;
+      const _message = `${edit}${cleanEdit(text)}`;
       setMessage(_message);
+      setRows(message.length > 300 ? 5 : 3);
       const { current } = inputRef;
       if (current) {
         current.select();
