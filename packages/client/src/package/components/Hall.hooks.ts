@@ -204,12 +204,12 @@ export const useTimeRecord = () => {
 };
 
 export const useSettingsStyle = () => {
-  const settingsRef = useRef<HTMLDivElement>();
+  const settingsRef = useRef<HTMLDivElement>(null);
   const [settingStyle, setSettingStyle] = useState<string>();
   useEffect(() => {
     const { current } = settingsRef;
     if (current) {
-      setSettingStyle(current.getAttribute('style'));
+      setSettingStyle(current.getAttribute('style') || '');
     }
   }, []);
   return { settingsRef, settingStyle };

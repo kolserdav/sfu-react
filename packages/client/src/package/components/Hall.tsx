@@ -125,7 +125,7 @@ function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) 
             <div
               className={s.settings__item}
               ref={settingsRef}
-              style={settingStyle && { boxShadow: `1px 3px 1px ${theme?.colors.active}` }}
+              style={settingStyle ? { boxShadow: `1px 3px 1px ${theme?.colors.active}` } : {}}
             >
               <h5 className={s.settings__item__title}>{locale.recordActions}</h5>
               <div className={s.settings__item__row}>

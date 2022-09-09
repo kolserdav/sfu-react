@@ -29,7 +29,9 @@ export const useListeners = ({
   const _themes = useMemo(() => changeColors({ colors, themes }), [colors]);
   const [theme, setTheme] = useState<Themes['dark' | 'light']>();
   const [alert, setAlert] = useState<AlertProps>(ALERT_DEFAULT);
-  const [hallOpen, setHallOpen] = useState<boolean>(getLocalStorage(LocalStorageName.HALL_OPEN));
+  const [hallOpen, setHallOpen] = useState<boolean>(
+    getLocalStorage(LocalStorageName.HALL_OPEN) || false
+  );
   const [locale, setLocale] = useState<LocaleServer['client'] | null>(null);
   const openMenu = () => {
     setLocalStorage(LocalStorageName.HALL_OPEN, !hallOpen);
