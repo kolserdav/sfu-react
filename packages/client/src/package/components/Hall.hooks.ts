@@ -16,7 +16,7 @@ import storeUserList from '../store/userList';
 import storeMessage, { changeMessage } from '../store/message';
 import storeTimeRecord, { RootState } from '../store/timeRecord';
 import { videoRecordWrapper } from './Hall.lib';
-import { LocalStorageName } from '../utils/localStorage';
+import { LocalStorageName, setLocalStorage } from '../utils/localStorage';
 
 export const useLang = () => {
   const [lang, setLang] = useState<LocaleValue>(getCookie(CookieName.lang) || LocaleDefault);
@@ -32,12 +32,11 @@ export const useLang = () => {
 };
 
 export const useSettings = ({ open }: { open: boolean }) => {
-  const defaultOpenSettings = useMemo(
-    () => typeof localStorage.getItem(LocalStorageName.SETTINGS_OPEN) === 'string',
-    []
+  const [openSettings, setOpenSettings] = useState<boolean>(
+    localStorage.getItem(LocalStorageName.SETTINGS_OPEN) === 'true'
   );
-  const [openSettings, setOpenSettings] = useState<boolean>(defaultOpenSettings);
   const openSettingsDialog = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    setLocalStorage(LocalStorageName.SETTINGS_OPEN, !openSettings);
     setOpenSettings(!openSettings);
   };
 

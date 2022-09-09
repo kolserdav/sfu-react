@@ -28,6 +28,8 @@ import {
   SSL_KEY_DEFAULT_PATH,
   SSL_CERT_DEFAULT_PATH,
   SSL_SIGNATURE_HASH,
+  CERT_PEM,
+  KEY_PEM,
 } from '../utils/constants';
 import WS from './ws';
 import DB from './db';
@@ -77,9 +79,9 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     certPem: string;
   }) {
     this.ws = ws;
-    this.certPem = _certPem;
-    this.keyPem = _keyPem;
-    if (_certPem === SSL_CERT_DEFAULT_PATH || _keyPem === SSL_KEY_DEFAULT_PATH) {
+    this.certPem = CERT_PEM || _certPem;
+    this.keyPem = KEY_PEM || _keyPem;
+    if (this.certPem === SSL_CERT_DEFAULT_PATH || this.keyPem === SSL_KEY_DEFAULT_PATH) {
       log('warn', 'The default certificate can be compromised!', _certPem);
     } else {
       log('info', 'Sertificate and key is:', { certPem: this.certPem, keyPem: this.keyPem }, true);

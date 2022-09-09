@@ -98,6 +98,9 @@ class RecordVideo extends DB {
         });
       }, 1000);
     });
+    cancelablePromise.catch((d) => {
+      console.log(d);
+    });
     return { page, recorder, cancelablePromise, intervaToClean };
   }
 
@@ -144,12 +147,11 @@ class RecordVideo extends DB {
               });
               this.videoUpdateTime({ roomId: id, time });
               if (this.pages[id]) {
+                log('warn', 'Record page was closed', { id });
                 this.pages[id].page.close().then(() => {
                   this.pages[id].browser.close();
                   delete this.pages[id];
                 });
-              } else {
-                log('warn', 'Record page not found', { id });
               }
               cancelablePromise.cancel();
               resolve(0);

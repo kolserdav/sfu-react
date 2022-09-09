@@ -28,6 +28,8 @@ type LocalStorageValue<T extends keyof typeof LocalStorageName> = T extends Loca
   ? boolean
   : T extends LocalStorageName.VOLUMES
   ? Record<string, Volumes>
+  : T extends LocalStorageName.SETTINGS_OPEN
+  ? boolean
   : never;
 
 export function getLocalStorage<T extends keyof typeof LocalStorageName>(
