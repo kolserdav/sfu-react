@@ -106,6 +106,8 @@ export enum MessageType {
   SET_MUTE_LIST = 'SET_MUTE_LIST',
   GET_RECORD = 'GET_RECORD',
   SET_RECORDING = 'SET_RECORDING',
+  GET_VIDEOS = 'GET_VIDEOS',
+  SET_VIDEOS = 'SET_VIDEOS',
 }
 
 export namespace Locale {
@@ -192,6 +194,11 @@ export namespace DataTypes {
     export type GetLocale = {
       locale: LocaleValue;
     };
+    export type GetVideos = {
+      userId: string | number;
+      token: string;
+      args: Prisma.VideoFindManyArgs;
+    };
     export type GetClosePeerConnection = {
       roomId: number | string;
       target: number | string;
@@ -213,6 +220,12 @@ export namespace DataTypes {
     export type SetUserId = {
       name: string;
     };
+
+    export type SetVideos = {
+      args: GetManyResult<Video>;
+      roomId: string;
+    };
+
     export type GetRoom = {
       userId: number | string;
       mimeType: string;

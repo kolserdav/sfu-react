@@ -11,6 +11,7 @@
 import { WebSocketServer, Server, WebSocket, ServerOptions } from 'ws';
 import { WSInterface, UserItem, LocaleValue } from '../types/interfaces';
 import { log } from '../utils/lib';
+import Auth from './auth';
 import DB from './db';
 
 const db = new DB();
@@ -18,7 +19,7 @@ const db = new DB();
 // eslint-disable-next-line no-unused-vars
 export type ServerCallback = (args: Server<WebSocket>) => void;
 
-class WS implements WSInterface {
+class WS extends Auth implements WSInterface {
   public connection: Server<WebSocket>;
 
   public sockets: Record<string, WebSocket> = {};
@@ -31,7 +32,16 @@ class WS implements WSInterface {
 
   public WebSocket = WebSocket;
 
-  constructor(connectionArgs: ServerOptions | undefined, cb?: ServerCallback) {
+  constructor(
+    connectionArgs:
+      | (ServerOptions & {
+          checkTokenCb: Auth['checkTockenCb'];
+        })
+      | undefined,
+    cb?: ServerCallback
+  ) {
+    const { checkTokenCb } = connectionArgs;
+    super(checkTokenCb);
     this.connection = this.createConnection(connectionArgs, cb);
   }
 

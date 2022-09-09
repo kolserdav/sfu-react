@@ -63,3 +63,8 @@ export const getLocale = (value: LocaleValue): LocaleServer =>
 
 export const checkSignallingState = (signallingState: werift.RTCPeerConnection['signalingState']) =>
   ['have-remote-offer', 'have-local-pranswer'].includes(signallingState);
+
+export const checkTockenDefault = async (token: string) => {
+  log('warn', 'Check token callback not set, use default all yes', { token });
+  return true;
+};
