@@ -15,9 +15,10 @@ import { PuppeteerScreenRecorder } from 'puppeteer-screen-recorder';
 import { HEADLESS, VIEWPORT, APP_URL } from '../utils/constants';
 import { ErrorCode, MessageType, SendMessageArgs } from '../types/interfaces';
 import WS from './ws';
+import DB from './db';
 import { getLocale, log } from '../utils/lib';
 
-class RecordVideo {
+class RecordVideo extends DB {
   public recordPages: Record<string, SendMessageArgs<MessageType.SET_RECORDING>> = {};
 
   public pages: Record<string, { page: puppeteer.Page; browser: puppeteer.Browser }> = {};
@@ -25,6 +26,7 @@ class RecordVideo {
   public ws: WS;
 
   constructor({ ws: _ws }: { ws: WS }) {
+    super();
     this.ws = _ws;
   }
 
@@ -58,7 +60,6 @@ class RecordVideo {
       };
     }
     await page.setViewport(VIEWPORT);
-    // TODO get uid
     await page.goto(`${APP_URL}/${roomId}?uid=record-${new Date().getTime()}&record=1`);
 
     const Config = {
@@ -69,11 +70,19 @@ class RecordVideo {
       aspectRatio: '16:9',
     };
     const recorder = new PuppeteerScreenRecorder(page, Config);
-    const savePath = path.resolve(__dirname, `../../rec/${roomId}.mp4`);
+    const iat = new Date().getTime();
+    const savePath = path.resolve(__dirname, `../../rec/${roomId}-${iat}.mp4`);
     await recorder.start(savePath);
     let intervaToClean = setInterval(() => {
       /** */
     }, 10000000);
+    this.videoCreate({
+      data: {
+        name: `${roomId}-${iat}.mp4`,
+        roomId: roomId.toString(),
+        time: 0,
+      },
+    });
     const cancelablePromise = new CancelablePromise((_) => {
       let time = 0;
       intervaToClean = setInterval(() => {
@@ -116,11 +125,10 @@ class RecordVideo {
       await new Promise((resolve) => {
         interval = setInterval(() => {
           const {
-            data: { command: _command },
+            data: { command: _command, time },
           } = this.recordPages[id];
           switch (_command) {
             case 'stop':
-              cancelablePromise.cancel();
               clearInterval(interval);
               recorder.stop();
               clearInterval(intervaToClean);
@@ -134,6 +142,7 @@ class RecordVideo {
                   message: locale.videoRecordStop,
                 },
               });
+              this.videoUpdateTime({ roomId: id, time });
               if (this.pages[id]) {
                 this.pages[id].page.close().then(() => {
                   this.pages[id].browser.close();
@@ -142,6 +151,7 @@ class RecordVideo {
               } else {
                 log('warn', 'Record page not found', { id });
               }
+              cancelablePromise.cancel();
               resolve(0);
               break;
             default:

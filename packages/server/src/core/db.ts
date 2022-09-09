@@ -162,6 +162,88 @@ class DB implements DBInterface {
     } as any;
   };
 
+  // eslint-disable-next-line class-methods-use-this
+  public videoFindFirst: DBInterface['videoFindFirst'] = async (args) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let result: any = null;
+    try {
+      result = await prisma.video.findFirst(args);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      log('error', 'DB Error video find first', { where: args.where, data: args, err });
+    }
+    return result;
+  };
+
+  // eslint-disable-next-line class-methods-use-this
+  public videoUpdate: DBInterface['videoUpdate'] = async (args) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let result: any = null;
+    try {
+      result = await prisma.video.update(args);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      log('error', 'DB Error update video', { where: args.where, data: args.data, err });
+    }
+    return result;
+  };
+
+  // eslint-disable-next-line class-methods-use-this
+  public videoCreate: DBInterface['videoCreate'] = async (args) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let result: any = null;
+    try {
+      result = await prisma.video.create(args);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      log('error', 'DB Error create video', { args, err });
+    }
+    return result;
+  };
+
+  // eslint-disable-next-line class-methods-use-this
+  public videoDelete: DBInterface['videoDelete'] = async (args) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let result: any = null;
+    try {
+      result = await prisma.video.delete(args);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      log('error', 'DB Error delete video', { args, err });
+    }
+    return result;
+  };
+
+  // eslint-disable-next-line class-methods-use-this
+  public videoFindMany: DBInterface['videoFindMany'] = async (args) => {
+    const { where, skip, take } = args;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let count = 0;
+    try {
+      count = await prisma.video.count({
+        where,
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      log('error', 'Error get count of videos', { err });
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let data: any = null;
+    try {
+      data = await prisma.video.findMany(args);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      log('error', 'Error get video', { err });
+    }
+    return {
+      result: data,
+      skip,
+      take,
+      count,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+  };
+
   public deleteGuest({ userId, roomId }: { userId: string | number; roomId: string | number }) {
     return new Promise((resolve) => {
       this.roomFindFirst({
@@ -230,6 +312,30 @@ class DB implements DBInterface {
       },
     });
   }
+
+  public videoUpdateTime = async ({ roomId, time }: { roomId: string | number; time: number }) => {
+    const video = await this.videoFindFirst({
+      where: {
+        roomId: roomId.toString(),
+      },
+      orderBy: {
+        created: 'desc',
+      },
+    });
+    if (video) {
+      this.videoUpdate({
+        where: {
+          id: video.id,
+        },
+        data: {
+          time,
+          updated: new Date(),
+        },
+      });
+    } else {
+      log('warn', 'Video not found', { roomId, time });
+    }
+  };
 }
 
 export default DB;

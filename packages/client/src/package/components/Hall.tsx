@@ -19,7 +19,14 @@ import CloseIcon from '../Icons/Close';
 import s from './Hall.module.scss';
 import IconButton from './ui/IconButton';
 import SettingsIcon from '../Icons/SettingsIcon';
-import { useLang, useSettings, useUsers, useVideoRecord, useTimeRecord } from './Hall.hooks';
+import {
+  useLang,
+  useSettings,
+  useUsers,
+  useVideoRecord,
+  useTimeRecord,
+  useSettingsStyle,
+} from './Hall.hooks';
 import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
 import RecIcon from '../Icons/Rec';
 import StopIcon from '../Icons/Stop';
@@ -30,8 +37,9 @@ function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) 
   const { lang, changeLang } = useLang();
   const { openSettings, openSettingsDialog } = useSettings({ open });
   const { users, isOwner, banneds, unBanWrapper } = useUsers({ userId, roomId });
-  const { recordStartHandler } = useVideoRecord({ roomId, userId });
   const { time, started } = useTimeRecord();
+  const { recordStartHandler, buttonDisabled } = useVideoRecord({ roomId, userId });
+  const { settingsRef, settingStyle } = useSettingsStyle();
   return (
     <div className={clsx(s.wrapper, open ? s.open : '')}>
       <div
@@ -116,7 +124,8 @@ function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) 
             </div>
             <div
               className={s.settings__item}
-              style={{ boxShadow: `1px 3px 1px ${theme?.colors.active}` }}
+              ref={settingsRef}
+              style={settingStyle && { boxShadow: `1px 3px 1px ${theme?.colors.active}` }}
             >
               <h5 className={s.settings__item__title}>{locale.recordActions}</h5>
               <div className={s.settings__item__row}>
@@ -126,7 +135,7 @@ function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) 
                     title={started ? locale.stopRecord : locale.startRecord}
                     className={started ? s.text__button : ''}
                     onClick={recordStartHandler(started ? 'stop' : 'start')}
-                    disabled={!isOwner}
+                    disabled={!isOwner || buttonDisabled}
                   >
                     <div className={s.record}>
                       {started && <div className={s.time}>{time}</div>}

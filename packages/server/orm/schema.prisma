@@ -27,6 +27,7 @@ model Room {
   created  DateTime  @default(now())
   Guests   Guest[]
   Message  Message[]
+  Video    Video[]
 }
 
 model Guest {
@@ -47,6 +48,16 @@ model Message {
   unitId  String
   roomId  String
   Unit    Unit     @relation(fields: [unitId], references: [id])
+  Room    Room     @relation(fields: [roomId], references: [id])
+  updated DateTime @default(now())
+  created DateTime @default(now())
+}
+
+model Video {
+  id      Int      @id @default(autoincrement())
+  name    String   @unique
+  time    Int
+  roomId  String
   Room    Room     @relation(fields: [roomId], references: [id])
   updated DateTime @default(now())
   created DateTime @default(now())

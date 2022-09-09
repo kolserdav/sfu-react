@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import storeLocale, { changeLocale } from '../store/locale';
 import {
   LocaleDefault,
@@ -8,6 +8,7 @@ import {
   SendMessageArgs,
   UserList,
 } from '../types/interfaces';
+import { VideoRecorderState } from '../types';
 import { getTime } from '../utils/lib';
 import { getCookie, CookieName, setCookie } from '../utils/cookies';
 import storeStreams from '../store/streams';
@@ -145,6 +146,8 @@ export const useUsers = ({
   return { users, isOwner, banneds, unBanWrapper };
 };
 
+let _command: VideoRecorderState = 'start';
+
 export const useVideoRecord = ({
   roomId,
   userId,
@@ -152,11 +155,18 @@ export const useVideoRecord = ({
   roomId: string | number;
   userId: string | number;
 }) => {
+  const [buttonDisabled, setButtonDisabled] = useState<boolean>(false);
   const recordStartHandler = (
     command: SendMessageArgs<MessageType.GET_RECORD>['data']['command']
-  ) => videoRecordWrapper({ command, userId, roomId });
+  ) => {
+    if (command !== _command) {
+      _command = command;
+      setButtonDisabled(_command === 'start');
+    }
+    return videoRecordWrapper({ command, userId, roomId });
+  };
 
-  return { recordStartHandler };
+  return { recordStartHandler, buttonDisabled };
 };
 
 export const useTimeRecord = () => {
@@ -192,4 +202,16 @@ export const useTimeRecord = () => {
   }, [started]);
 
   return { time, started };
+};
+
+export const useSettingsStyle = () => {
+  const settingsRef = useRef<HTMLDivElement>();
+  const [settingStyle, setSettingStyle] = useState<string>();
+  useEffect(() => {
+    const { current } = settingsRef;
+    if (current) {
+      setSettingStyle(current.getAttribute('style'));
+    }
+  }, []);
+  return { settingsRef, settingStyle };
 };

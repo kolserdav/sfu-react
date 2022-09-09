@@ -13,7 +13,7 @@
 /* eslint-disable max-classes-per-file */
 /* eslint-disable no-unused-vars */
 import * as werift from 'werift';
-import { Message, Prisma, Room, Unit } from '@prisma/client';
+import { Message, Prisma, Room, Unit, Video } from '@prisma/client';
 
 export type LocaleValue = 'en' | 'ru';
 export interface UserItem {
@@ -552,6 +552,26 @@ export namespace Data {
       GetManyResult<MessageFull>,
       Prisma.MessageGetPayload<T>
     > | null>;
+
+    public abstract videoFindFirst<T extends Prisma.VideoFindFirstArgs>(
+      args: Prisma.SelectSubset<T, Prisma.VideoFindFirstArgs>
+    ): Promise<Prisma.CheckSelect<T, Video, Prisma.VideoGetPayload<T>> | null>;
+
+    public abstract videoUpdate<T extends Prisma.VideoUpdateArgs>(
+      args: Prisma.SelectSubset<T, Prisma.VideoUpdateArgs>
+    ): Promise<Prisma.CheckSelect<T, Video, Prisma.VideoGetPayload<T>> | null>;
+
+    public abstract videoCreate<T extends Prisma.VideoCreateArgs>(
+      args: Prisma.SelectSubset<T, Prisma.VideoCreateArgs>
+    ): Promise<Prisma.CheckSelect<T, Video, Prisma.VideoGetPayload<T>> | null>;
+
+    public abstract videoDelete<T extends Prisma.VideoDeleteArgs>(
+      args: Prisma.SelectSubset<T, Prisma.VideoDeleteArgs>
+    ): Promise<Prisma.CheckSelect<T, Video, Prisma.VideoGetPayload<T>> | null>;
+
+    public abstract videoFindMany<T extends Prisma.VideoFindManyArgs>(
+      args: Prisma.SelectSubset<T, Prisma.VideoFindManyArgs>
+    ): Promise<Prisma.CheckSelect<T, GetManyResult<Video>, Prisma.VideoGetPayload<T>> | null>;
   }
 }
 

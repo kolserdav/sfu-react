@@ -479,13 +479,12 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       tracksL: tracks?.length,
       tracks: tracks?.map((item) => item.kind),
       ssL: streams.length,
-      ss: streams,
       cS: this.peerConnectionsServer[roomId][peerId]?.connectionState,
       sS: this.peerConnectionsServer[roomId][peerId]?.signalingState,
       iS: this.peerConnectionsServer[roomId][peerId]?.iceConnectionState,
     };
     if (!tracks || tracks?.length === 0) {
-      log('warn', 'Skiping add track', { ...opts, tracks });
+      log('info', 'Skiping add track', { ...opts, tracks });
       return;
     }
     if (this.peerConnectionsServer[roomId][peerId]) {
