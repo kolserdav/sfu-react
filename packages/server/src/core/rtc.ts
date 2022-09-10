@@ -11,7 +11,7 @@
 // eslint-disable-next-line import/no-relative-packages
 //import * as werift from '../werift-webrtc/packages/webrtc/lib/webrtc/src/index';
 import * as werift from 'werift';
-import { readFileSync } from 'fs';
+import { createCertificate, CertificateCreationResult } from 'pem';
 import {
   RTCInterface,
   MessageType,
@@ -25,11 +25,7 @@ import {
   STUN_SERVER,
   SENT_RTCP_INTERVAL,
   SSL_RTC_CONNECTION,
-  SSL_KEY_DEFAULT_PATH,
-  SSL_CERT_DEFAULT_PATH,
   SSL_SIGNATURE_HASH,
-  CERT_PEM,
-  KEY_PEM,
 } from '../utils/constants';
 import WS from './ws';
 import DB from './db';
@@ -63,29 +59,10 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
 
   private ws: WS;
 
-  public certPem: string;
-
-  public keyPem: string;
-
   public streams: Record<string, Record<string, werift.MediaStreamTrack[]>> = {};
 
-  constructor({
-    ws,
-    keyPem: _keyPem,
-    certPem: _certPem,
-  }: {
-    ws: WS;
-    keyPem: string;
-    certPem: string;
-  }) {
+  constructor({ ws }: { ws: WS }) {
     this.ws = ws;
-    this.certPem = CERT_PEM || _certPem;
-    this.keyPem = KEY_PEM || _keyPem;
-    if (this.certPem === SSL_CERT_DEFAULT_PATH || this.keyPem === SSL_KEY_DEFAULT_PATH) {
-      log('warn', 'The default certificate can be compromised!', _certPem);
-    } else {
-      log('info', 'Sertificate and key is:', { certPem: this.certPem, keyPem: this.keyPem }, true);
-    }
   }
 
   public getPeerId(
@@ -116,7 +93,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     });
   }
 
-  public createRTCServer: RTCInterface['createRTCServer'] = (opts) => {
+  public createRTCServer: RTCInterface['createRTCServer'] = async (opts) => {
     const { roomId, userId, target, connId, mimeType } = opts;
     const peerId = this.getPeerId(roomId, userId, target, connId);
     if (!this.peerConnectionsServer[roomId]) {
@@ -128,6 +105,15 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     } else {
       log('log', 'Creating peer connection', opts);
     }
+    const ssl: CertificateCreationResult | null = await new Promise((resolve) => {
+      createCertificate({ days: 1, selfSigned: true }, (err, _ssl) => {
+        if (err) {
+          log('error', 'Error create certificate');
+          resolve(null);
+        }
+        resolve(_ssl);
+      });
+    });
     this.peerConnectionsServer[roomId][peerId] = new werift.RTCPeerConnection({
       codecs: {
         audio: [
@@ -160,8 +146,8 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       dtls: {
         keys: SSL_RTC_CONNECTION
           ? {
-              keyPem: readFileSync(this.keyPem).toString(),
-              certPem: readFileSync(this.certPem).toString(),
+              keyPem: ssl.clientKey,
+              certPem: ssl.certificate,
               signatureHash: SSL_SIGNATURE_HASH,
             }
           : undefined,
@@ -297,7 +283,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       target,
     });
     if (!this.peerConnectionsServer[roomId]?.[peerId]) {
-      log('warn', 'Skiping add ice candidate', {
+      log('info', 'Skiping add ice candidate', {
         connId,
         id,
         userId,
@@ -344,7 +330,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       return;
     }
     const peerId = this.getPeerId(id, userId, target, connId);
-    this.createRTCServer({
+    await this.createRTCServer({
       roomId: id,
       userId,
       target,

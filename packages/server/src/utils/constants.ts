@@ -14,14 +14,6 @@ import { MessageType, SendMessageArgs } from '../types/interfaces';
 
 export const LOG_LEVEL = 2;
 export const SSL_RTC_CONNECTION = true;
-export const SSL_CERT_DEFAULT_PATH = resolve(
-  __dirname,
-  '../../../../docs/resources/default.cert.pem'
-);
-export const SSL_KEY_DEFAULT_PATH = resolve(
-  __dirname,
-  '../../../../docs/resources/default.key.pem'
-);
 export const SSL_SIGNATURE_HASH: werift.SignatureHash = { signature: 1, hash: 4 };
 export const DEFAULT_PORT = '3001';
 export const HEADLESS = true;

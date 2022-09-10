@@ -35,7 +35,7 @@ class WS extends Auth implements WSInterface {
   constructor(
     connectionArgs:
       | (ServerOptions & {
-          checkTokenCb: Auth['checkTockenCb'];
+          checkTokenCb: Auth['checkTokenCb'];
         })
       | undefined,
     cb?: ServerCallback

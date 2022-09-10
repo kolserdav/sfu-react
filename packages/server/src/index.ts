@@ -1,3 +1,4 @@
+// @ts-check
 /******************************************************************************************
  * Repository: https://github.com/kolserdav/werift-sfu-react.git
  * File name: index.ts
@@ -29,8 +30,6 @@ const ARGS = {
   help: 'This document',
   port: 'Server websocket port',
   cors: 'Allowed origins',
-  'ssl-cert': 'Abs path to SSL certificate cert.pem',
-  'ssl-key': 'Abs path to SSL private key key.pem',
   db: `Database url ${DEFAULT_PARAMS.db}`,
   version: 'Show installed version',
   migrate: 'Run only migrate script',
@@ -87,8 +86,6 @@ let port = 3000;
 let cors = '';
 let code = 0;
 let db = '';
-let certPem = '';
-let keyPem = '';
 let skipMigrate = false;
 (async () => {
   for (let n = 0; args[n]; n++) {
@@ -122,14 +119,6 @@ let skipMigrate = false;
         }
         process.env.DATABASE_URL = db;
         break;
-      case 'ssl-cert':
-        log('info', `SSL certificate path:`, argv['ssl-cert'], true);
-        certPem = argv['ssl-cert'];
-        break;
-      case 'ssl-key':
-        log('info', `SSL key path:`, argv['ssl-key'], true);
-        keyPem = argv['ssl-key'];
-        break;
       case 'migrate':
         log('info', 'Start migrate only script...', '', true);
         break;
@@ -160,7 +149,7 @@ let skipMigrate = false;
     } else if (!skipMigrate) {
       // eslint-disable-next-line global-require
       import('./main').then(({ createServer }) => {
-        createServer({ port, cors, certPem, keyPem });
+        createServer({ port, cors });
       });
     }
   }

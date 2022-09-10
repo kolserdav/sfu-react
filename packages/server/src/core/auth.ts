@@ -3,10 +3,10 @@ import { log } from '../utils/lib';
 class Auth {
   tokenList: string[] = [];
 
-  checkTockenCb: (token: string) => Promise<boolean>;
+  checkTokenCb: (token: string) => Promise<boolean>;
 
-  constructor(_checkTockenCb: Auth['checkTockenCb']) {
-    this.checkTockenCb = _checkTockenCb;
+  constructor(_checkTockenCb: Auth['checkTokenCb']) {
+    this.checkTokenCb = _checkTockenCb;
   }
 
   // eslint-disable-next-line class-methods-use-this

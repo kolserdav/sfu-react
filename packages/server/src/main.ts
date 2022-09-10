@@ -19,10 +19,11 @@ import WS, { ServerCallback } from './core/ws';
 import RTC, { OnRoomConnect, OnRoomOpen } from './core/rtc';
 import { MessageType } from './types/interfaces';
 import { getLocale, log } from './utils/lib';
-import { PORT, CORS, SSL_KEY_DEFAULT_PATH, SSL_CERT_DEFAULT_PATH } from './utils/constants';
+import { PORT, CORS } from './utils/constants';
 import DB from './core/db';
 import Chat from './core/chat';
 import RecordVideo from './core/recordVideo';
+import Auth from './core/auth';
 
 export const prisma = new PrismaClient();
 
@@ -42,15 +43,12 @@ export function createServer(
   {
     port = PORT,
     cors = CORS,
-    keyPem = SSL_KEY_DEFAULT_PATH,
-    certPem = SSL_CERT_DEFAULT_PATH,
     onRoomOpen,
     onRoomClose,
     onRoomConnect,
     onRoomDisconnect,
+    checkTokenCb,
   }: {
-    keyPem?: string;
-    certPem?: string;
     port?: number;
     cors?: string;
     onRoomOpen?: OnRoomOpen;
@@ -58,12 +56,13 @@ export function createServer(
     onRoomClose?: (args: { roomId: string | number }) => void;
     onRoomConnect?: OnRoomConnect;
     onRoomDisconnect?: OnRoomConnect;
+    checkTokenCb?: Auth['checkTokenCb'];
   },
   cb?: ServerCallback
 ) {
-  const wss = new WS({ port }, cb);
+  const wss = new WS({ port, checkTokenCb }, cb);
   const recordVideo = new RecordVideo({ ws: wss });
-  const rtc: RTC | null = new RTC({ ws: wss, keyPem, certPem });
+  const rtc: RTC | null = new RTC({ ws: wss });
 
   const getConnectionId = (): string => {
     const connId = v4();
@@ -72,8 +71,6 @@ export function createServer(
     }
     return connId;
   };
-  rtc.certPem = certPem;
-  rtc.keyPem = keyPem;
   wss.connection.on('connection', (ws, req) => {
     const { origin } = req.headers;
     const protocol = req.headers['sec-websocket-protocol'];
@@ -321,7 +318,5 @@ if (require.main === module) {
   createServer({
     port: PORT,
     cors: CORS,
-    keyPem: SSL_KEY_DEFAULT_PATH,
-    certPem: SSL_CERT_DEFAULT_PATH,
   });
 }
