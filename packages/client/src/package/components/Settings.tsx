@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import clsx from 'clsx';
 import IconButton from './ui/IconButton';
 import RecIcon from '../Icons/Rec';
