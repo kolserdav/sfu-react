@@ -8,9 +8,8 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import WS from '../core/ws';
 import { Colors, Theme } from '../Theme';
-import { LocaleServer, LogLevel } from './interfaces';
+import { LocaleServer, LocaleValue, LogLevel } from './interfaces';
 
 export interface GlobalProps {
   server: string;
@@ -29,6 +28,12 @@ export type RoomProps = GlobalProps & {
 
 export type HallProps = Omit<GlobalProps, 'iceServers'> & {
   open: boolean;
+  locale: LocaleServer['client'];
+};
+
+export type SettingsProps = Omit<GlobalProps, 'iceServers' | 'server' | 'port'> & {
+  open: boolean;
+  isOwner: boolean;
   locale: LocaleServer['client'];
 };
 

@@ -10,11 +10,6 @@ class Auth {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  protected async checkToken(token: string) {
-    return true;
-  }
-
-  // eslint-disable-next-line class-methods-use-this
   protected async checkTockenDefault(token: string) {
     log('warn', 'Check token callback not set, use default all yes', { token });
     return true;

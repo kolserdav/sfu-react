@@ -17,6 +17,8 @@ const lang: LocaleServer = {
     errorSendMessage: 'Ошибка отправки сообщения',
     youAreBanned: 'Вы забанены',
     videoRecordStop: 'Видеозапись остановлена',
+    forbidden: 'Запрещено',
+    notAuthorised: 'Не авторизован',
   },
   client: {
     shareScreen: 'Демонстрация экрана',

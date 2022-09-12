@@ -1,0 +1,69 @@
+@import '../Main';
+
+$border-width: 2px;
+$settings-item-padding: 1rem;
+
+.settings {
+  position: relative;
+  max-width: calc(20% + #{$settings-item-padding} * 2);
+  margin-left: $settings-item-padding;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  &.open {
+    z-index: 105;
+    position: fixed;
+    right: 0;
+    border-radius: 6px;
+    align-items: flex-start;
+    border: $border-width solid cyan;
+    width: 80vw;
+    max-width: 100%;
+    max-height: calc(90% + #{$border-width} * 2);
+    @media (max-width: $mobile-width) {
+      width: 500px;
+      height: 500px;
+    }
+
+    @media (max-width: $small-width) {
+      width: $small-width;
+      height: 500px;
+    }
+  }
+  @media (max-width: $mobile-width) {
+    width: 0;
+    height: 0;
+  }
+
+  .settings__item {
+    position: relative;
+    width: 100%;
+    height: calc(100% - 4px);
+    display: flex;
+    padding: $settings-item-padding;
+    flex-direction: column;
+    align-items: flex-start;
+
+    .settings__item__title {
+      text-align: center;
+    }
+
+    .settings__item__actions {
+      position: relative;
+      display: block;
+      margin-right: $settings-item-padding;
+    }
+
+    .settings__item__row {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      justify-content: space-between;
+      align-items: center;
+      /* stylelint-disable-next-line declaration-block-no-redundant-longhand-properties */
+      flex-wrap: nowrap;
+    }
+  }
+}

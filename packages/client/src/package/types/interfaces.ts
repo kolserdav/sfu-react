@@ -47,6 +47,8 @@ export enum ErrorCode {
   errorSendMessage = 'errorSendMessage',
   youAreBanned = 'youAreBanned',
   videoRecordStop = 'videoRecordStop',
+  forbidden = 'forbidden',
+  notAuthorised = 'notAuthorised',
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -106,8 +108,8 @@ export enum MessageType {
   SET_MUTE_LIST = 'SET_MUTE_LIST',
   GET_RECORD = 'GET_RECORD',
   SET_RECORDING = 'SET_RECORDING',
-  GET_VIDEOS = 'GET_VIDEOS',
-  SET_VIDEOS = 'SET_VIDEOS',
+  GET_VIDEO_FIND_MANY = 'GET_VIDEO_FIND_MANY',
+  SET_VIDEO_FIND_MANY = 'SET_VIDEO_FIND_MANY',
 }
 
 export namespace Locale {
@@ -131,6 +133,8 @@ export namespace Locale {
     errorSendMessage: string;
     youAreBanned: string;
     videoRecordStop: string;
+    forbidden: string;
+    notAuthorised: string;
   }
 
   export interface Client {
@@ -194,11 +198,6 @@ export namespace DataTypes {
     export type GetLocale = {
       locale: LocaleValue;
     };
-    export type GetVideos = {
-      userId: string | number;
-      token: string;
-      args: Prisma.VideoFindManyArgs;
-    };
     export type GetClosePeerConnection = {
       roomId: number | string;
       target: number | string;
@@ -221,11 +220,6 @@ export namespace DataTypes {
       name: string;
     };
 
-    export type SetVideos = {
-      args: GetManyResult<Video>;
-      roomId: string;
-    };
-
     export type GetRoom = {
       userId: number | string;
       mimeType: string;
@@ -236,6 +230,11 @@ export namespace DataTypes {
     export type GetToBan = {
       target: string | number;
       userId: string | number;
+    };
+    export type GetVideoFindMany = {
+      userId: string | number;
+      token: string;
+      args: Prisma.VideoFindManyArgs;
     };
     export type GetToUnMute = {
       target: string | number;
@@ -267,6 +266,9 @@ export namespace DataTypes {
     };
     export type SetRoom = {
       isOwner: boolean;
+    };
+    export type SetVideoFindMany = {
+      videos: GetManyResult<Video>;
     };
     export type SetBanList = {
       banneds: Banneds[any];
@@ -380,6 +382,10 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.GetEditMessage
     : T extends MessageType.SET_EDIT_MESSAGE
     ? DataTypes.MessageTypes.SetEditMessage
+    : T extends MessageType.GET_VIDEO_FIND_MANY
+    ? DataTypes.MessageTypes.GetVideoFindMany
+    : T extends MessageType.SET_VIDEO_FIND_MANY
+    ? DataTypes.MessageTypes.SetVideoFindMany
     : T extends MessageType.GET_DELETE_MESSAGE
     ? DataTypes.MessageTypes.GetDeleteMessage
     : T extends MessageType.SET_DELETE_MESSAGE

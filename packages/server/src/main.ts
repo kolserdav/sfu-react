@@ -193,6 +193,9 @@ export function createServer(
         case MessageType.GET_MUTE:
           rtc.handleGetMute(rawMessage);
           break;
+        case MessageType.GET_VIDEO_FIND_MANY:
+          wss.videoFindManyHandler(rawMessage);
+          break;
         default:
           wss.sendMessage(rawMessage);
       }
