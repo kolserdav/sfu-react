@@ -8,7 +8,6 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import { resolve } from 'path';
 import werift from 'werift';
 import { MessageType, SendMessageArgs } from '../types/interfaces';
 
@@ -16,7 +15,7 @@ export const LOG_LEVEL = 2;
 export const SSL_RTC_CONNECTION = true;
 export const SSL_SIGNATURE_HASH: werift.SignatureHash = { signature: 1, hash: 4 };
 export const DEFAULT_PORT = '3001';
-export const HEADLESS = true;
+export const HEADLESS = false;
 export const VIEWPORT = {
   width: 1920,
   height: 1080,
