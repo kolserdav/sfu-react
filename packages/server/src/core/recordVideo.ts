@@ -12,6 +12,7 @@ import puppeteer from 'puppeteer';
 import { CancelablePromise } from 'cancelable-promise';
 import FFmpeg from 'fluent-ffmpeg';
 import path from 'path';
+import { PassThrough } from 'stream';
 import { PuppeteerScreenRecorder } from 'puppeteer-screen-recorder';
 import { HEADLESS, VIEWPORT, APP_URL } from '../utils/constants';
 import { ErrorCode, MessageType, SendMessageArgs } from '../types/interfaces';
@@ -72,10 +73,11 @@ class RecordVideo extends DB {
       aspectRatio: '16:9',
     });
     const iat = new Date().getTime();
-    const savePath = path.resolve(__dirname, `../../rec/${roomId}-${iat}.mp4`);
     await page.waitForSelector('video');
-    await recorder.start(savePath);
-    //new FFmpeg().addInput(video).addInput(audio).saveToFile(destination, './temp');
+    const stream = new PassThrough();
+    await recorder.startStream(stream);
+    const destination = path.resolve(__dirname, `../../rec/${roomId}-${iat}.mp4`);
+    new FFmpeg().addInput(stream).saveToFile(destination);
     let intervaToClean = setInterval(() => {
       /** */
     }, 10000000);
@@ -105,7 +107,6 @@ class RecordVideo extends DB {
           log('warn', 'Page of room not found', { time, roomId });
         }
       }, 1000);
-      // new FFmpeg().addInput(video).addInput(audio).saveToFile(destination, './temp');
       page.on('console', (_message) => {
         const message = _message.text();
         console.log(message);
