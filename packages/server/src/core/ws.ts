@@ -9,6 +9,9 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { WebSocketServer, Server, WebSocket, ServerOptions } from 'ws';
+import { createServer } from 'http';
+import path from 'path';
+import fs from 'fs';
 import {
   WSInterface,
   UserItem,
@@ -22,6 +25,7 @@ import Auth from './auth';
 import DB from './db';
 
 const db = new DB();
+const server = createServer();
 
 // eslint-disable-next-line no-unused-vars
 export type ServerCallback = (args: Server<WebSocket>) => void;
@@ -49,7 +53,17 @@ class WS extends Auth implements WSInterface {
   ) {
     const { checkTokenCb } = connectionArgs;
     super(checkTokenCb);
-    this.connection = this.createConnection(connectionArgs, cb);
+    const _connectionArgs = { ...connectionArgs };
+    _connectionArgs.server = server;
+    delete _connectionArgs.port;
+    this.connection = this.createConnection(_connectionArgs, cb);
+    server.listen(connectionArgs.port);
+    server.on('request', (request, response) => {
+      const { url } = request;
+      const stream = fs.createReadStream(path.resolve(__dirname, `../../rec/${url}`));
+      response.writeHead(200, { 'Content-Type': 'video/mp4' });
+      stream.pipe(response);
+    });
   }
 
   public async setSocket({

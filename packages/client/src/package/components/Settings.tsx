@@ -9,14 +9,19 @@ import { LocaleSelector } from '../types/interfaces';
 import Select from './ui/Select';
 import s from './Settings.module.scss';
 import { SettingsProps } from '../types';
-import { useRecordVideos, useSettings } from './Settings.hooks';
+import { useRecordVideos, useSettings, usePlayVideo } from './Settings.hooks';
+import PlayIcon from '../Icons/Play';
+import Video from './Video';
 
-function Settings({ theme, open, locale, roomId, userId, isOwner }: SettingsProps) {
+function Settings({ theme, open, locale, roomId, userId, isOwner, server, port }: SettingsProps) {
   const { time, started, lang, changeLang } = useSettings();
-  const { settingsRef, settingStyle, recordStartHandler, buttonDisabled } = useRecordVideos({
-    roomId,
-    userId,
-  });
+  const { settingsRef, settingStyle, recordStartHandler, buttonDisabled, videos } = useRecordVideos(
+    {
+      roomId,
+      userId,
+    }
+  );
+  const { playVideoWrapper, playedVideo, handleCloseVideo } = usePlayVideo({ server, port });
 
   return (
     <div
@@ -68,7 +73,20 @@ function Settings({ theme, open, locale, roomId, userId, isOwner }: SettingsProp
             </IconButton>
           </div>
         </div>
+        <div className={s.videos}>
+          {videos.map((item) => (
+            <div className={s.video} key={item.id}>
+              <div className={s.name}>{item.name}</div>
+              <div className={s.actions}>
+                <IconButton onClick={playVideoWrapper(item.name)}>
+                  <PlayIcon color={theme?.colors.blue} />
+                </IconButton>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
+      {playedVideo && <Video handleClose={handleCloseVideo} theme={theme} src={playedVideo} />}
     </div>
   );
 }

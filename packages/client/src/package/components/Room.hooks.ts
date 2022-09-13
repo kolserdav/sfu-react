@@ -519,7 +519,6 @@ export const useConnection = ({
         videos: { result, count, take, skip },
       },
       id: _id,
-      connId,
     }: SendMessageArgs<MessageType.SET_VIDEO_FIND_MANY>) => {
       storeVideos.dispatch(
         changeVideos({

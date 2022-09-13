@@ -34,7 +34,7 @@ export type HallProps = Omit<GlobalProps, 'iceServers'> & {
   locale: LocaleServer['client'];
 };
 
-export type SettingsProps = Omit<GlobalProps, 'iceServers' | 'server' | 'port'> & {
+export type SettingsProps = Omit<GlobalProps, 'iceServers'> & {
   open: boolean;
   isOwner: boolean;
   locale: LocaleServer['client'];

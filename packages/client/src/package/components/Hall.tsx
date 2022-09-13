@@ -91,6 +91,8 @@ function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) 
             roomId={roomId}
             isOwner={isOwner}
             open={openSettings}
+            server={server}
+            port={port}
           />
           {open && (
             <IconButton onClick={openSettingsDialog} className={s.settings__button}>

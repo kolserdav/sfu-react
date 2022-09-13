@@ -67,3 +67,24 @@ $settings-item-padding: 1rem;
     }
   }
 }
+
+.videos {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.video {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  .name {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+}
