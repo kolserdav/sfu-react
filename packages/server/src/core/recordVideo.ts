@@ -53,7 +53,7 @@ class RecordVideo extends DB {
     });
     const [page] = await browser.pages();
     page.on('close', () => {
-      log('warn', 'Record page on close', {});
+      log('info', 'Record page on close', {});
     });
     if (!this.pages[roomId]) {
       this.pages[roomId] = {
@@ -90,16 +90,20 @@ class RecordVideo extends DB {
       let time = 0;
       intervaToClean = setInterval(() => {
         time++;
-        this.pages[roomId].time = time;
-        this.ws.sendMessage({
-          type: MessageType.SET_RECORDING,
-          id: userId,
-          connId: '',
-          data: {
-            time,
-            command: this.recordPages[roomId]?.data.command || 'stop',
-          },
-        });
+        if (this.pages[roomId]) {
+          this.pages[roomId].time = time;
+          this.ws.sendMessage({
+            type: MessageType.SET_RECORDING,
+            id: userId,
+            connId: '',
+            data: {
+              time,
+              command: this.recordPages[roomId]?.data.command || 'stop',
+            },
+          });
+        } else {
+          log('warn', 'Page of room not found', { time, roomId });
+        }
       }, 1000);
       // new FFmpeg().addInput(video).addInput(audio).saveToFile(destination, './temp');
       page.on('console', (_message) => {
@@ -152,11 +156,11 @@ class RecordVideo extends DB {
     });
     this.videoUpdateTime({ roomId: id, time });
     if (this.pages[id]) {
-      log('warn', 'Record page was closed', { id });
+      log('info', 'Record page was closed', { id });
       this.pages[id].page
         .close()
         .then(() => {
-          this.pages[id].browser.close().catch((e) => {
+          this.pages[id].browser.close().catch(() => {
             //
           });
           delete this.pages[id];
@@ -172,26 +176,30 @@ class RecordVideo extends DB {
     const {
       id,
       data: { command, userId },
+      connId,
     } = args;
-    const prom = this.startRecord(args);
     this.recordPages[id] = {
       id,
       data: {
         command,
         time: 0,
       },
-      connId: '',
+      connId,
       type: MessageType.SET_RECORDING,
     };
+    if (command !== 'start') {
+      return;
+    }
+    const prom = this.startRecord(args);
     let interval = setInterval(() => {
       /** */
     }, 100000000);
     prom.then(async ({ cancelablePromise, recorder, intervaToClean }) => {
-      this.pages[id].page.on('close', () => {
+      this.pages[id]?.page.on('close', () => {
         this.ws.sendMessage({
           type: MessageType.SET_RECORDING,
           id: userId,
-          connId: '',
+          connId,
           data: {
             time: this.pages[id].time,
             command: 'stop',

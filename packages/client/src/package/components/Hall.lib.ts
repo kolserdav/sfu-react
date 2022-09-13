@@ -21,6 +21,7 @@ export const videoRecordWrapper =
     userId: string | number;
   }) =>
   (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    console.log(command);
     storeMessage.dispatch(
       changeMessage<MessageType.GET_RECORD>({
         message: {

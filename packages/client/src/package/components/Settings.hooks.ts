@@ -25,7 +25,7 @@ export const useLang = () => {
   return { lang, changeLang };
 };
 
-let _command: VideoRecorderState = 'start';
+let _command: VideoRecorderState = 'stop';
 
 export const useVideoRecord = ({
   roomId,
@@ -152,6 +152,7 @@ export const useRecordVideos = ({
         },
       })
     );
+    // take is wrong
   }, [roomId, userId, skip, load]);
 
   /**

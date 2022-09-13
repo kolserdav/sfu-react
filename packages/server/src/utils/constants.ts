@@ -15,7 +15,7 @@ export const LOG_LEVEL = 2;
 export const SSL_RTC_CONNECTION = true;
 export const SSL_SIGNATURE_HASH: werift.SignatureHash = { signature: 1, hash: 4 };
 export const DEFAULT_PORT = '3001';
-export const HEADLESS = false;
+export const HEADLESS = true;
 export const VIEWPORT = {
   width: 1920,
   height: 1080,
