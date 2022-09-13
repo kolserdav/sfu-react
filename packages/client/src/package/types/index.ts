@@ -8,8 +8,11 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
+import { Video } from '@prisma/client';
 import { Colors, Theme } from '../Theme';
-import { LocaleServer, LocaleValue, LogLevel } from './interfaces';
+import { LocaleServer, LogLevel } from './interfaces';
+
+export type VideoFull = Video;
 
 export interface GlobalProps {
   server: string;

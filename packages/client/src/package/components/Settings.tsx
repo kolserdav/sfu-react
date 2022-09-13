@@ -9,19 +9,15 @@ import { LocaleSelector } from '../types/interfaces';
 import Select from './ui/Select';
 import s from './Settings.module.scss';
 import { SettingsProps } from '../types';
-import { useSettings } from './Settings.hooks';
+import { useRecordVideos, useSettings } from './Settings.hooks';
 
 function Settings({ theme, open, locale, roomId, userId, isOwner }: SettingsProps) {
-  const {
-    settingsRef,
-    settingStyle,
-    recordStartHandler,
-    buttonDisabled,
-    time,
-    started,
-    lang,
-    changeLang,
-  } = useSettings({ roomId, userId });
+  const { time, started, lang, changeLang } = useSettings();
+  const { settingsRef, settingStyle, recordStartHandler, buttonDisabled } = useRecordVideos({
+    roomId,
+    userId,
+  });
+
   return (
     <div
       style={{ background: theme?.colors.paper }}

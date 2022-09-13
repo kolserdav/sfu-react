@@ -6,7 +6,7 @@ class Auth {
   checkTokenCb: (token: string) => Promise<boolean>;
 
   constructor(_checkTockenCb: Auth['checkTokenCb']) {
-    this.checkTokenCb = _checkTockenCb;
+    this.checkTokenCb = _checkTockenCb || this.checkTockenDefault;
   }
 
   // eslint-disable-next-line class-methods-use-this

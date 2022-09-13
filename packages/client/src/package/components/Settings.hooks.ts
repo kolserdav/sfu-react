@@ -6,6 +6,10 @@ import storeTimeRecord, { RootState } from '../store/timeRecord';
 import { videoRecordWrapper } from './Hall.lib';
 import storeLocale, { changeLocale } from '../store/locale';
 import { getCookie, CookieName, setCookie } from '../utils/cookies';
+import { RECORDED_VIDEO_TAKE_DEFAULT } from '../utils/constants';
+import storeMessage, { changeMessage } from '../store/message';
+import storeError from '../store/error';
+import storeVideos from '../store/video';
 
 export const useLang = () => {
   const [lang, setLang] = useState<LocaleValue>(getCookie(CookieName.lang) || LocaleDefault);
@@ -90,25 +94,88 @@ export const useSettingsStyle = () => {
   return { settingsRef, settingStyle };
 };
 
-export const useSettings = ({
+export const useSettings = () => {
+  const { lang, changeLang } = useLang();
+  const { time, started } = useTimeRecord();
+
+  return {
+    time,
+    started,
+    lang,
+    changeLang,
+  };
+};
+
+export const useRecordVideos = ({
   roomId,
   userId,
 }: {
   roomId: string | number;
   userId: string | number;
 }) => {
-  const { lang, changeLang } = useLang();
-  const { time, started } = useTimeRecord();
   const { recordStartHandler, buttonDisabled } = useVideoRecord({ roomId, userId });
   const { settingsRef, settingStyle } = useSettingsStyle();
-  return {
-    settingsRef,
-    settingStyle,
-    recordStartHandler,
-    buttonDisabled,
-    time,
-    started,
-    lang,
-    changeLang,
-  };
+  const [take, setTake] = useState<number>(RECORDED_VIDEO_TAKE_DEFAULT);
+  const [skip, setSkip] = useState<number>(0);
+  const [count, setCount] = useState<number>(0);
+  const [load, setLoad] = useState<boolean>(false);
+
+  /**
+   * Get recorded videos
+   */
+  useEffect(() => {
+    if (!load) {
+      return;
+    }
+    storeMessage.dispatch(
+      changeMessage({
+        message: {
+          type: 'room',
+          value: {
+            type: MessageType.GET_VIDEO_FIND_MANY,
+            id: roomId,
+            connId: '',
+            data: {
+              args: {
+                where: {
+                  roomId: roomId.toString(),
+                },
+                skip,
+                take,
+              },
+              userId,
+              token: '',
+            },
+          },
+        },
+      })
+    );
+  }, [roomId, userId, skip, take, load]);
+
+  /**
+   * Listen recorded videos
+   */
+  useEffect(() => {
+    const cleanSubs = storeVideos.subscribe(() => {
+      const { videos } = storeVideos.getState();
+      console.log(videos);
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, []);
+
+  /**
+   * Listen error on initial
+   */
+  useEffect(() => {
+    storeError.subscribe(() => {
+      const { error } = storeError.getState();
+      if (error === 'initial') {
+        setLoad(true);
+      }
+    });
+  }, []);
+
+  return { recordStartHandler, buttonDisabled, settingsRef, settingStyle, skip, take, count };
 };

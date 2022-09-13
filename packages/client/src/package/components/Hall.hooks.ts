@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import storeLocale, { changeLocale } from '../store/locale';
-import { LocaleDefault, LocaleValue, MessageType, RoomUser, UserList } from '../types/interfaces';
-
-import { getCookie, CookieName, setCookie } from '../utils/cookies';
+import { MessageType, RoomUser, UserList } from '../types/interfaces';
 import storeStreams from '../store/streams';
 import storeUserList from '../store/userList';
 import storeMessage, { changeMessage } from '../store/message';
 import { LocalStorageName, setLocalStorage } from '../utils/localStorage';
+import { getDocumentWidth } from '../utils/lib';
+import { MOBILE_WIDTH } from '../utils/constants';
 
 export const useSettings = ({ open }: { open: boolean }) => {
   const [openSettings, setOpenSettings] = useState<boolean>(
-    localStorage.getItem(LocalStorageName.SETTINGS_OPEN) === 'true'
+    localStorage.getItem(LocalStorageName.SETTINGS_OPEN) === 'true' &&
+      getDocumentWidth() <= MOBILE_WIDTH
   );
   const openSettingsDialog = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     setLocalStorage(LocalStorageName.SETTINGS_OPEN, !openSettings);

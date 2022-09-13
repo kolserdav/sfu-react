@@ -53,8 +53,9 @@ import storeError, { changeError } from '../store/error';
 import storeClickDocument from '../store/clickDocument';
 import { getLocalStorage, LocalStorageName, setLocalStorage } from '../utils/localStorage';
 import storeUserList, { changeUserList } from '../store/userList';
-import storeMessage from '../store/message';
+import storeMessage, { changeMessage } from '../store/message';
 import storeTimeRecord, { changeTimeRecord } from '../store/timeRecord';
+import storeVideos, { changeVideos } from '../store/video';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -280,14 +281,23 @@ export const useConnection = ({
    * Send message from storeMessage
    */
   useEffect(() => {
-    const cleanSubs = storeMessage.subscribe(() => {
+    const storeMessageHandler = (second = false) => {
       const {
         message: { type, value },
       } = storeMessage.getState();
       if (type === 'room') {
-        ws.sendMessage(value);
+        if (ws.connection.readyState === ws.connection.OPEN) {
+          ws.sendMessage(value);
+        } else if (second === false) {
+          setTimeout(() => {
+            storeMessageHandler(true);
+          }, 1000);
+        } else {
+          log('warn', 'Ws not found on sendMessage', { type, value });
+        }
       }
-    });
+    };
+    const cleanSubs = storeMessage.subscribe(storeMessageHandler);
     return () => {
       cleanSubs();
     };
@@ -502,6 +512,23 @@ export const useConnection = ({
         target: userId,
         eventName: 'need-reconnect',
       });
+    };
+
+    const setVideoFindManyHandler = ({
+      data: {
+        videos: { result, count, take, skip },
+      },
+      id: _id,
+      connId,
+    }: SendMessageArgs<MessageType.SET_VIDEO_FIND_MANY>) => {
+      storeVideos.dispatch(
+        changeVideos({
+          videos: result,
+          count,
+          take,
+          skip,
+        })
+      );
     };
 
     const changeMuteList = ({
@@ -733,6 +760,9 @@ export const useConnection = ({
           break;
         case MessageType.SET_BAN_LIST:
           changeBanList(rawMessage);
+          break;
+        case MessageType.SET_VIDEO_FIND_MANY:
+          setVideoFindManyHandler(rawMessage);
           break;
         case MessageType.SET_RECORDING:
           handleRecordingTime(rawMessage);

@@ -161,3 +161,11 @@ export const getTime = (startTime: number) => {
     _minutes.toString().length === 1 ? '0' : ''
   }${_minutes}:${_seconds.toString().length === 1 ? '0' : ''}${_seconds}`;
 };
+
+export const getDocumentWidth = () => {
+  let result = 0;
+  if (typeof document !== 'undefined') {
+    result = document.body.clientWidth;
+  }
+  return result;
+};
