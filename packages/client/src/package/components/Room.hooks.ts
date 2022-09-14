@@ -55,7 +55,6 @@ import { getLocalStorage, LocalStorageName, setLocalStorage } from '../utils/loc
 import storeUserList, { changeUserList } from '../store/userList';
 import storeMessage from '../store/message';
 import storeTimeRecord, { changeTimeRecord } from '../store/timeRecord';
-import storeVideos, { changeVideos } from '../store/video';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -472,17 +471,6 @@ export const useConnection = ({
       setAdminMuted(_adminMuteds.indexOf(userId) !== -1);
     };
 
-    const handleRecordingTime = (args: SendMessageArgs<MessageType.SET_RECORDING>) => {
-      storeTimeRecord.dispatch(
-        changeTimeRecord<MessageType.SET_RECORDING>({
-          message: {
-            type: 'recording',
-            value: args,
-          },
-        })
-      );
-    };
-
     const handleError = ({
       data: { message, type: _type, code },
     }: SendMessageArgs<MessageType.SET_ERROR>) => {
@@ -512,22 +500,6 @@ export const useConnection = ({
         target: userId,
         eventName: 'need-reconnect',
       });
-    };
-
-    const setVideoFindManyHandler = ({
-      data: {
-        videos: { result, count, take, skip },
-      },
-      id: _id,
-    }: SendMessageArgs<MessageType.SET_VIDEO_FIND_MANY>) => {
-      storeVideos.dispatch(
-        changeVideos({
-          videos: result,
-          count,
-          take,
-          skip,
-        })
-      );
     };
 
     const changeMuteList = ({
@@ -759,12 +731,6 @@ export const useConnection = ({
           break;
         case MessageType.SET_BAN_LIST:
           changeBanList(rawMessage);
-          break;
-        case MessageType.SET_VIDEO_FIND_MANY:
-          setVideoFindManyHandler(rawMessage);
-          break;
-        case MessageType.SET_RECORDING:
-          handleRecordingTime(rawMessage);
           break;
         case MessageType.SET_ERROR:
           handleError(rawMessage);

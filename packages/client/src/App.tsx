@@ -27,32 +27,34 @@ function App() {
         </button>
       ) : (
         <Main
-          room={{
-            server: isTest
+          // Required props *}
+          userId={window.location.search.replace(/\?uid=/, '')}
+          // Optional props
+          server={
+            isTest
               ? (process.env.REACT_APP_SERVER_TEST as string)
-              : (process.env.REACT_APP_SERVER as string),
-            port: parseInt(process.env.REACT_APP_PORT as string, 10),
-            iceServers: [
-              {
-                urls: [
-                  isTest
-                    ? (process.env.REACT_APP_STUN_SERVER_TEST as string)
-                    : (process.env.REACT_APP_STUN_SERVER as string),
-                ],
-              },
-              {
-                urls: [
-                  isTest
-                    ? (process.env.REACT_APP_TURN_SERVER_TEST as string)
-                    : (process.env.REACT_APP_TURN_SERVER as string),
-                ],
-                username: process.env.REACT_APP_TURN_SERVER_USER,
-                credential: process.env.REACT_APP_TURN_SERVER_PASSWORD,
-              },
-            ],
-            userId: window.location.search.replace(/\?uid=/, ''),
-            name: 'John Doe',
-          }}
+              : (process.env.REACT_APP_SERVER as string)
+          }
+          port={parseInt(process.env.REACT_APP_PORT as string, 10)}
+          iceServers={[
+            {
+              urls: [
+                isTest
+                  ? (process.env.REACT_APP_STUN_SERVER_TEST as string)
+                  : (process.env.REACT_APP_STUN_SERVER as string),
+              ],
+            },
+            {
+              urls: [
+                isTest
+                  ? (process.env.REACT_APP_TURN_SERVER_TEST as string)
+                  : (process.env.REACT_APP_TURN_SERVER as string),
+              ],
+              username: process.env.REACT_APP_TURN_SERVER_USER,
+              credential: process.env.REACT_APP_TURN_SERVER_PASSWORD,
+            },
+          ]}
+          name="John Doe"
         />
       )}
     </div>

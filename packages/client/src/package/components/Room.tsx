@@ -31,7 +31,7 @@ import {
   getVolumeContext,
   getSettingsContext,
 } from './Room.lib';
-import { DEFAULT_USER_NAME } from '../utils/constants';
+import { USER_NAME_DEFAULT } from '../utils/constants';
 import CloseButton from './ui/CloseButton';
 import ScreenIcon from '../Icons/ScreeenIcon';
 import IconButton from './ui/IconButton';
@@ -92,7 +92,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     port,
     cleanAudioAnalyzer,
     locale,
-    userName: name || DEFAULT_USER_NAME,
+    userName: name || USER_NAME_DEFAULT,
     toMute,
     toBan,
     toUnMute,

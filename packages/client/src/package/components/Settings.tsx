@@ -9,41 +9,54 @@ import { LocaleSelector } from '../types/interfaces';
 import Select from './ui/Select';
 import s from './Settings.module.scss';
 import { SettingsProps } from '../types';
-import { useRecordVideos, useSettings, usePlayVideo, useDeleteVideo } from './Settings.hooks';
+import {
+  useSettingsStyle,
+  usePlayVideo,
+  useDeleteVideo,
+  useVideoRecord,
+  useLang,
+  useMessages,
+} from './Settings.hooks';
 import PlayIcon from '../Icons/Play';
 import Video from './Video';
 import DeleteIcon from '../Icons/Delete';
-import WS from '../core/ws';
 
-function Settings({ theme, open, locale, roomId, userId, isOwner, server, port }: SettingsProps) {
-  const {
-    settingsRef,
-    settingStyle,
-    recordStartWrapper,
-    buttonDisabled,
-    videos,
-    setSkip,
-    skip,
-    setButtonDisabled,
-  } = useRecordVideos({
-    roomId,
-    userId,
-  });
-  const { time, started, lang, changeLang } = useSettings({
-    buttonDisabled,
-    setButtonDisabled,
-    setSkip,
-    skip,
-  });
+function Settings({
+  theme,
+  open,
+  locale,
+  roomId,
+  userId,
+  isOwner,
+  server,
+  port,
+  token,
+  name,
+}: SettingsProps) {
+  const { lang, changeLang } = useLang();
+  const { settingsRef, settingStyle } = useSettingsStyle();
+
   const { playVideoWrapper, playedVideo, handleCloseVideo } = usePlayVideo({
     server,
     port,
     roomId,
-    setSkip,
-    skip,
   });
-
   const { deleteVideoWrapper } = useDeleteVideo();
+  const { videos, time, started, buttonDisabled, setButtonDisabled, ws } = useMessages({
+    roomId,
+    server,
+    port,
+    userId,
+    protocol: 'settings',
+    token,
+  });
+  const { recordStartWrapper } = useVideoRecord({
+    roomId,
+    userId,
+    buttonDisabled,
+    setButtonDisabled,
+    ws,
+  });
 
   return (
     <div

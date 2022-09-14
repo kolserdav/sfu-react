@@ -21,17 +21,31 @@ import IconButton from './components/ui/IconButton';
 import Alert from './components/ui/Alert';
 import s from './Main.module.scss';
 import { useListeners } from './Main.hooks';
+import { USER_NAME_DEFAULT } from './utils/constants';
 
-function Main({ room }: { room: Omit<GlobalProps, 'locale' | 'roomId'> }) {
-  const { port, server } = room;
+function Main({
+  port,
+  server,
+  colors,
+  userId,
+  token = '',
+  name = USER_NAME_DEFAULT,
+}: Omit<GlobalProps, 'locale' | 'roomId'>) {
   const pathname = getPathname();
   const roomId = useMemo(() => getRoomId(pathname || ''), [pathname]);
-  const { colors } = room;
   const { locale, openMenu, theme, alert, hallOpen } = useListeners({ colors, port, server });
   return (
     <div>
       {locale && (
-        <Room {...room} theme={!room.theme ? theme : undefined} roomId={roomId} locale={locale} />
+        <Room
+          port={port}
+          userId={userId}
+          server={server}
+          colors={colors}
+          theme={!theme ? theme : undefined}
+          roomId={roomId}
+          locale={locale}
+        />
       )}
       <div
         className={clsx(s.button, hallOpen ? s.active : '')}
@@ -51,12 +65,14 @@ function Main({ room }: { room: Omit<GlobalProps, 'locale' | 'roomId'> }) {
       {locale && (
         <Hall
           roomId={roomId}
-          userId={room.userId}
+          userId={userId}
           open={hallOpen}
           locale={locale}
-          server={room.server}
-          port={room.port}
+          server={server}
+          port={port}
           theme={theme}
+          token={token}
+          name={name}
         />
       )}
       <Alert open={alert.open} type={alert.type} theme={theme}>

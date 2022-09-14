@@ -20,7 +20,10 @@ import { ErrorCode, MessageType, SendMessageArgs } from '../types/interfaces';
 import WS from '../core/ws';
 import DB from '../core/db';
 import { getLocale, log } from '../utils/lib';
-
+/**
+ * @see
+ * TODO need refactor
+ */
 class RecordVideo {
   public recordPages: Record<string, SendMessageArgs<MessageType.SET_RECORDING>> = {};
 

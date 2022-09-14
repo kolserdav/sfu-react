@@ -7,7 +7,7 @@ import DB from '../core/db';
 class Settings extends DB implements ConnectorInterface {
   public users: ConnectorInterface['users'] = {};
 
-  public setUnit: ConnectorInterface['setUnit'] = ({ roomId, userId, ws, locale }) => {
+  public setUnit: ConnectorInterface['setUnit'] = ({ roomId, userId, ws, locale, connId }) => {
     if (!this.users[roomId]) {
       this.users[roomId] = {};
     }
@@ -22,8 +22,8 @@ class Settings extends DB implements ConnectorInterface {
       roomId,
       msg: {
         id: userId,
-        connId: '',
-        type: MessageType.SET_CHAT_UNIT,
+        connId,
+        type: MessageType.SET_SETTINGS_UNIT,
         data: undefined,
       },
     });
@@ -90,6 +90,42 @@ class Settings extends DB implements ConnectorInterface {
         connId,
         data: {
           videos,
+        },
+      },
+    });
+  }
+
+  public async videoFindFirstHandler({
+    id,
+    data: { args, userId, token },
+    connId,
+  }: SendMessageArgs<MessageType.GET_VIDEO_FIND_MANY>) {
+    const locale = getLocale(this.users[id][userId].locale).server;
+    if ((await this.checkTokenCb(token)) === false) {
+      this.sendMessage({
+        roomId: id,
+        msg: {
+          type: MessageType.SET_ERROR,
+          connId,
+          id: userId,
+          data: {
+            type: 'warn',
+            message: locale.forbidden,
+            code: ErrorCode.forbidden,
+          },
+        },
+      });
+      return;
+    }
+    const video = await this.videoFindFirst({ ...args });
+    this.sendMessage({
+      roomId: id,
+      msg: {
+        type: MessageType.SET_VIDEO_FIND_FIRST,
+        id: userId,
+        connId,
+        data: {
+          video,
         },
       },
     });

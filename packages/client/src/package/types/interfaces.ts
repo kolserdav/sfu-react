@@ -112,6 +112,8 @@ export enum MessageType {
   SET_RECORDING = 'SET_RECORDING',
   GET_VIDEO_FIND_MANY = 'GET_VIDEO_FIND_MANY',
   SET_VIDEO_FIND_MANY = 'SET_VIDEO_FIND_MANY',
+  GET_VIDEO_FIND_FIRST = 'GET_VIDEO_FIND_FIRST',
+  SET_VIDEO_FIND_FIRST = 'SET_VIDEO_FIND_FIRST',
 }
 
 export namespace Locale {
@@ -242,6 +244,11 @@ export namespace DataTypes {
       token: string;
       args: Prisma.VideoFindManyArgs;
     };
+    export type GetVideoFindFirst = {
+      userId: string | number;
+      token: string;
+      args: Prisma.VideoFindFirstArgs;
+    };
     export type GetToUnMute = {
       target: string | number;
     };
@@ -275,6 +282,9 @@ export namespace DataTypes {
     };
     export type SetVideoFindMany = {
       videos: GetManyResult<Video>;
+    };
+    export type SetVideoFindFirst = {
+      video: Video;
     };
     export type SetBanList = {
       banneds: Banneds[any];
@@ -395,8 +405,12 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetEditMessage
     : T extends MessageType.GET_VIDEO_FIND_MANY
     ? DataTypes.MessageTypes.GetVideoFindMany
+    : T extends MessageType.GET_VIDEO_FIND_FIRST
+    ? DataTypes.MessageTypes.GetVideoFindFirst
     : T extends MessageType.SET_VIDEO_FIND_MANY
     ? DataTypes.MessageTypes.SetVideoFindMany
+    : T extends MessageType.SET_VIDEO_FIND_FIRST
+    ? DataTypes.MessageTypes.SetVideoFindFirst
     : T extends MessageType.GET_DELETE_MESSAGE
     ? DataTypes.MessageTypes.GetDeleteMessage
     : T extends MessageType.SET_DELETE_MESSAGE

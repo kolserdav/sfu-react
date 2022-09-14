@@ -24,21 +24,22 @@ function App() {
         </button>
       ) : (
         <Uyem
-          room={{
-            server: 'localhost',
-            port: 3001,
-            iceServers: [
-              {
-                urls: ['stun:127.0.0.1:3478'],
-              },
-              {
-                urls: ['turn:127.0.0.2:3478'],
-                username: 'username',
-                credential: 'password',
-              },
-            ],
-            userId: window.location.search.replace(/\?uid=/, ''),
-          }}
+          // Required props *}
+          userId={window.location.search.replace(/\?uid=/, '')}
+          // Optional props
+          server="localhost"
+          port={3001}
+          iceServers={[
+            {
+              urls: ['stun:127.0.0.1:3478'],
+            },
+            {
+              urls: ['turn:127.0.0.2:3478'],
+              username: 'username',
+              credential: 'password',
+            },
+          ]}
+          name="John Doe"
         />
       )}
     </div>

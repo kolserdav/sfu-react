@@ -14,9 +14,9 @@ import { getLocale, log } from '../utils/lib';
 import DB from '../core/db';
 
 class Chat extends DB implements ConnectorInterface {
-  public users: ConnectorInterface['users'];
+  public users: ConnectorInterface['users'] = {};
 
-  public setUnit: ConnectorInterface['setUnit'] = ({ roomId, userId, ws, locale }) => {
+  public setUnit: ConnectorInterface['setUnit'] = ({ roomId, userId, ws, locale, connId }) => {
     if (!this.users[roomId]) {
       this.users[roomId] = {};
     }
@@ -31,7 +31,7 @@ class Chat extends DB implements ConnectorInterface {
       roomId,
       msg: {
         id: userId,
-        connId: '',
+        connId,
         type: MessageType.SET_CHAT_UNIT,
         data: undefined,
       },

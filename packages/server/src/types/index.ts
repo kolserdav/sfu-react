@@ -16,6 +16,7 @@ export abstract class ConnectorInterface extends DB {
     userId: string | number;
     ws: WebSocket;
     locale: LocaleValue;
+    connId: string;
   }): void;
 
   public abstract sendMessage<T extends keyof typeof MessageType>(args: {

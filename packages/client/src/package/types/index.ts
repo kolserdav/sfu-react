@@ -20,6 +20,7 @@ export interface GlobalProps {
   port: number;
   userId: string | number;
   name?: string;
+  token?: string;
   theme?: Theme;
   iceServers?: RTCConfiguration['iceServers'];
   colors?: Colors;
@@ -29,15 +30,17 @@ export type RoomProps = GlobalProps & {
   locale: LocaleServer['client'];
 };
 
-export type HallProps = Omit<GlobalProps, 'iceServers'> & {
+export type HallProps = Required<Omit<GlobalProps, 'iceServers' | 'theme' | 'colors'>> & {
   open: boolean;
   locale: LocaleServer['client'];
+  theme?: Theme;
 };
 
-export type SettingsProps = Omit<GlobalProps, 'iceServers'> & {
+export type SettingsProps = Required<Omit<GlobalProps, 'iceServers' | 'theme' | 'colors'>> & {
   open: boolean;
   isOwner: boolean;
   locale: LocaleServer['client'];
+  theme?: Theme;
 };
 
 export type ChatProps = Omit<HallProps, 'open'>;

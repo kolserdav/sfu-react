@@ -28,6 +28,7 @@ import Auth from './core/auth';
 import Settings from './addons/settings';
 
 export const prisma = new PrismaClient();
+const db = new DB();
 const chat = new Chat();
 const settings = new Settings();
 
@@ -61,9 +62,8 @@ export function createServer(
   },
   cb?: ServerCallback
 ) {
-  const db = new DB();
-  settings.checkTokenCb = checkTokenCb;
-  chat.checkTokenCb = checkTokenCb;
+  settings.checkTokenCb = checkTokenCb || settings.checkTokenCb;
+  chat.checkTokenCb = checkTokenCb || chat.checkTokenCb;
   const wss = new WS({ port, db }, cb);
   const recordVideo = new RecordVideo({ ws: wss, db });
   const rtc: RTC | null = new RTC({ ws: wss, db });
@@ -138,7 +138,9 @@ export function createServer(
             userId: wss.getMessage(MessageType.GET_CHAT_UNIT, rawMessage).data.userId,
             ws,
             locale: wss.getMessage(MessageType.GET_CHAT_UNIT, rawMessage).data.locale,
+            connId,
           });
+
           break;
         case MessageType.GET_SETTINGS_UNIT:
           settings.setUnit({
@@ -146,6 +148,7 @@ export function createServer(
             userId: wss.getMessage(MessageType.GET_SETTINGS_UNIT, rawMessage).data.userId,
             ws,
             locale: wss.getMessage(MessageType.GET_SETTINGS_UNIT, rawMessage).data.locale,
+            connId,
           });
           break;
         case MessageType.GET_CHAT_MESSAGES:
@@ -207,6 +210,9 @@ export function createServer(
           break;
         case MessageType.GET_VIDEO_FIND_MANY:
           settings.videoFindManyHandler(rawMessage);
+          break;
+        case MessageType.GET_VIDEO_FIND_FIRST:
+          settings.videoFindFirstHandler(rawMessage);
           break;
         default:
           wss.sendMessage(rawMessage);

@@ -21,7 +21,7 @@ import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
 import { checkIsRecord } from '../utils/lib';
 import Settings from './Settings';
 
-function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) {
+function Hall({ open, locale, server, port, roomId, userId, theme, token, name }: HallProps) {
   const { openSettings, openSettingsDialog } = useSettings({ open });
   const { users, isOwner, banneds, unBanWrapper } = useUsers({ userId, roomId });
 
@@ -83,8 +83,12 @@ function Hall({ open, locale, server, port, roomId, userId, theme }: HallProps) 
             roomId={roomId}
             server={server}
             port={port}
+            name={name}
+            token={token}
           />
           <Settings
+            token={token}
+            name={name}
             theme={theme}
             locale={locale}
             userId={userId}
