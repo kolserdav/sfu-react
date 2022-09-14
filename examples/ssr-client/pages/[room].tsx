@@ -17,7 +17,7 @@ function Room() {
       {checkRouterIsLoad(router) && (
         <Uyem
           // Required props *}
-          userId={window.location.search.replace(/\?uid=/, '')}
+          userId={router.asPath.replace(/.+\?uid=/, '') || '0'}
           // Optional props
           server="localhost"
           port={3001}
