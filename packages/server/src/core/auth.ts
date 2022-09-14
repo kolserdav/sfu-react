@@ -3,10 +3,15 @@ import { log } from '../utils/lib';
 class Auth {
   tokenList: string[] = [];
 
+  // eslint-disable-next-line no-unused-vars
   checkTokenCb: (token: string) => Promise<boolean>;
 
-  constructor(_checkTockenCb: Auth['checkTokenCb']) {
-    this.checkTokenCb = _checkTockenCb || this.checkTockenDefault;
+  public setCheckTokenCb = (checkTokenCb: Auth['checkTokenCb']) => {
+    this.checkTokenCb = checkTokenCb;
+  };
+
+  constructor() {
+    this.checkTokenCb = this.checkTockenDefault;
   }
 
   // eslint-disable-next-line class-methods-use-this

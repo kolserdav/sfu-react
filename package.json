@@ -62,7 +62,7 @@
     "copy-interfaces": "node scripts/create-interfaces-symlink.js",
     "copy": "npm run copy-interfaces",
     "dev:migrate": "cd packages/server && npm run dev:migrate",
-    "dev:server": "cd packages/server && npm run dev",
+    "dev:server": "cd packages/server && tsc -p . && npm run dev",
     "dev:server-server": "cd packages/server && npm run dev:server",
     "dev:client": "cd packages/client && npm run dev",
     "dev:client-next": "cd packages/client && npm run next:dev",

@@ -11,7 +11,7 @@
 import * as Types from '../types/interfaces';
 import { log } from '../utils/lib';
 
-type Protocol = 'room' | 'chat' | 'check';
+export type Protocol = 'room' | 'chat' | 'check' | 'settings';
 
 class WS implements Types.WSInterface {
   public connection: WebSocket;

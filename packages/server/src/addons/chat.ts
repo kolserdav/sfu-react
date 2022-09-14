@@ -8,25 +8,15 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import { WebSocket } from 'ws';
-import { ErrorCode, LocaleValue, MessageType, SendMessageArgs } from '../types/interfaces';
+import { ConnectorInterface } from '../types';
+import { ErrorCode, MessageType, SendMessageArgs } from '../types/interfaces';
 import { getLocale, log } from '../utils/lib';
-import DB from './db';
+import DB from '../core/db';
 
-class Chat extends DB {
-  public users: Record<string, Record<string, { locale: LocaleValue; ws: WebSocket }>> = {};
+class Chat extends DB implements ConnectorInterface {
+  public users: ConnectorInterface['users'];
 
-  public setChatUnit({
-    roomId,
-    userId,
-    ws,
-    locale,
-  }: {
-    roomId: string | number;
-    userId: string | number;
-    ws: WebSocket;
-    locale: LocaleValue;
-  }) {
+  public setUnit: ConnectorInterface['setUnit'] = ({ roomId, userId, ws, locale }) => {
     if (!this.users[roomId]) {
       this.users[roomId] = {};
     }
@@ -46,24 +36,18 @@ class Chat extends DB {
         data: undefined,
       },
     });
-  }
+  };
 
-  public cleanChatUnit({ roomId, userId }: { roomId: string | number; userId: string | number }) {
+  public cleanUnit: ConnectorInterface['cleanUnit'] = ({ roomId, userId }) => {
     if (!this.users[roomId][userId]) {
       log('warn', 'Chat user can not remove', { roomId, userId });
       return;
     }
     delete this.users[roomId][userId];
-  }
+  };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public sendMessage<T extends keyof typeof MessageType>({
-    msg,
-    roomId,
-  }: {
-    msg: SendMessageArgs<T>;
-    roomId: string | number;
-  }) {
+  public sendMessage: ConnectorInterface['sendMessage'] = ({ msg, roomId }) => {
     const { id } = msg;
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -82,7 +66,7 @@ class Chat extends DB {
         resolve(0);
       }, 0);
     });
-  }
+  };
 
   public async handleRoomMessage({
     id,
@@ -136,7 +120,7 @@ class Chat extends DB {
 
   public async handleEditMessage({
     id,
-    data: { args, userId },
+    data: { args },
   }: SendMessageArgs<MessageType.GET_EDIT_MESSAGE>) {
     const res = await this.messageUpdate(args);
     const uKeys = Object.keys(this.users[id]);
@@ -155,7 +139,7 @@ class Chat extends DB {
 
   public async handleDeleteMessage({
     id,
-    data: { args, userId },
+    data: { args },
   }: SendMessageArgs<MessageType.GET_DELETE_MESSAGE>) {
     const res = await this.messageDelete(args);
     const uKeys = Object.keys(this.users[id]);

@@ -12,25 +12,14 @@ import { WebSocketServer, Server, WebSocket, ServerOptions } from 'ws';
 import { createServer } from 'http';
 import path from 'path';
 import fs from 'fs';
-import {
-  WSInterface,
-  UserItem,
-  LocaleValue,
-  SendMessageArgs,
-  MessageType,
-  ErrorCode,
-} from '../types/interfaces';
-import { log, getLocale } from '../utils/lib';
-import Auth from './auth';
+import { WSInterface, UserItem, LocaleValue } from '../types/interfaces';
+import { ServerCallback } from '../types';
+import { log } from '../utils/lib';
 import DB from './db';
 
-const db = new DB();
 const server = createServer();
 
-// eslint-disable-next-line no-unused-vars
-export type ServerCallback = (args: Server<WebSocket>) => void;
-
-class WS extends Auth implements WSInterface {
+class WS implements WSInterface {
   public connection: Server<WebSocket>;
 
   public sockets: Record<string, WebSocket> = {};
@@ -43,17 +32,15 @@ class WS extends Auth implements WSInterface {
 
   public WebSocket = WebSocket;
 
-  constructor(
-    connectionArgs:
-      | (ServerOptions & {
-          checkTokenCb: Auth['checkTokenCb'];
-        })
-      | undefined,
-    cb?: ServerCallback
-  ) {
-    const { checkTokenCb } = connectionArgs;
-    super(checkTokenCb);
+  /**
+   * @deprecated
+   * move db
+   */
+  private db: DB;
+
+  constructor(connectionArgs: (ServerOptions & { db: DB }) | undefined, cb?: ServerCallback) {
     const _connectionArgs = { ...connectionArgs };
+    this.db = connectionArgs.db;
     _connectionArgs.server = server;
     delete _connectionArgs.port;
     this.connection = this.createConnection(_connectionArgs, cb);
@@ -93,13 +80,13 @@ class WS extends Auth implements WSInterface {
     this.sockets[this.getSocketId(_id.toString(), connId)] = ws;
     const id = _id.toString();
     if (!isRoom) {
-      const u = await db.unitFindFirst({
+      const u = await this.db.unitFindFirst({
         where: {
           id,
         },
       });
       if (u) {
-        await db.unitUpdate({
+        await this.db.unitUpdate({
           where: {
             id,
           },
@@ -109,7 +96,7 @@ class WS extends Auth implements WSInterface {
           },
         });
       } else {
-        await db.unitCreate({
+        await this.db.unitCreate({
           data: {
             id,
             name: userName,
@@ -209,35 +196,6 @@ class WS extends Auth implements WSInterface {
         resolve(0);
       }, 0);
     });
-
-  public async videoFindManyHandler({
-    data: { args, userId, token },
-    connId,
-  }: SendMessageArgs<MessageType.GET_VIDEO_FIND_MANY>) {
-    const locale = getLocale(this.users[userId].locale).server;
-    if ((await this.checkTokenCb(token)) === false) {
-      this.sendMessage({
-        type: MessageType.SET_ERROR,
-        connId,
-        id: userId,
-        data: {
-          type: 'warn',
-          message: locale.forbidden,
-          code: ErrorCode.forbidden,
-        },
-      });
-      return;
-    }
-    const videos = await db.videoFindMany({ ...args });
-    this.sendMessage({
-      type: MessageType.SET_VIDEO_FIND_MANY,
-      id: userId,
-      connId,
-      data: {
-        videos,
-      },
-    });
-  }
 }
 
 export default WS;

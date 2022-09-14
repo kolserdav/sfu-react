@@ -30,8 +30,6 @@ import {
 import WS from './ws';
 import DB from './db';
 
-const db = new DB();
-
 // eslint-disable-next-line no-unused-vars
 export type OnRoomConnect = (args: {
   roomId: string | number;
@@ -59,10 +57,17 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
 
   private ws: WS;
 
+  /**
+   * @deprecated
+   * move db
+   */
+  private db: DB;
+
   public streams: Record<string, Record<string, werift.MediaStreamTrack[]>> = {};
 
-  constructor({ ws }: { ws: WS }) {
+  constructor({ ws, db }: { ws: WS; db: DB }) {
     this.ws = ws;
+    this.db = db;
   }
 
   public getPeerId(
@@ -531,7 +536,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     roomId: number | string;
     onRoomOpen?: OnRoomOpen;
   }): Promise<{ error: 1 | 0; isOwner: boolean }> {
-    const room = await db.roomFindFirst({
+    const room = await this.db.roomFindFirst({
       where: {
         id: roomId.toString(),
       },
@@ -540,7 +545,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     let isOwner = room?.authorId === userId.toString();
     if (!room) {
       const authorId = userId.toString();
-      db.roomCreate({
+      this.db.roomCreate({
         data: {
           id: roomId.toString(),
           authorId,
@@ -570,7 +575,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
             isOwner,
           };
         }
-        await db.roomUpdate({
+        await this.db.roomUpdate({
           where: {
             id: room.id,
           },
@@ -590,61 +595,65 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
           code: ErrorCode.initial,
         },
       });
-      db.unitFindFirst({
-        where: {
-          id: userId.toString(),
-        },
-        select: {
-          IGuest: {
-            select: {
-              id: true,
+      this.db
+        .unitFindFirst({
+          where: {
+            id: userId.toString(),
+          },
+          select: {
+            IGuest: {
+              select: {
+                id: true,
+              },
             },
           },
-        },
-      }).then((g) => {
-        const id = roomId.toString();
-        if (!g) {
-          log('warn', 'Unit not found', { id: userId.toString() });
-        } else if (!g?.IGuest[0]) {
-          db.unitUpdate({
-            where: {
-              id: userId.toString(),
-            },
-            data: {
-              IGuest: {
-                create: {
-                  roomId: id,
+        })
+        .then((g) => {
+          const id = roomId.toString();
+          if (!g) {
+            log('warn', 'Unit not found', { id: userId.toString() });
+          } else if (!g?.IGuest[0]) {
+            this.db
+              .unitUpdate({
+                where: {
+                  id: userId.toString(),
+                },
+                data: {
+                  IGuest: {
+                    create: {
+                      roomId: id,
+                    },
+                  },
+                  updated: new Date(),
+                },
+              })
+              .then((r) => {
+                if (!r) {
+                  log('warn', 'Room not updated', { roomId });
+                }
+              });
+          } else if (g.IGuest[0].id) {
+            this.db.unitUpdate({
+              where: {
+                id: userId.toString(),
+              },
+              data: {
+                IGuest: {
+                  update: {
+                    where: {
+                      id: g.IGuest[0].id,
+                    },
+                    data: {
+                      updated: new Date(),
+                    },
+                  },
                 },
               },
-              updated: new Date(),
-            },
-          }).then((r) => {
-            if (!r) {
-              log('warn', 'Room not updated', { roomId });
-            }
-          });
-        } else if (g.IGuest[0].id) {
-          db.unitUpdate({
-            where: {
-              id: userId.toString(),
-            },
-            data: {
-              IGuest: {
-                update: {
-                  where: {
-                    id: g.IGuest[0].id,
-                  },
-                  data: {
-                    updated: new Date(),
-                  },
-                },
-              },
-            },
-          });
-        } else {
-          log('warn', 'Room not saved', { g: g.IGuest[0]?.id, id });
-        }
-      });
+            });
+          } else {
+            log('warn', 'Room not saved', { g: g.IGuest[0]?.id, id });
+          }
+        });
     }
     const { name } = this.ws.users[userId];
     if (!this.rooms[roomId]) {

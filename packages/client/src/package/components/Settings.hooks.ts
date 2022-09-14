@@ -1,7 +1,7 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { VideoFull, VideoRecorderState } from '../types';
 import { SendMessageArgs, MessageType, LocaleDefault, LocaleValue } from '../types/interfaces';
-import { getTime } from '../utils/lib';
+import { getTime, log } from '../utils/lib';
 import storeTimeRecord, { RootState } from '../store/timeRecord';
 import { videoRecord } from './Hall.lib';
 import storeLocale, { changeLocale } from '../store/locale';
@@ -11,6 +11,7 @@ import storeMessage, { changeMessage } from '../store/message';
 import storeError from '../store/error';
 import storeVideos from '../store/video';
 import { getVideoSrc } from './Settings.lib';
+import WS, { Protocol } from '../core/ws';
 
 export const useLang = () => {
   const [lang, setLang] = useState<LocaleValue>(getCookie(CookieName.lang) || LocaleDefault);
@@ -271,4 +272,77 @@ export const useDeleteVideo = () => {
   };
 
   return { deleteVideoWrapper };
+};
+
+export const useMessages = ({
+  roomId,
+  userId,
+  server,
+  port,
+  protocol,
+}: {
+  roomId: string | number;
+  userId: string | number;
+  server: string;
+  port: number;
+  protocol: Protocol;
+}) => {
+  const ws = useMemo(() => new WS({ server, port, protocol: 'chat' }), [port, server]);
+
+  /**
+   * Handle messages
+   */
+  useEffect(() => {
+    const setErrorHandler = ({
+      data: { message: children, type },
+    }: SendMessageArgs<MessageType.SET_ERROR>) => {
+      log(type, children, {}, true);
+    };
+
+    ws.onOpen = () => {
+      ws.sendMessage({
+        id: roomId,
+        type: MessageType.GET_CHAT_UNIT,
+        connId: '',
+        data: {
+          userId,
+          locale: getCookie(CookieName.lang) || LocaleDefault,
+        },
+      });
+    };
+    ws.onMessage = (ev) => {
+      const { data } = ev;
+      const rawMessage = ws.parseMessage(data);
+      if (!rawMessage) {
+        return;
+      }
+      const { type } = rawMessage;
+      switch (type) {
+        case MessageType.SET_ERROR:
+          setErrorHandler(rawMessage);
+          break;
+        default:
+      }
+    };
+    ws.onError = (e) => {
+      log('error', 'Error chat', { e });
+    };
+    ws.onClose = () => {
+      log('warn', 'Chat connection closed', {});
+    };
+    return () => {
+      ws.onOpen = () => {
+        /** */
+      };
+      ws.onMessage = () => {
+        /** */
+      };
+      ws.onError = () => {
+        /** */
+      };
+      ws.onClose = () => {
+        /** */
+      };
+    };
+  }, [ws, userId, roomId]);
 };

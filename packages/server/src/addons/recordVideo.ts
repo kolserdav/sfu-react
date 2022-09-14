@@ -17,11 +17,11 @@ import { PassThrough } from 'stream';
 import { PuppeteerScreenRecorder } from 'puppeteer-screen-recorder';
 import { HEADLESS, VIEWPORT, APP_URL } from '../utils/constants';
 import { ErrorCode, MessageType, SendMessageArgs } from '../types/interfaces';
-import WS from './ws';
-import DB from './db';
+import WS from '../core/ws';
+import DB from '../core/db';
 import { getLocale, log } from '../utils/lib';
 
-class RecordVideo extends DB {
+class RecordVideo {
   public recordPages: Record<string, SendMessageArgs<MessageType.SET_RECORDING>> = {};
 
   public pages: Record<string, { page: puppeteer.Page; browser: puppeteer.Browser; time: number }> =
@@ -29,9 +29,15 @@ class RecordVideo extends DB {
 
   public ws: WS;
 
-  constructor({ ws: _ws }: { ws: WS }) {
-    super();
+  /**
+   * @deprecated
+   * move db
+   */
+  private db: DB;
+
+  constructor({ ws: _ws, db: _db }: { ws: WS; db: DB }) {
     this.ws = _ws;
+    this.db = _db;
   }
 
   async startRecord({
@@ -86,7 +92,7 @@ class RecordVideo extends DB {
     let intervaToClean = setInterval(() => {
       /** */
     }, 10000000);
-    this.videoCreate({
+    this.db.videoCreate({
       data: {
         name: `${iat}.mp4`,
         roomId: roomId.toString(),
@@ -150,7 +156,7 @@ class RecordVideo extends DB {
         message: locale.videoRecordStop,
       },
     });
-    this.videoUpdateTime({ roomId: id, time });
+    this.db.videoUpdateTime({ roomId: id, time });
     if (this.pages[id]) {
       log('info', 'Record page was closed', { id });
       this.pages[id].page

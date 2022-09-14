@@ -11,10 +11,11 @@
 import { PrismaClient } from '@prisma/client';
 import { DBInterface } from '../types/interfaces';
 import { log } from '../utils/lib';
+import Auth from './auth';
 
 const prisma = new PrismaClient();
 
-class DB implements DBInterface {
+class DB extends Auth implements DBInterface {
   // eslint-disable-next-line class-methods-use-this
   public roomFindFirst: DBInterface['roomFindFirst'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

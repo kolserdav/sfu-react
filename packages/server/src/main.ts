@@ -15,20 +15,21 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 import { PrismaClient } from '@prisma/client';
-import WS, { ServerCallback } from './core/ws';
+import WS from './core/ws';
+import { ServerCallback } from './types';
 import RTC, { OnRoomConnect, OnRoomOpen } from './core/rtc';
 import { MessageType } from './types/interfaces';
 import { getLocale, log } from './utils/lib';
 import { PORT, CORS } from './utils/constants';
 import DB from './core/db';
-import Chat from './core/chat';
-import RecordVideo from './core/recordVideo';
+import Chat from './addons/chat';
+import RecordVideo from './addons/recordVideo';
 import Auth from './core/auth';
+import Settings from './addons/settings';
 
 export const prisma = new PrismaClient();
-
-const db = new DB();
 const chat = new Chat();
+const settings = new Settings();
 
 process.on('uncaughtException', (err: Error) => {
   log('error', 'uncaughtException', err);
@@ -60,9 +61,12 @@ export function createServer(
   },
   cb?: ServerCallback
 ) {
-  const wss = new WS({ port, checkTokenCb }, cb);
-  const recordVideo = new RecordVideo({ ws: wss });
-  const rtc: RTC | null = new RTC({ ws: wss });
+  const db = new DB();
+  settings.checkTokenCb = checkTokenCb;
+  chat.checkTokenCb = checkTokenCb;
+  const wss = new WS({ port, db }, cb);
+  const recordVideo = new RecordVideo({ ws: wss, db });
+  const rtc: RTC | null = new RTC({ ws: wss, db });
 
   const getConnectionId = (): string => {
     const connId = v4();
@@ -129,11 +133,19 @@ export function createServer(
           });
           break;
         case MessageType.GET_CHAT_UNIT:
-          chat.setChatUnit({
+          chat.setUnit({
             roomId: wss.getMessage(MessageType.GET_CHAT_UNIT, rawMessage).id,
             userId: wss.getMessage(MessageType.GET_CHAT_UNIT, rawMessage).data.userId,
             ws,
             locale: wss.getMessage(MessageType.GET_CHAT_UNIT, rawMessage).data.locale,
+          });
+          break;
+        case MessageType.GET_SETTINGS_UNIT:
+          settings.setUnit({
+            roomId: wss.getMessage(MessageType.GET_SETTINGS_UNIT, rawMessage).id,
+            userId: wss.getMessage(MessageType.GET_SETTINGS_UNIT, rawMessage).data.userId,
+            ws,
+            locale: wss.getMessage(MessageType.GET_SETTINGS_UNIT, rawMessage).data.locale,
           });
           break;
         case MessageType.GET_CHAT_MESSAGES:
@@ -194,7 +206,7 @@ export function createServer(
           rtc.handleGetMute(rawMessage);
           break;
         case MessageType.GET_VIDEO_FIND_MANY:
-          wss.videoFindManyHandler(rawMessage);
+          settings.videoFindManyHandler(rawMessage);
           break;
         default:
           wss.sendMessage(rawMessage);
@@ -241,7 +253,8 @@ export function createServer(
             }
           });
           if (index !== -1) {
-            chat.cleanChatUnit({ roomId: item, userId });
+            chat.cleanUnit({ roomId: item, userId });
+            settings.cleanUnit({ roomId: item, userId });
             const keys = rtc.getPeerConnectionKeys(item);
             rtc.cleanConnections(item, userId.toString());
             rtc.rooms[item].splice(index, 1);

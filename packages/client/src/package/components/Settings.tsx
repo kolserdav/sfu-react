@@ -13,6 +13,7 @@ import { useRecordVideos, useSettings, usePlayVideo, useDeleteVideo } from './Se
 import PlayIcon from '../Icons/Play';
 import Video from './Video';
 import DeleteIcon from '../Icons/Delete';
+import WS from '../core/ws';
 
 function Settings({ theme, open, locale, roomId, userId, isOwner, server, port }: SettingsProps) {
   const {
