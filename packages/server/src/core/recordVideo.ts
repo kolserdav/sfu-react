@@ -88,7 +88,7 @@ class RecordVideo extends DB {
     }, 10000000);
     this.videoCreate({
       data: {
-        name: `${roomId}-${iat}.mp4`,
+        name: `${iat}.mp4`,
         roomId: roomId.toString(),
         time: 0,
       },
@@ -105,7 +105,7 @@ class RecordVideo extends DB {
             connId: '',
             data: {
               time,
-              command: this.recordPages[roomId]?.data.command || 'stop',
+              command: this.recordPages[roomId].data.command,
             },
           });
         } else {
@@ -193,6 +193,9 @@ class RecordVideo extends DB {
     }, 100000000);
     prom.then(async ({ cancelablePromise, recorder, intervaToClean }) => {
       this.pages[id]?.page.on('close', () => {
+        if (this.recordPages[id]?.data.command === 'stop') {
+          return;
+        }
         this.ws.sendMessage({
           type: MessageType.SET_RECORDING,
           id: userId,

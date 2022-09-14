@@ -9,7 +9,7 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { PrismaClient } from '@prisma/client';
-import { DBInterface, MessageType, SendMessageArgs } from '../types/interfaces';
+import { DBInterface } from '../types/interfaces';
 import { log } from '../utils/lib';
 
 const prisma = new PrismaClient();

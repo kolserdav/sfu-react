@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { VideoFull, VideoRecorderState } from '../types';
 import { SendMessageArgs, MessageType, LocaleDefault, LocaleValue } from '../types/interfaces';
 import { getTime } from '../utils/lib';
@@ -47,7 +47,17 @@ export const useVideoRecord = ({
   return { recordStartWrapper, buttonDisabled, setButtonDisabled };
 };
 
-export const useTimeRecord = () => {
+export const useTimeRecord = ({
+  buttonDisabled,
+  setButtonDisabled,
+  setSkip,
+  skip,
+}: {
+  buttonDisabled: boolean;
+  setButtonDisabled: React.Dispatch<React.SetStateAction<boolean>>;
+  setSkip: React.Dispatch<React.SetStateAction<number>>;
+  skip: number;
+}) => {
   const [time, setTime] = useState<string>('');
   const [started, setStarted] = useState<boolean>(false);
 
@@ -56,6 +66,16 @@ export const useTimeRecord = () => {
    */
   useEffect(() => {
     const { subscribe }: any = storeTimeRecord;
+    let timeout = setTimeout(() => {
+      /** */
+    }, 0);
+    /* TODO
+    const videoFindFirst = () => {
+      storeMessage.dispatch(changeMessage({
+        type: 'room'
+      }))
+    }
+    */
     const cleanSubs = subscribe(() => {
       const {
         message: {
@@ -72,12 +92,21 @@ export const useTimeRecord = () => {
       if (!_started && started) {
         setStarted(false);
       }
+      if (buttonDisabled) {
+        setButtonDisabled(false);
+      }
       setTime(getTime(new Date().getTime() - _time * 1000));
+      if (command === 'stop') {
+        timeout = setTimeout(() => {
+          //  TODO videoFindFirst();
+        }, 1000);
+      }
     });
     return () => {
       cleanSubs();
+      clearTimeout(timeout);
     };
-  }, [started]);
+  }, [started, buttonDisabled, setButtonDisabled, setSkip, skip]);
 
   return { time, started };
 };
@@ -94,9 +123,19 @@ export const useSettingsStyle = () => {
   return { settingsRef, settingStyle };
 };
 
-export const useSettings = () => {
+export const useSettings = ({
+  buttonDisabled,
+  setButtonDisabled,
+  skip,
+  setSkip,
+}: {
+  buttonDisabled: boolean;
+  setButtonDisabled: React.Dispatch<React.SetStateAction<boolean>>;
+  setSkip: React.Dispatch<React.SetStateAction<number>>;
+  skip: number;
+}) => {
   const { lang, changeLang } = useLang();
-  const { time, started } = useTimeRecord();
+  const { time, started } = useTimeRecord({ buttonDisabled, setButtonDisabled, skip, setSkip });
 
   return {
     time,
@@ -118,7 +157,6 @@ export const useRecordVideos = ({
     userId,
   });
   const { settingsRef, settingStyle } = useSettingsStyle();
-  const [take, setTake] = useState<number>(RECORDED_VIDEO_TAKE_DEFAULT);
   const [skip, setSkip] = useState<number>(0);
   const [count, setCount] = useState<number>(0);
   const [load, setLoad] = useState<boolean>(false);
@@ -131,6 +169,7 @@ export const useRecordVideos = ({
     if (!load) {
       return;
     }
+    console.log(skip, load);
     storeMessage.dispatch(
       changeMessage({
         message: {
@@ -144,8 +183,11 @@ export const useRecordVideos = ({
                 where: {
                   roomId: roomId.toString(),
                 },
+                orderBy: {
+                  created: 'desc',
+                },
                 skip,
-                take,
+                take: RECORDED_VIDEO_TAKE_DEFAULT,
               },
               userId,
               token: '',
@@ -154,7 +196,6 @@ export const useRecordVideos = ({
         },
       })
     );
-    // take is wrong
   }, [roomId, userId, skip, load]);
 
   /**
@@ -162,16 +203,17 @@ export const useRecordVideos = ({
    */
   useEffect(() => {
     const cleanSubs = storeVideos.subscribe(() => {
-      const { videos: _videos, count: _count, take: _take, skip: _skip } = storeVideos.getState();
-      setVideos(_videos);
-      setCount(_count);
-      setTake(_take);
-      setSkip(_skip);
+      const { videos: _videos, count: _count } = storeVideos.getState();
+      const __videos = videos.concat(_videos);
+      setTimeout(() => {
+        setVideos(__videos);
+        setCount(_count);
+      }, 0);
     });
     return () => {
       cleanSubs();
     };
-  }, []);
+  }, [videos, buttonDisabled, setButtonDisabled]);
 
   /**
    * Listen error on initial
@@ -188,38 +230,45 @@ export const useRecordVideos = ({
   return {
     recordStartWrapper,
     buttonDisabled,
+    setButtonDisabled,
     settingsRef,
     settingStyle,
     skip,
-    take,
     count,
     videos,
-    setButtonDisabled,
+    setSkip,
   };
 };
 
 export const usePlayVideo = ({
   server,
   port,
-  buttonDisabled,
-  setButtonDisabled,
+  roomId,
+  setSkip,
+  skip,
 }: {
   server: string;
   port: number;
-  buttonDisabled: boolean;
-  setButtonDisabled: React.Dispatch<React.SetStateAction<boolean>>;
+  roomId: string | number;
+  skip: number;
+  setSkip: React.Dispatch<React.SetStateAction<number>>;
 }) => {
   const [playedVideo, setPlayedVideo] = useState<string>('');
   const playVideoWrapper = (videoName: string) => () => {
-    setPlayedVideo(getVideoSrc({ port, server, name: videoName }));
-    if (buttonDisabled) {
-      setButtonDisabled(false);
-    }
+    setPlayedVideo(getVideoSrc({ port, server, name: videoName, roomId }));
   };
   const handleCloseVideo = () => {
     setPlayedVideo('');
-    setButtonDisabled(false);
   };
 
   return { playVideoWrapper, playedVideo, handleCloseVideo };
+};
+
+export const useDeleteVideo = () => {
+  const deleteVideoWrapper = (videoId: number) => () => {
+    /** */
+    console.log(videoId);
+  };
+
+  return { deleteVideoWrapper };
 };

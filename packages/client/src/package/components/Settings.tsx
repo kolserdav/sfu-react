@@ -9,29 +9,40 @@ import { LocaleSelector } from '../types/interfaces';
 import Select from './ui/Select';
 import s from './Settings.module.scss';
 import { SettingsProps } from '../types';
-import { useRecordVideos, useSettings, usePlayVideo } from './Settings.hooks';
+import { useRecordVideos, useSettings, usePlayVideo, useDeleteVideo } from './Settings.hooks';
 import PlayIcon from '../Icons/Play';
 import Video from './Video';
+import DeleteIcon from '../Icons/Delete';
 
 function Settings({ theme, open, locale, roomId, userId, isOwner, server, port }: SettingsProps) {
-  const { time, started, lang, changeLang } = useSettings();
   const {
     settingsRef,
     settingStyle,
     recordStartWrapper,
     buttonDisabled,
     videos,
+    setSkip,
+    skip,
     setButtonDisabled,
   } = useRecordVideos({
     roomId,
     userId,
   });
+  const { time, started, lang, changeLang } = useSettings({
+    buttonDisabled,
+    setButtonDisabled,
+    setSkip,
+    skip,
+  });
   const { playVideoWrapper, playedVideo, handleCloseVideo } = usePlayVideo({
     server,
     port,
-    buttonDisabled,
-    setButtonDisabled,
+    roomId,
+    setSkip,
+    skip,
   });
+
+  const { deleteVideoWrapper } = useDeleteVideo();
 
   return (
     <div
@@ -86,7 +97,10 @@ function Settings({ theme, open, locale, roomId, userId, isOwner, server, port }
               <div className={s.name}>{item.name}</div>
               <div className={s.actions}>
                 <IconButton onClick={playVideoWrapper(item.name)}>
-                  <PlayIcon color={theme?.colors.blue} />
+                  <PlayIcon width={20} height={20} color={theme?.colors.blue} />
+                </IconButton>
+                <IconButton onClick={deleteVideoWrapper(item.id)}>
+                  <DeleteIcon width={16} height={16} color={theme?.colors.red} />
                 </IconButton>
               </div>
             </div>

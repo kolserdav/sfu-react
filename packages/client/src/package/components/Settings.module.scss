@@ -98,4 +98,24 @@ $settings-item-padding: 1rem;
     justify-content: center;
     height: 100%;
   }
+
+  .actions {
+    display: flex;
+    flex-direction: row;
+  }
+}
+
+.record__button__started {
+  border-radius: 7px;
+}
+
+.text__button {
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+
+  .text__button__title {
+    display: table-cell;
+    vertical-align: middle;
+  }
 }

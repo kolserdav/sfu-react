@@ -70,17 +70,6 @@ $user-item-padding: 1rem;
   line-height: 1.6;
 }
 
-.text__button {
-  border-radius: 7px;
-  display: flex;
-  align-items: center;
-
-  .text__button__title {
-    display: table-cell;
-    vertical-align: middle;
-  }
-}
-
 .settings__button {
   z-index: 106;
   position: fixed;

@@ -53,7 +53,7 @@ import storeError, { changeError } from '../store/error';
 import storeClickDocument from '../store/clickDocument';
 import { getLocalStorage, LocalStorageName, setLocalStorage } from '../utils/localStorage';
 import storeUserList, { changeUserList } from '../store/userList';
-import storeMessage, { changeMessage } from '../store/message';
+import storeMessage from '../store/message';
 import storeTimeRecord, { changeTimeRecord } from '../store/timeRecord';
 import storeVideos, { changeVideos } from '../store/video';
 
@@ -1320,7 +1320,7 @@ export const useVideoStarted = ({
             _attempts[item.target] = 0;
           }
           if (_attempts[item.target] === 1) {
-            if (!played[item.target] && mounted) {
+            if (!played[item.target] && mounted && !checkIsRecord(item.target.toString())) {
               lostStreamHandler({ ...item, eventName: 'not-played' });
               log('warn', `Video not played ${item.target}`, {
                 target: item.target,
