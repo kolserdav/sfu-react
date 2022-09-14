@@ -3,7 +3,7 @@ import { VideoFull, VideoRecorderState } from '../types';
 import { SendMessageArgs, MessageType, LocaleDefault, LocaleValue } from '../types/interfaces';
 import { getTime } from '../utils/lib';
 import storeTimeRecord, { RootState } from '../store/timeRecord';
-import { videoRecordWrapper } from './Hall.lib';
+import { videoRecord } from './Hall.lib';
 import storeLocale, { changeLocale } from '../store/locale';
 import { getCookie, CookieName, setCookie } from '../utils/cookies';
 import { RECORDED_VIDEO_TAKE_DEFAULT } from '../utils/constants';
@@ -35,17 +35,16 @@ export const useVideoRecord = ({
   userId: string | number;
 }) => {
   const [buttonDisabled, setButtonDisabled] = useState<boolean>(false);
-  const recordStartHandler = (
-    command: SendMessageArgs<MessageType.GET_RECORD>['data']['command']
-  ) => {
-    if (command !== _command) {
-      _command = command;
-      setButtonDisabled(_command === 'start');
-    }
-    return videoRecordWrapper({ command, userId, roomId });
-  };
+  const recordStartWrapper =
+    (command: SendMessageArgs<MessageType.GET_RECORD>['data']['command']) => () => {
+      if (command !== _command) {
+        _command = command;
+        setButtonDisabled(_command === 'start');
+      }
+      return videoRecord({ command, userId, roomId });
+    };
 
-  return { recordStartHandler, buttonDisabled };
+  return { recordStartWrapper, buttonDisabled, setButtonDisabled };
 };
 
 export const useTimeRecord = () => {
@@ -114,7 +113,10 @@ export const useRecordVideos = ({
   roomId: string | number;
   userId: string | number;
 }) => {
-  const { recordStartHandler, buttonDisabled } = useVideoRecord({ roomId, userId });
+  const { recordStartWrapper, buttonDisabled, setButtonDisabled } = useVideoRecord({
+    roomId,
+    userId,
+  });
   const { settingsRef, settingStyle } = useSettingsStyle();
   const [take, setTake] = useState<number>(RECORDED_VIDEO_TAKE_DEFAULT);
   const [skip, setSkip] = useState<number>(0);
@@ -184,7 +186,7 @@ export const useRecordVideos = ({
   }, []);
 
   return {
-    recordStartHandler,
+    recordStartWrapper,
     buttonDisabled,
     settingsRef,
     settingStyle,
@@ -192,16 +194,32 @@ export const useRecordVideos = ({
     take,
     count,
     videos,
+    setButtonDisabled,
   };
 };
 
-export const usePlayVideo = ({ server, port }: { server: string; port: number }) => {
+export const usePlayVideo = ({
+  server,
+  port,
+  buttonDisabled,
+  setButtonDisabled,
+}: {
+  server: string;
+  port: number;
+  buttonDisabled: boolean;
+  setButtonDisabled: React.Dispatch<React.SetStateAction<boolean>>;
+}) => {
   const [playedVideo, setPlayedVideo] = useState<string>('');
   const playVideoWrapper = (videoName: string) => () => {
     setPlayedVideo(getVideoSrc({ port, server, name: videoName }));
+    if (buttonDisabled) {
+      setButtonDisabled(false);
+    }
   };
   const handleCloseVideo = () => {
     setPlayedVideo('');
+    setButtonDisabled(false);
   };
+
   return { playVideoWrapper, playedVideo, handleCloseVideo };
 };

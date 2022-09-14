@@ -10,32 +10,29 @@ export const changeThemeHandler = () => {
   setLocalStorage(LocalStorageName.THEME, theme === 'dark' ? 'light' : 'dark');
 };
 
-export const videoRecordWrapper =
-  ({
-    command,
-    roomId,
-    userId,
-  }: {
-    command: keyof typeof RecordCommand;
-    roomId: string | number;
-    userId: string | number;
-  }) =>
-  (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    console.log(command);
-    storeMessage.dispatch(
-      changeMessage<MessageType.GET_RECORD>({
-        message: {
-          type: 'room',
-          value: {
-            type: MessageType.GET_RECORD,
-            connId: '',
-            id: roomId,
-            data: {
-              command,
-              userId,
-            },
+export const videoRecord = ({
+  command,
+  roomId,
+  userId,
+}: {
+  command: keyof typeof RecordCommand;
+  roomId: string | number;
+  userId: string | number;
+}) => {
+  storeMessage.dispatch(
+    changeMessage<MessageType.GET_RECORD>({
+      message: {
+        type: 'room',
+        value: {
+          type: MessageType.GET_RECORD,
+          connId: '',
+          id: roomId,
+          data: {
+            command,
+            userId,
           },
         },
-      })
-    );
-  };
+      },
+    })
+  );
+};

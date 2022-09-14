@@ -15,32 +15,39 @@ import Video from './Video';
 
 function Settings({ theme, open, locale, roomId, userId, isOwner, server, port }: SettingsProps) {
   const { time, started, lang, changeLang } = useSettings();
-  const { settingsRef, settingStyle, recordStartHandler, buttonDisabled, videos } = useRecordVideos(
-    {
-      roomId,
-      userId,
-    }
-  );
-  const { playVideoWrapper, playedVideo, handleCloseVideo } = usePlayVideo({ server, port });
+  const {
+    settingsRef,
+    settingStyle,
+    recordStartWrapper,
+    buttonDisabled,
+    videos,
+    setButtonDisabled,
+  } = useRecordVideos({
+    roomId,
+    userId,
+  });
+  const { playVideoWrapper, playedVideo, handleCloseVideo } = usePlayVideo({
+    server,
+    port,
+    buttonDisabled,
+    setButtonDisabled,
+  });
 
   return (
     <div
       style={{ background: theme?.colors.paper }}
-      className={clsx(s.settings, open ? s.open : '')}
+      className={clsx(s.wrapper, open ? s.open : '')}
     >
-      <div
-        className={s.settings__item}
-        style={{ boxShadow: `1px 3px 1px ${theme?.colors.active}` }}
-      >
-        <h5 className={s.settings__item__title}>{locale.generalSettings}</h5>
+      <div className={s.item} style={{ boxShadow: `1px 3px 1px ${theme?.colors.active}` }}>
+        <h5 className={s.item__title}>{locale.generalSettings}</h5>
 
         <Select theme={theme} onChange={changeLang} value={lang} title={locale.changeLang}>
           {LocaleSelector}
         </Select>
 
-        <div className={s.settings__item__row}>
-          <h6 className={s.settings__item__title}>{locale.darkTheme}</h6>
-          <div className={s.settings__item__actions}>
+        <div className={s.item__row}>
+          <h6 className={s.item__title}>{locale.darkTheme}</h6>
+          <div className={s.item__actions}>
             <IconButton onClick={changeThemeHandler} title={locale.changeTheme}>
               <ThemeIcon color={theme?.colors.text} />
             </IconButton>
@@ -48,18 +55,18 @@ function Settings({ theme, open, locale, roomId, userId, isOwner, server, port }
         </div>
       </div>
       <div
-        className={s.settings__item}
+        className={s.item}
         ref={settingsRef}
         style={settingStyle ? { boxShadow: `1px 3px 1px ${theme?.colors.active}` } : {}}
       >
-        <h5 className={s.settings__item__title}>{locale.recordActions}</h5>
-        <div className={s.settings__item__row}>
-          <h6 className={s.settings__item__title}>{locale.recordVideo}</h6>
-          <div className={s.settings__item__actions}>
+        <h5 className={s.item__title}>{locale.recordActions}</h5>
+        <div className={s.item__row}>
+          <h6 className={s.item__title}>{locale.recordVideo}</h6>
+          <div className={s.item__actions}>
             <IconButton
               title={started ? locale.stopRecord : locale.startRecord}
               className={started ? s.text__button : ''}
-              onClick={recordStartHandler(started ? 'stop' : 'start')}
+              onClick={recordStartWrapper(started ? 'stop' : 'start')}
               disabled={!isOwner || buttonDisabled}
             >
               <div className={s.record}>

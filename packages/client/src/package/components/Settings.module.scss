@@ -3,7 +3,7 @@
 $border-width: 2px;
 $settings-item-padding: 1rem;
 
-.settings {
+.wrapper {
   position: relative;
   max-width: calc(20% + #{$settings-item-padding} * 2);
   margin-left: $settings-item-padding;
@@ -37,7 +37,7 @@ $settings-item-padding: 1rem;
     height: 0;
   }
 
-  .settings__item {
+  .item {
     position: relative;
     width: 100%;
     height: calc(100% - 4px);
@@ -46,17 +46,28 @@ $settings-item-padding: 1rem;
     flex-direction: column;
     align-items: flex-start;
 
-    .settings__item__title {
+    .item__title {
       text-align: center;
     }
 
-    .settings__item__actions {
+    .item__actions {
       position: relative;
       display: block;
       margin-right: $settings-item-padding;
+
+      .record {
+        display: flex;
+        align-items: center;
+      }
+
+      .time {
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+      }
     }
 
-    .settings__item__row {
+    .item__row {
       display: flex;
       flex-direction: row;
       width: 100%;

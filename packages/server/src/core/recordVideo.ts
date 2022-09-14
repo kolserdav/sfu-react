@@ -12,6 +12,7 @@ import puppeteer from 'puppeteer';
 import { CancelablePromise } from 'cancelable-promise';
 import FFmpeg from 'fluent-ffmpeg';
 import path from 'path';
+import fs from 'fs';
 import { PassThrough } from 'stream';
 import { PuppeteerScreenRecorder } from 'puppeteer-screen-recorder';
 import { HEADLESS, VIEWPORT, APP_URL } from '../utils/constants';
@@ -76,7 +77,11 @@ class RecordVideo extends DB {
     await page.waitForSelector('video');
     const stream = new PassThrough();
     await recorder.startStream(stream);
-    const destination = path.resolve(__dirname, `../../rec/${roomId}-${iat}.mp4`);
+    const roomVideoDir = path.resolve(__dirname, `../../rec/${roomId}`);
+    if (!fs.existsSync(roomVideoDir)) {
+      fs.mkdirSync(roomVideoDir);
+    }
+    const destination = `${roomVideoDir}/${iat}.mp4`;
     new FFmpeg().addInput(stream).saveToFile(destination);
     let intervaToClean = setInterval(() => {
       /** */
@@ -107,16 +112,6 @@ class RecordVideo extends DB {
           log('warn', 'Page of room not found', { time, roomId });
         }
       }, 1000);
-      page.on('console', (_message) => {
-        const message = _message.text();
-        console.log(message);
-      });
-      page.evaluate(() => {
-        setInterval(() => {
-          const videos = document.querySelectorAll('video');
-          console.log(JSON.stringify({ length: videos.length }));
-        }, 1000);
-      });
     });
     return { page, recorder, cancelablePromise, intervaToClean };
   }
@@ -188,6 +183,7 @@ class RecordVideo extends DB {
       connId,
       type: MessageType.SET_RECORDING,
     };
+    console.log(command);
     if (command !== 'start') {
       return;
     }
