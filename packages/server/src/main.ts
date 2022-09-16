@@ -31,7 +31,6 @@ export const prisma = new PrismaClient();
 const db = new DB();
 const chat = new Chat();
 const settings = new Settings();
-const recordVideo = new RecordVideo({ settings });
 
 process.on('uncaughtException', (err: Error) => {
   log('error', 'uncaughtException', err);
@@ -63,11 +62,12 @@ export function createServer(
   },
   cb?: ServerCallback
 ) {
+  const wss = new WS({ port, db }, cb);
+  const rtc: RTC | null = new RTC({ ws: wss, db });
+  const recordVideo = new RecordVideo({ settings, rtc });
   settings.checkTokenCb = checkTokenCb || settings.checkTokenCb;
   chat.checkTokenCb = checkTokenCb || chat.checkTokenCb;
   recordVideo.checkTokenCb = checkTokenCb || recordVideo.checkTokenCb;
-  const wss = new WS({ port, db }, cb);
-  const rtc: RTC | null = new RTC({ ws: wss, db });
   const getConnectionId = (): string => {
     const connId = v4();
     if (wss.sockets[connId]) {

@@ -9,21 +9,21 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import puppeteer from 'puppeteer';
+import * as werift from 'werift';
 import { CancelablePromise } from 'cancelable-promise';
 import FFmpeg from 'fluent-ffmpeg';
 import path from 'path';
 import fs from 'fs';
 import { PassThrough } from 'stream';
 import { PuppeteerScreenRecorder } from 'puppeteer-screen-recorder';
+import { v4 } from 'uuid';
 import { HEADLESS, VIEWPORT, APP_URL } from '../utils/constants';
-import { ErrorCode, MessageType, SendMessageArgs } from '../types/interfaces';
+import { ErrorCode, MessageType, SendMessageArgs, RECORD_VIDEO_NAME } from '../types/interfaces';
 import DB from '../core/db';
 import { getLocale, log } from '../utils/lib';
 import Settings from './settings';
-/**
- * @see
- * TODO need refactor
- */
+import RTC from '../core/rtc';
+
 class RecordVideo extends DB {
   public recordPages: Record<string, SendMessageArgs<MessageType.SET_RECORDING>> = {};
 
@@ -32,9 +32,12 @@ class RecordVideo extends DB {
 
   public settings: Settings;
 
-  constructor({ settings: _settings }: { settings: Settings }) {
+  private rtc: RTC;
+
+  constructor({ settings: _settings, rtc: _rtc }: { settings: Settings; rtc: RTC }) {
     super();
     this.settings = _settings;
+    this.rtc = _rtc;
   }
 
   async startRecord({
@@ -68,7 +71,9 @@ class RecordVideo extends DB {
       };
     }
     await page.setViewport(VIEWPORT);
-    await page.goto(`${APP_URL}/${roomId}?uid=record-${new Date().getTime()}&record=1`);
+    await page.goto(
+      `${APP_URL}/${roomId}?uid=${RECORD_VIDEO_NAME}-${new Date().getTime()}&${RECORD_VIDEO_NAME}=1`
+    );
     const recorder = new PuppeteerScreenRecorder(page, {
       followNewTab: true,
       fps: 25,
@@ -85,7 +90,10 @@ class RecordVideo extends DB {
       fs.mkdirSync(roomVideoDir);
     }
     const destination = `${roomVideoDir}/${iat}.mp4`;
-    new FFmpeg().addInput(stream).saveToFile(destination);
+
+    const soundStream = await this.getSoundStream({ roomId });
+
+    /// new FFmpeg().addInput(stream).addInput(soundStream).saveToFile(destination);
     let intervaToClean = setInterval(() => {
       /** */
     }, 10000000);
@@ -120,6 +128,24 @@ class RecordVideo extends DB {
       }, 1000);
     });
     return { page, recorder, cancelablePromise, intervaToClean };
+  }
+
+  private async getSoundStream({ roomId }: { roomId: string | number }) {
+    const keys = this.rtc.getKeysStreams(roomId);
+    const mediaRecorders = keys.map((item) => {
+      const id = v4();
+      const audio = this.rtc.streams[roomId][item].find((_item) => _item.kind === 'audio');
+      const mediaRecorder = new werift.MediaRecorder(
+        this.rtc.streams[roomId][item],
+        path.resolve(__dirname, `../../rec/mr-${id}.webm`)
+      );
+      mediaRecorder.start();
+      return mediaRecorder;
+    });
+    console.log(mediaRecorders);
+    await setTimeout(() => {
+      /** */
+    }, 5000);
   }
 
   private closeVideoRecord({
