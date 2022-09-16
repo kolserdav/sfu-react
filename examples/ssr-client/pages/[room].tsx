@@ -16,7 +16,7 @@ function Room() {
     <div>
       {checkRouterIsLoad(router) && (
         <Uyem
-          // Required props *}
+          // Required props 
           userId={router.asPath.replace(/.+\?uid=/, '') || '0'}
           // Optional props
           server="localhost"

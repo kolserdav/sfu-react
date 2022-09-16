@@ -17,30 +17,24 @@ import { PassThrough } from 'stream';
 import { PuppeteerScreenRecorder } from 'puppeteer-screen-recorder';
 import { HEADLESS, VIEWPORT, APP_URL } from '../utils/constants';
 import { ErrorCode, MessageType, SendMessageArgs } from '../types/interfaces';
-import WS from '../core/ws';
 import DB from '../core/db';
 import { getLocale, log } from '../utils/lib';
+import Settings from './settings';
 /**
  * @see
  * TODO need refactor
  */
-class RecordVideo {
+class RecordVideo extends DB {
   public recordPages: Record<string, SendMessageArgs<MessageType.SET_RECORDING>> = {};
 
   public pages: Record<string, { page: puppeteer.Page; browser: puppeteer.Browser; time: number }> =
     {};
 
-  public ws: WS;
+  public settings: Settings;
 
-  /**
-   * @deprecated
-   * move db
-   */
-  private db: DB;
-
-  constructor({ ws: _ws, db: _db }: { ws: WS; db: DB }) {
-    this.ws = _ws;
-    this.db = _db;
+  constructor({ settings: _settings }: { settings: Settings }) {
+    super();
+    this.settings = _settings;
   }
 
   async startRecord({
@@ -95,7 +89,7 @@ class RecordVideo {
     let intervaToClean = setInterval(() => {
       /** */
     }, 10000000);
-    this.db.videoCreate({
+    this.videoCreate({
       data: {
         name: `${iat}.mp4`,
         roomId: roomId.toString(),
@@ -108,14 +102,17 @@ class RecordVideo {
         time++;
         if (this.pages[roomId]) {
           this.pages[roomId].time = time;
-          this.ws.sendMessage({
-            type: MessageType.SET_RECORDING,
-            id: userId,
-            connId: '',
-            data: {
-              time,
-              command: this.recordPages[roomId].data.command,
+          this.settings.sendMessage({
+            msg: {
+              type: MessageType.SET_RECORDING,
+              id: userId,
+              connId: '',
+              data: {
+                time,
+                command: this.recordPages[roomId].data.command,
+              },
             },
+            roomId,
           });
         } else {
           log('warn', 'Page of room not found', { time, roomId });
@@ -145,21 +142,24 @@ class RecordVideo {
       connId,
       data: { userId },
     } = args;
-    const locale = getLocale(this.ws.users[userId].locale).server;
+    const locale = getLocale(this.settings.users[id][userId].locale).server;
     clearInterval(interval);
     recorder.stop();
     clearInterval(intervaToClean);
-    this.ws.sendMessage({
-      type: MessageType.SET_ERROR,
-      id: userId,
-      connId,
-      data: {
-        type: 'info',
-        code: ErrorCode.videoRecordStop,
-        message: locale.videoRecordStop,
+    this.settings.sendMessage({
+      msg: {
+        type: MessageType.SET_ERROR,
+        id: userId,
+        connId,
+        data: {
+          type: 'info',
+          code: ErrorCode.videoRecordStop,
+          message: locale.videoRecordStop,
+        },
       },
+      roomId: id,
     });
-    this.db.videoUpdateTime({ roomId: id, time });
+    this.videoUpdateTime({ roomId: id, time });
     if (this.pages[id]) {
       log('info', 'Record page was closed', { id });
       this.pages[id].page
@@ -192,7 +192,6 @@ class RecordVideo {
       connId,
       type: MessageType.SET_RECORDING,
     };
-    console.log(command);
     if (command !== 'start') {
       return;
     }
@@ -205,14 +204,17 @@ class RecordVideo {
         if (this.recordPages[id]?.data.command === 'stop') {
           return;
         }
-        this.ws.sendMessage({
-          type: MessageType.SET_RECORDING,
-          id: userId,
-          connId,
-          data: {
-            time: this.pages[id].time,
-            command: 'stop',
+        this.settings.sendMessage({
+          msg: {
+            type: MessageType.SET_RECORDING,
+            id: userId,
+            connId,
+            data: {
+              time: this.pages[id].time,
+              command: 'stop',
+            },
           },
+          roomId: id,
         });
         this.closeVideoRecord({
           cancelablePromise,

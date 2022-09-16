@@ -42,17 +42,15 @@ export const useVideoRecord = ({
         _command = command;
         setButtonDisabled(_command === 'start');
       }
-      return () => {
-        ws.sendMessage({
-          type: MessageType.GET_RECORD,
-          connId: '',
-          id: roomId,
-          data: {
-            command,
-            userId,
-          },
-        });
-      };
+      ws.sendMessage({
+        type: MessageType.GET_RECORD,
+        connId: '',
+        id: roomId,
+        data: {
+          command,
+          userId,
+        },
+      });
     };
 
   return { recordStartWrapper };
