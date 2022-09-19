@@ -30,7 +30,7 @@ class Settings extends DB implements ConnectorInterface {
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public sendMessage: ConnectorInterface['sendMessage'] = ({ msg, roomId }) => {
+  public sendMessage: ConnectorInterface['sendMessage'] = ({ msg, roomId }, cb) => {
     const { id } = msg;
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -45,7 +45,7 @@ class Settings extends DB implements ConnectorInterface {
           log('error', 'Settings user not found', { roomId, id });
           resolve(1);
         }
-        this.users[roomId][id].ws.send(res);
+        this.users[roomId][id].ws.send(res, cb);
         resolve(0);
       }, 0);
     });

@@ -35,6 +35,8 @@ class RecordVideo extends DB {
 
   public settings: Settings;
 
+  private passTroughs: Record<string, PassThrough> = {};
+
   private rtc: RTC;
 
   constructor({ settings: _settings, rtc: _rtc }: { settings: Settings; rtc: RTC }) {
@@ -86,8 +88,8 @@ class RecordVideo extends DB {
     });
     const iat = new Date().getTime();
     await page.waitForSelector('video');
-    const stream = new PassThrough();
-    await recorder.startStream(stream);
+    this.passTroughs[roomId] = new PassThrough();
+    await recorder.startStream(this.passTroughs[roomId]);
     const roomVideoDir = path.resolve(__dirname, `../../rec/${roomId}`);
     if (!fs.existsSync(roomVideoDir)) {
       fs.mkdirSync(roomVideoDir);
@@ -96,7 +98,10 @@ class RecordVideo extends DB {
 
     this.mediaRecorders[roomId] = await this.getSoundStream({ roomId });
     new FFmpeg()
-      .input(stream)
+      .input(this.passTroughs[roomId])
+      .on('end', (d) => {
+        console.log('end', d);
+      })
       .input(this.mediaRecorders[roomId][0].path, {
         frames: NaN,
         currentFps: NaN,
@@ -105,6 +110,7 @@ class RecordVideo extends DB {
         timemark: '00:00:00.00',
       })
       .saveToFile(destination);
+
     let intervaToClean = setInterval(() => {
       /** */
     }, 10000000);
@@ -121,18 +127,26 @@ class RecordVideo extends DB {
         time++;
         if (this.pages[roomId]) {
           this.pages[roomId].time = time;
-          this.settings.sendMessage({
-            msg: {
-              type: MessageType.SET_RECORDING,
-              id: userId,
-              connId: '',
-              data: {
-                time,
-                command: this.recordPages[roomId].data.command,
+          const { command } = this.recordPages[roomId].data;
+          this.settings.sendMessage(
+            {
+              msg: {
+                type: MessageType.SET_RECORDING,
+                id: userId,
+                connId: '',
+                data: {
+                  time,
+                  command,
+                },
               },
+              roomId,
             },
-            roomId,
-          });
+            () => {
+              if (command === 'stop') {
+                clearInterval(intervaToClean);
+              }
+            }
+          );
         } else {
           log('warn', 'Page of room not found', { time, roomId });
         }
@@ -149,7 +163,7 @@ class RecordVideo extends DB {
     return keys.map((item) => {
       const id = v4();
       const audio = this.rtc.streams[roomId][item].find((_item) => _item.kind === 'audio');
-      const _path = path.resolve(__dirname, `../../rec/mr-${id}.webm`);
+      const _path = path.resolve(__dirname, `../../rec/${roomId}-${id}.webm`);
       const mediaRecorder = new werift.MediaRecorder([audio], _path, { width: 1, height: 1 });
       mediaRecorder.start();
       return {
@@ -159,19 +173,17 @@ class RecordVideo extends DB {
     });
   }
 
-  private closeVideoRecord({
+  private async closeVideoRecord({
     cancelablePromise,
-    recorder,
     interval,
-    intervaToClean,
     args,
+    recorder,
     time,
     roomId,
   }: {
     cancelablePromise: CancelablePromise<string>;
-    recorder: PuppeteerScreenRecorder;
     interval: NodeJS.Timeout;
-    intervaToClean: NodeJS.Timeout;
+    recorder: PuppeteerScreenRecorder;
     args: SendMessageArgs<MessageType.GET_RECORD>;
     time: number;
     roomId: string | number;
@@ -183,8 +195,13 @@ class RecordVideo extends DB {
     } = args;
     const locale = getLocale(this.settings.users[id][userId].locale).server;
     clearInterval(interval);
-    recorder.stop();
-    clearInterval(intervaToClean);
+    await recorder.stop();
+    const keys = Object.keys(this.mediaRecorders[roomId]);
+    for (let i = 0; keys[i]; i++) {
+      const item = this.mediaRecorders[roomId][i];
+      // eslint-disable-next-line no-await-in-loop
+      await item.mediaRecorder.stop();
+    }
     this.settings.sendMessage({
       msg: {
         type: MessageType.SET_ERROR,
@@ -213,10 +230,6 @@ class RecordVideo extends DB {
           delete this.pages[id];
         });
     }
-    this.mediaRecorders[roomId].forEach((item) => {
-      item.mediaRecorder.stop();
-    });
-    delete this.mediaRecorders[roomId];
     cancelablePromise.cancel();
   }
 
@@ -261,12 +274,11 @@ class RecordVideo extends DB {
         });
         this.closeVideoRecord({
           cancelablePromise,
-          recorder,
-          intervaToClean,
           interval,
           time: this.pages[id].time,
           args,
           roomId: id,
+          recorder,
         });
       });
       await new Promise((resolve) => {
@@ -278,12 +290,11 @@ class RecordVideo extends DB {
             case 'stop':
               this.closeVideoRecord({
                 cancelablePromise,
-                recorder,
-                intervaToClean,
                 interval,
                 time,
                 args,
                 roomId: id,
+                recorder,
               });
               resolve(0);
               break;

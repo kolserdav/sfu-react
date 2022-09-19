@@ -125,7 +125,7 @@ export const useMessages = ({
    * Handle messages
    */
   useEffect(() => {
-    let timeout = setTimeout(() => {
+    const timeout = setTimeout(() => {
       /** */
     }, 0);
     const setErrorHandler = ({
@@ -167,7 +167,7 @@ export const useMessages = ({
       }
       setTime(getTime(new Date().getTime() - _time * 1000));
       if (command === 'stop') {
-        timeout = setTimeout(() => {
+        setTimeout(() => {
           ws.sendMessage({
             id: roomId,
             connId,
@@ -185,7 +185,8 @@ export const useMessages = ({
               },
             },
           });
-        }, 1000);
+          // TODO check event
+        }, 3000);
       }
     };
 

@@ -19,10 +19,13 @@ export abstract class ConnectorInterface extends DB {
     connId: string;
   }): void;
 
-  public abstract sendMessage<T extends keyof typeof MessageType>(args: {
-    msg: SendMessageArgs<T>;
-    roomId: string | number;
-  }): void;
+  public abstract sendMessage<T extends keyof typeof MessageType>(
+    args: {
+      msg: SendMessageArgs<T>;
+      roomId: string | number;
+    },
+    cb?: () => void
+  ): void;
 
   public abstract cleanUnit(args: { roomId: string | number; userId: string | number }): void;
 }
