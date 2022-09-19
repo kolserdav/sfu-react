@@ -966,7 +966,7 @@ const analyzer: Record<string, AnalyserNode[]> = {};
 const freqs: Record<string, Uint8Array[]> = {};
 const audioLevels: Record<string, number> = {};
 
-export const useAudioAnalyzer = ({ userId }: { userId: string | number }) => {
+export const useAudioAnalyzer = () => {
   const [speaker, setSpeaker] = useState<string | number>(0);
   const createAudioAnalyzer = (item: Stream) => {
     const audioContext = new AudioContext();
@@ -975,7 +975,6 @@ export const useAudioAnalyzer = ({ userId }: { userId: string | number }) => {
     const audioChannelSplitter = audioContext.createChannelSplitter(audioSource.channelCount);
     audioSource.connect(audioGain);
     audioGain.connect(audioChannelSplitter);
-    audioGain.connect(audioContext.destination);
     analyzer[item.target] = [];
     freqs[item.target] = [];
     for (let i = 0; i < audioSource.channelCount; i++) {
@@ -986,9 +985,6 @@ export const useAudioAnalyzer = ({ userId }: { userId: string | number }) => {
       analyzer[item.target][i].fftSize = 32;
       freqs[item.target][i] = new Uint8Array(analyzer[item.target][i].frequencyBinCount);
       audioChannelSplitter.connect(analyzer[item.target][i], i, 0);
-    }
-    if (item.target === userId) {
-      audioGain.gain.value = 0;
     }
   };
 

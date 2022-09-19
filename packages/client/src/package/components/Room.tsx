@@ -52,9 +52,8 @@ import PseudoButton from './ui/PseudoButton';
 function Room({ userId, iceServers, server, port, roomId, locale, name, theme }: RoomProps) {
   const container = useRef<HTMLDivElement>(null);
   const roomLink = useMemo(() => getRoomLink(roomId), [roomId]);
-  const { createAudioAnalyzer, analyzeSoundLevel, cleanAudioAnalyzer, speaker } = useAudioAnalyzer({
-    userId,
-  });
+  const { createAudioAnalyzer, analyzeSoundLevel, cleanAudioAnalyzer, speaker } =
+    useAudioAnalyzer();
   const {
     dialogSettings,
     clickToSettingsWrapper,
