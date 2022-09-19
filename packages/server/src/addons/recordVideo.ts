@@ -30,6 +30,9 @@ class RecordVideo extends DB {
   public pages: Record<string, { page: puppeteer.Page; browser: puppeteer.Browser; time: number }> =
     {};
 
+  public mediaRecorders: Record<string, { path: string; mediaRecorder: werift.MediaRecorder }[]> =
+    {};
+
   public settings: Settings;
 
   private rtc: RTC;
@@ -91,7 +94,7 @@ class RecordVideo extends DB {
     }
     const destination = `${roomVideoDir}/${iat}.mp4`;
 
-    const soundStream = await this.getSoundStream({ roomId });
+    this.mediaRecorders[roomId] = await this.getSoundStream({ roomId });
 
     /// new FFmpeg().addInput(stream).addInput(soundStream).saveToFile(destination);
     let intervaToClean = setInterval(() => {
@@ -131,21 +134,21 @@ class RecordVideo extends DB {
   }
 
   private async getSoundStream({ roomId }: { roomId: string | number }) {
-    const keys = this.rtc.getKeysStreams(roomId);
-    const mediaRecorders = keys.map((item) => {
+    const keys = this.rtc.getKeysStreams(roomId).filter((item) => {
+      const peer = item.split(this.rtc.delimiter);
+      return !new RegExp(`^${RECORD_VIDEO_NAME}`).test(peer[1]);
+    });
+    return keys.map((item) => {
       const id = v4();
       const audio = this.rtc.streams[roomId][item].find((_item) => _item.kind === 'audio');
-      const mediaRecorder = new werift.MediaRecorder(
-        this.rtc.streams[roomId][item],
-        path.resolve(__dirname, `../../rec/mr-${id}.webm`)
-      );
+      const _path = path.resolve(__dirname, `../../rec/mr-${id}.webm`);
+      const mediaRecorder = new werift.MediaRecorder([audio], _path, { width: 1, height: 1 });
       mediaRecorder.start();
-      return mediaRecorder;
+      return {
+        path: _path,
+        mediaRecorder,
+      };
     });
-    console.log(mediaRecorders);
-    await setTimeout(() => {
-      /** */
-    }, 5000);
   }
 
   private closeVideoRecord({
@@ -155,6 +158,7 @@ class RecordVideo extends DB {
     intervaToClean,
     args,
     time,
+    roomId,
   }: {
     cancelablePromise: CancelablePromise<string>;
     recorder: PuppeteerScreenRecorder;
@@ -162,6 +166,7 @@ class RecordVideo extends DB {
     intervaToClean: NodeJS.Timeout;
     args: SendMessageArgs<MessageType.GET_RECORD>;
     time: number;
+    roomId: string | number;
   }) {
     const {
       id,
@@ -200,6 +205,10 @@ class RecordVideo extends DB {
           delete this.pages[id];
         });
     }
+    this.mediaRecorders[roomId].forEach((item) => {
+      item.mediaRecorder.stop();
+    });
+    delete this.mediaRecorders[roomId];
     cancelablePromise.cancel();
   }
 
@@ -249,6 +258,7 @@ class RecordVideo extends DB {
           interval,
           time: this.pages[id].time,
           args,
+          roomId: id,
         });
       });
       await new Promise((resolve) => {
@@ -265,6 +275,7 @@ class RecordVideo extends DB {
                 interval,
                 time,
                 args,
+                roomId: id,
               });
               resolve(0);
               break;

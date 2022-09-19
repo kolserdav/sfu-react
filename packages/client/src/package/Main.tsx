@@ -42,7 +42,7 @@ function Main({
           userId={userId}
           server={server}
           colors={colors}
-          theme={!theme ? theme : undefined}
+          theme={theme}
           roomId={roomId}
           locale={locale}
         />

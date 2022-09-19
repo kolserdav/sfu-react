@@ -54,7 +54,6 @@ import storeClickDocument from '../store/clickDocument';
 import { getLocalStorage, LocalStorageName, setLocalStorage } from '../utils/localStorage';
 import storeUserList, { changeUserList } from '../store/userList';
 import storeMessage from '../store/message';
-import storeTimeRecord, { changeTimeRecord } from '../store/timeRecord';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -967,7 +966,7 @@ const analyzer: Record<string, AnalyserNode[]> = {};
 const freqs: Record<string, Uint8Array[]> = {};
 const audioLevels: Record<string, number> = {};
 
-export const useAudioAnalyzer = () => {
+export const useAudioAnalyzer = ({ userId }: { userId: string | number }) => {
   const [speaker, setSpeaker] = useState<string | number>(0);
   const createAudioAnalyzer = (item: Stream) => {
     const audioContext = new AudioContext();
@@ -987,6 +986,9 @@ export const useAudioAnalyzer = () => {
       analyzer[item.target][i].fftSize = 32;
       freqs[item.target][i] = new Uint8Array(analyzer[item.target][i].frequencyBinCount);
       audioChannelSplitter.connect(analyzer[item.target][i], i, 0);
+    }
+    if (item.target === userId) {
+      audioGain.gain.value = 0;
     }
   };
 
