@@ -95,8 +95,16 @@ class RecordVideo extends DB {
     const destination = `${roomVideoDir}/${iat}.mp4`;
 
     this.mediaRecorders[roomId] = await this.getSoundStream({ roomId });
-
-    /// new FFmpeg().addInput(stream).addInput(soundStream).saveToFile(destination);
+    new FFmpeg()
+      .input(stream)
+      .input(this.mediaRecorders[roomId][0].path, {
+        frames: NaN,
+        currentFps: NaN,
+        currentKbps: NaN,
+        targetSize: 0,
+        timemark: '00:00:00.00',
+      })
+      .saveToFile(destination);
     let intervaToClean = setInterval(() => {
       /** */
     }, 10000000);

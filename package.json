@@ -88,6 +88,7 @@
     "clsx": "^1.1.1",
     "dotenv": "^16.0.1",
     "fluent-ffmpeg": "^2.1.2",
+    "fluent-ffmpeg-multistream": "^1.0.0",
     "pem": "^1.14.6",
     "puppeteer": "^15.3.2",
     "puppeteer-screen-recorder": "^2.0.2",
