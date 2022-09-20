@@ -9,6 +9,7 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import puppeteer from 'puppeteer';
+import { spawn } from 'child_process';
 import * as werift from 'werift';
 import { CancelablePromise } from 'cancelable-promise';
 import FFmpeg from 'fluent-ffmpeg';
@@ -94,9 +95,27 @@ class RecordVideo extends DB {
     if (!fs.existsSync(roomVideoDir)) {
       fs.mkdirSync(roomVideoDir);
     }
+    const videoStreamPath = path.resolve(__dirname, `../../rec/pt.flv`);
+    const stream = fs.createReadStream(videoStreamPath);
+    stream.pipe(this.passTroughs[roomId]);
+    this.passTroughs[roomId].on('data', (d) => {
+      console.log(1, d.toString());
+    });
     const destination = `${roomVideoDir}/${iat}.mp4`;
-
-    this.mediaRecorders[roomId] = await this.getSoundStream({ roomId });
+    this.mediaRecorders[roomId] = await this.getSoundStreams({ roomId });
+    /*
+    const ffmpeg = spawn('ffmpeg', ['-i', videoStreamPath, destination]);
+    ffmpeg.stdout.on('data', (d) => {
+      // console.log(1, d.toString());
+    });
+    ffmpeg.stderr.on('data', (d) => {
+      console.log(2, d.toString());
+    });
+    ffmpeg.on('exit', (d) => {
+      console.log(3, d.toString());
+    });
+    */
+    /*
     new FFmpeg()
       .input(this.passTroughs[roomId])
       .on('end', (d) => {
@@ -110,7 +129,7 @@ class RecordVideo extends DB {
         timemark: '00:00:00.00',
       })
       .saveToFile(destination);
-
+    */
     let intervaToClean = setInterval(() => {
       /** */
     }, 10000000);
@@ -155,7 +174,7 @@ class RecordVideo extends DB {
     return { page, recorder, cancelablePromise, intervaToClean };
   }
 
-  private async getSoundStream({ roomId }: { roomId: string | number }) {
+  private async getSoundStreams({ roomId }: { roomId: string | number }) {
     const keys = this.rtc.getKeysStreams(roomId).filter((item) => {
       const peer = item.split(this.rtc.delimiter);
       return !new RegExp(`^${RECORD_VIDEO_NAME}`).test(peer[1]);
