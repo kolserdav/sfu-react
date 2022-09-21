@@ -45,7 +45,6 @@ export function createServer(
   {
     port = PORT,
     cors = CORS,
-    db: dbArg,
     onRoomOpen,
     onRoomClose,
     onRoomConnect,
@@ -54,7 +53,6 @@ export function createServer(
   }: {
     port?: number;
     cors?: string;
-    db?: string;
     onRoomOpen?: OnRoomOpen;
     // eslint-disable-next-line no-unused-vars
     onRoomClose?: (args: { roomId: string | number }) => void;
@@ -64,12 +62,6 @@ export function createServer(
   },
   cb?: ServerCallback
 ) {
-  if (dbArg) {
-    process.env.DATABASE_URL = dbArg;
-    log('info', 'Use database url', dbArg, true);
-  } else {
-    log('warn', 'Use default DATABASE_URL', process.env.DATABASE_URL);
-  }
   const wss = new WS({ port, db }, cb);
   const rtc: RTC | null = new RTC({ ws: wss, db });
   const recordVideo = new RecordVideo({ settings, rtc });
@@ -345,6 +337,7 @@ export function createServer(
 }
 
 if (require.main === module) {
+  log('info', 'Use DATABASE_URL', process.env.DATABASE_URL, true);
   createServer({
     port: PORT,
     cors: CORS,

@@ -1,5 +1,5 @@
+// pass on process  DATABASE_URL as mysql://user:password@localhost:3306/uyem_db;
 const { createServer, prisma } = require('uyem/server');
-
 createServer({ port: 3001 }, async (ws) => {
   /**
    * Ws listener example
