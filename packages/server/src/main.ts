@@ -337,9 +337,10 @@ export function createServer(
 }
 
 if (require.main === module) {
-  log('info', 'Use DATABASE_URL', process.env.DATABASE_URL, true);
   createServer({
     port: PORT,
     cors: CORS,
   });
+} else {
+  log('info', 'Use DATABASE_URL', process.env.DATABASE_URL, true);
 }
