@@ -47,7 +47,7 @@ docker-compose up -d
 - Install source:
 
 ```sh
-npm i uyem --omit=optional
+npm i uyem
 ```
 
 ## Settings
