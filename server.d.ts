@@ -1,1 +1,1 @@
-export { default as createServer } from './packages/server/dist/main';
+export { createServer, prisma } from './packages/server/dist/main';
