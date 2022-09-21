@@ -19,8 +19,8 @@ import { log } from './utils/lib';
 import { name, version } from '../../../package';
 
 log('info', `${name}@${version} started`, '...', true);
-process.env.CWD = path.resolve(__dirname, '../../..');
-process.env.PWD = process.env.CWD;
+process.chdir(path.resolve(__dirname, '../../..'));
+
 const processArgs = process.argv;
 const DEFAULT_PARAMS = {
   port: '3001',
