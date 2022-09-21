@@ -34,6 +34,7 @@ function Main({
   const pathname = getPathname();
   const roomId = useMemo(() => getRoomId(pathname || ''), [pathname]);
   const { locale, openMenu, theme, alert, hallOpen } = useListeners({ colors, port, server });
+
   return (
     <div>
       {locale && (
