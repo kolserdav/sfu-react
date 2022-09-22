@@ -20,7 +20,7 @@ function App() {
   const isHall = window.location.pathname === '/';
 
   return (
-    <div>
+    <div className="uyem-app">
       {isHall ? (
         <button type="button" onClick={createRoom}>
           Create room

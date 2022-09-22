@@ -482,6 +482,11 @@ class RTC
   // eslint-disable-next-line class-methods-use-this
   public onClosedCall: RTCInterface['onClosedCall'] = (args) => {
     log('warn', 'Call is closed', { ...args });
+    const { target } = args;
+    if (target.toString() === '0') {
+      const { href } = window.location;
+      window.location.href = href;
+    }
   };
 
   public closeAllConnections() {

@@ -13,6 +13,7 @@ import WS from '../core/ws';
 import { log, getDialogPosition } from '../utils/lib';
 import {
   ErrorCode,
+  Locale,
   LocaleDefault,
   MessageFull,
   MessageType,
@@ -26,6 +27,7 @@ import {
   FIRST_MESSAGE_INDENT,
   FOLOW_QUOTE_STYLE,
   DIALOG_MESSAGE_DIMENSION,
+  ALERT_TIMEOUT,
 } from '../utils/constants';
 import { DialogProps } from '../types';
 import {
@@ -42,6 +44,7 @@ import {
 import storeError from '../store/error';
 import storeClickDocument from '../store/clickDocument';
 import { CookieName, getCookie } from '../utils/cookies';
+import storeCanConnect, { changeCanConnect } from '../store/canConnect';
 
 let oldSkip = 0;
 let scrolled = false;
@@ -53,6 +56,7 @@ export const useMesages = ({
   userId,
   containerRef,
   inputRef,
+  locale,
 }: {
   port: number;
   server: string;
@@ -60,6 +64,7 @@ export const useMesages = ({
   userId: string | number;
   containerRef: React.RefObject<HTMLDivElement>;
   inputRef: React.RefObject<HTMLTextAreaElement>;
+  locale: Locale.Client;
 }) => {
   const [message, setMessage] = useState<string>('');
   const [chatUnit, setChatUnit] = useState<boolean>(false);
@@ -353,10 +358,29 @@ export const useMesages = ({
       setSkip(skip - 1);
     };
 
+    const setChatUnitHandler = () => {
+      storeCanConnect.dispatch(
+        changeCanConnect({
+          canConnect: true,
+        })
+      );
+      setChatUnit(true);
+    };
+
     const setErrorHandler = ({
-      data: { message: children, type },
+      data: { message: children, type, code },
     }: SendMessageArgs<MessageType.SET_ERROR>) => {
       log(type, children, {}, true);
+      switch (code) {
+        case ErrorCode.duplicateTab:
+          setTimeout(() => {
+            // eslint-disable-next-line no-restricted-globals
+            alert(locale.willBeReconnect);
+            window.history.go(-1);
+          }, ALERT_TIMEOUT);
+          break;
+        default:
+      }
     };
 
     const setRoomMessage = ({ data }: SendMessageArgs<MessageType.SET_ROOM_MESSAGE>) => {
@@ -404,7 +428,7 @@ export const useMesages = ({
           setDeleteMessageHandler(rawMessage);
           break;
         case MessageType.SET_CHAT_UNIT:
-          setChatUnit(true);
+          setChatUnitHandler();
           break;
         case MessageType.SET_ERROR:
           setErrorHandler(rawMessage);

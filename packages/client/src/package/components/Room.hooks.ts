@@ -54,6 +54,7 @@ import storeClickDocument from '../store/clickDocument';
 import { getLocalStorage, LocalStorageName, setLocalStorage } from '../utils/localStorage';
 import storeUserList, { changeUserList } from '../store/userList';
 import storeMessage from '../store/message';
+import storeCanConnect from '../store/canConnect';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -101,6 +102,7 @@ export const useConnection = ({
   const [isOwner, setIsOwner] = useState<boolean>(false);
   const [error, setError] = useState<keyof typeof ErrorCode>();
   const [connectionId, setConnectionId] = useState<string>('');
+  const [canConnect, setCanConnect] = useState<boolean>(false);
 
   const rtc = useMemo(() => new RTC({ ws }), [ws]);
   const addStream = useMemo(
@@ -239,6 +241,19 @@ export const useConnection = ({
       setToMute(0);
     }
   }, [toMute, connectionId, ws, roomId, setToMute]);
+
+  /**
+   * Listen can connect
+   */
+  useEffect(() => {
+    const cleanSubs = storeCanConnect.subscribe(() => {
+      const { canConnect: _canConnect } = storeCanConnect.getState();
+      setCanConnect(_canConnect);
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, []);
 
   /**
    * Listen toBan
@@ -537,6 +552,9 @@ export const useConnection = ({
       connId,
       data: { isOwner: _isOwner },
     }: SendMessageArgs<MessageType.SET_ROOM>) => {
+      if (!canConnect) {
+        return;
+      }
       setRoomIsSaved(true);
       setIsOwner(_isOwner);
       rtc.createPeerConnection({
@@ -775,6 +793,7 @@ export const useConnection = ({
     isOwner,
     isRecord,
     isRecording,
+    canConnect,
   ]);
 
   /**

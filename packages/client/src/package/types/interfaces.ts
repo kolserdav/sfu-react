@@ -50,6 +50,7 @@ export enum ErrorCode {
   videoRecordStop = 'videoRecordStop',
   forbidden = 'forbidden',
   notAuthorised = 'notAuthorised',
+  duplicateTab = 'duplicateTab',
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -140,6 +141,7 @@ export namespace Locale {
     videoRecordStop: string;
     forbidden: string;
     notAuthorised: string;
+    duplicateTab: string;
   }
 
   export interface Client {
@@ -174,6 +176,7 @@ export namespace Locale {
     startRecord: string;
     recording: string;
     stopRecord: string;
+    willBeReconnect: string;
   }
 }
 

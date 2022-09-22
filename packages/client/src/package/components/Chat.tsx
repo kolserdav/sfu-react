@@ -43,6 +43,7 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
     roomId,
     containerRef,
     inputRef,
+    locale,
   });
   const { dialog, messageContextWrapper } = useDialog();
   useScrollToQuote({ messages, containerRef });

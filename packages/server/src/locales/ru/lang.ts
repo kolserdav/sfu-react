@@ -19,6 +19,8 @@ const lang: LocaleServer = {
     videoRecordStop: 'Видеозапись остановлена',
     forbidden: 'Запрещено',
     notAuthorised: 'Не авторизован',
+    duplicateTab:
+      'Попытка неподдерживаемого повторного подключения в новой вкладке. Одновременно к комнате можно подключиться только с одного места.',
   },
   client: {
     shareScreen: 'Демонстрация экрана',
@@ -52,6 +54,7 @@ const lang: LocaleServer = {
     startRecord: 'Старт записи',
     recording: 'Записывает ...',
     stopRecord: 'Остановить запись',
+    willBeReconnect: 'Дублирующая вкладка будет перенаправлены на предыдущую сраницу',
   },
 };
 

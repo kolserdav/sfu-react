@@ -19,6 +19,8 @@ const lang: LocaleServer = {
     videoRecordStop: 'Video record stop',
     forbidden: 'Forbidden',
     notAuthorised: 'Not authorised',
+    duplicateTab:
+      'An unsupported attempt was made to reconnect in a new tab. Only one point can be connected to a room at a time.',
   },
   client: {
     shareScreen: 'Share screen',
@@ -52,6 +54,7 @@ const lang: LocaleServer = {
     startRecord: 'Start record',
     recording: 'Recording ...',
     stopRecord: 'Stop record',
+    willBeReconnect: 'The duplicate tab will be redirected to the previous page',
   },
 };
 

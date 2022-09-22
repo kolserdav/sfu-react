@@ -20,8 +20,22 @@ class Chat extends DB implements ConnectorInterface {
     if (!this.users[roomId]) {
       this.users[roomId] = {};
     }
+    const lang = getLocale(locale).server;
     if (this.users[roomId][userId]) {
       log('warn', 'Duplicate chat user', { roomId, userId });
+      ws.send(
+        JSON.stringify({
+          type: MessageType.SET_ERROR,
+          id: userId,
+          connId,
+          data: {
+            type: 'warn',
+            code: ErrorCode.duplicateTab,
+            message: lang.duplicateTab,
+          },
+        })
+      );
+      return;
     }
     this.users[roomId][userId] = {
       locale,

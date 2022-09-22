@@ -36,7 +36,7 @@ function Main({
   const { locale, openMenu, theme, alert, hallOpen } = useListeners({ colors, port, server });
 
   return (
-    <div>
+    <div className={s.wrapper}>
       {locale && (
         <Room
           port={port}
