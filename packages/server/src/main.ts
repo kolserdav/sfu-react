@@ -351,5 +351,5 @@ if (require.main === module) {
     cors: CORS,
   });
 } else {
-  log('info', 'Use DATABASE_URL', process.env.DATABASE_URL, true);
+  log('info', 'Using DATABASE_URL:', process.env.DATABASE_URL, true);
 }
