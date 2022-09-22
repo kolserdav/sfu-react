@@ -338,7 +338,7 @@ export function createServer(
     });
   });
   wss.connection.on('listening', () => {
-    log('info', 'Server listen at port:', port, true);
+    log('info', 'Uyem server listen at port:', port, true);
     if (cb) {
       cb(wss.connection);
     }
