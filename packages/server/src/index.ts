@@ -13,6 +13,7 @@
 import { spawn } from 'child_process';
 import path from 'path';
 import { log } from './utils/lib';
+import { LogLevel } from './types/interfaces';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 //@ts-ignore
 // eslint-disable-next-line import/no-relative-packages
@@ -30,6 +31,7 @@ const DEFAULT_PARAMS = {
 const ARGS = {
   help: 'This document',
   port: 'Server websocket port',
+  log: 'Level of logs 0 - all | 1 - info | 2 - warn | 3 - error',
   cors: 'Allowed origins',
   db: `Database url ${DEFAULT_PARAMS.db}`,
   version: 'Show installed version',
@@ -86,6 +88,7 @@ if (skipedReq.length) {
 let port = 3000;
 let cors = '';
 let code = 0;
+let logLevel: LogLevel;
 let db = '';
 let skipMigrate = false;
 (async () => {
@@ -98,10 +101,18 @@ let skipMigrate = false;
         code = 0;
         skipMigrate = true;
         break;
+      case 'log':
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        logLevel = parseInt(argv.log, 10) as any;
+        if (Number.isNaN(logLevel)) {
+          log('warn', 'Argument "log" is not a number', argv.log, true);
+          code = 1;
+        }
+        break;
       case 'port':
         port = parseInt(argv.port || DEFAULT_PARAMS.port, 10);
         if (Number.isNaN(port)) {
-          log('warn', 'Required number type of port, received:', port, true);
+          log('warn', 'Required number type of "port", received:', port, true);
           code = 1;
           break;
         }
@@ -150,7 +161,7 @@ let skipMigrate = false;
     } else if (!skipMigrate) {
       // eslint-disable-next-line global-require
       import('./main').then(({ createServer }) => {
-        createServer({ port, cors });
+        createServer({ port, cors, logLevel });
       });
     }
   }

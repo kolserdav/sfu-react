@@ -1,6 +1,6 @@
 /******************************************************************************************
  * Repository: https://github.com/kolserdav/werift-sfu-react.git
- * File name: canConnect.ts
+ * File name: logLevel.ts
  * Author: Sergey Kolmiller
  * Email: <uyem.ru@gmail.com>
  * License: MIT
@@ -9,9 +9,11 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { createSlice, configureStore } from '@reduxjs/toolkit';
+import { LogLevel } from '../types/interfaces';
+import { LOG_LEVEL } from '../utils/constants';
 
 interface State {
-  canConnect: boolean;
+  logLevel: LogLevel;
 }
 
 interface Action {
@@ -19,22 +21,22 @@ interface Action {
 }
 
 const slice = createSlice({
-  name: 'canConnect',
+  name: 'logLevel',
   initialState: {
-    canConnect: false,
+    logLevel: LOG_LEVEL,
   } as State,
   reducers: {
-    changeCanConnect: (state: State, action: Action) => {
+    changeLogLevel: (state: State, action: Action) => {
       // eslint-disable-next-line no-param-reassign
-      state.canConnect = action.payload.canConnect;
+      state.logLevel = action.payload.logLevel;
     },
   },
 });
 
-export const { changeCanConnect } = slice.actions;
+export const { changeLogLevel } = slice.actions;
 
-const storeCanConnect = configureStore({
+const storeLogLevel = configureStore({
   reducer: slice.reducer,
 });
 
-export default storeCanConnect;
+export default storeLogLevel;

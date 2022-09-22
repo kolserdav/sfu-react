@@ -9,13 +9,16 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { format } from 'date-fns';
-import { LOG_LEVEL, CODECS } from './constants';
+import { CODECS } from './constants';
 import { LogLevel } from '../types/interfaces';
 import { DialogProps } from '../types';
 import storeAlert, { changeAlert } from '../store/alert';
+import storeLogLevel from '../store/logLevel';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const log = (type: keyof typeof LogLevel, text: string, data?: any, forUser = false) => {
-  if (LogLevel[type] >= LOG_LEVEL) {
+  const { logLevel } = storeLogLevel.getState();
+  if (LogLevel[type] >= logLevel) {
     // eslint-disable-next-line no-console
     console[type](type, text, data);
     if (forUser) {

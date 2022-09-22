@@ -19,6 +19,8 @@ const locales: Record<string, LocaleServer> = {
   ru,
 };
 
+let logLevel = LOG_LEVEL;
+
 // eslint-disable-next-line no-unused-vars
 enum LogLevel {
   // eslint-disable-next-line no-unused-vars
@@ -44,7 +46,7 @@ export const log = (type: keyof typeof LogLevel, text: string, data?: any, cons?
     console.log(type === 'info' ? Cyan : type === 'warn' ? Yellow : type === 'error' ? Red : Reset);
     // eslint-disable-next-line no-console
     console[type](type, Reset, text, Bright, data, Reset);
-  } else if (LogLevel[type] >= LOG_LEVEL) {
+  } else if (LogLevel[type] >= logLevel) {
     // eslint-disable-next-line no-console
     console[type](
       type === 'error' ? Red : type === 'warn' ? Yellow : Bright,
@@ -55,6 +57,12 @@ export const log = (type: keyof typeof LogLevel, text: string, data?: any, cons?
       data,
       Reset
     );
+  }
+};
+
+export const setLogLevel = (_logLevel: LogLevel | undefined) => {
+  if (_logLevel !== undefined) {
+    logLevel = _logLevel;
   }
 };
 

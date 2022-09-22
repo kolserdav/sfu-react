@@ -28,12 +28,18 @@ function Main({
   server,
   colors,
   userId,
+  logLevel,
   token = '',
   name = USER_NAME_DEFAULT,
 }: Omit<GlobalProps, 'locale' | 'roomId'>) {
   const pathname = getPathname();
   const roomId = useMemo(() => getRoomId(pathname || ''), [pathname]);
-  const { locale, openMenu, theme, alert, hallOpen } = useListeners({ colors, port, server });
+  const { locale, openMenu, theme, alert, hallOpen } = useListeners({
+    colors,
+    port,
+    server,
+    logLevel,
+  });
 
   return (
     <div className={s.wrapper}>

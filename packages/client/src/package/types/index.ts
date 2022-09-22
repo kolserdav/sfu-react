@@ -24,19 +24,24 @@ export interface GlobalProps {
   theme?: Theme;
   iceServers?: RTCConfiguration['iceServers'];
   colors?: Colors;
+  logLevel?: LogLevel;
 }
 
 export type RoomProps = GlobalProps & {
   locale: LocaleServer['client'];
 };
 
-export type HallProps = Required<Omit<GlobalProps, 'iceServers' | 'theme' | 'colors'>> & {
+export type HallProps = Required<
+  Omit<GlobalProps, 'iceServers' | 'theme' | 'colors' | 'logLevel'>
+> & {
   open: boolean;
   locale: LocaleServer['client'];
   theme?: Theme;
 };
 
-export type SettingsProps = Required<Omit<GlobalProps, 'iceServers' | 'theme' | 'colors'>> & {
+export type SettingsProps = Required<
+  Omit<GlobalProps, 'iceServers' | 'theme' | 'colors' | 'logLevel'>
+> & {
   open: boolean;
   isOwner: boolean;
   locale: LocaleServer['client'];

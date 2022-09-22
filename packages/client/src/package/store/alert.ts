@@ -21,7 +21,7 @@ interface Action {
 }
 
 const slice = createSlice({
-  name: 'dialog',
+  name: 'alert',
   initialState: {
     alert: ALERT_DEFAULT,
   } as State,

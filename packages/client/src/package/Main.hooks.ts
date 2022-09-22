@@ -5,22 +5,25 @@ import { Colors, themes, Themes } from './Theme';
 import { changeColors } from './Main.lib';
 import storeTheme from './store/theme';
 import storeLocale from './store/locale';
-import { LocaleServer, MessageType } from './types/interfaces';
+import { LocaleServer, LogLevel, MessageType } from './types/interfaces';
 import { getLocalStorage, LocalStorageName, setLocalStorage } from './utils/localStorage';
 import { CookieName, setCookie } from './utils/cookies';
 import storeDialog from './store/alert';
 import storeClickDocument, { changeClickDocument } from './store/clickDocument';
 import WS from './core/ws';
 import { log } from './utils/lib';
+import storeLogLevel, { changeLogLevel } from './store/logLevel';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useListeners = ({
   colors,
   port,
   server,
+  logLevel,
 }: {
   port: number;
   server: string;
+  logLevel: LogLevel | undefined;
   colors?: Colors;
 }) => {
   const ws = useMemo(() => new WS({ port, server }), [port, server]);
@@ -166,6 +169,19 @@ export const useListeners = ({
       cleanSubs();
     };
   }, []);
+
+  /**
+   * listen logLevel
+   */
+  useEffect(() => {
+    if (logLevel !== undefined) {
+      storeLogLevel.dispatch(
+        changeLogLevel({
+          logLevel,
+        })
+      );
+    }
+  }, [logLevel]);
 
   return { locale, openMenu, theme, alert, hallOpen };
 };

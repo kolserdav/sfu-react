@@ -9,8 +9,9 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { AlertProps, ClickPosition, DialogProps } from '../types';
+import { LogLevel } from '../types/interfaces';
 
-export const LOG_LEVEL = 2;
+export const LOG_LEVEL: LogLevel = 2;
 export const WS_TTL = 1;
 export const START_DELAY = 1999;
 export const CODECS = [

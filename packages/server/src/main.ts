@@ -18,8 +18,8 @@ import { PrismaClient } from '@prisma/client';
 import WS from './core/ws';
 import { ServerCallback } from './types';
 import RTC, { OnRoomConnect, OnRoomOpen } from './core/rtc';
-import { MessageType } from './types/interfaces';
-import { getLocale, log } from './utils/lib';
+import { MessageType, LogLevel } from './types/interfaces';
+import { getLocale, log, setLogLevel } from './utils/lib';
 import { PORT, CORS } from './utils/constants';
 import DB from './core/db';
 import Chat from './addons/chat';
@@ -50,6 +50,7 @@ export function createServer(
     onRoomConnect,
     onRoomDisconnect,
     checkTokenCb,
+    logLevel,
   }: {
     port?: number;
     cors?: string;
@@ -59,9 +60,11 @@ export function createServer(
     onRoomConnect?: OnRoomConnect;
     onRoomDisconnect?: OnRoomConnect;
     checkTokenCb?: Auth['checkTokenCb'];
+    logLevel?: LogLevel;
   },
   cb?: ServerCallback
 ) {
+  setLogLevel(logLevel);
   const wss = new WS({ port, db }, cb);
   const rtc: RTC | null = new RTC({ ws: wss, db });
   const recordVideo = new RecordVideo({ settings, rtc });
