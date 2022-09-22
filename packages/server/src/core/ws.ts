@@ -38,12 +38,12 @@ class WS implements WSInterface {
    */
   private db: DB;
 
-  constructor(connectionArgs: (ServerOptions & { db: DB }) | undefined, cb?: ServerCallback) {
+  constructor(connectionArgs: (ServerOptions & { db: DB }) | undefined) {
     const _connectionArgs = { ...connectionArgs };
     this.db = connectionArgs.db;
     _connectionArgs.server = server;
     delete _connectionArgs.port;
-    this.connection = this.createConnection(_connectionArgs, cb);
+    this.connection = this.createConnection(_connectionArgs);
     server.listen(connectionArgs.port);
     server.on('request', (request, response) => {
       const { url } = request;
@@ -121,17 +121,8 @@ class WS implements WSInterface {
     return Object.keys(this.sockets).find((item) => item.split(this.delimiter)[0] === id) || null;
   }
 
-  public createConnection = (
-    args: ServerOptions | undefined,
-    // eslint-disable-next-line no-unused-vars
-    cb?: ServerCallback
-  ) => {
-    this.connection = new WebSocketServer(args, () => {
-      log('info', 'Server listen at port:', args.port, true);
-      if (cb) {
-        cb(this.connection);
-      }
-    });
+  public createConnection = (args: ServerOptions | undefined) => {
+    this.connection = new WebSocketServer(args);
     return this.connection;
   };
 

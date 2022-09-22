@@ -65,7 +65,7 @@ export function createServer(
   cb?: ServerCallback
 ) {
   setLogLevel(logLevel);
-  const wss = new WS({ port, db }, cb);
+  const wss = new WS({ port, db });
   const rtc: RTC | null = new RTC({ ws: wss, db });
   const recordVideo = new RecordVideo({ settings, rtc });
   settings.checkTokenCb = checkTokenCb || settings.checkTokenCb;
@@ -336,6 +336,12 @@ export function createServer(
         });
       }
     });
+  });
+  wss.connection.on('listening', () => {
+    log('info', 'Server listen at port:', port, true);
+    if (cb) {
+      cb(wss.connection);
+    }
   });
 }
 
