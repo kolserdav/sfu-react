@@ -64,6 +64,9 @@ export function createServer(
   },
   cb?: ServerCallback
 ) {
+  if (require.main !== module) {
+    log('info', 'Using DATABASE_URL:', process.env.DATABASE_URL, true);
+  }
   setLogLevel(logLevel);
   const wss = new WS({ port, db });
   const rtc: RTC | null = new RTC({ ws: wss, db });
@@ -350,6 +353,4 @@ if (require.main === module) {
     port: PORT,
     cors: CORS,
   });
-} else {
-  log('info', 'Using DATABASE_URL:', process.env.DATABASE_URL, true);
 }
