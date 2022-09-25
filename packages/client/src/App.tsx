@@ -16,6 +16,9 @@ const createRoom = () => {
   // Do not use the symbol "_" in room address
   window.location.href = `${new Date().getTime()}?uid=1`;
 };
+
+const userId = new Date().getTime();
+
 function App() {
   const isHall = window.location.pathname === '/';
 
@@ -28,7 +31,7 @@ function App() {
       ) : (
         <Main
           // Required props *}
-          userId={window.location.search.replace(/\?uid=/, '')}
+          userId={userId}
           // Optional props
           server={
             isTest

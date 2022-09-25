@@ -226,7 +226,7 @@ export function createServer(
     });
 
     const getUserId = (_connId: string) => {
-      let userId: number | string = 0;
+      let userId = '';
       const keys = Object.keys(wss.sockets);
       keys.forEach((item) => {
         const sock = item.split(rtc.delimiter);
@@ -260,7 +260,7 @@ export function createServer(
         roomKeys.forEach((item) => {
           let index = -1;
           rtc.rooms[item].forEach((_item, i) => {
-            if (_item.id === userId) {
+            if (_item.id.toString() === userId) {
               index = i;
             }
           });
@@ -283,8 +283,8 @@ export function createServer(
               keys.forEach((i) => {
                 const peer = i.split(rtc.delimiter);
                 if (
-                  (peer[1] === _item.id && peer[2] === userId.toString()) ||
-                  (peer[1] === userId.toString() && peer[2] === _item.id)
+                  (peer[1] === _item.id.toString() && peer[2] === userId.toString()) ||
+                  (peer[1] === userId.toString() && peer[2] === _item.id.toString())
                 ) {
                   // eslint-disable-next-line prefer-destructuring
                   _connId = peer[3];
