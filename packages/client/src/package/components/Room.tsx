@@ -153,7 +153,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
                       }
                     : {}
                 }
-                muted={item.target === userId || muteds.indexOf(item.target.toString()) !== -1}
+                muted={item.target === userId || muteds.indexOf(item.target) !== -1}
                 onTimeUpdate={(e) => {
                   analyzeSoundLevel(item.target);
                   if (item.stream.active === false) {
@@ -266,11 +266,10 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
                 )}
               </div>
               <div className={s.muted}>
-                {muteds.indexOf(item.target.toString()) !== -1 && (
+                {muteds.indexOf(item.target) !== -1 && (
                   <MicrophoneOffIcon
                     color={
-                      adminMuteds.indexOf(item.target.toString()) !== -1 &&
-                      (isOwner || userId === item.target)
+                      adminMuteds.indexOf(item.target) !== -1 && (isOwner || userId === item.target)
                         ? theme?.colors.blue
                         : theme?.colors.white
                     }
