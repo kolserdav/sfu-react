@@ -268,6 +268,7 @@ export const useConnection = ({
     } else if (typeof window !== 'undefined' && !qS) {
       _isPublic = false;
     }
+    log('info', 'Is public is', _isPublic);
     if (typeof _isPublic === 'boolean') {
       setIsPublic(_isPublic);
     }
