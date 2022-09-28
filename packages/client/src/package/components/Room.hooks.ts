@@ -55,6 +55,7 @@ import { getLocalStorage, LocalStorageName, setLocalStorage } from '../utils/loc
 import storeUserList, { changeUserList } from '../store/userList';
 import storeMessage from '../store/message';
 import storeCanConnect from '../store/canConnect';
+import storeRoomIsInactive, { changeRoomIsInactive } from '../store/roomIsInactive';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -103,6 +104,7 @@ export const useConnection = ({
   const [error, setError] = useState<keyof typeof ErrorCode>();
   const [connectionId, setConnectionId] = useState<string>('');
   const [canConnect, setCanConnect] = useState<boolean>(false);
+  const [isPublic, setIsPublic] = useState<boolean>();
 
   const rtc = useMemo(() => new RTC({ ws }), [ws]);
   const addStream = useMemo(
@@ -256,6 +258,22 @@ export const useConnection = ({
   }, []);
 
   /**
+   * Check is public
+   */
+  useEffect(() => {
+    const qS = parseQueryString();
+    let _isPublic;
+    if (typeof window !== 'undefined' && qS) {
+      _isPublic = qS.public === '1';
+    } else if (typeof window !== 'undefined' && !qS) {
+      _isPublic = false;
+    }
+    if (typeof _isPublic === 'boolean') {
+      setIsPublic(_isPublic);
+    }
+  }, []);
+
+  /**
    * Listen toBan
    */
   useEffect(() => {
@@ -333,7 +351,7 @@ export const useConnection = ({
    * Connections handlers
    */
   useEffect(() => {
-    if (!roomId) {
+    if (!roomId || typeof isPublic === 'undefined') {
       return () => {
         /** */
       };
@@ -500,6 +518,13 @@ export const useConnection = ({
           setTimeout(() => {
             window.history.go(-1);
           }, ALERT_TIMEOUT);
+          break;
+        case ErrorCode.roomIsInactive:
+          storeRoomIsInactive.dispatch(
+            changeRoomIsInactive({
+              roomIsInactive: true,
+            })
+          );
           break;
         default:
       }
@@ -715,6 +740,7 @@ export const useConnection = ({
             data: {
               userId: id,
               mimeType: getCodec(),
+              isPublic,
             },
             connId,
           });
@@ -794,6 +820,7 @@ export const useConnection = ({
     isRecord,
     isRecording,
     canConnect,
+    isPublic,
   ]);
 
   /**

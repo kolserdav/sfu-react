@@ -14,7 +14,7 @@ import s from './Chat.module.scss';
 import g from '../Global.module.scss';
 import SendIcon from '../Icons/Send';
 import IconButton from './ui/IconButton';
-import { useMesages, useDialog, useScrollToQuote } from './Chat.hooks';
+import { useMesages, useDialog, useScrollToQuote, useRoomIsInactive } from './Chat.hooks';
 import { dateToTime, dateToString, isMobile } from '../utils/lib';
 import { prepareMessage } from './Chat.lib';
 import Dialog from './ui/Dialog';
@@ -47,6 +47,7 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
   });
   const { dialog, messageContextWrapper } = useDialog();
   useScrollToQuote({ messages, containerRef });
+  const roomIsInactive = useRoomIsInactive();
 
   return (
     <div className={s.wrapper} style={{ background: theme?.colors.active }}>
@@ -98,8 +99,14 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
           ref={inputRef}
           onInput={changeText}
           value={message}
+          disabled={roomIsInactive}
         />
-        <IconButton className={s.send__icon} title={locale.send} onClick={sendMessage}>
+        <IconButton
+          disabled={roomIsInactive}
+          className={s.send__icon}
+          title={locale.send}
+          onClick={sendMessage}
+        >
           {isEdit ? (
             <CheckIcon color={theme?.colors.text} />
           ) : (

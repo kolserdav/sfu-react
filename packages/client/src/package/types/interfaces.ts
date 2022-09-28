@@ -236,6 +236,7 @@ export namespace DataTypes {
     export type GetRoom = {
       userId: number | string;
       mimeType: string;
+      isPublic: boolean;
     };
     export type GetToMute = {
       target: string | number;

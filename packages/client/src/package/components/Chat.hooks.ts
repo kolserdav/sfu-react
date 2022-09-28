@@ -45,6 +45,7 @@ import storeError from '../store/error';
 import storeClickDocument from '../store/clickDocument';
 import { CookieName, getCookie } from '../utils/cookies';
 import storeCanConnect, { changeCanConnect } from '../store/canConnect';
+import storeRoomIsInactive from '../store/roomIsInactive';
 
 let oldSkip = 0;
 let scrolled = false;
@@ -604,4 +605,18 @@ export const useScrollToQuote = ({
   }, [containerRef, messages]);
 
   return {};
+};
+
+export const useRoomIsInactive = () => {
+  const [roomIsInactive, setRoomIsInactive] = useState<boolean>(false);
+  useEffect(() => {
+    const cleanSubs = storeRoomIsInactive.subscribe(() => {
+      const { roomIsInactive: _roomIsInactive } = storeRoomIsInactive.getState();
+      setRoomIsInactive(_roomIsInactive);
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, []);
+  return roomIsInactive;
 };

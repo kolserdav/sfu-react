@@ -531,10 +531,12 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     userId,
     roomId,
     onRoomOpen,
+    isPublic,
   }: {
     userId: number | string;
     roomId: number | string;
     onRoomOpen?: OnRoomOpen;
+    isPublic: boolean;
   }): Promise<{ error: 1 | 0; isOwner: boolean }> {
     const room = await this.db.roomFindFirst({
       where: {
@@ -542,13 +544,13 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       },
     });
     const locale = getLocale(this.ws.users[userId].locale).server;
-    let isOwner = room?.authorId === userId.toString();
+    let isOwner = room?.authorId === null || room?.authorId === userId.toString();
     if (!room) {
       const authorId = userId.toString();
       this.db.roomCreate({
         data: {
           id: roomId.toString(),
-          authorId,
+          authorId: isPublic ? undefined : authorId,
           Guests: {
             create: {
               unitId: authorId,
@@ -741,6 +743,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       roomId: id,
       userId: uid,
       onRoomOpen,
+      isPublic: message.data.isPublic,
     });
     if (error) {
       this.ws.sendMessage({
