@@ -9,6 +9,7 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { Video } from '@prisma/client';
+import React from 'react';
 import { Colors, Theme } from '../Theme';
 import { LocaleServer, LogLevel } from './interfaces';
 
@@ -25,6 +26,7 @@ export interface GlobalProps {
   iceServers?: RTCConfiguration['iceServers'];
   colors?: Colors;
   logLevel?: LogLevel;
+  backLinks?: React.ReactNode | React.ReactNode[] | string | null;
 }
 
 export type RoomProps = GlobalProps & {
@@ -40,7 +42,7 @@ export type HallProps = Required<
 };
 
 export type SettingsProps = Required<
-  Omit<GlobalProps, 'iceServers' | 'theme' | 'colors' | 'logLevel'>
+  Omit<GlobalProps, 'iceServers' | 'theme' | 'colors' | 'logLevel' | 'backLinks'>
 > & {
   open: boolean;
   isOwner: boolean;
@@ -48,7 +50,7 @@ export type SettingsProps = Required<
   theme?: Theme;
 };
 
-export type ChatProps = Omit<HallProps, 'open'>;
+export type ChatProps = Omit<HallProps, 'open' | 'backLinks'>;
 
 export interface Stream {
   target: number | string;

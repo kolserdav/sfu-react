@@ -101,7 +101,7 @@ function Alert({ children, type, open, theme }: AlertProps) {
             : type === 'warn'
             ? theme?.colors.yellow
             : theme?.colors.blue,
-        color: type === 'warn' ? theme?.colors.black : theme?.colors.text,
+        color: type === 'warn' || type === 'error' ? theme?.colors.black : theme?.colors.text,
         display: open ? 'flex' : 'none',
       }}
     >

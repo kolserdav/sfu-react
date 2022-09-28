@@ -21,7 +21,18 @@ import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
 import { checkIsRecord } from '../utils/lib';
 import Settings from './Settings';
 
-function Hall({ open, locale, server, port, roomId, userId, theme, token, name }: HallProps) {
+function Hall({
+  open,
+  locale,
+  server,
+  port,
+  roomId,
+  userId,
+  theme,
+  token,
+  name,
+  backLinks,
+}: HallProps) {
   const { openSettings, openSettingsDialog } = useSettings({ open });
   const { users, isOwner, banneds, unBanWrapper } = useUsers({ userId, roomId });
 
@@ -36,6 +47,8 @@ function Hall({ open, locale, server, port, roomId, userId, theme, token, name }
       >
         <div className={s.block}>
           <div className={s.users} style={{ color: theme?.colors.text }}>
+            {backLinks && <div className={s.users}>{backLinks}</div>}
+            <div className={s.title}>{locale.guests}</div>
             {users.map((item) =>
               checkIsRecord(item.id.toString()) ? (
                 ''

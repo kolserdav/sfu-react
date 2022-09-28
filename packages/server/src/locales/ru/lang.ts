@@ -55,6 +55,7 @@ const lang: LocaleServer = {
     recording: 'Записывает ...',
     stopRecord: 'Остановить запись',
     willBeReconnect: 'Дублирующая вкладка будет перенаправлены на предыдущую сраницу',
+    guests: 'Гости комнаты',
   },
 };
 

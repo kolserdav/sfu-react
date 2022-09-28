@@ -31,6 +31,7 @@ function Main({
   logLevel,
   token = '',
   name = USER_NAME_DEFAULT,
+  backLinks = null,
 }: Omit<GlobalProps, 'locale' | 'roomId'>) {
   const pathname = getPathname();
   const roomId = useMemo(() => getRoomId(pathname || ''), [pathname]);
@@ -80,6 +81,7 @@ function Main({
           theme={theme}
           token={token}
           name={name}
+          backLinks={backLinks}
         />
       )}
       <Alert open={alert.open} type={alert.type} theme={theme}>

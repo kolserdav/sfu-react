@@ -557,6 +557,16 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         },
       });
       isOwner = true;
+      this.ws.sendMessage({
+        type: MessageType.SET_ERROR,
+        id: userId,
+        connId: '',
+        data: {
+          message: '',
+          type: 'log',
+          code: ErrorCode.initial,
+        },
+      });
     } else {
       if (room.archive) {
         if (!isOwner) {

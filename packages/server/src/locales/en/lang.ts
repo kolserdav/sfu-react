@@ -55,6 +55,7 @@ const lang: LocaleServer = {
     recording: 'Recording ...',
     stopRecord: 'Stop record',
     willBeReconnect: 'The duplicate tab will be redirected to the previous page',
+    guests: 'Room guests',
   },
 };
 

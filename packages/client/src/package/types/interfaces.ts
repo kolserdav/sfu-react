@@ -177,6 +177,7 @@ export namespace Locale {
     recording: string;
     stopRecord: string;
     willBeReconnect: string;
+    guests: string;
   }
 }
 
