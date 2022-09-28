@@ -94,7 +94,11 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
       </div>
       <div className={s.input}>
         <textarea
-          style={{ background: theme?.colors.paper, color: theme?.colors.text }}
+          style={{
+            background: theme?.colors.paper,
+            color: theme?.colors.text,
+            cursor: roomIsInactive ? 'not-allowed' : 'inherit',
+          }}
           rows={rows}
           ref={inputRef}
           onInput={changeText}

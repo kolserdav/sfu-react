@@ -544,7 +544,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       },
     });
     const locale = getLocale(this.ws.users[userId].locale).server;
-    let isOwner = room?.authorId === null || room?.authorId === userId.toString();
+    let isOwner = room?.authorId === userId.toString();
     if (!room) {
       const authorId = userId.toString();
       this.db.roomCreate({
@@ -558,7 +558,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
           },
         },
       });
-      isOwner = true;
+      isOwner = room?.authorId !== null;
       this.ws.sendMessage({
         type: MessageType.SET_ERROR,
         id: userId,
@@ -571,7 +571,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       });
     } else {
       if (room.archive) {
-        if (!isOwner) {
+        if (!isOwner && room?.authorId !== null) {
           this.ws.sendMessage({
             type: MessageType.SET_ERROR,
             id: userId,
@@ -587,15 +587,18 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
             isOwner,
           };
         }
-        await this.db.roomUpdate({
-          where: {
-            id: room.id,
-          },
-          data: {
-            archive: false,
-            updated: new Date(),
-          },
-        });
+        if (isOwner && room?.authorId !== null) {
+          isOwner = room?.authorId === null;
+          await this.db.roomUpdate({
+            where: {
+              id: room.id,
+            },
+            data: {
+              archive: false,
+              updated: new Date(),
+            },
+          });
+        }
       }
       this.ws.sendMessage({
         type: MessageType.SET_ERROR,
