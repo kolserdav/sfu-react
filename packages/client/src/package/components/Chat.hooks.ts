@@ -457,7 +457,7 @@ export const useMesages = ({
         /** */
       };
     };
-  }, [roomId, userId, ws, messages, message, myMessage, containerRef, skip]);
+  }, [roomId, userId, ws, messages, message, myMessage, containerRef, skip, locale]);
   return {
     changeText,
     sendMessage,
