@@ -11,7 +11,7 @@
 import werift from 'werift';
 import { MessageType, SendMessageArgs } from '../types/interfaces';
 
-export const LOG_LEVEL = 2;
+export const LOG_LEVEL = 0;
 export const SSL_RTC_CONNECTION = true;
 export const SSL_SIGNATURE_HASH: werift.SignatureHash = { signature: 1, hash: 4 };
 export const DEFAULT_PORT = '3001';

@@ -122,7 +122,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     () => getSettingsContext(dialogSettings.context).userId,
     [dialogSettings.context]
   );
-  console.log(roomId);
+
   return (
     <div
       className={s.wrapper}

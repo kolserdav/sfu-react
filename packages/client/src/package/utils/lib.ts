@@ -52,7 +52,6 @@ export const parseMessage = (message: string): object => {
 };
 
 export const parseQueryString = (): Record<string, string> | null => {
-  console.log(window.location.search);
   const query = typeof window !== 'undefined' ? window.location.search : '';
   const arr = query.replace(/\??/, '').split('&');
   let res: Record<string, string> | null = null;

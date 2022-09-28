@@ -16,7 +16,13 @@ import DB from '../core/db';
 class Chat extends DB implements ConnectorInterface {
   public users: ConnectorInterface['users'] = {};
 
-  public setUnit: ConnectorInterface['setUnit'] = ({ roomId, userId, ws, locale, connId }) => {
+  public setUnit: ConnectorInterface['setUnit'] = async ({
+    roomId,
+    userId,
+    ws,
+    locale,
+    connId,
+  }) => {
     if (!this.users[roomId]) {
       this.users[roomId] = {};
     }
@@ -172,6 +178,7 @@ class Chat extends DB implements ConnectorInterface {
 
   public async getChatMessages({
     id,
+    connId,
     data: { args, userId },
   }: SendMessageArgs<MessageType.GET_CHAT_MESSAGES>) {
     const data = await this.messageFindMany(args);
@@ -179,7 +186,7 @@ class Chat extends DB implements ConnectorInterface {
       roomId: id,
       msg: {
         type: MessageType.SET_CHAT_MESSAGES,
-        connId: '',
+        connId,
         id: userId,
         data,
       },
