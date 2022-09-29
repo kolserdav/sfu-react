@@ -13,7 +13,6 @@ import { createServer } from 'http';
 import path from 'path';
 import fs from 'fs';
 import { WSInterface, UserItem, LocaleValue } from '../types/interfaces';
-import { ServerCallback } from '../types';
 import { log } from '../utils/lib';
 import DB from './db';
 
