@@ -16,7 +16,7 @@ try {
   config = require('./rooms.json');
   log('info', `Config file ${path.resolve(__dirname, 'rooms.json')} used.`, {
     CI: Boolean(process.env.CI),
-    NEXT: Boolean(process.env.NEXT),
+    TEST_NEXT: Boolean(process.env.TEST_NEXT),
   });
 } catch (e) {
   log(
@@ -27,7 +27,7 @@ try {
     )} not specified, use default ${path.resolve(__dirname, '../rooms.example.json')}`,
     {
       CI: Boolean(process.env.CI),
-      NEXT: Boolean(process.env.NEXT),
+      TEST_NEXT: Boolean(process.env.TEST_NEXT),
     }
   );
   importErr = true;
@@ -280,7 +280,7 @@ const startServer = async () => {
       resolve(0);
     }, 4000);
   });
-  if (process.env.NEXT) {
+  if (process.env.TEST_NEXT) {
     log('log', 'Run command:', '"npm run start:client-next"', true);
     res = spawn('npm', ['run', 'start:client-next'], {
       env,

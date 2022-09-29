@@ -41,6 +41,6 @@ jobs:
       - name: test
         env:
           CI: true
-          NEXT: false
+          TEST_NEXT: false
         run: |
           npm run test
