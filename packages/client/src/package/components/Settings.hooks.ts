@@ -125,9 +125,17 @@ export const useMessages = ({
    * Handle messages
    */
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      /** */
-    }, 0);
+    ws.onOpen = () => {
+      ws.sendMessage({
+        id: roomId,
+        type: MessageType.GET_SETTINGS_UNIT,
+        connId: '',
+        data: {
+          userId,
+          locale: getCookie(CookieName.lang) || LocaleDefault,
+        },
+      });
+    };
     const setErrorHandler = ({
       data: { message: children, type },
     }: SendMessageArgs<MessageType.SET_ERROR>) => {
@@ -216,17 +224,6 @@ export const useMessages = ({
       setSkip(skip + RECORDED_VIDEO_TAKE_DEFAULT);
     };
 
-    ws.onOpen = () => {
-      ws.sendMessage({
-        id: roomId,
-        type: MessageType.GET_SETTINGS_UNIT,
-        connId: '',
-        data: {
-          userId,
-          locale: getCookie(CookieName.lang) || LocaleDefault,
-        },
-      });
-    };
     ws.onMessage = (ev) => {
       const { data } = ev;
       const rawMessage = ws.parseMessage(data);

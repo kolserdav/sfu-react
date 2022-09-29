@@ -320,6 +320,17 @@ export const useMesages = ({
    * Handle messages
    */
   useEffect(() => {
+    ws.onOpen = () => {
+      ws.sendMessage({
+        id: roomId,
+        type: MessageType.GET_CHAT_UNIT,
+        connId: '',
+        data: {
+          userId,
+          locale: getCookie(CookieName.lang) || LocaleDefault,
+        },
+      });
+    };
     const setChatMessagesHandler = ({
       data: { result, count: _count },
     }: SendMessageArgs<MessageType.SET_CHAT_MESSAGES>) => {
@@ -396,17 +407,6 @@ export const useMesages = ({
         }
         setSkip(skip + 1);
       }
-    };
-    ws.onOpen = () => {
-      ws.sendMessage({
-        id: roomId,
-        type: MessageType.GET_CHAT_UNIT,
-        connId: '',
-        data: {
-          userId,
-          locale: getCookie(CookieName.lang) || LocaleDefault,
-        },
-      });
     };
     ws.onMessage = (ev) => {
       const { data } = ev;

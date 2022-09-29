@@ -122,7 +122,7 @@ class WS implements Types.WSInterface {
   }) {
     this.newConnection({ server, port, protocol });
     this.connection.onopen = (ev: Event) => {
-      log('log', 'onOpen', ev);
+      log('log', 'Web socket on open', { protocol });
       this.onOpen(ev);
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

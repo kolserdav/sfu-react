@@ -16,7 +16,7 @@ try {
   config = require('./rooms.json');
   log('info', `Config file ${path.resolve(__dirname, 'rooms.json')} used.`, {
     CI: Boolean(process.env.CI),
-    SSR: Boolean(process.env.SSR),
+    NEXT: Boolean(process.env.NEXT),
   });
 } catch (e) {
   log(
@@ -27,7 +27,7 @@ try {
     )} not specified, use default ${path.resolve(__dirname, '../rooms.example.json')}`,
     {
       CI: Boolean(process.env.CI),
-      SSR: Boolean(process.env.SSR),
+      NEXT: Boolean(process.env.NEXT),
     }
   );
   importErr = true;
@@ -82,7 +82,7 @@ async function openRoom(room, uid) {
     ],
   });
   const [page] = await browser.pages();
-  const _url = `${url}/${room}?uid=${uid}`;
+  const _url = `${url}/room/${room}?uid=${uid}`;
   page.on('console', (message) => {
     const text = message.text();
     if (!/DevTools/.test(text) && !/webpack-dev-server/.test(text)) {
@@ -280,9 +280,9 @@ const startServer = async () => {
       resolve(0);
     }, 4000);
   });
-  if (process.env.SSR) {
-    log('log', 'Run command:', '"npm run start:client"', true);
-    res = spawn('npm', ['run', 'start:client'], {
+  if (process.env.NEXT) {
+    log('log', 'Run command:', '"npm run start:client-next"', true);
+    res = spawn('npm', ['run', 'start:client-next'], {
       env,
     });
     res.stdout.on('data', (d) => {

@@ -90,6 +90,8 @@ export const useConnection = ({
   setToBan: React.Dispatch<React.SetStateAction<string | number>>;
 }) => {
   const ws = useMemo(() => new WS({ server, port, protocol: 'room' }), [server, port]);
+  const rtc = useMemo(() => new RTC({ ws }), [ws]);
+
   const [streams, setStreams] = useState<Stream[]>([]);
   const [shareScreen, setShareScreen] = useState<boolean>(false);
   const [selfStream, setSelfStream] = useState<Stream | null>(null);
@@ -106,7 +108,6 @@ export const useConnection = ({
   const [canConnect, setCanConnect] = useState<boolean>(false);
   const [isPublic, setIsPublic] = useState<boolean>();
 
-  const rtc = useMemo(() => new RTC({ ws }), [ws]);
   const addStream = useMemo(
     () =>
       ({
@@ -228,130 +229,22 @@ export const useConnection = ({
   };
 
   /**
-   * Listen toMute
-   */
-  useEffect(() => {
-    if (toMute && roomId) {
-      ws.sendMessage({
-        type: MessageType.GET_TO_MUTE,
-        connId: connectionId,
-        id: roomId,
-        data: {
-          target: toMute,
-        },
-      });
-      setToMute(0);
-    }
-  }, [toMute, connectionId, ws, roomId, setToMute]);
-
-  /**
-   * Listen can connect
-   */
-  useEffect(() => {
-    const cleanSubs = storeCanConnect.subscribe(() => {
-      const { canConnect: _canConnect } = storeCanConnect.getState();
-      setCanConnect(_canConnect);
-    });
-    return () => {
-      cleanSubs();
-    };
-  }, []);
-
-  /**
-   * Check is public
-   */
-  useEffect(() => {
-    const qS = parseQueryString();
-    let _isPublic;
-    if (typeof window !== 'undefined' && qS) {
-      _isPublic = qS.public === '1';
-    } else if (typeof window !== 'undefined' && !qS) {
-      _isPublic = false;
-    }
-    log('info', 'Is public is', _isPublic);
-    if (typeof _isPublic === 'boolean') {
-      setIsPublic(_isPublic);
-    }
-  }, []);
-
-  /**
-   * Listen toBan
-   */
-  useEffect(() => {
-    if (toBan && roomId) {
-      ws.sendMessage({
-        type: MessageType.GET_TO_BAN,
-        connId: connectionId,
-        id: roomId,
-        data: {
-          target: toBan,
-          userId: ws.userId,
-        },
-      });
-      setToBan(0);
-    }
-  }, [toBan, connectionId, ws, roomId, setToBan]);
-
-  /**
-   * Listen toUnMute
-   */
-  useEffect(() => {
-    if (toUnMute && roomId) {
-      ws.sendMessage({
-        type: MessageType.GET_TO_UNMUTE,
-        connId: connectionId,
-        id: roomId,
-        data: {
-          target: toUnMute,
-        },
-      });
-      setToUnMute(0);
-    }
-  }, [toUnMute, connectionId, ws, roomId, setToUnMute]);
-
-  /**
-   * Send message from storeMessage
-   */
-  useEffect(() => {
-    const storeMessageHandler = (second = false) => {
-      const {
-        message: { type, value },
-      } = storeMessage.getState();
-      if (type === 'room') {
-        if (ws.connection.readyState === ws.connection.OPEN) {
-          ws.sendMessage(value);
-        } else if (second === false) {
-          setTimeout(() => {
-            storeMessageHandler(true);
-          }, 1000);
-        } else {
-          log('warn', 'Ws not found on sendMessage', { type, value });
-        }
-      }
-    };
-    const cleanSubs = storeMessage.subscribe(storeMessageHandler);
-    return () => {
-      cleanSubs();
-    };
-  }, [ws]);
-
-  /**
-   * Set streams from store
-   */
-  useEffect(() => {
-    const cleanSubs = storeStreams.subscribe(() => {
-      const state = storeStreams.getState();
-      setStreams(state.streams);
-    });
-    return () => {
-      cleanSubs();
-    };
-  }, []);
-
-  /**
    * Connections handlers
    */
   useEffect(() => {
+    ws.onOpen = () => {
+      setTimeout(() => {
+        ws.sendMessage({
+          type: MessageType.GET_USER_ID,
+          id,
+          data: {
+            userName,
+            locale: getCookie(CookieName.lang) || LocaleDefault,
+          },
+          connId: '',
+        });
+      }, START_DELAY);
+    };
     if (!roomId || typeof isPublic === 'undefined') {
       return () => {
         /** */
@@ -521,11 +414,13 @@ export const useConnection = ({
           }, ALERT_TIMEOUT);
           break;
         case ErrorCode.roomIsInactive:
-          storeRoomIsInactive.dispatch(
-            changeRoomIsInactive({
-              roomIsInactive: true,
-            })
-          );
+          if (message !== '') {
+            storeRoomIsInactive.dispatch(
+              changeRoomIsInactive({
+                roomIsInactive: true,
+              })
+            );
+          }
           break;
         default:
       }
@@ -707,19 +602,6 @@ export const useConnection = ({
         return isExists[0] !== undefined;
       });
     };
-    ws.onOpen = () => {
-      setTimeout(() => {
-        ws.sendMessage({
-          type: MessageType.GET_USER_ID,
-          id,
-          data: {
-            userName,
-            locale: getCookie(CookieName.lang) || LocaleDefault,
-          },
-          connId: '',
-        });
-      }, START_DELAY);
-    };
     ws.onMessage = (ev) => {
       const { data } = ev;
       const rawMessage = ws.parseMessage(data);
@@ -823,6 +705,127 @@ export const useConnection = ({
     canConnect,
     isPublic,
   ]);
+
+  /**
+   * Listen toMute
+   */
+  useEffect(() => {
+    if (toMute && roomId) {
+      ws.sendMessage({
+        type: MessageType.GET_TO_MUTE,
+        connId: connectionId,
+        id: roomId,
+        data: {
+          target: toMute,
+        },
+      });
+      setToMute(0);
+    }
+  }, [toMute, connectionId, ws, roomId, setToMute]);
+
+  /**
+   * Listen can connect
+   */
+  useEffect(() => {
+    const cleanSubs = storeCanConnect.subscribe(() => {
+      const { canConnect: _canConnect } = storeCanConnect.getState();
+      setCanConnect(_canConnect);
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, []);
+
+  /**
+   * Check is public
+   */
+  useEffect(() => {
+    const qS = parseQueryString();
+    let _isPublic;
+    if (typeof window !== 'undefined' && qS) {
+      _isPublic = qS.public === '1';
+    } else if (typeof window !== 'undefined' && !qS) {
+      _isPublic = false;
+    }
+    log('info', 'Is public is', _isPublic);
+    if (typeof _isPublic === 'boolean') {
+      setIsPublic(_isPublic);
+    }
+  }, []);
+
+  /**
+   * Listen toBan
+   */
+  useEffect(() => {
+    if (toBan && roomId) {
+      ws.sendMessage({
+        type: MessageType.GET_TO_BAN,
+        connId: connectionId,
+        id: roomId,
+        data: {
+          target: toBan,
+          userId: ws.userId,
+        },
+      });
+      setToBan(0);
+    }
+  }, [toBan, connectionId, ws, roomId, setToBan]);
+
+  /**
+   * Listen toUnMute
+   */
+  useEffect(() => {
+    if (toUnMute && roomId) {
+      ws.sendMessage({
+        type: MessageType.GET_TO_UNMUTE,
+        connId: connectionId,
+        id: roomId,
+        data: {
+          target: toUnMute,
+        },
+      });
+      setToUnMute(0);
+    }
+  }, [toUnMute, connectionId, ws, roomId, setToUnMute]);
+
+  /**
+   * Send message from storeMessage
+   */
+  useEffect(() => {
+    const storeMessageHandler = (second = false) => {
+      const {
+        message: { type, value },
+      } = storeMessage.getState();
+      if (type === 'room') {
+        if (ws.connection.readyState === ws.connection.OPEN) {
+          ws.sendMessage(value);
+        } else if (second === false) {
+          setTimeout(() => {
+            storeMessageHandler(true);
+          }, 1000);
+        } else {
+          log('warn', 'Ws not found on sendMessage', { type, value });
+        }
+      }
+    };
+    const cleanSubs = storeMessage.subscribe(storeMessageHandler);
+    return () => {
+      cleanSubs();
+    };
+  }, [ws]);
+
+  /**
+   * Set streams from store
+   */
+  useEffect(() => {
+    const cleanSubs = storeStreams.subscribe(() => {
+      const state = storeStreams.getState();
+      setStreams(state.streams);
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, []);
 
   /**
    * Check room list

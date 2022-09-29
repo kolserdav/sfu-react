@@ -13,9 +13,9 @@
     "build": "cross-env CI=false react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "next:dev": "next dev",
-    "next:build": "next build",
-    "next:start": "next start"
+    "dev:next": "next dev",
+    "build:next": "next build",
+    "start:next": "next start"
   },
   "eslintConfig": {
     "extends": [
