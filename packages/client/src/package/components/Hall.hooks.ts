@@ -29,6 +29,24 @@ export const useSettings = ({ open }: { open: boolean }) => {
   return { openSettings, openSettingsDialog };
 };
 
+export const useUserList = ({ open }: { open: boolean }) => {
+  const [openUserList, setOpenUserList] = useState<boolean>(false);
+  const openUserListHandler = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    setOpenUserList(!openUserList);
+  };
+
+  /**
+   * Listen close
+   */
+  useEffect(() => {
+    if (openUserList && !open) {
+      setOpenUserList(false);
+    }
+  }, [open, openUserList]);
+
+  return { openUserList, openUserListHandler };
+};
+
 export const useUsers = ({
   userId,
   roomId,

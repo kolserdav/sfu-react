@@ -23,12 +23,12 @@ $settings-item-padding: 1rem;
     max-width: 100%;
     max-height: calc(90% + #{$border-width} * 2);
     @media (max-width: $mobile-width) {
-      width: 500px;
+      width: calc(100vw - #{$settings-item-padding} * 2);
       height: 500px;
     }
 
     @media (max-width: $small-width) {
-      width: $small-width;
+      width: calc(100vw - #{$settings-item-padding} * 2);
       height: 500px;
     }
   }

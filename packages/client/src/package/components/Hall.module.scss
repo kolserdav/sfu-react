@@ -52,7 +52,18 @@
   }
 
   @media (max-width: $mobile-width) {
-    display: none;
+    position: fixed;
+    top: 0;
+    z-index: 107;
+    width: 100%;
+    overflow: hidden;
+    height: 0;
+    transition: height 0.3s ease-in;
+
+    &.open {
+      height: 100vh;
+      transition: height 0.3s ease-out;
+    }
   }
 }
 
@@ -68,6 +79,9 @@ $user-item-padding: 1rem;
   align-items: center;
   justify-content: space-between;
   line-height: 1.6;
+  @media (max-width: $mobile-width) {
+    justify-content: space-around;
+  }
 }
 
 .settings__button {
@@ -76,5 +90,21 @@ $user-item-padding: 1rem;
   right: 0;
   @media (min-width: $mobile-width) {
     display: none;
+  }
+}
+
+.userlist__button {
+  z-index: 108;
+  position: fixed;
+  right: 0;
+  top: 40px;
+  transition: top 0.3s ease-in;
+  @media (min-width: $mobile-width) {
+    display: none;
+  }
+
+  &.open {
+    top: 0;
+    transition: top 0.3s ease-out;
   }
 }

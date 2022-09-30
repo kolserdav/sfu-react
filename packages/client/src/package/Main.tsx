@@ -14,7 +14,7 @@ import clsx from 'clsx';
 import Room from './components/Room';
 import Hall from './components/Hall';
 import { GlobalProps } from './types';
-import { getPathname, getRoomId } from './utils/lib';
+import { getPathname, getRoomId, parseQueryString } from './utils/lib';
 import ChevronLeftIcon from './Icons/ChevronLeftIcon';
 import ChevronRightIcon from './Icons/ChevronRightIcon';
 import IconButton from './components/ui/IconButton';
@@ -27,13 +27,15 @@ function Main({
   port,
   server,
   colors,
-  userId,
+  userId: _userId,
   logLevel,
   token = '',
   name = USER_NAME_DEFAULT,
   backLinks = null,
 }: Omit<GlobalProps, 'locale' | 'roomId'>) {
   const pathname = getPathname();
+  const qS = useMemo(() => parseQueryString(), []);
+  const userId = useMemo(() => qS?.uid || _userId, [_userId, qS?.uid]);
   const roomId = useMemo(() => getRoomId(pathname || ''), [pathname]);
   const { locale, openMenu, theme, alert, hallOpen } = useListeners({
     colors,

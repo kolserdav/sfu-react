@@ -16,10 +16,11 @@ import CloseIcon from '../Icons/Close';
 import s from './Hall.module.scss';
 import IconButton from './ui/IconButton';
 import SettingsIcon from '../Icons/SettingsIcon';
-import { useSettings, useUsers } from './Hall.hooks';
+import { useSettings, useUsers, useUserList } from './Hall.hooks';
 import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
 import { checkIsRecord } from '../utils/lib';
 import Settings from './Settings';
+import UsersIcon from '../Icons/Users';
 
 function Hall({
   open,
@@ -35,6 +36,7 @@ function Hall({
 }: HallProps) {
   const { openSettings, openSettingsDialog } = useSettings({ open });
   const { users, isOwner, banneds, unBanWrapper } = useUsers({ userId, roomId });
+  const { openUserList, openUserListHandler } = useUserList({ open });
 
   return (
     <div className={clsx(s.wrapper, open ? s.open : '')}>
@@ -46,7 +48,10 @@ function Hall({
         }}
       >
         <div className={s.block}>
-          <div className={s.users} style={{ color: theme?.colors.text }}>
+          <div
+            className={clsx(s.users, openUserList ? s.open : '')}
+            style={{ color: theme?.colors.text, backgroundColor: theme?.colors.paper }}
+          >
             {backLinks && <div className={s.users}>{backLinks}</div>}
             <div className={s.title}>{locale.guests}</div>
             {users.map((item) =>
@@ -111,6 +116,18 @@ function Hall({
             server={server}
             port={port}
           />
+          {open && (
+            <IconButton
+              onClick={openUserListHandler}
+              className={clsx(s.userlist__button, openUserList ? s.open : '')}
+            >
+              {openUserList ? (
+                <CloseIcon color={theme?.colors.text} />
+              ) : (
+                <UsersIcon color={theme?.colors.text} />
+              )}
+            </IconButton>
+          )}
           {open && (
             <IconButton onClick={openSettingsDialog} className={s.settings__button}>
               {openSettings ? (
