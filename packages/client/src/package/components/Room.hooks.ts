@@ -245,8 +245,8 @@ export const useConnection = ({
   /**
    * On change pathname
    */
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       const _roomId = getRoomId(window.location.pathname);
       if (_roomId !== roomId) {
         ws.connection.close();
@@ -254,8 +254,9 @@ export const useConnection = ({
         setStreams([]);
         setLenght(0);
       }
-    };
-  }, [window.location.pathname, roomId]);
+    },
+    [window.location.pathname, roomId]
+  );
 
   /**
    * Connections handlers
