@@ -908,6 +908,8 @@ export const useConnection = ({
   };
 };
 
+let oldLenght = 0;
+
 export const useVideoDimensions = ({
   lenght,
   container,
@@ -937,7 +939,8 @@ export const useVideoDimensions = ({
             // Change track constraints
             stream.getVideoTracks().forEach((item) => {
               const oldWidth = item.getConstraints().width;
-              if (oldWidth !== width) {
+              if (oldWidth !== width || oldLenght !== lenght) {
+                oldLenght = lenght;
                 let _width = width;
                 let _height = width;
                 if (coeff >= 1) {
