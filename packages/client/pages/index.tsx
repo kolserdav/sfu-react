@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
+import Link from 'next/link';
 import Head from 'next/head';
 import styles from '../styles/Home.module.css';
-import Link from 'next/link';
 
 function Home() {
   const href = useMemo(() => `/room/${new Date().getTime()}?uid=${new Date().getTime() + 1}`, []);
