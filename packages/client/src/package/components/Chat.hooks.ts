@@ -10,7 +10,7 @@
  ******************************************************************************************/
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import WS from '../core/ws';
-import { log, getDialogPosition } from '../utils/lib';
+import { log, getDialogPosition, getRoomId } from '../utils/lib';
 import {
   ErrorCode,
   Locale,
@@ -210,6 +210,18 @@ export const useMesages = ({
     },
     [message, userId, roomId, ws]
   );
+
+  /**
+   * On change pathname
+   */
+  useEffect(() => {
+    return () => {
+      const _roomId = getRoomId(window.location.pathname);
+      if (_roomId !== roomId) {
+        ws.connection.close();
+      }
+    };
+  }, [window.location.pathname, roomId]);
 
   /**
    * Listen error

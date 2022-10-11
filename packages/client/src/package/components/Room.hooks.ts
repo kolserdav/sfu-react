@@ -19,6 +19,7 @@ import {
   isClickByDialog,
   parseQueryString,
   checkIsRecord,
+  getRoomId,
 } from '../utils/lib';
 import {
   createSettingsContext,
@@ -89,7 +90,10 @@ export const useConnection = ({
   setToUnMute: React.Dispatch<React.SetStateAction<string | number>>;
   setToBan: React.Dispatch<React.SetStateAction<string | number>>;
 }) => {
-  const ws = useMemo(() => new WS({ server, port, protocol: 'room' }), [server, port]);
+  const ws = useMemo(
+    () => new WS({ server, port, protocol: 'room' }),
+    [server, port, window.location.pathname]
+  );
   const rtc = useMemo(() => new RTC({ ws }), [ws]);
 
   const [streams, setStreams] = useState<Stream[]>([]);
@@ -168,7 +172,7 @@ export const useConnection = ({
       }
       ws.shareScreen = !shareScreen;
       const oldStream = rtc.localStream || new MediaStream();
-      rtc.localStream = null;
+      rtc.setLocalStream(null);
       rtc.addTracks(
         { userId: ws.userId, roomId, connId: connectionId, target: 0, locale },
         (err, stream) => {
@@ -183,7 +187,7 @@ export const useConnection = ({
             });
           } else {
             ws.shareScreen = !ws.shareScreen;
-            rtc.localStream = stream;
+            rtc.setLocalStream(stream);
             addStream({
               target: ws.userId,
               stream: oldStream,
@@ -197,7 +201,17 @@ export const useConnection = ({
         }
       );
     },
-    [addStream, connectionId, locale, roomId, rtc, ws, shareScreen, isOwner]
+    [
+      addStream,
+      connectionId,
+      locale,
+      roomId,
+      rtc,
+      ws,
+      shareScreen,
+      isOwner,
+      window.location.pathname,
+    ]
   );
 
   const changeMuted = () => {
@@ -227,6 +241,21 @@ export const useConnection = ({
       rtc.localStream.getVideoTracks()[0].enabled = _video;
     }
   };
+
+  /**
+   * On change pathname
+   */
+  useEffect(() => {
+    return () => {
+      const _roomId = getRoomId(window.location.pathname);
+      if (_roomId !== roomId) {
+        ws.connection.close();
+        rtc.closeAllConnections(true);
+        setStreams([]);
+        setLenght(0);
+      }
+    };
+  }, [window.location.pathname, roomId]);
 
   /**
    * Connections handlers

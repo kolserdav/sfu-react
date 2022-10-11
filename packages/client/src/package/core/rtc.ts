@@ -50,6 +50,10 @@ class RTC
     this.ws = ws;
   }
 
+  public setLocalStream(stream: MediaStream | null) {
+    this.localStream = stream;
+  }
+
   public createPeerConnection({
     roomId,
     userId,
@@ -489,12 +493,17 @@ class RTC
     }
   };
 
-  public closeAllConnections() {
+  public closeAllConnections(withSelfStream = false) {
     this.ws.connection.close();
-    this.localStream = null;
     Object.keys(this.peerConnections).forEach((item) => {
       this.closeByPeer(item);
     });
+    if (withSelfStream && this.localStream !== null) {
+      this.localStream.getTracks().forEach((track) => {
+        track.stop();
+      });
+    }
+    this.localStream = null;
   }
 
   public parsePeerId({ target }: { target: string | number }) {
