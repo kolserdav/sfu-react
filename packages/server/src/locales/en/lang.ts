@@ -56,6 +56,11 @@ const lang: LocaleServer = {
     stopRecord: 'Stop record',
     willBeReconnect: 'The duplicate tab will be redirected to the previous page',
     guests: 'Room guests',
+    micOff: 'Turn off the microphone',
+    micOn: 'Turn on the microphone',
+    cameraOff: 'Turn off the camera',
+    cameraOn: 'Turn on the camera',
+    copyRoomLink: 'Copy room address',
   },
 };
 

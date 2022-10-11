@@ -283,7 +283,10 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
       </div>
       <div className={s.actions}>
         {roomLink && (
-          <IconButton onClick={() => copyLink(roomLink, locale.linkCopied)}>
+          <IconButton
+            title={locale.copyRoomLink}
+            onClick={() => copyLink(roomLink, locale.linkCopied)}
+          >
             <CopyIcon color={theme?.colors.text} />
           </IconButton>
         )}
@@ -296,14 +299,18 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
             )}
           </IconButton>
         )}
-        <IconButton onClick={changeMuted} disabled={adminMuted}>
+        <IconButton
+          title={muted ? locale.micOn : locale.micOff}
+          onClick={changeMuted}
+          disabled={adminMuted}
+        >
           {muted || adminMuted ? (
             <MicrophoneOffIcon color={theme?.colors.text} />
           ) : (
             <MicrophoneIcon color={theme?.colors.text} />
           )}
         </IconButton>
-        <IconButton onClick={changeVideo}>
+        <IconButton title={video ? locale.cameraOff : locale.cameraOn} onClick={changeVideo}>
           {video ? (
             <CameraOutlineIcon color={theme?.colors.text} />
           ) : (

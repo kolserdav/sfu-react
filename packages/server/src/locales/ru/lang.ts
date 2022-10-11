@@ -56,6 +56,11 @@ const lang: LocaleServer = {
     stopRecord: 'Остановить запись',
     willBeReconnect: 'Дублирующая вкладка будет перенаправлены на предыдущую сраницу',
     guests: 'Гости комнаты',
+    micOff: 'Отключить микрофон',
+    micOn: 'Включить микрофон',
+    cameraOff: 'Отключить камеру',
+    cameraOn: 'Включить камеру',
+    copyRoomLink: 'Copy room address',
   },
 };
 

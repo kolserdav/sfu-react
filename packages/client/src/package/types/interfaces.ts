@@ -178,6 +178,11 @@ export namespace Locale {
     stopRecord: string;
     willBeReconnect: string;
     guests: string;
+    micOn: string;
+    micOff: string;
+    cameraOn: string;
+    cameraOff: string;
+    copyRoomLink: string;
   }
 }
 
