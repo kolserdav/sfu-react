@@ -55,6 +55,7 @@ function Main({
           theme={theme}
           roomId={roomId}
           locale={locale}
+          name={name}
         />
       )}
       <div

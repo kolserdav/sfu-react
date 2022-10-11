@@ -90,10 +90,7 @@ export const useConnection = ({
   setToUnMute: React.Dispatch<React.SetStateAction<string | number>>;
   setToBan: React.Dispatch<React.SetStateAction<string | number>>;
 }) => {
-  const ws = useMemo(
-    () => new WS({ server, port, protocol: 'room' }),
-    [server, port, window.location.pathname]
-  );
+  const ws = useMemo(() => new WS({ server, port, protocol: 'room' }), [server, port]);
   const rtc = useMemo(() => new RTC({ ws }), [ws]);
 
   const [streams, setStreams] = useState<Stream[]>([]);
@@ -201,17 +198,7 @@ export const useConnection = ({
         }
       );
     },
-    [
-      addStream,
-      connectionId,
-      locale,
-      roomId,
-      rtc,
-      ws,
-      shareScreen,
-      isOwner,
-      window.location.pathname,
-    ]
+    [addStream, connectionId, locale, roomId, rtc, ws, shareScreen, isOwner]
   );
 
   const changeMuted = () => {
@@ -255,7 +242,7 @@ export const useConnection = ({
         setLenght(0);
       }
     },
-    [window.location.pathname, roomId]
+    [roomId, rtc, ws.connection]
   );
 
   /**
