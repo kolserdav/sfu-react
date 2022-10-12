@@ -240,21 +240,28 @@ export function createServer(
 
     // eslint-disable-next-line no-param-reassign
     ws.on('close', async () => {
+      let skip = false;
       if (protocol === 'chat') {
         Object.keys(chat.users).forEach((item) => {
-          Object.keys(chat.users[item]).forEach((_item) => {
-            if (chat.users[item][_item].connId === connId) {
-              chat.cleanUnit({ roomId: item, userId: _item });
-            }
-          });
+          if (!skip) {
+            Object.keys(chat.users[item]).forEach((_item) => {
+              if (!skip && chat.users[item][_item].connId === connId) {
+                chat.cleanUnit({ roomId: item, userId: _item });
+                skip = true;
+              }
+            });
+          }
         });
       } else if (protocol === 'settings') {
         Object.keys(settings.users).forEach((item) => {
-          Object.keys(settings.users[item]).forEach((_item) => {
-            if (settings.users[item][_item].connId === connId) {
-              settings.cleanUnit({ roomId: item, userId: _item });
-            }
-          });
+          if (!skip) {
+            Object.keys(settings.users[item]).forEach((_item) => {
+              if (!skip && settings.users[item][_item].connId === connId) {
+                settings.cleanUnit({ roomId: item, userId: _item });
+                skip = true;
+              }
+            });
+          }
         });
       }
       if (protocol !== 'room') {
