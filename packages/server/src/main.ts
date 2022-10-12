@@ -240,6 +240,23 @@ export function createServer(
 
     // eslint-disable-next-line no-param-reassign
     ws.on('close', async () => {
+      if (protocol === 'chat') {
+        Object.keys(chat.users).forEach((item) => {
+          Object.keys(chat.users[item]).forEach((_item) => {
+            if (chat.users[item][_item].connId === connId) {
+              chat.cleanUnit({ roomId: item, userId: _item });
+            }
+          });
+        });
+      } else if (protocol === 'settings') {
+        Object.keys(settings.users).forEach((item) => {
+          Object.keys(settings.users[item]).forEach((_item) => {
+            if (settings.users[item][_item].connId === connId) {
+              settings.cleanUnit({ roomId: item, userId: _item });
+            }
+          });
+        });
+      }
       if (protocol !== 'room') {
         return;
       }
@@ -265,8 +282,6 @@ export function createServer(
             }
           });
           if (index !== -1) {
-            chat.cleanUnit({ roomId: item, userId });
-            settings.cleanUnit({ roomId: item, userId });
             const keys = rtc.getPeerConnectionKeys(item);
             rtc.cleanConnections(item, userId.toString());
             rtc.rooms[item].splice(index, 1);

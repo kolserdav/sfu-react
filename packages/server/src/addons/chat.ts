@@ -46,6 +46,7 @@ class Chat extends DB implements ConnectorInterface {
     this.users[roomId][userId] = {
       locale,
       ws,
+      connId,
     };
     this.sendMessage({
       roomId,

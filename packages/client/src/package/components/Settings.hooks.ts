@@ -112,7 +112,7 @@ export const useMessages = ({
   protocol: Protocol;
   token: string;
 }) => {
-  const ws = useMemo(() => new WS({ server, port, protocol: 'chat' }), [port, server]);
+  const ws = useMemo(() => new WS({ server, port, protocol: 'settings' }), [port, server]);
   const [time, setTime] = useState<string>('');
   const [started, setStarted] = useState<boolean>(false);
   const [connId, setConnId] = useState<string>('');

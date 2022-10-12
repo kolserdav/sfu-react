@@ -3,7 +3,10 @@ import { WebSocket, Server } from 'ws';
 import { LocaleValue, SendMessageArgs, MessageType } from '../types/interfaces';
 import DB from '../core/db';
 
-export type WSItem = Record<string, Record<string, { locale: LocaleValue; ws: WebSocket }>>;
+export type WSItem = Record<
+  string,
+  Record<string, { locale: LocaleValue; ws: WebSocket; connId: string }>
+>;
 
 export type ServerCallback = (args: Server<WebSocket>) => void;
 

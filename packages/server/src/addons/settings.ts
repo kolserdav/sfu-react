@@ -12,11 +12,12 @@ class Settings extends DB implements ConnectorInterface {
       this.users[roomId] = {};
     }
     if (this.users[roomId][userId]) {
-      log('warn', 'Duplicate chat user', { roomId, userId });
+      log('warn', 'Duplicate settings user', { roomId, userId });
     }
     this.users[roomId][userId] = {
       locale,
       ws,
+      connId,
     };
     this.sendMessage({
       roomId,
