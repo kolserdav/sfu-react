@@ -32,6 +32,7 @@ function Main({
   token = '',
   name = USER_NAME_DEFAULT,
   backLinks = null,
+  videoRecord = false,
 }: Omit<GlobalProps, 'locale' | 'roomId'>) {
   const pathname = getPathname();
   const qS = useMemo(() => parseQueryString(), []);
@@ -85,6 +86,7 @@ function Main({
           token={token}
           name={name}
           backLinks={backLinks}
+          videoRecord={videoRecord}
         />
       )}
       <Alert open={alert.open} type={alert.type} theme={theme}>

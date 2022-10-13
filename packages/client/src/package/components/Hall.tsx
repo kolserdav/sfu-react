@@ -33,6 +33,7 @@ function Hall({
   token,
   name,
   backLinks,
+  videoRecord,
 }: HallProps) {
   const { openSettings, openSettingsDialog } = useSettings({ open });
   const { users, isOwner, banneds, unBanWrapper } = useUsers({ userId, roomId });
@@ -115,6 +116,7 @@ function Hall({
             open={openSettings}
             server={server}
             port={port}
+            videoRecord={videoRecord}
           />
           {open && (
             <IconButton

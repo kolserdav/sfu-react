@@ -23,6 +23,10 @@ export interface GlobalProps {
   name?: string;
   token?: string;
   theme?: Theme;
+  /**
+   * @deprecated NOT IMPLEMENTED
+   */
+  videoRecord?: boolean;
   iceServers?: RTCConfiguration['iceServers'];
   colors?: Colors;
   logLevel?: LogLevel;
@@ -50,7 +54,7 @@ export type SettingsProps = Required<
   theme?: Theme;
 };
 
-export type ChatProps = Omit<HallProps, 'open' | 'backLinks'>;
+export type ChatProps = Omit<HallProps, 'open' | 'backLinks' | 'videoRecord'>;
 
 export interface Stream {
   target: number | string;

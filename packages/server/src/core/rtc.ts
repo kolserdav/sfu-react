@@ -259,7 +259,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
                   roomLength: rooms[roomId]?.length || 0,
                   muteds: this.muteds[roomId],
                   adminMuteds: this.adminMuteds[roomId],
-                  isOwner: this.rooms[roomId]?.find((_item) => _item.id === userId).isOwner,
+                  isOwner: this.rooms[roomId]?.find((_item) => _item.id === userId)?.isOwner,
                 },
                 connId,
               });
@@ -364,8 +364,17 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     });
     const desc = new werift.RTCSessionDescription(sdp.sdp as string, 'offer');
     let error = false;
+    if (this.peerConnectionsServer[roomId][peerId]!.getSenders().length !== 0) {
+      log('warn', 'Skipping set remote desc for answer, tracks exists', {});
+      error = true;
+      return;
+    }
+    let sendersLength = 0;
     await this.peerConnectionsServer[roomId][peerId]!.setRemoteDescription(desc).catch((e) => {
-      log('error', 'Error set remote description', { e: e.message, stack: e.stack, ...opts });
+      sendersLength = this.peerConnectionsServer[roomId][peerId]!.getSenders().length;
+      if (sendersLength === 0) {
+        log('error', 'Error set remote description', { e: e.message, stack: e.stack, ...opts });
+      }
       error = true;
     });
     if (!this.peerConnectionsServer[roomId]?.[peerId]) {
@@ -391,14 +400,15 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     }
     log('info', '---> Setting local description after creating answer', { ...opts });
     if (!this.peerConnectionsServer[roomId]?.[peerId] || error) {
-      log('warn', 'Failed set local description fo answer', {
+      log('warn', 'Skipping set local description for answer', {
         error,
         ...opts,
+        sendersLength,
       });
       return;
     }
     await this.peerConnectionsServer[roomId][peerId]!.setLocalDescription(answ).catch((err) => {
-      log('error', 'Error set local description for answer', {
+      log('error', 'Error set local description for answer 2', {
         message: err.message,
         stack: err.stack,
         ...opts,

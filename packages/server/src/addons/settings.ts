@@ -43,8 +43,9 @@ class Settings extends DB implements ConnectorInterface {
           resolve(1);
         }
         if (!this.users[roomId][id]) {
-          log('error', 'Settings user not found', { roomId, id });
+          log('warn', 'Settings user not found', { roomId, id });
           resolve(1);
+          return;
         }
         this.users[roomId][id].ws.send(res, cb);
         resolve(0);
@@ -66,7 +67,8 @@ class Settings extends DB implements ConnectorInterface {
     connId,
   }: SendMessageArgs<MessageType.GET_VIDEO_FIND_MANY>) {
     const locale = getLocale(this.users[id][userId].locale).server;
-    if ((await this.checkTokenCb(token)) === false) {
+    const checkToken = token ? await this.checkTokenCb(token) : true;
+    if (checkToken === false) {
       this.sendMessage({
         roomId: id,
         msg: {
@@ -102,7 +104,8 @@ class Settings extends DB implements ConnectorInterface {
     connId,
   }: SendMessageArgs<MessageType.GET_VIDEO_FIND_MANY>) {
     const locale = getLocale(this.users[id][userId].locale).server;
-    if ((await this.checkTokenCb(token)) === false) {
+    const checkToken = token ? await this.checkTokenCb(token) : true;
+    if (checkToken === false) {
       this.sendMessage({
         roomId: id,
         msg: {

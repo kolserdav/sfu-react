@@ -508,11 +508,13 @@ class RTC
 
   public parsePeerId({ target }: { target: string | number }) {
     let peer: string[] = [];
-    Object.keys(this.peerConnections).forEach((item) => {
+    Object.keys(this.peerConnections).every((item) => {
       const _peer = item.split(this.delimiter);
       if (_peer[1] === target.toString()) {
         peer = _peer;
+        return false;
       }
+      return true;
     });
     return peer;
   }

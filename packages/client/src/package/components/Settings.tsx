@@ -32,6 +32,7 @@ function Settings({
   port,
   token,
   name,
+  videoRecord,
 }: SettingsProps) {
   const { lang, changeLang } = useLang();
   const { settingsRef, settingStyle } = useSettingsStyle();
@@ -79,48 +80,50 @@ function Settings({
           </div>
         </div>
       </div>
-      <div
-        className={s.item}
-        ref={settingsRef}
-        style={settingStyle ? { boxShadow: `1px 3px 1px ${theme?.colors.active}` } : {}}
-      >
-        <h5 className={s.item__title}>{locale.recordActions}</h5>
-        <div className={s.item__row}>
-          <h6 className={s.item__title}>{locale.recordVideo}</h6>
-          <div className={s.item__actions}>
-            <IconButton
-              title={started ? locale.stopRecord : locale.startRecord}
-              className={started ? s.text__button : ''}
-              onClick={recordStartWrapper(started ? 'stop' : 'start')}
-              disabled={!isOwner || buttonDisabled}
-            >
-              <div className={s.record}>
-                {started && <div className={s.time}>{time}</div>}
-                {started ? (
-                  <StopIcon color={theme?.colors.red} />
-                ) : (
-                  <RecIcon color={theme?.colors.red} />
-                )}
+      {videoRecord && (
+        <div
+          className={s.item}
+          ref={settingsRef}
+          style={settingStyle ? { boxShadow: `1px 3px 1px ${theme?.colors.active}` } : {}}
+        >
+          <h5 className={s.item__title}>{locale.recordActions}</h5>
+          <div className={s.item__row}>
+            <h6 className={s.item__title}>{locale.recordVideo}</h6>
+            <div className={s.item__actions}>
+              <IconButton
+                title={started ? locale.stopRecord : locale.startRecord}
+                className={started ? s.text__button : ''}
+                onClick={recordStartWrapper(started ? 'stop' : 'start')}
+                disabled={!isOwner || buttonDisabled}
+              >
+                <div className={s.record}>
+                  {started && <div className={s.time}>{time}</div>}
+                  {started ? (
+                    <StopIcon color={theme?.colors.red} />
+                  ) : (
+                    <RecIcon color={theme?.colors.red} />
+                  )}
+                </div>
+              </IconButton>
+            </div>
+          </div>
+          <div className={s.videos}>
+            {videos.map((item) => (
+              <div className={s.video} key={item.id}>
+                <div className={s.name}>{item.name}</div>
+                <div className={s.actions}>
+                  <IconButton onClick={playVideoWrapper(item.name)}>
+                    <PlayIcon width={20} height={20} color={theme?.colors.blue} />
+                  </IconButton>
+                  <IconButton onClick={deleteVideoWrapper(item.id)}>
+                    <DeleteIcon width={16} height={16} color={theme?.colors.red} />
+                  </IconButton>
+                </div>
               </div>
-            </IconButton>
+            ))}
           </div>
         </div>
-        <div className={s.videos}>
-          {videos.map((item) => (
-            <div className={s.video} key={item.id}>
-              <div className={s.name}>{item.name}</div>
-              <div className={s.actions}>
-                <IconButton onClick={playVideoWrapper(item.name)}>
-                  <PlayIcon width={20} height={20} color={theme?.colors.blue} />
-                </IconButton>
-                <IconButton onClick={deleteVideoWrapper(item.id)}>
-                  <DeleteIcon width={16} height={16} color={theme?.colors.red} />
-                </IconButton>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
       {playedVideo && <Video handleClose={handleCloseVideo} theme={theme} src={playedVideo} />}
     </div>
   );
