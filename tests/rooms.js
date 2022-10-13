@@ -121,7 +121,7 @@ async function evaluateRoom(evalPage, last = false) {
        */
       let _timeupdate = {};
       const _videos = document.querySelectorAll('video');
-      _videos[0].parentElement?.parentElement?.focus();
+      _videos[0]?.parentElement?.parentElement?.focus();
       await new Promise((resolve) => {
         setTimeout(() => {
           resolve(0);

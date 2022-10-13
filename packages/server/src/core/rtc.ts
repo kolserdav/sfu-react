@@ -552,7 +552,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     onRoomOpen?: OnRoomOpen;
     isPublic: boolean;
   }): Promise<{ error: 1 | 0; isOwner: boolean }> {
-    const room = await this.db.roomFindFirst({
+    let room = await this.db.roomFindFirst({
       where: {
         id: roomId.toString(),
       },
@@ -561,7 +561,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     let isOwner = room?.authorId === userId.toString();
     if (!room) {
       const authorId = userId.toString();
-      this.db.roomCreate({
+      room = await this.db.roomCreate({
         data: {
           id: roomId.toString(),
           authorId: isPublic ? undefined : authorId,
@@ -602,7 +602,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
           };
         }
         if (isOwner && room?.authorId !== null) {
-          isOwner = room?.authorId === null;
+          isOwner = true;
           await this.db.roomUpdate({
             where: {
               id: room.id,
