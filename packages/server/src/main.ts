@@ -228,12 +228,14 @@ export function createServer(
     const getUserId = (_connId: string) => {
       let userId = '';
       const keys = Object.keys(wss.sockets);
-      keys.forEach((item) => {
+      keys.every((item) => {
         const sock = item.split(rtc.delimiter);
         if (sock[1] === _connId) {
           // eslint-disable-next-line prefer-destructuring
           userId = sock[0];
+          return false;
         }
+        return true;
       });
       return userId;
     };
@@ -242,26 +244,34 @@ export function createServer(
     ws.on('close', async () => {
       let skip = false;
       if (protocol === 'chat') {
-        Object.keys(chat.users).forEach((item) => {
-          if (!skip) {
-            Object.keys(chat.users[item]).forEach((_item) => {
-              if (!skip && chat.users[item][_item].connId === connId) {
-                chat.cleanUnit({ roomId: item, userId: _item });
-                skip = true;
-              }
-            });
+        Object.keys(chat.users).every((item) => {
+          if (skip) {
+            return false;
           }
+          Object.keys(chat.users[item]).every((_item) => {
+            if (chat.users[item][_item].connId === connId) {
+              chat.cleanUnit({ roomId: item, userId: _item });
+              skip = true;
+              return false;
+            }
+            return true;
+          });
+          return true;
         });
       } else if (protocol === 'settings') {
-        Object.keys(settings.users).forEach((item) => {
-          if (!skip) {
-            Object.keys(settings.users[item]).forEach((_item) => {
-              if (!skip && settings.users[item][_item].connId === connId) {
-                settings.cleanUnit({ roomId: item, userId: _item });
-                skip = true;
-              }
-            });
+        Object.keys(settings.users).every((item) => {
+          if (skip) {
+            return false;
           }
+          Object.keys(settings.users[item]).every((_item) => {
+            if (settings.users[item][_item].connId === connId) {
+              settings.cleanUnit({ roomId: item, userId: _item });
+              skip = true;
+              return false;
+            }
+            return true;
+          });
+          return true;
         });
       }
       if (protocol !== 'room') {
@@ -281,12 +291,14 @@ export function createServer(
         log('info', 'User disconnected', userId);
 
         const roomKeys = Object.keys(rtc.rooms);
-        roomKeys.forEach((item) => {
+        roomKeys.every((item) => {
           let index = -1;
-          rtc.rooms[item].forEach((_item, i) => {
+          rtc.rooms[item].every((_item, i) => {
             if (_item.id.toString() === userId) {
               index = i;
+              return false;
             }
+            return true;
           });
           if (index !== -1) {
             const keys = rtc.getPeerConnectionKeys(item);
@@ -302,7 +314,7 @@ export function createServer(
             // Send user list of room
             rtc.rooms[item].forEach((_item) => {
               let _connId = connId;
-              keys.forEach((i) => {
+              keys.every((i) => {
                 const peer = i.split(rtc.delimiter);
                 if (
                   (peer[1] === _item.id.toString() && peer[2] === userId) ||
@@ -310,7 +322,9 @@ export function createServer(
                 ) {
                   // eslint-disable-next-line prefer-destructuring
                   _connId = peer[3];
+                  return false;
                 }
+                return true;
               });
               wss.sendMessage({
                 type: MessageType.SET_CHANGE_UNIT,
@@ -357,7 +371,9 @@ export function createServer(
             }
             db.deleteGuest({ userId, roomId: item });
             delete wss.users[userId];
+            return false;
           }
+          return true;
         });
       }
     });

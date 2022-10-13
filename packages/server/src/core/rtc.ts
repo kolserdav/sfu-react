@@ -426,13 +426,15 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
   private getStreamConnId(roomId: string | number, userId: string | number) {
     let _connId = '';
     const keys = this.getKeysStreams(roomId);
-    keys.forEach((element) => {
+    keys.every((element) => {
       const str = element.split(this.delimiter);
       const isTarget = str[1] === userId.toString() && str[2] === '0';
       if (isTarget) {
         // eslint-disable-next-line prefer-destructuring
         _connId = str[3];
+        return false;
       }
+      return true;
     });
     return _connId;
   }
@@ -440,13 +442,15 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
   private getPeerConnId(roomId: string | number, userId: string | number, target: number | string) {
     let _connId = '';
     const keys = this.getPeerConnectionKeys(roomId);
-    keys.forEach((element) => {
+    keys.every((element) => {
       const str = element.split(this.delimiter);
       const isTarget = str[1] === userId.toString() && str[2] === target.toString();
       if (isTarget) {
         // eslint-disable-next-line prefer-destructuring
         _connId = str[3];
+        return false;
       }
+      return true;
     });
     return _connId;
   }
@@ -723,10 +727,12 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       this.banneds[id] = [];
     }
     let index = -1;
-    this.banneds[id].forEach((item, i) => {
+    this.banneds[id].every((item, i) => {
       if (item.id === uid) {
         index = i;
+        return false;
       }
+      return true;
     });
     const locale = getLocale(this.ws.users[uid].locale).server;
     if (index !== -1) {
@@ -934,10 +940,12 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     }
     let index = -1;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.banneds[roomId].forEach((item, i) => {
+    this.banneds[roomId].every((item, i) => {
       if (item.id === target) {
         index = i;
+        return false;
       }
+      return true;
     });
     if (index === -1) {
       const user = this.rooms[roomId].find((item) => item.id === target);
@@ -1025,10 +1033,12 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       this.banneds[roomId] = [];
     }
     let index = -1;
-    this.banneds[roomId].forEach((it, i) => {
+    this.banneds[roomId].every((it, i) => {
       if (it.id === target) {
         index = i;
+        return false;
       }
+      return true;
     });
     if (index !== -1) {
       this.banneds[roomId].splice(index, 1);
