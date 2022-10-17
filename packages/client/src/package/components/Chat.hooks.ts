@@ -30,16 +30,7 @@ import {
   ALERT_TIMEOUT,
 } from '../utils/constants';
 import { DialogProps } from '../types';
-import {
-  checkQuote,
-  cleanQuote,
-  scrollToBottom,
-  scrollToTop,
-  scrollTo,
-  getQuoteContext,
-  checkEdit,
-  cleanEdit,
-} from './Chat.lib';
+import { cleanQuote, scrollToBottom, scrollToTop, scrollTo } from './Chat.lib';
 import storeError from '../store/error';
 import storeClickDocument from '../store/clickDocument';
 import { CookieName, getCookie } from '../utils/cookies';
@@ -75,6 +66,7 @@ export const useMesages = ({
   const [count, setCount] = useState<number>(0);
   const [rows, setRows] = useState<number>(1);
   const [editedMessage, setEditedMessage] = useState<number>(0);
+  const [quotedMessage, setQuotedMessage] = useState<number>(0);
   const [messages, setMessages] = useState<
     SendMessageArgs<MessageType.SET_CHAT_MESSAGES>['data']['result']
   >([]);
@@ -84,11 +76,17 @@ export const useMesages = ({
     [editedMessage, messages]
   );
 
+  const quoteMessage = useMemo(
+    () => messages.find((item) => item.id === quotedMessage),
+    [quotedMessage, messages]
+  );
+
   const ws = useMemo(() => new WS({ server, port, protocol: 'chat' }), [port, server]);
 
   const onClickCloseEditMessage = useMemo(
     () => () => {
       setEditedMessage(0);
+      setQuotedMessage(0);
     },
     []
   );
@@ -97,21 +95,9 @@ export const useMesages = ({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { target }: any = e;
     const { value } = target;
-    let _value = (value as string).slice();
-    const { current } = inputRef;
-    const quote = checkQuote(value);
-    const edit = checkEdit(value);
-    if (current) {
-      if (current.selectionStart <= quote) {
-        _value = cleanQuote(value);
-      }
-      if (current.selectionStart <= edit) {
-        _value = cleanEdit(value);
-      }
-    }
     let c = 1;
-    for (let i = 0; _value[i]; i++) {
-      if (_value[i] === '\n') {
+    for (let i = 0; value[i]; i++) {
+      if (value[i] === '\n') {
         c++;
       }
     }
@@ -120,38 +106,34 @@ export const useMesages = ({
     } else {
       setRows(TEXT_AREA_MAX_ROWS);
     }
-    const _isEdit = checkEdit(_value);
-    if (_isEdit && !isEdit) {
-      setIsEdit(true);
-    } else if (!isEdit && isEdit) {
-      setIsEdit(false);
-    }
-    setMessage(_value);
+    setMessage(value);
   };
 
   const clickQuoteWrapper =
     (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-      const quote = `[quote=${getQuoteContext(JSON.parse(context))}]\n`;
-      setMessage(`${quote}${cleanQuote(message)}`);
+      const { id } = JSON.parse(context);
+      setQuotedMessage(id);
+      setEditedMessage(0);
+      setMessage(cleanQuote(message));
       setRows(message.length > 300 ? 5 : 3);
       const { current } = inputRef;
       if (current) {
         current.select();
-        current.selectionStart = quote.length + 1;
+        current.selectionStart = message.length;
       }
     };
 
   const clickEditWrapper =
     (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       const { text, id } = JSON.parse(context);
-      const _message = cleanEdit(text);
       setEditedMessage(id);
-      setMessage(_message);
+      setQuotedMessage(0);
+      setMessage(text);
       setRows(message.length > 300 ? 5 : 3);
       const { current } = inputRef;
       if (current) {
         current.select();
-        current.selectionStart = _message.length;
+        current.selectionStart = text.length;
       }
     };
 
@@ -189,7 +171,7 @@ export const useMesages = ({
                   id: editedMessage,
                 },
                 data: {
-                  text: cleanEdit(message),
+                  text: message,
                   updated: new Date(),
                 },
                 include: {
@@ -217,7 +199,7 @@ export const useMesages = ({
         }
       } else {
         setRows(1);
-        setMessage(mess);
+        setMessage(message);
       }
     },
     [message, userId, roomId, ws, editedMessage]
@@ -329,6 +311,19 @@ export const useMesages = ({
                   name: true,
                 },
               },
+              Quote: {
+                select: {
+                  MessageQuote: {
+                    include: {
+                      Unit: {
+                        select: {
+                          name: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
             },
             orderBy: {
               created: 'desc',
@@ -423,6 +418,22 @@ export const useMesages = ({
 
     const setRoomMessage = ({ data }: SendMessageArgs<MessageType.SET_ROOM_MESSAGE>) => {
       if (messages) {
+        if (quotedMessage) {
+          ws.sendMessage({
+            type: MessageType.GET_CREATE_QUOTE,
+            connId: '',
+            id: roomId,
+            data: {
+              args: {
+                data: {
+                  messageId: data.id,
+                  quoteId: quotedMessage,
+                },
+              },
+              userId,
+            },
+          });
+        }
         const _messages = messages.map((item) => item);
         _messages.push(data);
         setMessages(_messages);
@@ -434,6 +445,33 @@ export const useMesages = ({
         setSkip(skip + 1);
       }
     };
+
+    const setCreateQuoteHandler = ({ data }: SendMessageArgs<MessageType.SET_CREATE_QUOTE>) => {
+      ws.sendMessage({
+        type: MessageType.GET_EDIT_MESSAGE,
+        connId: '',
+        id: roomId,
+        data: {
+          args: {
+            where: {
+              id: data.messageId,
+            },
+            data: {
+              quoteId: data.id,
+            },
+            include: {
+              Unit: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          userId,
+        },
+      });
+    };
+
     ws.onMessage = (ev) => {
       const { data } = ev;
       const rawMessage = ws.parseMessage(data);
@@ -456,6 +494,9 @@ export const useMesages = ({
           break;
         case MessageType.SET_CHAT_UNIT:
           setChatUnitHandler();
+          break;
+        case MessageType.SET_CREATE_QUOTE:
+          setCreateQuoteHandler(rawMessage);
           break;
         case MessageType.SET_ERROR:
           setErrorHandler(rawMessage);
@@ -483,7 +524,7 @@ export const useMesages = ({
         /** */
       };
     };
-  }, [roomId, userId, ws, messages, message, myMessage, containerRef, skip, locale]);
+  }, [roomId, userId, ws, messages, message, myMessage, containerRef, skip, locale, quotedMessage]);
   return {
     changeText,
     sendMessage,
@@ -497,6 +538,7 @@ export const useMesages = ({
     error,
     editMessage,
     onClickCloseEditMessage,
+    quoteMessage,
   };
 };
 

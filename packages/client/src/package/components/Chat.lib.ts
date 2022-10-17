@@ -65,7 +65,7 @@ export const scrollToTop = (element: HTMLDivElement) => {
   scrollTo(element, 1);
 };
 
-const getShortMess = (text: string) => {
+export const getShortMess = (text: string) => {
   let result = '';
   const _text = text.replace(quoteRegex, '');
   for (let i = 0; i < SHORT_MESS_LENGTH && _text[i]; i++) {
@@ -81,26 +81,6 @@ export const cleanQuote = (text: string) => text.replace(quoteRegex, '');
 
 export const getQuoteContext = (item: MessageFull) =>
   JSON.stringify({ id: item.id, name: item.Unit.name, shortMess: getShortMess(item.text) });
-
-export const checkQuote = (text: string) => {
-  const quote = text.match(quoteRegex);
-  let length = 0;
-  if (quote) {
-    length = quote[0].length;
-  }
-  return length;
-};
-
-export const checkEdit = (text: string) => {
-  const edit = text.match(editRegex);
-  let length = 0;
-  if (edit) {
-    length = edit[0].length;
-  }
-  return length;
-};
-
-export const cleanEdit = (text: string) => text.replace(editRegex, '').replace(/^\n/, '');
 
 export const parseQuoteContext = (
   text: string

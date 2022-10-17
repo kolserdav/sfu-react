@@ -13,7 +13,7 @@
 /* eslint-disable max-classes-per-file */
 /* eslint-disable no-unused-vars */
 import * as werift from 'werift';
-import { Message, Prisma, Room, Unit, Video } from '@prisma/client';
+import { Message, Prisma, Room, Unit, Video, Quote } from '@prisma/client';
 
 export const RECORD_VIDEO_NAME = 'record';
 export type LocaleValue = 'en' | 'ru';
@@ -40,8 +40,15 @@ export type MessageFull = Message & {
   Unit: {
     name: string;
   };
+  Quote?: {
+    MessageQuote: Message & {
+      Unit: {
+        name: string;
+      };
+    };
+  };
 };
-
+export type QuoteFull = Quote;
 export enum ErrorCode {
   initial = 'initial',
   roomIsInactive = 'roomIsInactive',
@@ -100,6 +107,10 @@ export enum MessageType {
   SET_CHAT_MESSAGES = 'SET_CHAT_MESSAGES',
   GET_EDIT_MESSAGE = 'GET_EDIT_MESSAGE',
   SET_EDIT_MESSAGE = 'SET_EDIT_MESSAGE',
+  GET_CREATE_MESSAGE = 'GET_CREATE_MESSAGE',
+  SET_CREATE_MESSAGE = 'SET_CREATE_MESSAGE',
+  GET_CREATE_QUOTE = 'GET_CREATE_QUOTE',
+  SET_CREATE_QUOTE = 'SET_CREATE_QUOTE',
   GET_DELETE_MESSAGE = 'GET_DELETE_MESSAGE',
   SET_DELETE_MESSAGE = 'SET_DELETE_MESSAGE',
   GET_LOCALE = 'GET_LOCALE',
@@ -281,6 +292,14 @@ export namespace DataTypes {
       args: Prisma.MessageUpdateArgs;
       userId: string | number;
     };
+    export type GetCreateMessage = {
+      args: Prisma.MessageCreateArgs;
+      userId: string | number;
+    };
+    export type GetCreateQuote = {
+      args: Prisma.QuoteCreateArgs;
+      userId: string | number;
+    };
     export type GetRecord = {
       command: keyof typeof RecordCommand;
       userId: string | number;
@@ -328,6 +347,8 @@ export namespace DataTypes {
     };
     export type SetRoomMessage = MessageFull;
     export type SetEditMessage = MessageFull;
+    export type SetCreateMessage = MessageFull;
+    export type SetCreateQuote = QuoteFull;
     export type SetDeleteMessage = MessageFull;
     export type SetChatMessages = GetManyResult<MessageFull>;
     export type SetClosePeerConnection = {
@@ -413,8 +434,16 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.GetRoomMessage
     : T extends MessageType.GET_EDIT_MESSAGE
     ? DataTypes.MessageTypes.GetEditMessage
+    : T extends MessageType.GET_CREATE_MESSAGE
+    ? DataTypes.MessageTypes.GetCreateMessage
+    : T extends MessageType.GET_CREATE_QUOTE
+    ? DataTypes.MessageTypes.GetCreateQuote
     : T extends MessageType.SET_EDIT_MESSAGE
     ? DataTypes.MessageTypes.SetEditMessage
+    : T extends MessageType.SET_CREATE_MESSAGE
+    ? DataTypes.MessageTypes.SetCreateMessage
+    : T extends MessageType.SET_CREATE_QUOTE
+    ? DataTypes.MessageTypes.SetCreateQuote
     : T extends MessageType.GET_VIDEO_FIND_MANY
     ? DataTypes.MessageTypes.GetVideoFindMany
     : T extends MessageType.GET_VIDEO_FIND_FIRST
@@ -594,6 +623,11 @@ export namespace Data {
       args: Prisma.SelectSubset<T, Prisma.MessageCreateArgs>,
       _connection?: WebSocket
     ): Promise<Prisma.CheckSelect<T, MessageFull, Prisma.MessageGetPayload<T>> | null>;
+
+    public abstract quoteCreate<T extends Prisma.QuoteCreateArgs>(
+      args: Prisma.SelectSubset<T, Prisma.QuoteCreateArgs>,
+      _connection?: WebSocket
+    ): Promise<Prisma.CheckSelect<T, QuoteFull, Prisma.QuoteGetPayload<T>> | null>;
 
     public abstract messageDelete<T extends Prisma.MessageDeleteArgs>(
       args: Prisma.SelectSubset<T, Prisma.MessageDeleteArgs>,

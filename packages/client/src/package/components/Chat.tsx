@@ -15,8 +15,8 @@ import g from '../Global.module.scss';
 import SendIcon from '../Icons/Send';
 import IconButton from './ui/IconButton';
 import { useMesages, useDialog, useScrollToQuote, useRoomIsInactive } from './Chat.hooks';
-import { dateToTime, dateToString, isMobile } from '../utils/lib';
-import { prepareMessage } from './Chat.lib';
+import { dateToTime, dateToString, isMobile, dateToDateTime } from '../utils/lib';
+import { prepareMessage, getShortMess } from './Chat.lib';
 import Dialog from './ui/Dialog';
 import { ChatProps } from '../types';
 import CheckIcon from '../Icons/Check';
@@ -38,6 +38,7 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
     clickDeleteWrapper,
     error,
     editMessage,
+    quoteMessage,
     onClickCloseEditMessage,
   } = useMesages({
     port,
@@ -90,6 +91,14 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
                 {item.unitId !== userId.toString() && (
                   <div className={s.name}>{item.Unit.name}</div>
                 )}
+                {item.Quote && (
+                  <a className={s.quote__link} href={`#${item.Quote.MessageQuote.id}`}>
+                    <div className={s.quote}>
+                      <div className={s.name}>{item.Quote.MessageQuote.Unit.name}</div>
+                      <div className={s.text}>{getShortMess(item.Quote.MessageQuote.text)}</div>
+                    </div>
+                  </a>
+                )}
                 <div
                   className={s.text}
                   dangerouslySetInnerHTML={{ __html: prepareMessage(item.text) }}
@@ -100,9 +109,9 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
                   ) : (
                     ''
                   )}
-                  {dateToTime(
-                    new Date(item.created !== item.updated ? item.updated : item.created)
-                  )}
+                  {item.created !== item.updated
+                    ? dateToDateTime(new Date(item.updated))
+                    : dateToTime(new Date(item.created))}
                 </div>
               </div>
             </div>
@@ -112,13 +121,14 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
         )}
       </div>
       <div className={s.input}>
-        {editMessage && (
+        {(editMessage || quoteMessage) && (
           <div className={s.info}>
             <div
               className={s.block}
               style={{ backgroundColor: theme?.colors.paper, left: textAreaLeft() }}
             >
-              <span>{locale.editMessage}</span>
+              <span>{editMessage ? locale.editMessage : locale.quote}</span>
+              {quoteMessage && <span>: {getShortMess(quoteMessage.text)}</span>}
               <IconButton onClick={onClickCloseEditMessage}>
                 <CloseIcon width={24} height={24} color={theme?.colors.text} />
               </IconButton>

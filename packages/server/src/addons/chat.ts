@@ -107,6 +107,19 @@ class Chat extends DB implements ConnectorInterface {
             name: true,
           },
         },
+        Quote: {
+          select: {
+            MessageQuote: {
+              include: {
+                Unit: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
     const locale = getLocale(this.users[id][userId].locale).server;
@@ -151,6 +164,44 @@ class Chat extends DB implements ConnectorInterface {
         roomId: id,
         msg: {
           type: MessageType.SET_EDIT_MESSAGE,
+          connId: '',
+          id: item,
+          data: res,
+        },
+      });
+    });
+  }
+
+  public async handleCreateMessage({
+    id,
+    data: { args },
+  }: SendMessageArgs<MessageType.GET_CREATE_MESSAGE>) {
+    const res = await this.messageCreate(args);
+    const uKeys = Object.keys(this.users[id]);
+    uKeys.forEach((item) => {
+      this.sendMessage({
+        roomId: id,
+        msg: {
+          type: MessageType.SET_CREATE_MESSAGE,
+          connId: '',
+          id: item,
+          data: res,
+        },
+      });
+    });
+  }
+
+  public async handleCreateQuote({
+    id,
+    data: { args },
+  }: SendMessageArgs<MessageType.GET_CREATE_QUOTE>) {
+    const res = await this.quoteCreate(args);
+    const uKeys = Object.keys(this.users[id]);
+    uKeys.forEach((item) => {
+      this.sendMessage({
+        roomId: id,
+        msg: {
+          type: MessageType.SET_CREATE_QUOTE,
           connId: '',
           id: item,
           data: res,

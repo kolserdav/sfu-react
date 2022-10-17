@@ -121,6 +121,19 @@ class DB extends Auth implements DBInterface {
   };
 
   // eslint-disable-next-line class-methods-use-this
+  public quoteCreate: DBInterface['quoteCreate'] = async (args) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let result: any = null;
+    try {
+      result = await prisma.quote.create(args);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      log('error', 'DB Error create quote', { args, err });
+    }
+    return result;
+  };
+
+  // eslint-disable-next-line class-methods-use-this
   public messageDelete: DBInterface['messageDelete'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any = null;

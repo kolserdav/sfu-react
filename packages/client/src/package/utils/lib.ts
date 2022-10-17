@@ -100,6 +100,8 @@ export const dateToString = (date: Date) => format(date, 'dd.MM.yyyy');
 
 export const dateToTime = (date: Date) => format(date, 'HH:mm');
 
+export const dateToDateTime = (date: Date) => format(date, 'dd.MM.yyyy HH:mm');
+
 export function getUTCDate(date: string): Date {
   const dt = new Date(date);
   dt.setTime(dt.getTime() + dt.getTimezoneOffset() * 60 * 1000);

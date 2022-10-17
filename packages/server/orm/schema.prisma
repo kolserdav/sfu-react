@@ -43,14 +43,28 @@ model Guest {
 }
 
 model Message {
-  id      Int      @id @default(autoincrement())
-  text    String   @db.MediumText
-  unitId  String
-  roomId  String
-  Unit    Unit     @relation(fields: [unitId], references: [id])
-  Room    Room     @relation(fields: [roomId], references: [id])
-  updated DateTime @default(now())
-  created DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  text         String   @db.MediumText
+  unitId       String
+  roomId       String
+  quoteId      Int?
+  Unit         Unit     @relation(fields: [unitId], references: [id])
+  Room         Room     @relation(fields: [roomId], references: [id])
+  Quote        Quote?   @relation(fields: [quoteId], references: [id])
+  updated      DateTime @default(now())
+  created      DateTime @default(now())
+  Message      Quote[]  @relation("Message")
+  MessageQuote Quote[]  @relation("MessageQuote")
+}
+
+model Quote {
+  id           Int       @id @default(autoincrement())
+  messageId    Int
+  Message      Message?  @relation("Message", fields: [messageId], references: [id])
+  quoteId      Int
+  MessageQuote Message?  @relation("MessageQuote", fields: [quoteId], references: [id])
+  Quote        Message[]
+  created      DateTime  @default(now())
 }
 
 model Video {

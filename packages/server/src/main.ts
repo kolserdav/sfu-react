@@ -193,6 +193,12 @@ export function createServer(
         case MessageType.GET_EDIT_MESSAGE:
           chat.handleEditMessage(rawMessage);
           break;
+        case MessageType.GET_CREATE_MESSAGE:
+          chat.handleCreateMessage(rawMessage);
+          break;
+        case MessageType.GET_CREATE_QUOTE:
+          chat.handleCreateQuote(rawMessage);
+          break;
         case MessageType.GET_DELETE_MESSAGE:
           chat.handleDeleteMessage(rawMessage);
           break;

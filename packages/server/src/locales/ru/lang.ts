@@ -28,7 +28,7 @@ const lang: LocaleServer = {
     send: 'Отправить',
     quote: 'Цитата',
     edit: 'Редактировать',
-    edited: 'измененно',
+    edited: 'изменено',
     delete: 'Удалить',
     erorGetSound: 'Демонстрация экрана без звука',
     errorGetCamera: 'Ошибка получения доступа к камере',
