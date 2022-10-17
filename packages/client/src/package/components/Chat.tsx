@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import clsx from 'clsx';
 import s from './Chat.module.scss';
 import g from '../Global.module.scss';
@@ -20,6 +20,8 @@ import { prepareMessage } from './Chat.lib';
 import Dialog from './ui/Dialog';
 import { ChatProps } from '../types';
 import CheckIcon from '../Icons/Check';
+import CloseIcon from '../Icons/Close';
+import { MOBILE_WIDTH, TEXT_AREA_BORDER_WIDTH, TEXT_AREA_PADDING_LEFT } from '../utils/constants';
 
 function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -34,8 +36,9 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
     clickQuoteWrapper,
     clickEditWrapper,
     clickDeleteWrapper,
-    isEdit,
     error,
+    editMessage,
+    onClickCloseEditMessage,
   } = useMesages({
     port,
     server,
@@ -48,6 +51,22 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
   const { dialog, messageContextWrapper } = useDialog();
   useScrollToQuote({ messages, containerRef });
   const roomIsInactive = useRoomIsInactive();
+
+  const textAreaLeft = useMemo(
+    () => () => {
+      const { current } = inputRef;
+      let res = 0;
+      if (current) {
+        const { left, width } = current.getBoundingClientRect();
+        res =
+          document.body.clientWidth > MOBILE_WIDTH
+            ? left - width - TEXT_AREA_PADDING_LEFT + TEXT_AREA_BORDER_WIDTH
+            : TEXT_AREA_BORDER_WIDTH;
+      }
+      return res;
+    },
+    [inputRef]
+  );
 
   return (
     <div className={s.wrapper} style={{ background: theme?.colors.active }}>
@@ -93,30 +112,45 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
         )}
       </div>
       <div className={s.input}>
-        <textarea
-          style={{
-            background: theme?.colors.paper,
-            color: theme?.colors.text,
-            cursor: roomIsInactive ? 'not-allowed' : 'inherit',
-          }}
-          rows={rows}
-          ref={inputRef}
-          onInput={changeText}
-          value={message}
-          disabled={roomIsInactive}
-        />
-        <IconButton
-          disabled={roomIsInactive}
-          className={s.send__icon}
-          title={locale.send}
-          onClick={sendMessage}
-        >
-          {isEdit ? (
-            <CheckIcon color={theme?.colors.text} />
-          ) : (
-            <SendIcon color={theme?.colors.text} />
-          )}
-        </IconButton>
+        {editMessage && (
+          <div className={s.info}>
+            <div
+              className={s.block}
+              style={{ backgroundColor: theme?.colors.paper, left: textAreaLeft() }}
+            >
+              <span>{locale.editMessage}</span>
+              <IconButton onClick={onClickCloseEditMessage}>
+                <CloseIcon width={24} height={24} color={theme?.colors.text} />
+              </IconButton>
+            </div>
+          </div>
+        )}
+        <div className={s.group}>
+          <textarea
+            style={{
+              background: theme?.colors.paper,
+              color: theme?.colors.text,
+              cursor: roomIsInactive ? 'not-allowed' : 'inherit',
+            }}
+            rows={rows}
+            ref={inputRef}
+            onInput={changeText}
+            value={message}
+            disabled={roomIsInactive}
+          />
+          <IconButton
+            disabled={roomIsInactive}
+            className={s.send__icon}
+            title={locale.send}
+            onClick={sendMessage}
+          >
+            {editMessage ? (
+              <CheckIcon color={theme?.colors.text} />
+            ) : (
+              <SendIcon color={theme?.colors.text} />
+            )}
+          </IconButton>
+        </div>
       </div>
       <Dialog {...dialog} theme={theme}>
         <div className={s.message__dialog}>

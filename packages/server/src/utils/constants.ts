@@ -52,3 +52,4 @@ export const STOP_RECORDING_MESSAGE: SendMessageArgs<MessageType.SET_RECORDING> 
 };
 export const CERT_PEM = env.CERT_PEM as string;
 export const KEY_PEM = env.KEY_PEM as string;
+export const IS_DEV = process.env.NODE_ENV !== 'development';

@@ -61,6 +61,7 @@ const lang: LocaleServer = {
     cameraOff: 'Turn off the camera',
     cameraOn: 'Turn on the camera',
     copyRoomLink: 'Copy room address',
+    editMessage: 'Message edited',
   },
 };
 

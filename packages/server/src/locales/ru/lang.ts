@@ -60,7 +60,8 @@ const lang: LocaleServer = {
     micOn: 'Включить микрофон',
     cameraOff: 'Отключить камеру',
     cameraOn: 'Включить камеру',
-    copyRoomLink: 'Copy room address',
+    copyRoomLink: 'Скопировать адрес комнаты',
+    editMessage: 'Редактируется ссобщение',
   },
 };
 

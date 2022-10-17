@@ -38,7 +38,6 @@ import {
   scrollTo,
   getQuoteContext,
   checkEdit,
-  getEditableMess,
   cleanEdit,
 } from './Chat.lib';
 import storeError from '../store/error';
@@ -75,11 +74,24 @@ export const useMesages = ({
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [count, setCount] = useState<number>(0);
   const [rows, setRows] = useState<number>(1);
+  const [editedMessage, setEditedMessage] = useState<number>(0);
   const [messages, setMessages] = useState<
     SendMessageArgs<MessageType.SET_CHAT_MESSAGES>['data']['result']
   >([]);
 
+  const editMessage = useMemo(
+    () => messages.find((item) => item.id === editedMessage),
+    [editedMessage, messages]
+  );
+
   const ws = useMemo(() => new WS({ server, port, protocol: 'chat' }), [port, server]);
+
+  const onClickCloseEditMessage = useMemo(
+    () => () => {
+      setEditedMessage(0);
+    },
+    []
+  );
 
   const changeText = (e: React.FormEvent<HTMLTextAreaElement>) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -132,8 +144,8 @@ export const useMesages = ({
   const clickEditWrapper =
     (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       const { text, id } = JSON.parse(context);
-      const edit = `[edit=${id}]\n`;
-      const _message = `${edit}${cleanEdit(text)}`;
+      const _message = cleanEdit(text);
+      setEditedMessage(id);
       setMessage(_message);
       setRows(message.length > 300 ? 5 : 3);
       const { current } = inputRef;
@@ -166,8 +178,7 @@ export const useMesages = ({
       const mess = message.replace(/[\n\s]+/g, '');
       // if message is not empty
       if (mess) {
-        if (checkEdit(message)) {
-          const id = getEditableMess(message);
+        if (editedMessage) {
           ws.sendMessage({
             type: MessageType.GET_EDIT_MESSAGE,
             connId: '',
@@ -175,7 +186,7 @@ export const useMesages = ({
             data: {
               args: {
                 where: {
-                  id,
+                  id: editedMessage,
                 },
                 data: {
                   text: cleanEdit(message),
@@ -192,6 +203,7 @@ export const useMesages = ({
               userId,
             },
           });
+          setEditedMessage(0);
         } else {
           ws.sendMessage({
             type: MessageType.GET_ROOM_MESSAGE,
@@ -208,7 +220,7 @@ export const useMesages = ({
         setMessage(mess);
       }
     },
-    [message, userId, roomId, ws]
+    [message, userId, roomId, ws, editedMessage]
   );
 
   /**
@@ -221,7 +233,8 @@ export const useMesages = ({
         ws.connection.close();
       }
     },
-    [window.location.pathname, roomId]
+    // ? wlp
+    [window.location.pathname, roomId, ws.connection]
   );
 
   /**
@@ -482,6 +495,8 @@ export const useMesages = ({
     clickDeleteWrapper,
     isEdit,
     error,
+    editMessage,
+    onClickCloseEditMessage,
   };
 };
 

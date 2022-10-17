@@ -183,6 +183,7 @@ export namespace Locale {
     cameraOn: string;
     cameraOff: string;
     copyRoomLink: string;
+    editMessage: string;
   }
 }
 

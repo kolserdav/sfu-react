@@ -12,6 +12,7 @@ import { ConnectorInterface } from '../types';
 import { ErrorCode, MessageType, SendMessageArgs } from '../types/interfaces';
 import { getLocale, log } from '../utils/lib';
 import DB from '../core/db';
+import { IS_DEV } from '../utils/constants';
 
 class Chat extends DB implements ConnectorInterface {
   public users: ConnectorInterface['users'] = {};
@@ -27,7 +28,7 @@ class Chat extends DB implements ConnectorInterface {
       this.users[roomId] = {};
     }
     const lang = getLocale(locale).server;
-    if (this.users[roomId][userId]) {
+    if (this.users[roomId][userId] && !IS_DEV) {
       log('warn', 'Duplicate chat user', { roomId, userId });
       ws.send(
         JSON.stringify({

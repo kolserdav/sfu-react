@@ -102,15 +102,6 @@ export const checkEdit = (text: string) => {
 
 export const cleanEdit = (text: string) => text.replace(editRegex, '').replace(/^\n/, '');
 
-export const getEditableMess = (text: string) => {
-  const edit = text.match(editRegex);
-  let id = 0;
-  if (edit) {
-    id = parseInt(edit[0].replace('[edit=', '').replace(']', ''), 10);
-  }
-  return id;
-};
-
 export const parseQuoteContext = (
   text: string
 ): {

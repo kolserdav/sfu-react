@@ -79,3 +79,7 @@ export const PSEUDO_BUTTON_ANIMATION_TIMEOUT = 1000;
 export const VIDEO_STARTED_HOOK_TIMEOUT = 4000;
 export const RECORDED_VIDEO_TAKE_DEFAULT = 2;
 export const MOBILE_WIDTH = 760;
+// dependency packages/client/src/package/components/Chat.module.scss $text-area-padding-left
+export const TEXT_AREA_PADDING_LEFT = 16;
+// dependency to five  packages/client/src/package/components/Chat.module.scss $text-area-border-width
+export const TEXT_AREA_BORDER_WIDTH = 5;
