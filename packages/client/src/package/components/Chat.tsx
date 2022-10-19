@@ -8,7 +8,7 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import React, { useMemo, useRef } from 'react';
+import React, { useRef } from 'react';
 import clsx from 'clsx';
 import s from './Chat.module.scss';
 import g from '../Global.module.scss';
@@ -21,7 +21,6 @@ import Dialog from './ui/Dialog';
 import { ChatProps } from '../types';
 import CheckIcon from '../Icons/Check';
 import CloseIcon from '../Icons/Close';
-import { MOBILE_WIDTH, TEXT_AREA_BORDER_WIDTH, TEXT_AREA_PADDING_LEFT } from '../utils/constants';
 
 function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -40,6 +39,7 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
     editMessage,
     quoteMessage,
     onClickCloseEditMessage,
+    textAreaLeft,
   } = useMesages({
     port,
     server,
@@ -52,22 +52,6 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
   const { dialog, messageContextWrapper } = useDialog();
   useScrollToQuote({ messages, containerRef });
   const roomIsInactive = useRoomIsInactive();
-
-  const textAreaLeft = useMemo(
-    () => () => {
-      const { current } = inputRef;
-      let res = 0;
-      if (current) {
-        const { left, width } = current.getBoundingClientRect();
-        res =
-          document.body.clientWidth > MOBILE_WIDTH
-            ? left - width - TEXT_AREA_PADDING_LEFT + TEXT_AREA_BORDER_WIDTH
-            : TEXT_AREA_BORDER_WIDTH;
-      }
-      return res;
-    },
-    [inputRef]
-  );
 
   return (
     <div className={s.wrapper} style={{ background: theme?.colors.active }}>
@@ -92,10 +76,17 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
                   <div className={s.name}>{item.Unit.name}</div>
                 )}
                 {item.Quote && (
-                  <a className={s.quote__link} href={`#${item.Quote.MessageQuote.id}`}>
+                  <a className={s.quote__link} href={`#${item.Quote.MessageQuote?.id || ''}`}>
                     <div className={s.quote}>
-                      <div className={s.name}>{item.Quote.MessageQuote.Unit.name}</div>
-                      <div className={s.text}>{getShortMess(item.Quote.MessageQuote.text)}</div>
+                      <div className={s.name}>{item.Quote.MessageQuote?.Unit.name}</div>
+                      <div
+                        className={clsx(
+                          s.text,
+                          item.Quote.MessageQuote?.text === undefined ? s.disabled : ''
+                        )}
+                      >
+                        {getShortMess(item.Quote.MessageQuote?.text || locale.messageDeleted)}
+                      </div>
                     </div>
                   </a>
                 )}

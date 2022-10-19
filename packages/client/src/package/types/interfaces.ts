@@ -38,11 +38,13 @@ export type ArgumentTypes<F extends Function> = F extends (args: infer A) => any
 export type GetManyResult<T> = { result: T[]; skip: number; count: number; take: number };
 export type MessageFull = Message & {
   Unit: {
+    id: string;
     name: string;
   };
   Quote?: {
     MessageQuote: Message & {
       Unit: {
+        id: string;
         name: string;
       };
     };
@@ -58,6 +60,7 @@ export enum ErrorCode {
   forbidden = 'forbidden',
   notAuthorised = 'notAuthorised',
   duplicateTab = 'duplicateTab',
+  errorDeleteMessage = 'errorDeleteMessage',
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -195,6 +198,7 @@ export namespace Locale {
     cameraOff: string;
     copyRoomLink: string;
     editMessage: string;
+    messageDeleted: string;
   }
 }
 

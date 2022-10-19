@@ -104,6 +104,7 @@ class Chat extends DB implements ConnectorInterface {
       include: {
         Unit: {
           select: {
+            id: true,
             name: true,
           },
         },
@@ -113,6 +114,7 @@ class Chat extends DB implements ConnectorInterface {
               include: {
                 Unit: {
                   select: {
+                    id: true,
                     name: true,
                   },
                 },
@@ -212,9 +214,28 @@ class Chat extends DB implements ConnectorInterface {
 
   public async handleDeleteMessage({
     id,
-    data: { args },
+    connId,
+    data: { args, userId },
   }: SendMessageArgs<MessageType.GET_DELETE_MESSAGE>) {
     const res = await this.messageDelete(args);
+    const lang = this.users[id][userId].locale;
+    const locale = getLocale(lang).server;
+    if (res === null) {
+      this.sendMessage({
+        roomId: id,
+        msg: {
+          id: userId,
+          connId,
+          type: MessageType.SET_ERROR,
+          data: {
+            type: 'error',
+            message: locale.error,
+            code: ErrorCode.errorDeleteMessage,
+          },
+        },
+      });
+      return;
+    }
     const uKeys = Object.keys(this.users[id]);
     uKeys.forEach((item) => {
       this.sendMessage({

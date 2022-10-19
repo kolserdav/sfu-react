@@ -14,9 +14,6 @@ import { log } from '../utils/lib';
 import { SHORT_MESS_LENGTH } from '../utils/constants';
 import s from './Chat.module.scss';
 
-const quoteRegex = /\[quote=.+\]/;
-const editRegex = /\[edit=\d+\]/;
-
 const prepareLinks = (text: string) => {
   let _text = text.slice();
   const links = text.match(/https?:\/\/[a-zA-Z.-_0-9/]+/g);
@@ -29,29 +26,8 @@ const prepareLinks = (text: string) => {
   return _text;
 };
 
-const prepareQuotes = (text: string) => {
-  let _text = text.slice();
-  const quote = text.match(quoteRegex);
-  if (quote) {
-    const _quote = quote[0];
-    const { id, name, shortMess } = parseQuoteContext(
-      _quote.replace('[quote=', '').replace(/\]$/, '')
-    );
-    if (!id) {
-      log('error', 'Error get quote', { id, _quote });
-      return text;
-    }
-    _text = _text.replace(
-      _quote,
-      `<a class="${s.quote__link}" href="#${id}"><div class="${s.quote}"><div class="${s.name}">${name}</div><div className="${s.text}">${shortMess}</div></div></a>`
-    );
-  }
-  return _text;
-};
-
 // eslint-disable-next-line import/prefer-default-export
-export const prepareMessage = (text: string) =>
-  prepareQuotes(prepareLinks(text.replace(/\n/g, '<br>')));
+export const prepareMessage = (text: string) => prepareLinks(text.replace(/\n/g, '<br>'));
 
 export const scrollTo = (element: HTMLDivElement, clientY: number) => {
   element.scrollTo({ top: clientY, behavior: 'smooth' });
@@ -67,17 +43,14 @@ export const scrollToTop = (element: HTMLDivElement) => {
 
 export const getShortMess = (text: string) => {
   let result = '';
-  const _text = text.replace(quoteRegex, '');
-  for (let i = 0; i < SHORT_MESS_LENGTH && _text[i]; i++) {
-    result += _text[i];
+  for (let i = 0; i < SHORT_MESS_LENGTH && text[i]; i++) {
+    result += text[i];
   }
-  if (_text.length > result.length) {
+  if (text.length > result.length) {
     result += ' ...';
   }
   return result;
 };
-
-export const cleanQuote = (text: string) => text.replace(quoteRegex, '');
 
 export const getQuoteContext = (item: MessageFull) =>
   JSON.stringify({ id: item.id, name: item.Unit.name, shortMess: getShortMess(item.text) });
@@ -97,4 +70,14 @@ export const parseQuoteContext = (
     log('error', 'Error parse quote', e);
   }
   return result;
+};
+
+export const gettextAreaRows = (value: string) => {
+  let c = 1;
+  for (let i = 0; value[i]; i++) {
+    if (value[i] === '\n') {
+      c++;
+    }
+  }
+  return c;
 };

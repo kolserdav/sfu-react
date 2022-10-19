@@ -135,6 +135,76 @@ class DB extends Auth implements DBInterface {
 
   // eslint-disable-next-line class-methods-use-this
   public messageDelete: DBInterface['messageDelete'] = async (args) => {
+    let message;
+    try {
+      message = await prisma.message.findFirst({
+        where: {
+          id: args.where.id,
+        },
+        include: {
+          Quote: true,
+          MessageQuote: true,
+        },
+      });
+    } catch (err: any) {
+      log('error', 'DB Error message find first while delete', { args, err });
+      return null;
+    }
+    if (!message) {
+      return null;
+    }
+    if (message.Quote) {
+      try {
+        message = await prisma.message.update({
+          where: {
+            id: args.where.id,
+          },
+          data: {
+            Quote: {
+              delete: true,
+            },
+          },
+          include: {
+            Quote: true,
+            MessageQuote: true,
+          },
+        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (err: any) {
+        log('error', 'DB Error message update while delete', { args, err });
+        return null;
+      }
+    }
+    if (!message) {
+      return null;
+    }
+    console.log(message);
+    if (message.Message?.length) {
+      try {
+        message = await prisma.message.update({
+          where: {
+            id: args.where.id,
+          },
+          data: {
+            Message: {
+              updateMany: [
+                {
+                  where: {
+                    messageId: message.id,
+                  },
+                  data: {
+                    quoteId: null,
+                  },
+                },
+              ],
+            },
+          },
+        });
+      } catch (err: any) {
+        log('error', 'DB Error update message while delete 2', { args, err });
+        return null;
+      }
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any = null;
     try {

@@ -140,6 +140,10 @@ $text-area-border-radius: 6px;
 
   .text {
     cursor: text;
+
+    &.disabled {
+      opacity: 0.5;
+    }
   }
 
   .quote {
