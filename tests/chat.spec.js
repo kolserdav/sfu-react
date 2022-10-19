@@ -47,7 +47,7 @@ const clickByButton = (page, selector) => {
   await textArea1.type(testMessage);
   clickByButton(page1, sendButton);
 
-  await page2.waitForTimeout(1000);
+  await page2.waitForTimeout(3000);
   const checkMess = await page2.evaluate(async (messContSelector) => {
     const messCont = document.querySelector(messContSelector);
     const firstMess = messCont.firstElementChild;
