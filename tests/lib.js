@@ -41,6 +41,11 @@ async function openRoom(url, room, uid, headless) {
 }
 
 const startServer = async () => {
+  await new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(0);
+    }, 3000);
+  });
   if (!process.env.CI) {
     return 0;
   }
