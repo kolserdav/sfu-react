@@ -1,10 +1,10 @@
 // @ts-check
 const path = require('path');
-const { spawn } = require('child_process');
 const puppeteer = require('puppeteer');
 const { log } = require('../packages/server/dist/utils/lib');
 const { stdout } = require('process');
 const exConfig = require('./rooms.example.json');
+const { openRoom, startServer } = require('./lib');
 
 let importErr = false;
 /**
@@ -43,11 +43,6 @@ let id = 1;
 const ROOMS = singleRoom ? 1 : rooms;
 const USERS = users;
 
-const HEADLESS = headless;
-const VIEWPORT = {
-  width: 640,
-  height: 480,
-};
 const EXIT_DELAY = 1000;
 
 /**
@@ -63,37 +58,6 @@ let count = 0;
 let success = 0;
 let errors = 0;
 let warnings = 0;
-
-/**
- *
- * @param {string} room
- * @param {string} uid
- * @returns {Promise<puppeteer.Page>}
- */
-async function openRoom(room, uid) {
-  const browser = await puppeteer.launch({
-    headless: HEADLESS,
-    defaultViewport: VIEWPORT,
-    args: [
-      '--allow-file-access-from-files',
-      '--disable-gesture-requirement-for-media-playback',
-      '--use-fake-ui-for-media-stream',
-      '--use-fake-device-for-media-stream',
-    ],
-  });
-  const [page] = await browser.pages();
-  const _url = `${url}/room/${room}?uid=${uid}`;
-  page.on('console', (message) => {
-    const text = message.text();
-    if (!/DevTools/.test(text) && !/webpack-dev-server/.test(text)) {
-      log('warn', `Message on room: ${room} for user: ${uid}:`, message.text(), true);
-    }
-  });
-  log('info', 'Open page:', _url, true);
-  await page.goto(_url);
-  await page.waitForSelector('video');
-  return page;
-}
 
 /**
  * @typedef {Record<string, boolean>} Timeupdate
@@ -243,67 +207,8 @@ async function reloadPage(page) {
   await page.waitForSelector('video');
 }
 
-const startServer = async () => {
-  log('log', 'Run command:', '"npm run prod:migrate"', true);
-  /**
-   * @type {any}
-   */
-  const env = { PATH: process.env.PATH };
-  let res = spawn('npm', ['run', 'prod:migrate'], {
-    env,
-  });
-  res.stdout.on('data', (d) => {
-    console.log(d.toString());
-  });
-  res.stderr.on('data', (d) => {
-    const data = d.toString();
-    console.log(data);
-  });
-  await new Promise((resolve) => {
-    res.on('exit', () => {
-      resolve(0);
-    });
-  });
-  log('log', 'Run command:', '"npm run start"', true);
-  res = spawn('npm', ['run', 'start'], {
-    env,
-  });
-  res.stdout.on('data', (d) => {
-    console.log(d.toString());
-  });
-  res.stderr.on('data', (d) => {
-    const data = d.toString();
-    console.log(data);
-  });
-  await new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(0);
-    }, 4000);
-  });
-  if (process.env.TEST_NEXT) {
-    log('log', 'Run command:', '"npm run start:client-next"', true);
-    res = spawn('npm', ['run', 'start:client-next'], {
-      env,
-    });
-    res.stdout.on('data', (d) => {
-      console.log(d.toString());
-    });
-    res.stderr.on('data', (d) => {
-      const data = d.toString();
-      console.log(data);
-    });
-    await new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(0);
-      }, 4000);
-    });
-  }
-};
-
 (async () => {
-  if (process.env.CI) {
-    await startServer();
-  }
+  await startServer();
   log('log', 'Start test ...', { USERS, ROOMS }, true);
   /**
    * @type {EvalPage[]}
@@ -317,7 +222,7 @@ const startServer = async () => {
         startTime = new Date().getTime();
       }
       const uid = (++id).toString();
-      const page = await openRoom(room, uid);
+      const page = await openRoom(url, room, uid, headless);
       pages.push({
         page,
         uid,

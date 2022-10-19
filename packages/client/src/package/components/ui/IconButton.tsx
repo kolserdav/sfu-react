@@ -22,6 +22,7 @@ function IconButton({
   strict,
   onClick,
   disabled,
+  id,
 }: {
   children: JSX.Element;
   title?: string;
@@ -31,9 +32,11 @@ function IconButton({
   strict?: boolean;
   onClick?: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
   disabled?: boolean;
+  id?: string;
 }) {
   return (
     <div
+      id={id}
       onClick={
         disabled
           ? () => {
@@ -60,6 +63,7 @@ IconButton.defaultProps = {
   height: 40,
   title: '',
   strict: false,
+  id: undefined,
   onClick: () => {
     /** */
   },

@@ -58,6 +58,7 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
       <div
         className={s.container}
         ref={containerRef}
+        id="messages"
         style={{ height: `calc(90% - ${rows} * ${isMobile() ? '0.5rem' : '1rem'})` }}
       >
         {messages.length ? (
@@ -140,6 +141,7 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
             disabled={roomIsInactive}
           />
           <IconButton
+            id="send-message"
             disabled={roomIsInactive}
             className={s.send__icon}
             title={locale.send}

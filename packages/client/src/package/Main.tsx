@@ -62,6 +62,7 @@ function Main({
       <div
         className={clsx(s.button, hallOpen ? s.active : '')}
         role="button"
+        id="open-chat"
         style={theme?.button}
         tabIndex={0}
         onClick={openMenu}

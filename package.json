@@ -78,7 +78,8 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:next": "concurrently \"npm run dev:server\" \"npm run dev:client-next\"",
     "dev:dev-server": "concurrently \"npm run dev:server-server\" \"npm run dev:client\"",
-    "test": "node tests/rooms.js",
+    "test": "node tests/rooms.spec.js",
+    "test:chat": "node tests/chat.spec.js",
     "test:browser": "node tests/webrtc-browser.js"
   },
   "dependencies": {
