@@ -1,6 +1,6 @@
 //@ts-check
 const puppeteer = require('puppeteer');
-const { spawn } = require('child_process');
+const { spawn, ChildProcessWithoutNullStreams } = require('child_process');
 const { log } = require('../packages/server/dist/utils/lib');
 
 const VIEWPORT = {
@@ -40,6 +40,10 @@ async function openRoom(url, room, uid, headless) {
   return page;
 }
 
+/**
+ *
+ * @returns {Promise<{client: ChildProcessWithoutNullStreams; server: ChildProcessWithoutNullStreams} | 0>}
+ */
 const startServer = async () => {
   await new Promise((resolve) => {
     setTimeout(() => {
@@ -54,29 +58,29 @@ const startServer = async () => {
    * @type {any}
    */
   const env = { PATH: process.env.PATH };
-  let res = spawn('npm', ['run', 'prod:migrate'], {
+  let server = spawn('npm', ['run', 'prod:migrate'], {
     env,
   });
-  res.stdout.on('data', (d) => {
+  server.stdout.on('data', (d) => {
     console.log(d.toString());
   });
-  res.stderr.on('data', (d) => {
+  server.stderr.on('data', (d) => {
     const data = d.toString();
     console.log(data);
   });
   await new Promise((resolve) => {
-    res.on('exit', () => {
+    server.on('exit', () => {
       resolve(0);
     });
   });
   log('log', 'Run command:', '"npm run start"', true);
-  res = spawn('npm', ['run', 'start'], {
+  server = spawn('npm', ['run', 'start'], {
     env,
   });
-  res.stdout.on('data', (d) => {
+  server.stdout.on('data', (d) => {
     console.log(d.toString());
   });
-  res.stderr.on('data', (d) => {
+  server.stderr.on('data', (d) => {
     const data = d.toString();
     console.log(data);
   });
@@ -85,15 +89,16 @@ const startServer = async () => {
       resolve(0);
     }, 4000);
   });
+  let client;
   if (process.env.TEST_NEXT) {
     log('log', 'Run command:', '"npm run start:client-next"', true);
-    res = spawn('npm', ['run', 'start:client-next'], {
+    client = spawn('npm', ['run', 'start:client-next'], {
       env,
     });
-    res.stdout.on('data', (d) => {
+    client.stdout.on('data', (d) => {
       console.log(d.toString());
     });
-    res.stderr.on('data', (d) => {
+    client.stderr.on('data', (d) => {
       const data = d.toString();
       console.log(data);
     });
@@ -103,6 +108,10 @@ const startServer = async () => {
       }, 4000);
     });
   }
+  return {
+    client,
+    server,
+  };
 };
 
 module.exports = { openRoom, startServer };

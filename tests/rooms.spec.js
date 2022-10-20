@@ -1,6 +1,7 @@
 // @ts-check
 const path = require('path');
 const puppeteer = require('puppeteer');
+const { ChildProcessWithoutNullStreams } = require('child_process');
 const { log } = require('../packages/server/dist/utils/lib');
 const { stdout } = require('process');
 const exConfig = require('./rooms.example.json');
@@ -52,6 +53,7 @@ const EXIT_DELAY = 1000;
  *  uid: string;
  *  room: string;
  * }} EvalPage
+ * @typedef {{server: ChildProcessWithoutNullStreams; client: ChildProcessWithoutNullStreams}} StartServer
  */
 
 let count = 0;
@@ -70,9 +72,10 @@ let timeupdate = {};
 /**
  *
  * @param {EvalPage} evalPage
+ * @param {StartServer | 0} res
  * @param {boolean} last
  */
-async function evaluateRoom(evalPage, last = false) {
+async function evaluateRoom(evalPage, res, last = false) {
   const { page, room, uid } = evalPage;
   const coeff = (USERS + ROOMS) / 1000;
   const d = Math.ceil(delay >= 1000 ? delay * coeff : (1000 * coeff) / 2);
@@ -152,14 +155,22 @@ async function evaluateRoom(evalPage, last = false) {
     setTimeout(() => {
       log('log', 'Test end', { success, warnings, errors }, true);
       if (last) {
+        let code = 0;
         if (errors === 0) {
           if (warnings !== 0) {
-            process.exit(1);
+            code = 1;
           }
-          process.exit(0);
         } else {
-          process.exit(1);
+          code = 1;
         }
+        if (res !== 0) {
+          const { client, server } = res;
+          server.kill();
+          if (process.env.TEST_NEXT) {
+            client.kill();
+          }
+        }
+        process.exit(code);
       }
     }, EXIT_DELAY);
   }
@@ -208,7 +219,7 @@ async function reloadPage(page) {
 }
 
 (async () => {
-  await startServer();
+  const res = await startServer();
   log('log', 'Start test ...', { USERS, ROOMS }, true);
   /**
    * @type {EvalPage[]}
@@ -238,7 +249,7 @@ async function reloadPage(page) {
   stdoutClean();
   clearInterval(timeout);
   for (let i = 0; pages[i]; i++) {
-    await evaluateRoom(pages[i]);
+    await evaluateRoom(pages[i], res);
   }
   await pages[0].page.waitForTimeout(EXIT_DELAY);
   for (let i = 0; pages[i]; i++) {
@@ -258,6 +269,6 @@ async function reloadPage(page) {
   clearInterval(timeout);
   count = 0;
   for (let i = 0; pages[i]; i++) {
-    await evaluateRoom(pages[i], true);
+    await evaluateRoom(pages[i], res, true);
   }
 })();

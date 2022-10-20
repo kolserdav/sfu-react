@@ -56,7 +56,7 @@ const clickByButton = (page, selector) => {
     return textEll.innerHTML;
   }, messages);
   if (checkMess !== testMessage) {
-    throw 'Error get message';
+    process.exit(1);
   }
   log('info', 'Sucess test messages', {}, true);
   process.exit(0);
