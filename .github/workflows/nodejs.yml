@@ -44,9 +44,3 @@ jobs:
           TEST_NEXT: false
         run: |
           npm run test
-      - name: test-chat
-        env:
-          CI: true
-          TEST_NEXT: false
-        run: |
-          npm run test:chat
