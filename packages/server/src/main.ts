@@ -56,7 +56,7 @@ export function createServer(
     cors?: string;
     onRoomOpen?: OnRoomOpen;
     // eslint-disable-next-line no-unused-vars
-    onRoomClose?: (args: { roomId: string | number }) => void;
+    onRoomClose?: (args: { roomId: string | number; roomLength: number }) => void;
     onRoomConnect?: OnRoomConnect;
     onRoomDisconnect?: OnRoomConnect;
     checkTokenCb?: Auth['checkTokenCb'];
@@ -311,12 +311,7 @@ export function createServer(
             rtc.cleanConnections(item, userId.toString());
             rtc.rooms[item].splice(index, 1);
             if (onRoomDisconnect) {
-              onRoomDisconnect({
-                roomId: item,
-                userId,
-                roomUsers: rtc.rooms[item],
-                roomLength: rtc.getRoomLenght(),
-              });
+              onRoomDisconnect({ roomId: item, userId, roomUsers: rtc.rooms[item] });
             }
             const mute = rtc.muteds[item].indexOf(userId.toString());
             if (mute !== -1) {
@@ -353,9 +348,6 @@ export function createServer(
               });
             });
             if (rtc.rooms[item].length === 0) {
-              if (onRoomClose) {
-                onRoomClose({ roomId: item });
-              }
               if (recordVideo.recordPages[item]) {
                 recordVideo.recordPages[item] = {
                   id: item,
@@ -379,6 +371,9 @@ export function createServer(
               db.changeRoomArchive({ userId: item.toString(), archive: true });
               delete rtc.muteds[item];
               delete rtc.adminMuteds[item];
+              if (onRoomClose) {
+                onRoomClose({ roomId: item, roomLength: rtc.getRoomLenght() });
+              }
             }
             db.deleteGuest({ userId, roomId: item });
             delete wss.users[userId];
