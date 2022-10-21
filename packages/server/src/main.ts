@@ -56,7 +56,7 @@ export function createServer(
     cors?: string;
     onRoomOpen?: OnRoomOpen;
     // eslint-disable-next-line no-unused-vars
-    onRoomClose?: (args: { roomId: string | number; roomLength: number }) => void;
+    onRoomClose?: (args: { roomId: string | number; roomLength: number; port: number }) => void;
     onRoomConnect?: OnRoomConnect;
     onRoomDisconnect?: OnRoomConnect;
     checkTokenCb?: Auth['checkTokenCb'];
@@ -372,7 +372,7 @@ export function createServer(
               delete rtc.muteds[item];
               delete rtc.adminMuteds[item];
               if (onRoomClose) {
-                onRoomClose({ roomId: item, roomLength: rtc.getRoomLenght() });
+                onRoomClose({ roomId: item, roomLength: rtc.getRoomLenght(), port });
               }
             }
             db.deleteGuest({ userId, roomId: item });
