@@ -35,6 +35,7 @@ export type OnRoomConnect = (args: {
   roomId: string | number;
   userId: string | number;
   roomUsers: RoomUser[];
+  roomLength: number;
 }) => void;
 
 // eslint-disable-next-line no-unused-vars
@@ -711,6 +712,10 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     return { error: 0, isOwner };
   }
 
+  public getRoomLenght() {
+    return Object.keys(this.rooms).length;
+  }
+
   public async handleGetRoomMessage({
     message,
     port,
@@ -814,6 +819,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         roomId: id,
         userId: uid,
         roomUsers: this.rooms[id],
+        roomLength: this.getRoomLenght(),
       });
     }
     this.ws.sendMessage({

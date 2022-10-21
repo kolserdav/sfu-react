@@ -311,7 +311,12 @@ export function createServer(
             rtc.cleanConnections(item, userId.toString());
             rtc.rooms[item].splice(index, 1);
             if (onRoomDisconnect) {
-              onRoomDisconnect({ roomId: item, userId, roomUsers: rtc.rooms[item] });
+              onRoomDisconnect({
+                roomId: item,
+                userId,
+                roomUsers: rtc.rooms[item],
+                roomLength: rtc.getRoomLenght(),
+              });
             }
             const mute = rtc.muteds[item].indexOf(userId.toString());
             if (mute !== -1) {
