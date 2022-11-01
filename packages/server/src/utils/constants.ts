@@ -39,7 +39,7 @@ export const PORT = parseInt(env.PORT || DEFAULT_PORT, 10);
 export const DATABASE_URL = env.DATABASE_URL || '';
 export const CORS = env.CORS || '';
 export const APP_URL = env.APP_URL || '';
-export const STUN_SERVER = env.STUN_SERVER || '';
+export const STUN_SERVER = env.STUN_SERVER || 'stun:127.0.0.1:3478';
 export const SENT_RTCP_INTERVAL = 1000;
 export const STOP_RECORDING_MESSAGE: SendMessageArgs<MessageType.SET_RECORDING> = {
   type: MessageType.SET_RECORDING,

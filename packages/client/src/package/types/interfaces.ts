@@ -541,7 +541,6 @@ export namespace Connection {
       userId: number | string;
       target: string | number;
       mimeType: string;
-      iceServers?: RTCConfiguration['iceServers'];
     }): void;
 
     public abstract handleIceCandidate(args: {
