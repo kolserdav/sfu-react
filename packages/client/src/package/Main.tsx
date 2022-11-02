@@ -33,6 +33,7 @@ function Main({
   name = USER_NAME_DEFAULT,
   backLinks = null,
   videoRecord = false,
+  iceServers = [],
 }: Omit<GlobalProps, 'locale' | 'roomId'>) {
   const pathname = getPathname();
   const qS = useMemo(() => parseQueryString(), []);
@@ -57,6 +58,7 @@ function Main({
           roomId={roomId}
           locale={locale}
           name={name}
+          iceServers={iceServers}
         />
       )}
       <div
