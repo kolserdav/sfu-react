@@ -33,7 +33,7 @@
   },
   "nodemonConfig": {
     "ignore": [
-      "node_modules/*"
+      "node_modules/"
     ]
   },
   "main": "packages/client/dist/Main.js",
