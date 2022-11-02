@@ -2,7 +2,8 @@ node_modules
 
 dist
 
-rec
+rec/*
+!rec/.gitkeep
 
 .env
 
