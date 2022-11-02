@@ -147,6 +147,11 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         {
           urls: STUN_SERVER,
         },
+        {
+          urls: process.env.TURN_SERVER as string,
+          username: process.env.TURN_SERVER_USER,
+          credential: process.env.TURN_SERVER_PASSWORD,
+        },
       ],
       dtls: {
         keys: SSL_RTC_CONNECTION
