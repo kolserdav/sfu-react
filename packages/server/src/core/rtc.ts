@@ -142,7 +142,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         ],
       },
       iceTransportPolicy: 'all',
-      bundlePolicy: 'disable',
       iceServers: [
         {
           urls: STUN_SERVER,
