@@ -11,7 +11,7 @@
 import { AlertProps, ClickPosition, DialogProps } from '../types';
 import { LogLevel } from '../types/interfaces';
 
-export const LOG_LEVEL: LogLevel = 2;
+export const LOG_LEVEL: LogLevel = parseInt(process.env.REACT_APP_LOG_LEVEL as string, 10);
 export const WS_TTL = 1;
 export const START_DELAY = 1999;
 export const CODECS = [
