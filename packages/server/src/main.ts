@@ -35,9 +35,9 @@ const settings = new Settings();
 process.on('uncaughtException', (err: Error) => {
   log('error', 'uncaughtException', err);
 });
-process.on('unhandledRejection', (err: Error) => {
-  console.log(err.name, 1);
-  if (!/TransactionFailed/.test(err.name)) {
+process.on('unhandledRejection', (err: any) => {
+  console.log(err.cause, 1);
+  if (!/TransactionFailed/.test(err.cause.message)) {
     log('error', 'unhandledRejection', err);
   } else {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
