@@ -490,7 +490,7 @@ class RTC
     if (target.toString() === '0') {
       const { href } = window.location;
       alert('Close connection');
-      window.location.href = href;
+      // window.location.href = href;
     }
   };
 
