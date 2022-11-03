@@ -36,9 +36,8 @@ process.on('uncaughtException', (err: Error) => {
   log('error', 'uncaughtException', err);
 });
 process.on('unhandledRejection', (err: Error) => {
-  console.log(err.message, 1);
-  console.log(err.toString(), 2);
-  if (!/TransactionFailed/.test(err.toString())) {
+  console.log(err.name, 1);
+  if (!/TransactionFailed/.test(err.name)) {
     log('error', 'unhandledRejection', err);
   } else {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
