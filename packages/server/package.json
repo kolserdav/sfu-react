@@ -6,6 +6,11 @@
   "prisma": {
     "schema": "orm/schema.prisma"
   },
+  "nodemonConfig": {
+    "ignore": [
+      "../../node_modules/"
+    ]
+  },
   "scripts": {
     "watch": "tsc -p . -w",
     "dev:start": "nodemon dist/main.js",
