@@ -76,7 +76,7 @@ export const VOLUME_MIN = 1;
 export const ALERT_TRANSITION = 350;
 export const VIDEO_ACTIONS_STYLE = 'right: calc(1rem - 10px);transition: top 0.3s ease-in';
 export const PSEUDO_BUTTON_ANIMATION_TIMEOUT = 1000;
-export const VIDEO_STARTED_HOOK_TIMEOUT = 4000;
+export const VIDEO_STARTED_HOOK_TIMEOUT = 1000;
 export const RECORDED_VIDEO_TAKE_DEFAULT = 2;
 export const MOBILE_WIDTH = 760;
 // dependency packages/client/src/package/components/Chat.module.scss $text-area-padding-left
