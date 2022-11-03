@@ -1352,28 +1352,12 @@ export const useVideoStarted = ({
         }
         const _attempts = { ...attempts };
         diffs.forEach((item) => {
-          if (!_attempts[item.target]) {
-            _attempts[item.target] = 0;
-          }
-          if (_attempts[item.target] === 1) {
-            if (!played[item.target] && mounted && !checkIsRecord(item.target.toString())) {
-              lostStreamHandler({ ...item, eventName: 'not-played' });
-              log('warn', `Video not played ${item.target}`, {
-                target: item.target,
-                streamL: item.stream.getTracks().length,
-              });
-            }
-          } else {
-            log('info', `${_attempts[item.target]} attempts of restart:`, { target: item.target });
-            if (_attempts[item.target] === 5) {
-              // _attempts[item.target] = 0;
-            }
-          }
-
-          if (_attempts[item.target] !== undefined) {
-            _attempts[item.target] += 1;
-          } else {
-            _attempts[item.target] = 1;
+          if (!played[item.target] && mounted && !checkIsRecord(item.target.toString())) {
+            lostStreamHandler({ ...item, eventName: 'not-played' });
+            log('warn', `Video not played ${item.target}`, {
+              target: item.target,
+              streamL: item.stream.getTracks().length,
+            });
           }
         });
         setAttempts(_attempts);
