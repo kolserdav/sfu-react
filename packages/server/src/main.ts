@@ -36,7 +36,13 @@ process.on('uncaughtException', (err: Error) => {
   log('error', 'uncaughtException', err);
 });
 process.on('unhandledRejection', (err: Error) => {
-  log('error', 'unhandledRejection', err);
+  if (!/TransactionFailed/.test(err.message)) {
+    log('error', 'unhandledRejection', err);
+  } else {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const _err: any = err;
+    log('warn', err.message, { response: _err?.response });
+  }
 });
 /**
  * Create WebRTC SFU server
