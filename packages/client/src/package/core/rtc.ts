@@ -206,7 +206,7 @@ class RTC
           case 'closed':
           case 'failed':
           case 'disconnected':
-            core.onClosedCall({ roomId, userId, target, connId });
+            core.onClosedCall({ roomId, userId, target, connId, command: 'iceConnectionState' });
             break;
         }
       };
@@ -235,7 +235,7 @@ class RTC
         );
         switch (core.peerConnections[peerId]!.signalingState) {
           case 'closed':
-            core.onClosedCall({ roomId, userId, target, connId });
+            core.onClosedCall({ roomId, userId, target, connId, command: 'signalingState' });
             break;
         }
       };
@@ -490,7 +490,7 @@ class RTC
     if (target.toString() === '0') {
       const { href } = window.location;
       alert('Close connection');
-      // window.location.href = href;
+      window.location.href = href;
     }
   };
 

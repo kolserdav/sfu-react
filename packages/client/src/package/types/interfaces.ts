@@ -564,6 +564,7 @@ export namespace Connection {
       roomId: number | string;
       userId: number | string;
       target: string | number;
+      command: keyof werift.RTCPeerConnection;
     }): void;
 
     public abstract handleOfferMessage(msg: Signaling.SendMessageArgs<MessageType.OFFER>): void;
