@@ -36,6 +36,8 @@ process.on('uncaughtException', (err: Error) => {
   log('error', 'uncaughtException', err);
 });
 process.on('unhandledRejection', (err: Error) => {
+  console.log(err.message, 1);
+  console.log(err.toString(), 2);
   if (!/TransactionFailed/.test(err.toString())) {
     log('error', 'unhandledRejection', err);
   } else {
