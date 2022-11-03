@@ -41,7 +41,7 @@ process.on('unhandledRejection', (err: Error) => {
   } else {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const _err: any = err;
-    log('warn', err.message, { response: _err?.response });
+    log('warn', 'Err name is Error', _err?.response);
   }
 });
 /**
