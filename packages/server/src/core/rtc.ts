@@ -152,15 +152,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
           credential: process.env.TURN_SERVER_PASSWORD,
         },
       ],
-      dtls: {
-        keys: SSL_RTC_CONNECTION
-          ? {
-              keyPem: ssl.clientKey,
-              certPem: ssl.certificate,
-              signatureHash: SSL_SIGNATURE_HASH,
-            }
-          : undefined,
-      },
     });
   };
 
