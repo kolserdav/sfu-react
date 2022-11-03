@@ -976,7 +976,7 @@ export const useVideoDimensions = ({
                   transition: width 0.3s ease-in;`
                 );
                 item
-                  .applyConstraints(coeff < 1 ? { height: _height } : { width: _width })
+                  .applyConstraints({ width: _width })
                   .then(() => {
                     log('log', 'Constraints changed', {
                       width,
