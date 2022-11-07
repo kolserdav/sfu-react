@@ -40,11 +40,11 @@ export interface Theme {
 
 const colors: Colors = {
   dark: {
-    paper: '#0f0f0f',
-    text: '#d7d6d6',
+    paper: '#212121',
+    text: '#cfcfcf',
     active: '#36413e',
     white: '#fff',
-    black: '#000',
+    black: 'black',
     red: 'orange',
     yellow: 'lightgoldenrodyellow',
     blue: 'blue',

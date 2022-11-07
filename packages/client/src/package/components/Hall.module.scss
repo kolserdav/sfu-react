@@ -70,9 +70,9 @@
 $user-item-padding: 1rem;
 
 .users__item {
-  padding: 0 $user-item-padding;
   position: relative;
-  width: calc(100% - #{$user-item-padding});
+  padding: 0 $user-item-padding;
+  width: calc(100% - #{$user-item-padding} * 2);
   overflow-y: auto;
   display: flex;
   flex-direction: row;

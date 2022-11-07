@@ -48,6 +48,7 @@ import Dialog from './ui/Dialog';
 import MenuIcon from '../Icons/Menu';
 import CrownIcon from '../Icons/Crown';
 import PseudoButton from './ui/PseudoButton';
+import HandUpIcon from '../Icons/HandUp';
 
 function Room({ userId, iceServers, server, port, roomId, locale, name, theme }: RoomProps) {
   const container = useRef<HTMLDivElement>(null);
@@ -68,6 +69,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     setToBan,
   } = useSettingsDialog();
   const {
+    askFloor,
     streams,
     lenght,
     lostStreamHandler,
@@ -310,17 +312,19 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
             )}
           </IconButton>
         )}
-        <IconButton
-          title={muted ? locale.micOn : locale.micOff}
-          onClick={changeMuted}
-          disabled={adminMuted}
-        >
-          {muted || adminMuted ? (
-            <MicrophoneOffIcon color={theme?.colors.text} />
-          ) : (
-            <MicrophoneIcon color={theme?.colors.text} />
-          )}
-        </IconButton>
+        {adminMuted ? (
+          <IconButton title={muted ? locale.micOn : locale.micOff} onClick={askFloor}>
+            <HandUpIcon color={theme?.colors.text} />
+          </IconButton>
+        ) : (
+          <IconButton title={muted ? locale.micOn : locale.micOff} onClick={changeMuted}>
+            {muted ? (
+              <MicrophoneOffIcon color={theme?.colors.text} />
+            ) : (
+              <MicrophoneIcon color={theme?.colors.text} />
+            )}
+          </IconButton>
+        )}
         <IconButton title={video ? locale.cameraOff : locale.cameraOn} onClick={changeVideo}>
           {video ? (
             <CameraOutlineIcon color={theme?.colors.text} />
@@ -345,13 +349,13 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
           tabIndex={-1}
           role="button"
           onClick={
-            rtc.muteds.indexOf(settingsUserId) === -1
+            adminMuteds.indexOf(settingsUserId) === -1
               ? clickToMuteWrapper(dialogSettings.context)
               : clickToUnMuteWrapper(dialogSettings.context)
           }
           className={g.dialog__item}
         >
-          {rtc.muteds.indexOf(settingsUserId) === -1 ? locale.mute : locale.unmute}
+          {adminMuteds.indexOf(settingsUserId) === -1 ? locale.mute : locale.unmute}
         </div>
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}
         <div

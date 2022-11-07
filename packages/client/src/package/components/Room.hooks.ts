@@ -222,6 +222,13 @@ export const useConnection = ({
     [muted, ws, roomId]
   );
 
+  const askFloor = useMemo(
+    () => () => {
+      console.log('askFloor');
+    },
+    []
+  );
+
   /**
    * Change muted
    */
@@ -898,6 +905,7 @@ export const useConnection = ({
   }, [roomId, ws, lenght, streams, connectionId, id, shareScreen, error]);
 
   return {
+    askFloor,
     streams,
     lenght,
     rtc,
