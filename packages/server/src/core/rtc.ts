@@ -141,6 +141,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
           }),
         ],
       },
+      bundlePolicy: 'disable',
       iceTransportPolicy: 'all',
       iceServers: [
         {
@@ -824,6 +825,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         roomUsers: this.rooms[id],
       });
     }
+    this.muteds[id].push(uid);
     this.ws.sendMessage({
       type: MessageType.SET_ROOM,
       id: uid,

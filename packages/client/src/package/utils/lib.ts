@@ -15,6 +15,8 @@ import { DialogProps } from '../types';
 import storeAlert, { changeAlert } from '../store/alert';
 import storeLogLevel from '../store/logLevel';
 
+export const isDev = () => process.env.NODE_ENV === 'development';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const log = (type: keyof typeof LogLevel, text: string, data?: any, forUser = false) => {
   const { logLevel } = storeLogLevel.getState();

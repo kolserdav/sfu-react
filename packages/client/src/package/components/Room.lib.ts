@@ -50,10 +50,9 @@ export const getWidthOfItem = ({
   };
 
   const { offsetWidth: width, offsetHeight: height } = container;
-  const _lenght = checkVideoFixed(container) ? 1 : lenght;
-  if (_lenght) {
+  if (lenght) {
     const horizontal = width > height;
-    switch (_lenght) {
+    switch (lenght) {
       case 2:
         dims = horizontal ? { cols: 2, rows: 1 } : { cols: 1, rows: 2 };
         break;
@@ -78,7 +77,60 @@ export const getWidthOfItem = ({
       case 11:
       case 12:
       case 13:
+      case 14:
+      case 15:
         dims = horizontal ? { cols: 5, rows: 3 } : { cols: 3, rows: 5 };
+        break;
+      case 16:
+      case 17:
+      case 18:
+      case 19:
+      case 20:
+        dims = horizontal ? { cols: 5, rows: 4 } : { cols: 4, rows: 5 };
+        break;
+      case 21:
+      case 22:
+      case 23:
+      case 24:
+        dims = horizontal ? { cols: 6, rows: 4 } : { cols: 4, rows: 6 };
+        break;
+      case 25:
+      case 26:
+      case 27:
+      case 28:
+        dims = horizontal ? { cols: 7, rows: 4 } : { cols: 4, rows: 7 };
+        break;
+      case 29:
+      case 30:
+      case 31:
+      case 32:
+        dims = horizontal ? { cols: 8, rows: 4 } : { cols: 4, rows: 8 };
+        break;
+      case 33:
+      case 34:
+      case 35:
+      case 36:
+        dims = horizontal ? { cols: 6, rows: 6 } : { cols: 4, rows: 9 };
+        break;
+      case 37:
+      case 38:
+      case 39:
+      case 40:
+        dims = horizontal ? { cols: 8, rows: 5 } : { cols: 4, rows: 10 };
+        break;
+      case 41:
+      case 42:
+      case 43:
+      case 44:
+      case 45:
+        dims = horizontal ? { cols: 9, rows: 5 } : { cols: 5, rows: 9 };
+        break;
+      case 46:
+      case 47:
+      case 48:
+      case 49:
+      case 50:
+        dims = horizontal ? { cols: 10, rows: 5 } : { cols: 5, rows: 10 };
         break;
       default:
       // TODO other counts

@@ -48,6 +48,7 @@ import {
   ALERT_TIMEOUT,
   VIDEO_ACTIONS_STYLE,
   VIDEO_STARTED_HOOK_TIMEOUT,
+  ROOM_LENGTH_TEST,
 } from '../utils/constants';
 import { CookieName, getCookie } from '../utils/cookies';
 import storeError, { changeError } from '../store/error';
@@ -98,11 +99,11 @@ export const useConnection = ({
   const [selfStream, setSelfStream] = useState<Stream | null>(null);
   const [roomIsSaved, setRoomIsSaved] = useState<boolean>(false);
   const [lenght, setLenght] = useState<number>(streams.length);
-  const [muted, setMuted] = useState<boolean>(false);
+  const [muted, setMuted] = useState<boolean>(true);
   const [adminMuted, setAdminMuted] = useState<boolean>(false);
   const [muteds, setMuteds] = useState<(string | number)[]>([]);
   const [adminMuteds, setAdminMuteds] = useState<(string | number)[]>([]);
-  const [video, setVideo] = useState<boolean>(true);
+  const [video, setVideo] = useState<boolean>(false);
   const [isOwner, setIsOwner] = useState<boolean>(false);
   const [error, setError] = useState<keyof typeof ErrorCode>();
   const [connectionId, setConnectionId] = useState<string>('');
@@ -201,33 +202,51 @@ export const useConnection = ({
     [addStream, connectionId, locale, roomId, rtc, ws, shareScreen, isOwner]
   );
 
-  const changeMuted = () => {
-    if (!roomId) {
-      return;
-    }
-    const _muted = !muted;
-    setMuted(_muted);
-    ws.sendMessage({
-      type: MessageType.GET_MUTE,
-      id: ws.userId,
-      connId: '',
-      data: {
-        muted: !muted,
-        roomId,
-      },
-    });
-    if (rtc.localStream) {
-      rtc.localStream.getAudioTracks()[0].enabled = !_muted;
-    }
-  };
+  const changeMuted = useMemo(
+    () => () => {
+      if (!roomId) {
+        return;
+      }
+      const _muted = !muted;
+      setMuted(_muted);
+      ws.sendMessage({
+        type: MessageType.GET_MUTE,
+        id: ws.userId,
+        connId: '',
+        data: {
+          muted: _muted,
+          roomId,
+        },
+      });
+    },
+    [muted, ws, roomId]
+  );
 
-  const changeVideo = () => {
+  /**
+   * Change muted
+   */
+  useEffect(() => {
     if (rtc.localStream) {
+      rtc.localStream.getAudioTracks()[0].enabled = muted;
+    }
+  }, [muted, rtc.localStream]);
+
+  const changeVideo = useMemo(
+    () => () => {
       const _video = !video;
       setVideo(_video);
-      rtc.localStream.getVideoTracks()[0].enabled = _video;
+    },
+    [video]
+  );
+
+  /**
+   * Change video enabled
+   */
+  useEffect(() => {
+    if (rtc.localStream) {
+      rtc.localStream.getVideoTracks()[0].enabled = video;
     }
-  };
+  }, [video, rtc.localStream]);
 
   /**
    * On change pathname
@@ -328,7 +347,7 @@ export const useConnection = ({
       connId,
     }: SendMessageArgs<MessageType.SET_CHANGE_UNIT>) => {
       if (lenght !== roomLength) {
-        setLenght(isRecord || isRecording ? roomLength - 1 : roomLength);
+        setLenght(ROOM_LENGTH_TEST || (isRecord || isRecording ? roomLength - 1 : roomLength));
       }
       rtc.muteds = _muteds.concat(_adminMuteds);
       setMuteds(rtc.muteds);
@@ -543,7 +562,9 @@ export const useConnection = ({
         st: _streams.map((i) => i.target),
       });
       rtc.roomLength = roomUsers?.length || 0;
-      setLenght(isRecord || isRecording ? roomUsers.length - 1 : roomUsers.length);
+      setLenght(
+        ROOM_LENGTH_TEST || (isRecord || isRecording ? roomUsers.length - 1 : roomUsers.length)
+      );
       setAdminMuteds(_adminMuteds);
       setMuteds(rtc.muteds);
       setAdminMuted(_adminMuteds.indexOf(id) !== -1);

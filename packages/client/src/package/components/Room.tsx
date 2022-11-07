@@ -9,7 +9,7 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import React, { useMemo, useRef } from 'react';
-import { log, checkIsRecord } from '../utils/lib';
+import { log, checkIsRecord, isDev } from '../utils/lib';
 import s from './Room.module.scss';
 import g from '../Global.module.scss';
 import { RoomProps } from '../types/index';
@@ -31,7 +31,7 @@ import {
   getVolumeContext,
   getSettingsContext,
 } from './Room.lib';
-import { USER_NAME_DEFAULT } from '../utils/constants';
+import { ROOM_LENGTH_TEST, USER_NAME_DEFAULT } from '../utils/constants';
 import CloseButton from './ui/CloseButton';
 import ScreenIcon from '../Icons/ScreeenIcon';
 import IconButton from './ui/IconButton';
@@ -122,6 +122,16 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     () => getSettingsContext(dialogSettings.context).userId,
     [dialogSettings.context]
   );
+  const _streams = useMemo(
+    () =>
+      ROOM_LENGTH_TEST && isDev()
+        ? new Array(ROOM_LENGTH_TEST)
+            .fill(0)
+            .map(() => streams[0])
+            .filter((item) => item !== undefined)
+        : streams,
+    [streams]
+  );
 
   return (
     <div
@@ -132,14 +142,15 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
       }}
     >
       <div className={s.container} ref={container}>
-        {streams.map((item, index) =>
+        {_streams.map((item, index) =>
           (isRecord && item.target === userId) ||
           (isRecording && checkIsRecord(item.target.toString())) ? (
             ''
           ) : (
             <div
               id={item.stream.id}
-              key={item.target}
+              // eslint-disable-next-line react/no-array-index-key
+              key={`${item.target}${index}`}
               className={s.video}
               data-connid={item.connId}
             >
