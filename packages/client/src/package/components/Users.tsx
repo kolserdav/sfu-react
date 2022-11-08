@@ -50,7 +50,7 @@ function Users({
               )}
 
               <IconButton
-                disabled={item.id === userId ? item.adminMuted : item.adminMuted && !isOwner}
+                disabled={item.id === userId ? item.adminMuted : item.adminMuted ? !isOwner : true}
               >
                 {item.muted || item.adminMuted ? (
                   <MicrophoneOffIcon
