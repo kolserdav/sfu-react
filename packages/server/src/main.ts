@@ -175,6 +175,7 @@ export function createServer(
               roomUsers: rtc.rooms[_roomId],
               muteds: rtc.muteds[_roomId],
               adminMuteds: rtc.adminMuteds[_roomId],
+              asked: rtc.askeds[_roomId],
             },
             connId,
           });
@@ -209,7 +210,7 @@ export function createServer(
           chat.handleDeleteMessage(rawMessage);
           break;
         case MessageType.GET_TO_MUTE:
-          rtc.handleGetToMute(rawMessage);
+          rtc.getToMuteHandler(rawMessage);
           break;
         case MessageType.GET_TO_BAN:
           rtc.handleGetToBan(rawMessage);
@@ -224,10 +225,13 @@ export function createServer(
           rtc.handleGetToUnBan(rawMessage);
           break;
         case MessageType.GET_MUTE:
-          rtc.handleGetMute(rawMessage);
+          rtc.getMuteHandler(rawMessage);
           break;
         case MessageType.GET_VIDEO_FIND_MANY:
           settings.videoFindManyHandler(rawMessage);
+          break;
+        case MessageType.GET_ASK_FLOOR:
+          rtc.setAskedFloorHandler(rawMessage);
           break;
         case MessageType.GET_VIDEO_FIND_FIRST:
           settings.videoFindFirstHandler(rawMessage);
@@ -319,9 +323,15 @@ export function createServer(
             if (onRoomDisconnect) {
               onRoomDisconnect({ roomId: item, userId, roomUsers: rtc.rooms[item] });
             }
-            const mute = rtc.muteds[item].indexOf(userId.toString());
+            // delete mute
+            const mute = rtc.muteds[item].indexOf(userId);
             if (mute !== -1) {
               rtc.muteds[item].splice(mute, 1);
+            }
+            // delete askeds
+            const askeds = rtc.askeds[item].indexOf(userId);
+            if (askeds !== -1) {
+              rtc.askeds[item].splice(askeds, 1);
             }
             // Send user list of room
             rtc.rooms[item].forEach((_item) => {
@@ -349,6 +359,7 @@ export function createServer(
                   name: _item.name,
                   eventName: 'delete',
                   isOwner: _item.isOwner,
+                  asked: rtc.askeds[item],
                 },
                 connId: _connId,
               });
@@ -373,6 +384,7 @@ export function createServer(
               delete rtc.rooms[item];
               delete rtc.streams[item];
               delete rtc.banneds[item];
+              delete rtc.askeds[item];
               delete rtc.peerConnectionsServer[item];
               db.changeRoomArchive({ userId: item.toString(), archive: true });
               delete rtc.muteds[item];

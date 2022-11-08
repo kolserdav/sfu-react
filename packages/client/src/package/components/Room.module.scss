@@ -20,6 +20,11 @@
   z-index: 12;
 }
 
+.setting__actions {
+  position: relative;
+  display: flex;
+}
+
 .container {
   position: relative;
   width: 100%;

@@ -63,6 +63,7 @@ const lang: LocaleServer = {
     copyRoomLink: 'Copy room address',
     editMessage: 'Message edited',
     messageDeleted: 'Message deleted',
+    askForTheFloor: 'Ask for the floor',
   },
 };
 

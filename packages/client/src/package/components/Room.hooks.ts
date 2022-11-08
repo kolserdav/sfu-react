@@ -102,6 +102,7 @@ export const useConnection = ({
   const [muted, setMuted] = useState<boolean>(true);
   const [adminMuted, setAdminMuted] = useState<boolean>(false);
   const [muteds, setMuteds] = useState<(string | number)[]>([]);
+  const [askeds, setAskeds] = useState<(string | number)[]>([]);
   const [adminMuteds, setAdminMuteds] = useState<(string | number)[]>([]);
   const [video, setVideo] = useState<boolean>(false);
   const [isOwner, setIsOwner] = useState<boolean>(false);
@@ -163,6 +164,7 @@ export const useConnection = ({
     });
     return { isRecording: check };
   }, [streams]);
+
   const screenShare = useMemo(
     () => (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       if (!roomId) {
@@ -224,8 +226,29 @@ export const useConnection = ({
 
   const askFloor = useMemo(
     () => () => {
-      console.log('askFloor');
+      if (!roomId) {
+        return;
+      }
+      ws.sendMessage({
+        type: MessageType.GET_ASK_FLOOR,
+        connId: connectionId,
+        id: roomId,
+        data: {
+          userId: id,
+        },
+      });
+      if (muted) {
+        changeMuted();
+      }
     },
+    [connectionId, id, roomId, ws, muted, changeMuted]
+  );
+
+  const setAskFloorHandler = useMemo(
+    () =>
+      ({ data: { asked } }: SendMessageArgs<MessageType.SET_ASK_FLOOR>) => {
+        setAskeds(asked);
+      },
     []
   );
 
@@ -350,12 +373,14 @@ export const useConnection = ({
         name,
         adminMuteds: _adminMuteds,
         isOwner: _isOwner,
+        asked,
       },
       connId,
     }: SendMessageArgs<MessageType.SET_CHANGE_UNIT>) => {
       if (lenght !== roomLength) {
         setLenght(ROOM_LENGTH_TEST || (isRecord || isRecording ? roomLength - 1 : roomLength));
       }
+      setAskeds(asked);
       rtc.muteds = _muteds.concat(_adminMuteds);
       setMuteds(rtc.muteds);
       setAdminMuteds(_adminMuteds);
@@ -405,6 +430,7 @@ export const useConnection = ({
                       muteds: _muteds,
                       adminMuteds: _adminMuteds,
                       isOwner,
+                      asked: askeds,
                     },
                   });
                 }
@@ -514,11 +540,12 @@ export const useConnection = ({
 
     const setRoomHandler = ({
       connId,
-      data: { isOwner: _isOwner },
+      data: { isOwner: _isOwner, asked },
     }: SendMessageArgs<MessageType.SET_ROOM>) => {
       if (!canConnect) {
         return;
       }
+      setAskeds(asked);
       setRoomIsSaved(true);
       setIsOwner(_isOwner);
       rtc.createPeerConnection({
@@ -558,7 +585,7 @@ export const useConnection = ({
         return;
       }
       const {
-        data: { roomUsers, muteds: _muteds, adminMuteds: _adminMuteds },
+        data: { roomUsers, muteds: _muteds, adminMuteds: _adminMuteds, asked },
         connId,
       } = ws.getMessage(MessageType.SET_ROOM_GUESTS, rawMessage);
       rtc.muteds = (_muteds || []).concat(_adminMuteds || []);
@@ -574,6 +601,7 @@ export const useConnection = ({
       );
       setAdminMuteds(_adminMuteds);
       setMuteds(rtc.muteds);
+      setAskeds(asked);
       setAdminMuted(_adminMuteds.indexOf(id) !== -1);
       roomUsers.forEach((item) => {
         if (item.id !== id) {
@@ -697,6 +725,9 @@ export const useConnection = ({
         case MessageType.SET_CHANGE_UNIT:
           changeRoomUnitHandler(rawMessage);
           break;
+        case MessageType.SET_ASK_FLOOR:
+          setAskFloorHandler(rawMessage);
+          break;
         case MessageType.SET_MUTE_LIST:
           changeMuteList(rawMessage);
           break;
@@ -730,12 +761,14 @@ export const useConnection = ({
       };
     };
   }, [
+    askeds,
     cleanAudioAnalyzer,
     roomId,
     streams,
     ws,
     rtc,
     id,
+    setAskFloorHandler,
     roomIsSaved,
     lenght,
     selfStream,
@@ -906,6 +939,7 @@ export const useConnection = ({
 
   return {
     askFloor,
+    askeds,
     streams,
     lenght,
     rtc,

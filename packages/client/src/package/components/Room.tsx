@@ -70,6 +70,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
   } = useSettingsDialog();
   const {
     askFloor,
+    askeds,
     streams,
     lenght,
     lostStreamHandler,
@@ -134,6 +135,8 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
         : streams,
     [streams]
   );
+
+  const isAsked = useMemo(() => askeds.indexOf(userId) !== -1, [askeds, userId]);
 
   return (
     <div
@@ -274,9 +277,21 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
                   </IconButton>
                 )}
                 {isOwner && item.target !== userId && (
-                  <IconButton onClick={clickToSettingsWrapper(item.target)}>
-                    <MenuIcon color={theme?.colors.white} />
-                  </IconButton>
+                  <div className={s.setting__actions}>
+                    <IconButton onClick={clickToSettingsWrapper(item.target)}>
+                      <MenuIcon color={theme?.colors.white} />
+                    </IconButton>
+                    {askeds.indexOf(item.target) !== -1 && (
+                      <IconButton
+                        disabled
+                        onClick={() => {
+                          /** */
+                        }}
+                      >
+                        <HandUpIcon color={theme?.colors.white} />
+                      </IconButton>
+                    )}
+                  </div>
                 )}
               </div>
               <div className={s.muted}>
@@ -312,19 +327,18 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
             )}
           </IconButton>
         )}
-        {adminMuted ? (
-          <IconButton title={muted ? locale.micOn : locale.micOff} onClick={askFloor}>
-            <HandUpIcon color={theme?.colors.text} />
-          </IconButton>
-        ) : (
-          <IconButton title={muted ? locale.micOn : locale.micOff} onClick={changeMuted}>
-            {muted ? (
-              <MicrophoneOffIcon color={theme?.colors.text} />
-            ) : (
-              <MicrophoneIcon color={theme?.colors.text} />
-            )}
+        {adminMuted && (
+          <IconButton title={locale.askForTheFloor} onClick={askFloor} disabled={isAsked}>
+            <HandUpIcon width={40} height={40} color={theme?.colors.text} />
           </IconButton>
         )}
+        <IconButton title={muted ? locale.micOn : locale.micOff} onClick={changeMuted}>
+          {muted ? (
+            <MicrophoneOffIcon color={theme?.colors.text} />
+          ) : (
+            <MicrophoneIcon color={theme?.colors.text} />
+          )}
+        </IconButton>
         <IconButton title={video ? locale.cameraOff : locale.cameraOn} onClick={changeVideo}>
           {video ? (
             <CameraOutlineIcon color={theme?.colors.text} />

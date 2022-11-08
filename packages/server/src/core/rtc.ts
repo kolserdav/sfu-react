@@ -12,6 +12,7 @@
 //import * as werift from '../werift-webrtc/packages/webrtc/lib/webrtc/src/index';
 import * as werift from 'werift';
 import { createCertificate, CertificateCreationResult } from 'pem';
+import { RtcpHeader } from 'werift';
 import {
   RTCInterface,
   MessageType,
@@ -50,6 +51,8 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
   public ssrcIntervals: Record<string, NodeJS.Timer> = {};
 
   public muteds: RoomList = {};
+
+  public askeds: RoomList = {};
 
   public adminMuteds: RoomList = {};
 
@@ -263,6 +266,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
                   eventName: 'add',
                   roomLength: rooms[roomId]?.length || 0,
                   muteds: this.muteds[roomId],
+                  asked: this.askeds[roomId],
                   adminMuteds: this.adminMuteds[roomId],
                   isOwner: this.rooms[roomId]?.find((_item) => _item.id === userId)?.isOwner,
                 },
@@ -741,6 +745,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     } = message;
     if (!this.rooms[id]) {
       this.rooms[id] = [];
+      this.askeds[id] = [];
       this.muteds[id] = [];
       this.adminMuteds[id] = [];
       this.banneds[id] = [];
@@ -779,6 +784,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         id: uid,
         data: {
           isOwner,
+          asked: this.askeds[id],
         },
         connId,
       });
@@ -831,6 +837,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       id: uid,
       data: {
         isOwner,
+        asked: this.askeds[id],
       },
       connId,
     });
@@ -886,7 +893,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     });
   }
 
-  public handleGetMute({ id, data: { muted, roomId } }: SendMessageArgs<MessageType.GET_MUTE>) {
+  public getMuteHandler({ id, data: { muted, roomId } }: SendMessageArgs<MessageType.GET_MUTE>) {
     const index = this.muteds[roomId].indexOf(id);
     if (muted) {
       if (index === -1) {
@@ -917,7 +924,30 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     });
   }
 
-  public handleGetToMute({
+  public setAskedFloorHandler = ({
+    id,
+    data: { userId },
+  }: SendMessageArgs<MessageType.GET_ASK_FLOOR>) => {
+    if (this.askeds[id].indexOf(userId) === -1) {
+      this.askeds[id].push(userId);
+    } else {
+      log('warn', 'Duplicate asked user', { id, userId });
+    }
+    this.rooms[id].forEach((item) => {
+      this.ws.sendMessage({
+        type: MessageType.SET_ASK_FLOOR,
+        id: item.id,
+        connId: '',
+        data: {
+          userId,
+          roomId: id,
+          asked: this.askeds[id],
+        },
+      });
+    });
+  };
+
+  public getToMuteHandler({
     id: roomId,
     data: { target },
   }: SendMessageArgs<MessageType.GET_TO_MUTE>) {

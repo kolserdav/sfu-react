@@ -130,6 +130,8 @@ export enum MessageType {
   SET_VIDEO_FIND_MANY = 'SET_VIDEO_FIND_MANY',
   GET_VIDEO_FIND_FIRST = 'GET_VIDEO_FIND_FIRST',
   SET_VIDEO_FIND_FIRST = 'SET_VIDEO_FIND_FIRST',
+  GET_ASK_FLOOR = 'GET_ASK_FLOOR',
+  SET_ASK_FLOOR = 'SET_ASK_FLOOR',
 }
 
 export namespace Locale {
@@ -199,6 +201,7 @@ export namespace Locale {
     copyRoomLink: string;
     editMessage: string;
     messageDeleted: string;
+    askForTheFloor: string;
   }
 }
 
@@ -248,6 +251,7 @@ export namespace DataTypes {
       roomLength: number;
       isOwner: boolean;
       muteds: (string | number)[];
+      asked: (string | number)[];
       adminMuteds: (string | number)[];
     };
     export type SetUserId = {
@@ -264,6 +268,9 @@ export namespace DataTypes {
     };
     export type GetToBan = {
       target: string | number;
+      userId: string | number;
+    };
+    export type GetAskFloor = {
       userId: string | number;
     };
     export type GetVideoFindMany = {
@@ -287,6 +294,7 @@ export namespace DataTypes {
       roomUsers: RoomUser[];
       muteds: (string | number)[];
       adminMuteds: (string | number)[];
+      asked: (string | number)[];
     };
     export type GetChatMessages = {
       args: Prisma.MessageFindManyArgs;
@@ -295,6 +303,11 @@ export namespace DataTypes {
     export type GetEditMessage = {
       args: Prisma.MessageUpdateArgs;
       userId: string | number;
+    };
+    export type SetAskFloor = {
+      roomId: string | number;
+      userId: string | number;
+      asked: (string | number)[];
     };
     export type GetCreateMessage = {
       args: Prisma.MessageCreateArgs;
@@ -314,6 +327,7 @@ export namespace DataTypes {
     };
     export type SetRoom = {
       isOwner: boolean;
+      asked: (string | number)[];
     };
     export type SetVideoFindMany = {
       videos: GetManyResult<Video>;
@@ -412,6 +426,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.GetToUnMute
     : T extends MessageType.GET_TO_UNBAN
     ? DataTypes.MessageTypes.GetToUnBan
+    : T extends MessageType.GET_ASK_FLOOR
+    ? DataTypes.MessageTypes.GetAskFloor
     : T extends MessageType.GET_RECORD
     ? DataTypes.MessageTypes.GetRecord
     : T extends MessageType.SET_ROOM
@@ -430,6 +446,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetMute
     : T extends MessageType.SET_CHAT_UNIT
     ? DataTypes.MessageTypes.SetChatUnit
+    : T extends MessageType.SET_ASK_FLOOR
+    ? DataTypes.MessageTypes.SetAskFloor
     : T extends MessageType.SET_SETTINGS_UNIT
     ? DataTypes.MessageTypes.SetSettingsUnit
     : T extends MessageType.SET_CHAT_MESSAGES
