@@ -16,11 +16,10 @@ import CloseIcon from '../Icons/Close';
 import s from './Hall.module.scss';
 import IconButton from './ui/IconButton';
 import SettingsIcon from '../Icons/SettingsIcon';
-import { useSettings, useUsers, useUserList } from './Hall.hooks';
-import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
-import { checkIsRecord } from '../utils/lib';
+import { useSettings, useUserList } from './Hall.hooks';
 import Settings from './Settings';
 import UsersIcon from '../Icons/Users';
+import Users from './Users';
 
 function Hall({
   open,
@@ -36,7 +35,6 @@ function Hall({
   videoRecord,
 }: HallProps) {
   const { openSettings, openSettingsDialog } = useSettings({ open });
-  const { users, isOwner, banneds, unBanWrapper } = useUsers({ userId, roomId });
   const { openUserList, openUserListHandler } = useUserList({ open });
 
   return (
@@ -49,52 +47,14 @@ function Hall({
         }}
       >
         <div className={s.block}>
-          <div
-            className={clsx(s.users, openUserList ? s.open : '')}
-            style={{ color: theme?.colors.text, backgroundColor: theme?.colors.paper }}
-          >
-            {backLinks && <div className={s.users}>{backLinks}</div>}
-            <div className={s.title}>{locale.guests}</div>
-            {users.map((item) =>
-              checkIsRecord(item.id.toString()) ? (
-                ''
-              ) : (
-                <div key={item.id} className={s.users__item}>
-                  <div className={s.user__name}>{item.name}</div>
-                  <div className={s.user__actions}>
-                    {(item.muted || item.adminMuted) && (
-                      <MicrophoneOffIcon
-                        width={16}
-                        height={16}
-                        color={
-                          !item.adminMuted
-                            ? theme?.colors.text
-                            : isOwner
-                            ? theme?.colors.blue
-                            : theme?.colors.text
-                        }
-                      />
-                    )}
-                  </div>
-                </div>
-              )
-            )}
-            {isOwner && banneds.length !== 0 && (
-              <div className={s.users}>
-                <div className={s.title}>{locale.banneds}</div>
-                {banneds.map((item) => (
-                  <div key={`${item.id}-ban`} className={s.users__item}>
-                    <div className={s.users__name}>{item.name}</div>
-                    <div className={s.users__actions}>
-                      <IconButton onClick={unBanWrapper(item.id)}>
-                        <CloseIcon width={16} height={16} color={theme?.colors.red} />
-                      </IconButton>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <Users
+            openUserList={openUserList}
+            theme={theme}
+            locale={locale}
+            backLinks={backLinks}
+            userId={userId}
+            roomId={roomId}
+          />
           <Chat
             theme={theme}
             locale={locale}
@@ -112,7 +72,6 @@ function Hall({
             locale={locale}
             userId={userId}
             roomId={roomId}
-            isOwner={isOwner}
             open={openSettings}
             server={server}
             port={port}

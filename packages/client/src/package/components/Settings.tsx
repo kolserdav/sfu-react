@@ -27,7 +27,6 @@ function Settings({
   locale,
   roomId,
   userId,
-  isOwner,
   server,
   port,
   token,
@@ -94,7 +93,7 @@ function Settings({
                 title={started ? locale.stopRecord : locale.startRecord}
                 className={started ? s.text__button : ''}
                 onClick={recordStartWrapper(started ? 'stop' : 'start')}
-                disabled={!isOwner || buttonDisabled}
+                disabled={buttonDisabled}
               >
                 <div className={s.record}>
                   {started && <div className={s.time}>{time}</div>}

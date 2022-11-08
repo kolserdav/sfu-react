@@ -49,7 +49,6 @@ export type SettingsProps = Required<
   Omit<GlobalProps, 'iceServers' | 'theme' | 'colors' | 'logLevel' | 'backLinks'>
 > & {
   open: boolean;
-  isOwner: boolean;
   locale: LocaleServer['client'];
   theme?: Theme;
 };

@@ -658,7 +658,7 @@ export const useConnection = ({
           Object.keys(rtc.peerConnections).forEach((__item) => {
             const peer = __item.split(rtc.delimiter);
             if (peer[1] === item.target) {
-              streams.forEach((i, index) => {
+              streams.forEach((i) => {
                 if (i.target === item.target) {
                   storeStreams.dispatch(changeStreams({ type: 'delete', stream: i }));
                 }
