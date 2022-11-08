@@ -137,7 +137,10 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
   );
 
   const isAsked = useMemo(() => askeds.indexOf(userId) !== -1, [askeds, userId]);
-
+  const _speaker = useMemo(
+    () => (muteds.indexOf(speaker) === -1 && adminMuteds.indexOf(speaker) === -1 ? speaker : 0),
+    [speaker, muteds, adminMuteds]
+  );
   return (
     <div
       className={s.wrapper}
@@ -164,13 +167,17 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
               {/** video is strong second child */}
               <video
                 style={
-                  speaker === item.target
+                  _speaker === item.target
                     ? {
                         border: `2px solid ${theme?.colors.blue}`,
                       }
                     : {}
                 }
-                muted={item.target === userId || muteds.indexOf(item.target) !== -1}
+                muted={
+                  item.target === userId ||
+                  muteds.indexOf(item.target) !== -1 ||
+                  adminMuteds.indexOf(item.target) !== -1
+                }
                 onTimeUpdate={(e) => {
                   analyzeSoundLevel(item.target);
                   if (item.stream.active === false) {

@@ -41,3 +41,10 @@
     justify-content: space-around;
   }
 }
+
+.user__actions {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}

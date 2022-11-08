@@ -9,6 +9,8 @@ import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
 import IconButton from './ui/IconButton';
 import CloseIcon from '../Icons/Close';
 import { checkIsRecord } from '../utils/lib';
+import CrownIcon from '../Icons/Crown';
+import MicrophoneIcon from '../Icons/MicrophoneIcon';
 
 function Users({
   theme,
@@ -41,19 +43,25 @@ function Users({
           <div key={item.id} className={s.users__item}>
             <div className={s.user__name}>{item.name}</div>
             <div className={s.user__actions}>
-              {(item.muted || item.adminMuted) && (
-                <MicrophoneOffIcon
-                  width={16}
-                  height={16}
-                  color={
-                    !item.adminMuted
-                      ? theme?.colors.text
-                      : isOwner
-                      ? theme?.colors.blue
-                      : theme?.colors.text
-                  }
-                />
+              {item.isOwner && (
+                <IconButton title={isOwner ? locale.youAreAdminOfRoom : locale.isAdminOfRoom}>
+                  <CrownIcon width={16} height={16} color={theme?.colors.yellow} />
+                </IconButton>
               )}
+
+              <IconButton
+                disabled={item.id === userId ? item.adminMuted : item.adminMuted && !isOwner}
+              >
+                {item.muted || item.adminMuted ? (
+                  <MicrophoneOffIcon
+                    width={16}
+                    height={16}
+                    color={!item.adminMuted ? theme?.colors.text : theme?.colors.blue}
+                  />
+                ) : (
+                  <MicrophoneIcon width={16} height={16} color={theme?.colors.text} />
+                )}
+              </IconButton>
             </div>
           </div>
         )

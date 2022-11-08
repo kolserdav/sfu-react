@@ -257,9 +257,18 @@ export const useConnection = ({
    */
   useEffect(() => {
     if (rtc.localStream) {
-      rtc.localStream.getAudioTracks()[0].enabled = muted;
+      rtc.localStream.getAudioTracks()[0].enabled = !muted;
     }
   }, [muted, rtc.localStream]);
+
+  /**
+   * Change adminMuted
+   */
+  useEffect(() => {
+    if (rtc.localStream) {
+      rtc.localStream.getAudioTracks()[0].enabled = !adminMuted;
+    }
+  }, [adminMuted, rtc.localStream]);
 
   const changeVideo = useMemo(
     () => () => {
@@ -1103,56 +1112,65 @@ const audioLevels: Record<string, number> = {};
 
 export const useAudioAnalyzer = () => {
   const [speaker, setSpeaker] = useState<string | number>(0);
-  const createAudioAnalyzer = (item: Stream) => {
-    const audioContext = new AudioContext();
-    const audioSource = audioContext.createMediaStreamSource(item.stream);
-    const audioGain = audioContext.createGain();
-    const audioChannelSplitter = audioContext.createChannelSplitter(audioSource.channelCount);
-    audioSource.connect(audioGain);
-    audioGain.connect(audioChannelSplitter);
-    analyzer[item.target] = [];
-    freqs[item.target] = [];
-    for (let i = 0; i < audioSource.channelCount; i++) {
-      analyzer[item.target][i] = audioContext.createAnalyser();
-      analyzer[item.target][i].minDecibels = -100;
-      analyzer[item.target][i].maxDecibels = 0;
-      analyzer[item.target][i].smoothingTimeConstant = 0.8;
-      analyzer[item.target][i].fftSize = 32;
-      freqs[item.target][i] = new Uint8Array(analyzer[item.target][i].frequencyBinCount);
-      audioChannelSplitter.connect(analyzer[item.target][i], i, 0);
-    }
-  };
-
-  const analyzeSoundLevel = (uid: string | number) => {
-    if (analyzer[uid]) {
-      for (let i = 0; i < analyzer[uid].length; i++) {
-        analyzer[uid][i].getByteFrequencyData(freqs[uid][i]);
-        let level = 0;
-        freqs[uid][i].forEach((item) => {
-          level = Math.max(level, item);
-        });
-        audioLevels[uid] = level / 256;
+  const createAudioAnalyzer = useMemo(
+    () => (item: Stream) => {
+      const audioContext = new AudioContext();
+      const audioSource = audioContext.createMediaStreamSource(item.stream);
+      const audioGain = audioContext.createGain();
+      const audioChannelSplitter = audioContext.createChannelSplitter(audioSource.channelCount);
+      audioSource.connect(audioGain);
+      audioGain.connect(audioChannelSplitter);
+      analyzer[item.target] = [];
+      freqs[item.target] = [];
+      for (let i = 0; i < audioSource.channelCount; i++) {
+        analyzer[item.target][i] = audioContext.createAnalyser();
+        analyzer[item.target][i].minDecibels = -100;
+        analyzer[item.target][i].maxDecibels = 0;
+        analyzer[item.target][i].smoothingTimeConstant = 0.8;
+        analyzer[item.target][i].fftSize = 32;
+        freqs[item.target][i] = new Uint8Array(analyzer[item.target][i].frequencyBinCount);
+        audioChannelSplitter.connect(analyzer[item.target][i], i, 0);
       }
-    }
-  };
+    },
+    []
+  );
 
-  const cleanAudioAnalyzer = (uid: string | number) => {
-    if (analyzer[uid]) {
-      delete analyzer[uid];
-    } else {
-      log('info', 'Audio analyzer not found', uid);
-    }
-    if (freqs[uid]) {
-      delete freqs[uid];
-    } else {
-      log('info', 'Audio analyzer freqs not found', uid);
-    }
-    if (audioLevels[uid]) {
-      delete audioLevels[uid];
-    } else {
-      log('info', 'Audio analyzer levels not found', uid);
-    }
-  };
+  const analyzeSoundLevel = useMemo(
+    () => (uid: string | number) => {
+      if (analyzer[uid]) {
+        for (let i = 0; i < analyzer[uid].length; i++) {
+          analyzer[uid][i].getByteFrequencyData(freqs[uid][i]);
+          let level = 0;
+          freqs[uid][i].forEach((item) => {
+            level = Math.max(level, item);
+          });
+          audioLevels[uid] = level / 256;
+        }
+      }
+    },
+    []
+  );
+
+  const cleanAudioAnalyzer = useMemo(
+    () => (uid: string | number) => {
+      if (analyzer[uid]) {
+        delete analyzer[uid];
+      } else {
+        log('info', 'Audio analyzer not found', uid);
+      }
+      if (freqs[uid]) {
+        delete freqs[uid];
+      } else {
+        log('info', 'Audio analyzer freqs not found', uid);
+      }
+      if (audioLevels[uid]) {
+        delete audioLevels[uid];
+      } else {
+        log('info', 'Audio analyzer levels not found', uid);
+      }
+    },
+    []
+  );
 
   /**
    * Compare audio levels

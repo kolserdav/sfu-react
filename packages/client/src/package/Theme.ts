@@ -47,7 +47,7 @@ const colors: Colors = {
     black: 'black',
     red: 'orange',
     yellow: 'lightgoldenrodyellow',
-    blue: 'blue',
+    blue: '#1a6aaf',
   },
   light: {
     red: 'red',

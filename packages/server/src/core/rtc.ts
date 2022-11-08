@@ -12,7 +12,6 @@
 //import * as werift from '../werift-webrtc/packages/webrtc/lib/webrtc/src/index';
 import * as werift from 'werift';
 import { createCertificate, CertificateCreationResult } from 'pem';
-import { RtcpHeader } from 'werift';
 import {
   RTCInterface,
   MessageType,
@@ -831,7 +830,9 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         roomUsers: this.rooms[id],
       });
     }
-    this.muteds[id].push(uid);
+    if (this.muteds[id].indexOf(uid) === -1) {
+      this.muteds[id].push(uid);
+    }
     this.ws.sendMessage({
       type: MessageType.SET_ROOM,
       id: uid,
