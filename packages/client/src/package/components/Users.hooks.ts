@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
-import { MessageType, RoomUser, UserList } from '../types/interfaces';
+import { useState, useEffect, useMemo } from 'react';
+import { MessageType, RoomUser, UserItem, UserList } from '../types/interfaces';
 import storeStreams from '../store/streams';
 import storeUserList from '../store/userList';
 import storeMessage, { changeMessage } from '../store/message';
+import storeMuted, { changeMuted } from '../store/muted';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useUsers = ({
@@ -96,4 +97,17 @@ export const useUsers = ({
   }, []);
 
   return { users, isOwner, banneds, unBanWrapper };
+};
+
+export const useActions = () => {
+  const changeMutedWrapper = useMemo(
+    () =>
+      ({ muted }: UserList) =>
+      () => {
+        storeMuted.dispatch(changeMuted({ muted: !muted }));
+      },
+    []
+  );
+
+  return { changeMutedWrapper };
 };

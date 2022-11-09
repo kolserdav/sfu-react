@@ -4,7 +4,7 @@ import s from './Users.module.scss';
 import { Theme } from '../Theme';
 import { Locale } from '../types/interfaces';
 import { GlobalProps } from '../types';
-import { useUsers } from './Users.hooks';
+import { useActions, useUsers } from './Users.hooks';
 import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
 import IconButton from './ui/IconButton';
 import CloseIcon from '../Icons/Close';
@@ -28,10 +28,11 @@ function Users({
   openUserList: boolean;
 }) {
   const { users, isOwner, banneds, unBanWrapper } = useUsers({ userId, roomId });
+  const { changeMutedWrapper } = useActions();
 
   return (
     <div
-      className={clsx(s.users, openUserList ? s.open : '')}
+      className={clsx(s.wrapper, openUserList ? s.open : '')}
       style={{ color: theme?.colors.text, backgroundColor: theme?.colors.paper }}
     >
       {backLinks && <div className={s.users}>{backLinks}</div>}
@@ -42,7 +43,7 @@ function Users({
         ) : (
           <div key={item.id} className={s.users__item}>
             <div className={s.user__name}>{item.name}</div>
-            <div className={s.user__actions}>
+            <div className={s.actions}>
               {item.isOwner && (
                 <IconButton title={isOwner ? locale.youAreAdminOfRoom : locale.isAdminOfRoom}>
                   <CrownIcon width={16} height={16} color={theme?.colors.yellow} />
@@ -51,6 +52,7 @@ function Users({
 
               <IconButton
                 disabled={item.id === userId ? item.adminMuted : item.adminMuted ? !isOwner : true}
+                onClick={changeMutedWrapper(item)}
               >
                 {item.muted || item.adminMuted ? (
                   <MicrophoneOffIcon

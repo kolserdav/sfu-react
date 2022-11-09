@@ -1,6 +1,6 @@
 @import '../Global.module';
 
-.users {
+.wrapper {
   position: relative;
   flex-basis: 20%;
   height: 100%;
@@ -40,11 +40,11 @@
   @media (max-width: $mobile-width) {
     justify-content: space-around;
   }
-}
 
-.user__actions {
-  position: relative;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
+  .actions {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
 }
