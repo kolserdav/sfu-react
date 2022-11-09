@@ -99,14 +99,14 @@ export const useUsers = ({
   return { users, isOwner, banneds, unBanWrapper };
 };
 
-export const useActions = () => {
+export const useActions = ({ userId }: { userId: string | number }) => {
   const changeMutedWrapper = useMemo(
     () =>
       ({ muted }: UserList) =>
       () => {
-        storeMuted.dispatch(changeMuted({ muted: !muted }));
+        storeMuted.dispatch(changeMuted({ muted: !muted, id: userId }));
       },
-    []
+    [userId]
   );
 
   return { changeMutedWrapper };

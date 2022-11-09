@@ -26,8 +26,8 @@ import {
   createVolumeContext,
   getSettingsContext,
   getWidthOfItem,
-  changeMuteList,
   changeBanList,
+  changeMuteList,
 } from './Room.lib';
 import {
   LocaleServer,
@@ -56,10 +56,10 @@ import { CookieName, getCookie } from '../utils/cookies';
 import storeError, { changeError } from '../store/error';
 import storeClickDocument from '../store/clickDocument';
 import { getLocalStorage, LocalStorageName, setLocalStorage } from '../utils/localStorage';
-import storeUserList, { changeUserList } from '../store/userList';
 import storeMessage from '../store/message';
 import storeCanConnect from '../store/canConnect';
 import storeRoomIsInactive, { changeRoomIsInactive } from '../store/roomIsInactive';
+import storeMuted from '../store/muted';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -216,14 +216,14 @@ export const useConnection = ({
       ws.sendMessage({
         type: MessageType.GET_MUTE,
         id: ws.userId,
-        connId: '',
+        connId: connectionId,
         data: {
           muted: _muted,
           roomId,
         },
       });
     },
-    [muted, ws, roomId]
+    [muted, ws, roomId, connectionId]
   );
 
   const askFloor = useMemo(
@@ -253,6 +253,21 @@ export const useConnection = ({
       },
     []
   );
+
+  /**
+   * Listen change muted
+   */
+  useEffect(() => {
+    const cleanSubs = storeMuted.subscribe(() => {
+      const { id: _id } = storeMuted.getState();
+      if (_id === id) {
+        changeMuted();
+      }
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, [muted, changeMuted, id]);
 
   /**
    * Change muted
@@ -305,386 +320,6 @@ export const useConnection = ({
     [roomId, rtc, ws.connection]
   );
 
-  const removeStreamHandler = useMemo(
-    () =>
-      ({
-        data: { roomId: _roomId, target: _target },
-        connId: _connId,
-      }: SendMessageArgs<MessageType.SET_CLOSE_PEER_CONNECTION>) => {
-        const peerId = rtc.getPeerId(_roomId, _target, _connId);
-        cleanAudioAnalyzer(_target);
-        const _stream = streams.find((item) => item.target === _target);
-        if (_stream) {
-          storeStreams.dispatch(changeStreams({ type: 'delete', stream: _stream }));
-        } else {
-          log('warn', 'Close call without stream', { peerId });
-        }
-      },
-    [cleanAudioAnalyzer, rtc, streams]
-  );
-
-  const lostStreamHandler: typeof rtc.lostStreamHandler = useMemo(
-    () =>
-      ({ connId, target, eventName }) => {
-        if (!roomId) {
-          return;
-        }
-        let _connId = connId;
-        Object.keys(rtc.peerConnections).forEach((item) => {
-          const peer = item.split(rtc.delimiter);
-          if (peer[1] === target.toString()) {
-            // eslint-disable-next-line prefer-destructuring
-            _connId = peer[2];
-          }
-        });
-        rtc.closeVideoCall({ roomId, userId: ws.userId, target, connId: _connId });
-        ws.sendMessage({
-          type: MessageType.GET_CLOSE_PEER_CONNECTION,
-          connId: _connId,
-          id: ws.userId,
-          data: {
-            roomId,
-            target,
-          },
-        });
-      },
-    [roomId, rtc, ws]
-  );
-
-  /**
-   * 'add' send server/main.js and 'added' listen on Room.hooks.ts
-   */
-  const changeRoomUnitHandler = useMemo(
-    () =>
-      ({
-        id: userId,
-        data: {
-          target,
-          eventName,
-          roomLength,
-          muteds: _muteds,
-          name,
-          adminMuteds: _adminMuteds,
-          isOwner: _isOwner,
-          asked,
-        },
-        connId,
-      }: SendMessageArgs<MessageType.SET_CHANGE_UNIT>) => {
-        if (!roomId) {
-          return;
-        }
-        if (lenght !== roomLength) {
-          setLenght(ROOM_LENGTH_TEST || (isRecord || isRecording ? roomLength - 1 : roomLength));
-        }
-        setAskeds(asked);
-        rtc.muteds = _muteds.concat(_adminMuteds);
-        setMuteds(rtc.muteds);
-        setAdminMuteds(_adminMuteds);
-        setAdminMuted(_adminMuteds.indexOf(userId) !== -1);
-        switch (eventName) {
-          case 'add':
-          case 'added':
-            if (userId !== target) {
-              log('info', 'Change room unit handler', {
-                userId,
-                target,
-                roomLength,
-                connId,
-                eventName,
-              });
-              rtc.createPeerConnection({
-                roomId,
-                target,
-                userId: id,
-                connId,
-                onTrack: ({ addedUserId, stream }) => {
-                  log('info', 'Added unit track', { addedUserId, s: stream.id, connId });
-                  addStream({
-                    target: addedUserId,
-                    stream,
-                    connId,
-                    name,
-                    change: true,
-                    isOwner: _isOwner,
-                  });
-                },
-                iceServers,
-                eventName: 'back',
-              });
-              rtc.addTracks({ roomId, userId, target, connId, locale }, (e) => {
-                if (!e) {
-                  if (eventName !== 'added' && target !== userId) {
-                    ws.sendMessage({
-                      type: MessageType.SET_CHANGE_UNIT,
-                      id: target,
-                      connId,
-                      data: {
-                        target: userId,
-                        name: ws.name,
-                        roomLength,
-                        eventName: 'added',
-                        muteds: _muteds,
-                        adminMuteds: _adminMuteds,
-                        isOwner,
-                        asked: askeds,
-                      },
-                    });
-                  }
-                }
-              });
-            }
-            break;
-          case 'delete':
-            log('info', 'Need delete user', {
-              roomId,
-              target,
-              userId,
-              connId,
-              k: Object.keys(rtc.peerConnections),
-            });
-            rtc.closeVideoCall({ roomId, target, userId, connId });
-            const _stream = streams.find((item) => item.target === target);
-            if (_stream) {
-              storeStreams.dispatch(changeStreams({ type: 'delete', stream: _stream }));
-            }
-            break;
-        }
-      },
-    [
-      addStream,
-      askeds,
-      iceServers,
-      id,
-      isOwner,
-      isRecord,
-      isRecording,
-      lenght,
-      locale,
-      roomId,
-      rtc,
-      streams,
-      ws,
-    ]
-  );
-
-  const changeMuteHandler = useMemo(
-    () => (args: SendMessageArgs<MessageType.SET_MUTE>) => {
-      const {
-        id: userId,
-        data: { muteds: _muteds, adminMuteds: _adminMuteds },
-      } = args;
-      rtc.muteds = _muteds.concat(_adminMuteds);
-      setAdminMuteds(_adminMuteds);
-      setMuteds(rtc.muteds);
-      setAdminMuted(_adminMuteds.indexOf(userId) !== -1);
-    },
-    [rtc]
-  );
-
-  const handleError = useMemo(
-    () =>
-      ({ data: { message, type: _type, code } }: SendMessageArgs<MessageType.SET_ERROR>) => {
-        log(_type, message, { _type, code }, true);
-        setError(code);
-        storeError.dispatch(
-          changeError({
-            error: code,
-          })
-        );
-        switch (code) {
-          case ErrorCode.youAreBanned:
-            setTimeout(() => {
-              window.history.go(-1);
-            }, ALERT_TIMEOUT);
-            break;
-          case ErrorCode.roomIsInactive:
-            if (message !== '') {
-              storeRoomIsInactive.dispatch(
-                changeRoomIsInactive({
-                  roomIsInactive: true,
-                })
-              );
-            }
-            break;
-          default:
-        }
-      },
-    []
-  );
-
-  const needReconnectHandler = useMemo(
-    () =>
-      ({ data: { userId }, connId }: SendMessageArgs<MessageType.GET_NEED_RECONNECT>) => {
-        lostStreamHandler({
-          connId,
-          target: userId,
-          eventName: 'need-reconnect',
-        });
-      },
-    [lostStreamHandler]
-  );
-
-  const setRoomHandler = useMemo(
-    () =>
-      ({ connId, data: { isOwner: _isOwner, asked } }: SendMessageArgs<MessageType.SET_ROOM>) => {
-        if (!canConnect || !roomId) {
-          return;
-        }
-        setAskeds(asked);
-        setRoomIsSaved(true);
-        setIsOwner(_isOwner);
-        rtc.createPeerConnection({
-          userId: ws.userId,
-          target: 0,
-          connId,
-          roomId,
-          onTrack: ({ addedUserId, stream }) => {
-            log('info', '-> Added local stream to room', { addedUserId, id });
-          },
-          iceServers,
-          eventName: 'first',
-        });
-        rtc.addTracks({ userId: ws.userId, roomId, connId, target: 0, locale }, (e, stream) => {
-          if (!e) {
-            addStream({
-              target: ws.userId,
-              stream,
-              connId,
-              name: ws.name,
-              change: true,
-              isOwner: _isOwner,
-            });
-          } else {
-            log('warn', 'Stream not added', e);
-          }
-        });
-      },
-    [addStream, canConnect, iceServers, id, locale, roomId, rtc, ws.name, ws.userId]
-  );
-
-  const changeRoomGuestsHandler = useMemo(
-    () =>
-      async ({ rawMessage }: { rawMessage: SendMessageArgs<MessageType.SET_ROOM_GUESTS> }) => {
-        if (!roomId) {
-          return;
-        }
-        const {
-          data: { roomUsers, muteds: _muteds, adminMuteds: _adminMuteds, asked },
-          connId,
-        } = ws.getMessage(MessageType.SET_ROOM_GUESTS, rawMessage);
-        rtc.muteds = (_muteds || []).concat(_adminMuteds || []);
-        const _streams: Stream[] = storeStreams.getState().streams as Stream[];
-        log('info', 'Run change room gusets handler', {
-          roomUsers,
-          id,
-          st: _streams.map((i) => i.target),
-        });
-        rtc.roomLength = roomUsers?.length || 0;
-        setLenght(
-          ROOM_LENGTH_TEST || (isRecord || isRecording ? roomUsers.length - 1 : roomUsers.length)
-        );
-        setAdminMuteds(_adminMuteds);
-        setMuteds(rtc.muteds);
-        setAskeds(asked);
-        setAdminMuted(_adminMuteds.indexOf(id) !== -1);
-        roomUsers.forEach((item) => {
-          if (item.id !== id) {
-            const _isExists = _streams.filter((_item) => item.id === _item.target);
-            if (!_isExists[0]) {
-              log('info', `Check new user ${item}`, { uid: id });
-              const skip = rtc.createPeerConnection({
-                roomId,
-                target: item.id,
-                userId: id,
-                connId,
-                onTrack: ({ addedUserId, stream }) => {
-                  addStream({
-                    target: addedUserId,
-                    stream,
-                    connId,
-                    name: item.name,
-                    change: true,
-                    isOwner: item.isOwner,
-                  });
-                },
-                iceServers,
-                eventName: 'check',
-              });
-              if (skip) {
-                return;
-              }
-              rtc.addTracks({ roomId, userId: id, target: item.id, connId, locale }, (e) => {
-                if (e) {
-                  log('warn', 'Failed add tracks', { roomId, userId: id, target: item, connId });
-                  return;
-                }
-                log('info', 'Change room guests connection', {
-                  roomId,
-                  target: item,
-                  userId: id,
-                  connId,
-                });
-              });
-            }
-          } else if (!streams.find((_item) => _item.target === ws.userId)) {
-            const __streams = streams.map((_item) => _item);
-            if (selfStream) {
-              storeStreams.dispatch(changeStreams({ type: 'add', stream: selfStream }));
-            } else {
-              log('warn', 'Self stream is not defined', { __streams });
-            }
-          }
-        });
-        // Remove disconnected
-        streams.forEach((item) => {
-          const isExists = roomUsers.filter((_item) => _item.id === item.target);
-          if (!isExists[0]) {
-            Object.keys(rtc.peerConnections).forEach((__item) => {
-              const peer = __item.split(rtc.delimiter);
-              if (peer[1] === item.target) {
-                streams.forEach((i) => {
-                  if (i.target === item.target) {
-                    storeStreams.dispatch(changeStreams({ type: 'delete', stream: i }));
-                  }
-                });
-                rtc.closeVideoCall({
-                  roomId,
-                  userId: id,
-                  target: item.target,
-                  connId: peer[2],
-                });
-              }
-            });
-          }
-          return isExists[0] !== undefined;
-        });
-      },
-    [addStream, iceServers, id, isRecord, isRecording, locale, roomId, rtc, selfStream, streams, ws]
-  );
-
-  const setUserIdHandler = useMemo(
-    () => (rawMessage: SendMessageArgs<MessageType.SET_USER_ID>) => {
-      if (!roomId || typeof isPublic === 'undefined') {
-        return;
-      }
-      const { connId } = rawMessage;
-      setConnectionId(connId);
-      rtc.connId = connId;
-      ws.name = ws.getMessage(MessageType.SET_USER_ID, rawMessage).data.name;
-      ws.sendMessage({
-        type: MessageType.GET_ROOM,
-        id: roomId,
-        data: {
-          userId: id,
-          mimeType: getCodec(),
-          isPublic,
-        },
-        connId,
-      });
-    },
-    [id, isPublic, roomId, rtc, ws]
-  );
-
   /**
    * Connections handlers
    */
@@ -711,18 +346,354 @@ export const useConnection = ({
       ws.setUserId(id);
     }
 
+    const removeStreamHandler = ({
+      data: { roomId: _roomId, target: _target },
+      connId: _connId,
+    }: SendMessageArgs<MessageType.SET_CLOSE_PEER_CONNECTION>) => {
+      const peerId = rtc.getPeerId(_roomId, _target, _connId);
+      cleanAudioAnalyzer(_target);
+      const _stream = streams.find((item) => item.target === _target);
+      if (_stream) {
+        storeStreams.dispatch(changeStreams({ type: 'delete', stream: _stream }));
+      } else {
+        log('warn', 'Close call without stream', { peerId });
+      }
+    };
+
+    const lostStreamHandler: typeof rtc.lostStreamHandler = ({ connId, target, eventName }) => {
+      if (!roomId) {
+        return;
+      }
+      let _connId = connId;
+      Object.keys(rtc.peerConnections).forEach((item) => {
+        const peer = item.split(rtc.delimiter);
+        if (peer[1] === target.toString()) {
+          // eslint-disable-next-line prefer-destructuring
+          _connId = peer[2];
+        }
+      });
+      rtc.closeVideoCall({ roomId, userId: ws.userId, target, connId: _connId });
+      ws.sendMessage({
+        type: MessageType.GET_CLOSE_PEER_CONNECTION,
+        connId: _connId,
+        id: ws.userId,
+        data: {
+          roomId,
+          target,
+        },
+      });
+    };
+
     rtc.lostStreamHandler = lostStreamHandler;
 
+    /**
+     * 'add' send server/main.js and 'added' listen on Room.hooks.ts
+     */
+    const changeRoomUnitHandler = ({
+      id: userId,
+      data: {
+        target,
+        eventName,
+        roomLength,
+        muteds: _muteds,
+        name,
+        adminMuteds: _adminMuteds,
+        isOwner: _isOwner,
+        asked,
+      },
+      connId,
+    }: SendMessageArgs<MessageType.SET_CHANGE_UNIT>) => {
+      if (lenght !== roomLength) {
+        setLenght(ROOM_LENGTH_TEST || (isRecord || isRecording ? roomLength - 1 : roomLength));
+      }
+      setAskeds(asked);
+      rtc.muteds = _muteds.concat(_adminMuteds);
+      setMuteds(rtc.muteds);
+      setAdminMuteds(_adminMuteds);
+      setAdminMuted(_adminMuteds.indexOf(userId) !== -1);
+      switch (eventName) {
+        case 'add':
+        case 'added':
+          if (userId !== target) {
+            log('info', 'Change room unit handler', {
+              userId,
+              target,
+              roomLength,
+              connId,
+              eventName,
+            });
+            rtc.createPeerConnection({
+              roomId,
+              target,
+              userId: id,
+              connId,
+              onTrack: ({ addedUserId, stream }) => {
+                log('info', 'Added unit track', { addedUserId, s: stream.id, connId });
+                addStream({
+                  target: addedUserId,
+                  stream,
+                  connId,
+                  name,
+                  change: true,
+                  isOwner: _isOwner,
+                });
+              },
+              iceServers,
+              eventName: 'back',
+            });
+            rtc.addTracks({ roomId, userId, target, connId, locale }, (e) => {
+              if (!e) {
+                if (eventName !== 'added' && target !== userId) {
+                  ws.sendMessage({
+                    type: MessageType.SET_CHANGE_UNIT,
+                    id: target,
+                    connId,
+                    data: {
+                      target: userId,
+                      name: ws.name,
+                      roomLength,
+                      eventName: 'added',
+                      muteds: _muteds,
+                      adminMuteds: _adminMuteds,
+                      isOwner,
+                      asked: askeds,
+                    },
+                  });
+                }
+              }
+            });
+          }
+          break;
+        case 'delete':
+          log('info', 'Need delete user', {
+            roomId,
+            target,
+            userId,
+            connId,
+            k: Object.keys(rtc.peerConnections),
+          });
+          rtc.closeVideoCall({ roomId, target, userId, connId });
+          const _stream = streams.find((item) => item.target === target);
+          if (_stream) {
+            storeStreams.dispatch(changeStreams({ type: 'delete', stream: _stream }));
+          }
+          break;
+      }
+    };
+
+    const changeMuteHandler = (args: SendMessageArgs<MessageType.SET_MUTE>) => {
+      const {
+        id: userId,
+        data: { muteds: _muteds, adminMuteds: _adminMuteds },
+      } = args;
+      rtc.muteds = _muteds.concat(_adminMuteds);
+      setAdminMuteds(_adminMuteds);
+      setMuteds(rtc.muteds);
+      setAdminMuted(_adminMuteds.indexOf(userId) !== -1);
+    };
+
+    const handleError = ({
+      data: { message, type: _type, code },
+    }: SendMessageArgs<MessageType.SET_ERROR>) => {
+      log(_type, message, { _type, code }, true);
+      setError(code);
+      storeError.dispatch(
+        changeError({
+          error: code,
+        })
+      );
+      switch (code) {
+        case ErrorCode.youAreBanned:
+          setTimeout(() => {
+            window.history.go(-1);
+          }, ALERT_TIMEOUT);
+          break;
+        case ErrorCode.roomIsInactive:
+          if (message !== '') {
+            storeRoomIsInactive.dispatch(
+              changeRoomIsInactive({
+                roomIsInactive: true,
+              })
+            );
+          }
+          break;
+        default:
+      }
+    };
+
+    const needReconnectHandler = ({
+      data: { userId },
+      connId,
+    }: SendMessageArgs<MessageType.GET_NEED_RECONNECT>) => {
+      lostStreamHandler({
+        connId,
+        target: userId,
+        eventName: 'need-reconnect',
+      });
+    };
+
+    const setRoomHandler = ({
+      connId,
+      data: { isOwner: _isOwner, asked },
+    }: SendMessageArgs<MessageType.SET_ROOM>) => {
+      if (!canConnect) {
+        return;
+      }
+      setAskeds(asked);
+      setRoomIsSaved(true);
+      setIsOwner(_isOwner);
+      rtc.createPeerConnection({
+        userId: ws.userId,
+        target: 0,
+        connId,
+        roomId,
+        onTrack: ({ addedUserId, stream }) => {
+          log('info', '-> Added local stream to room', { addedUserId, id });
+        },
+        iceServers,
+        eventName: 'first',
+      });
+      rtc.addTracks({ userId: ws.userId, roomId, connId, target: 0, locale }, (e, stream) => {
+        if (!e) {
+          addStream({
+            target: ws.userId,
+            stream,
+            connId,
+            name: ws.name,
+            change: true,
+            isOwner: _isOwner,
+          });
+        } else {
+          log('warn', 'Stream not added', e);
+        }
+      });
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const changeRoomGuestsHandler = async ({
+      rawMessage,
+    }: {
+      rawMessage: SendMessageArgs<MessageType.SET_ROOM_GUESTS>;
+    }) => {
+      if (!roomId) {
+        return;
+      }
+      const {
+        data: { roomUsers, muteds: _muteds, adminMuteds: _adminMuteds, asked },
+        connId,
+      } = ws.getMessage(MessageType.SET_ROOM_GUESTS, rawMessage);
+      rtc.muteds = (_muteds || []).concat(_adminMuteds || []);
+      const _streams: Stream[] = storeStreams.getState().streams as Stream[];
+      log('info', 'Run change room gusets handler', {
+        roomUsers,
+        id,
+        st: _streams.map((i) => i.target),
+      });
+      rtc.roomLength = roomUsers?.length || 0;
+      setLenght(
+        ROOM_LENGTH_TEST || (isRecord || isRecording ? roomUsers.length - 1 : roomUsers.length)
+      );
+      setAdminMuteds(_adminMuteds);
+      setMuteds(rtc.muteds);
+      setAskeds(asked);
+      setAdminMuted(_adminMuteds.indexOf(id) !== -1);
+      roomUsers.forEach((item) => {
+        if (item.id !== id) {
+          const _isExists = _streams.filter((_item) => item.id === _item.target);
+          if (!_isExists[0]) {
+            log('info', `Check new user ${item}`, { uid: id });
+            const skip = rtc.createPeerConnection({
+              roomId,
+              target: item.id,
+              userId: id,
+              connId,
+              onTrack: ({ addedUserId, stream }) => {
+                addStream({
+                  target: addedUserId,
+                  stream,
+                  connId,
+                  name: item.name,
+                  change: true,
+                  isOwner: item.isOwner,
+                });
+              },
+              iceServers,
+              eventName: 'check',
+            });
+            if (skip) {
+              return;
+            }
+            rtc.addTracks({ roomId, userId: id, target: item.id, connId, locale }, (e) => {
+              if (e) {
+                log('warn', 'Failed add tracks', { roomId, userId: id, target: item, connId });
+                return;
+              }
+              log('info', 'Change room guests connection', {
+                roomId,
+                target: item,
+                userId: id,
+                connId,
+              });
+            });
+          }
+        } else if (!streams.find((_item) => _item.target === ws.userId)) {
+          const __streams = streams.map((_item) => _item);
+          if (selfStream) {
+            storeStreams.dispatch(changeStreams({ type: 'add', stream: selfStream }));
+          } else {
+            log('warn', 'Self stream is not defined', { __streams });
+          }
+        }
+      });
+      // Remove disconnected
+      streams.forEach((item) => {
+        const isExists = roomUsers.filter((_item) => _item.id === item.target);
+        if (!isExists[0]) {
+          Object.keys(rtc.peerConnections).forEach((__item) => {
+            const peer = __item.split(rtc.delimiter);
+            if (peer[1] === item.target) {
+              streams.forEach((i) => {
+                if (i.target === item.target) {
+                  storeStreams.dispatch(changeStreams({ type: 'delete', stream: i }));
+                }
+              });
+              rtc.closeVideoCall({
+                roomId,
+                userId: id,
+                target: item.target,
+                connId: peer[2],
+              });
+            }
+          });
+        }
+        return isExists[0] !== undefined;
+      });
+    };
     ws.onMessage = (ev) => {
       const { data } = ev;
       const rawMessage = ws.parseMessage(data);
       if (!rawMessage) {
         return;
       }
-      const { type } = rawMessage;
+      const { type, connId } = rawMessage;
       switch (type) {
         case MessageType.SET_USER_ID:
-          setUserIdHandler(rawMessage);
+          /**
+           * Connect to room
+           */
+          setConnectionId(connId);
+          rtc.connId = connId;
+          ws.name = ws.getMessage(MessageType.SET_USER_ID, rawMessage).data.name;
+          ws.sendMessage({
+            type: MessageType.GET_ROOM,
+            id: roomId,
+            data: {
+              userId: id,
+              mimeType: getCodec(),
+              isPublic,
+            },
+            connId,
+          });
           break;
         case MessageType.CANDIDATE:
           rtc.handleCandidateMessage(rawMessage);
@@ -784,22 +755,27 @@ export const useConnection = ({
       };
     };
   }, [
-    changeMuteHandler,
-    changeRoomGuestsHandler,
-    changeRoomUnitHandler,
-    handleError,
-    id,
-    isPublic,
-    lostStreamHandler,
-    needReconnectHandler,
-    removeStreamHandler,
+    askeds,
+    cleanAudioAnalyzer,
     roomId,
-    rtc,
-    setAskFloorHandler,
-    setRoomHandler,
-    setUserIdHandler,
-    userName,
+    streams,
     ws,
+    rtc,
+    id,
+    setAskFloorHandler,
+    roomIsSaved,
+    lenght,
+    selfStream,
+    iceServers,
+    rtc.lostStreamHandler,
+    locale,
+    userName,
+    addStream,
+    isOwner,
+    isRecord,
+    isRecording,
+    canConnect,
+    isPublic,
   ]);
 
   /**

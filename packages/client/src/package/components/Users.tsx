@@ -28,7 +28,7 @@ function Users({
   openUserList: boolean;
 }) {
   const { users, isOwner, banneds, unBanWrapper } = useUsers({ userId, roomId });
-  const { changeMutedWrapper } = useActions();
+  const { changeMutedWrapper } = useActions({ userId });
 
   return (
     <div
@@ -45,7 +45,10 @@ function Users({
             <div className={s.user__name}>{item.name}</div>
             <div className={s.actions}>
               {item.isOwner && (
-                <IconButton title={isOwner ? locale.youAreAdminOfRoom : locale.isAdminOfRoom}>
+                <IconButton
+                  disabled
+                  title={isOwner ? locale.youAreAdminOfRoom : locale.isAdminOfRoom}
+                >
                   <CrownIcon width={16} height={16} color={theme?.colors.yellow} />
                 </IconButton>
               )}
