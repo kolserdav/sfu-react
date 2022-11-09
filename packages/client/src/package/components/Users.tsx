@@ -42,16 +42,20 @@ function Users({
           ''
         ) : (
           <div key={item.id} className={s.users__item}>
-            <div className={s.user__name}>{item.name}</div>
+            <div className={s.user}>
+              <span className={s.name}>{item.name}</span>
+              <div className={s.icons}>
+                {item.isOwner && (
+                  <IconButton
+                    disabled
+                    title={isOwner ? locale.youAreAdminOfRoom : locale.isAdminOfRoom}
+                  >
+                    <CrownIcon width={16} height={16} color={theme?.colors.yellow} />
+                  </IconButton>
+                )}
+              </div>
+            </div>
             <div className={s.actions}>
-              {item.isOwner && (
-                <IconButton
-                  disabled
-                  title={isOwner ? locale.youAreAdminOfRoom : locale.isAdminOfRoom}
-                >
-                  <CrownIcon width={16} height={16} color={theme?.colors.yellow} />
-                </IconButton>
-              )}
               <IconButton
                 disabled={item.id === userId ? item.adminMuted : true}
                 onClick={changeMutedWrapper(item)}

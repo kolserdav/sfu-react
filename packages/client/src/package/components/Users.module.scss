@@ -27,6 +27,22 @@
   }
 }
 
+.user {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+
+  .icons {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: flex-end;
+    margin-bottom: 4px;
+  }
+}
+
 .users__item {
   position: relative;
   padding: 0 $user-item-padding;
