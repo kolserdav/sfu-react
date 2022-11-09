@@ -272,6 +272,7 @@ export namespace DataTypes {
     };
     export type GetAskFloor = {
       userId: string | number;
+      command: 'add' | 'delete';
     };
     export type GetVideoFindMany = {
       userId: string | number;

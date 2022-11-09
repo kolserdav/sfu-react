@@ -927,12 +927,26 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
 
   public setAskedFloorHandler = ({
     id,
-    data: { userId },
+    data: { userId, command },
   }: SendMessageArgs<MessageType.GET_ASK_FLOOR>) => {
-    if (this.askeds[id].indexOf(userId) === -1) {
-      this.askeds[id].push(userId);
-    } else {
-      log('warn', 'Duplicate asked user', { id, userId });
+    let index = -1;
+    switch (command) {
+      case 'add':
+        if (this.askeds[id].indexOf(userId) === -1) {
+          this.askeds[id].push(userId);
+        } else {
+          log('warn', 'Duplicate asked user', { id, userId });
+        }
+        break;
+      case 'delete':
+        index = this.askeds[id].indexOf(userId);
+        if (index !== -1) {
+          this.askeds[id].splice(index, 1);
+        } else {
+          log('warn', 'Remove missing askeds for the floor', { id, userId });
+        }
+        break;
+      default:
     }
     this.rooms[id].forEach((item) => {
       this.ws.sendMessage({

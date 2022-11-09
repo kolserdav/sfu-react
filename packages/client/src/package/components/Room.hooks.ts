@@ -241,6 +241,7 @@ export const useConnection = ({
         id: roomId,
         data: {
           userId: id,
+          command: 'add',
         },
       });
       if (muted) {
@@ -880,6 +881,17 @@ export const useConnection = ({
           target: toUnMute,
         },
       });
+      if (askeds.indexOf(toUnMute) !== -1) {
+        ws.sendMessage({
+          type: MessageType.GET_ASK_FLOOR,
+          connId: connectionId,
+          id: roomId,
+          data: {
+            userId: toUnMute,
+            command: 'delete',
+          },
+        });
+      }
       setToUnMute(0);
     }
   }, [toUnMute, connectionId, ws, roomId, setToUnMute]);
@@ -1337,7 +1349,6 @@ export const useSettingsDialog = () => {
 
   const clickToMuteWrapper = (context: string) => () => {
     const { userId } = getSettingsContext(context);
-    console.log('mute', userId);
     setToMute(userId);
   };
 
@@ -1348,7 +1359,6 @@ export const useSettingsDialog = () => {
 
   const clickToUnMuteWrapper = (context: string) => () => {
     const { userId } = getSettingsContext(context);
-    console.log('unmute', userId);
     setToUnMute(userId);
   };
 
