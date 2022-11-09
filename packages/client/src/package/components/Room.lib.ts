@@ -9,6 +9,8 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import storeAlert, { changeAlert } from '../store/alert';
+import storeUserList, { changeUserList } from '../store/userList';
+import { MessageType, SendMessageArgs } from '../types/interfaces';
 import s from './Room.module.scss';
 import c from './ui/CloseButton.module.scss';
 
@@ -196,3 +198,35 @@ export const createSettingsContext = ({ userId }: { userId: string | number }) =
 
 export const getSettingsContext = (context: string): { userId: string | number } =>
   JSON.parse(context);
+
+export const changeMuteList = ({
+  data: { muteds: _muteds, adminMuteds: _adminMuteds },
+}: SendMessageArgs<MessageType.SET_MUTE_LIST>) => {
+  const {
+    userList: { banneds },
+  } = storeUserList.getState();
+  storeUserList.dispatch(
+    changeUserList({
+      userList: {
+        banneds,
+        muteds: _muteds,
+        adminMuteds: _adminMuteds,
+      },
+    })
+  );
+};
+
+export const changeBanList = ({ data: { banneds } }: SendMessageArgs<MessageType.SET_BAN_LIST>) => {
+  const {
+    userList: { muteds: _muteds, adminMuteds: _adminMuteds },
+  } = storeUserList.getState();
+  storeUserList.dispatch(
+    changeUserList({
+      userList: {
+        banneds,
+        muteds: _muteds,
+        adminMuteds: _adminMuteds,
+      },
+    })
+  );
+};
