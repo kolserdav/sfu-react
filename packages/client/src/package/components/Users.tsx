@@ -67,7 +67,10 @@ function Users({
                 )}
               </IconButton>
               {isOwner && item.id !== userId && (
-                <IconButton onClick={changeAdminMutedWrapper(item)}>
+                <IconButton
+                  onClick={changeAdminMutedWrapper(item)}
+                  title={item.adminMuted ? locale.unmute : locale.mute}
+                >
                   {item.adminMuted ? (
                     <MicrophoneOffIcon width={16} height={16} color={theme?.colors.blue} />
                   ) : (
