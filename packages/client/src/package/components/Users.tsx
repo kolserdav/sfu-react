@@ -28,7 +28,7 @@ function Users({
   openUserList: boolean;
 }) {
   const { users, isOwner, banneds, unBanWrapper } = useUsers({ userId, roomId });
-  const { changeMutedWrapper } = useActions({ userId });
+  const { changeMutedWrapper, changeAdminMutedWrapper } = useActions({ userId });
 
   return (
     <div
@@ -52,9 +52,8 @@ function Users({
                   <CrownIcon width={16} height={16} color={theme?.colors.yellow} />
                 </IconButton>
               )}
-
               <IconButton
-                disabled={item.id === userId ? item.adminMuted : item.adminMuted ? !isOwner : true}
+                disabled={item.id === userId ? item.adminMuted : true}
                 onClick={changeMutedWrapper(item)}
               >
                 {item.muted || item.adminMuted ? (
@@ -67,6 +66,15 @@ function Users({
                   <MicrophoneIcon width={16} height={16} color={theme?.colors.text} />
                 )}
               </IconButton>
+              {isOwner && item.id !== userId && (
+                <IconButton onClick={changeAdminMutedWrapper(item)}>
+                  {item.adminMuted ? (
+                    <MicrophoneOffIcon width={16} height={16} color={theme?.colors.blue} />
+                  ) : (
+                    <MicrophoneIcon width={16} height={16} color={theme?.colors.blue} />
+                  )}
+                </IconButton>
+              )}
             </div>
           </div>
         )

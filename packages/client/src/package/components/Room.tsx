@@ -102,6 +102,8 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     setToMute,
     setToUnMute,
     setToBan,
+    clickToMuteWrapper,
+    clickToUnMuteWrapper,
   });
   const setVideoDimensions = useVideoDimensions({
     container: container.current,

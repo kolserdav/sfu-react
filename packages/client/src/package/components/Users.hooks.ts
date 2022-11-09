@@ -4,6 +4,7 @@ import storeStreams from '../store/streams';
 import storeUserList from '../store/userList';
 import storeMessage, { changeMessage } from '../store/message';
 import storeMuted, { changeMuted } from '../store/muted';
+import storeAdminMuted, { changeAdminMuted } from '../store/adminMuted';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useUsers = ({
@@ -102,12 +103,23 @@ export const useUsers = ({
 export const useActions = ({ userId }: { userId: string | number }) => {
   const changeMutedWrapper = useMemo(
     () =>
-      ({ muted }: UserList) =>
+      ({ muted, id }: UserList) =>
       () => {
-        storeMuted.dispatch(changeMuted({ muted: !muted, id: userId }));
+        if (id === userId) {
+          storeMuted.dispatch(changeMuted({ muted: !muted, id: userId }));
+        }
       },
     [userId]
   );
 
-  return { changeMutedWrapper };
+  const changeAdminMutedWrapper = useMemo(
+    () =>
+      ({ adminMuted, id }: UserList) =>
+      () => {
+        storeAdminMuted.dispatch(changeAdminMuted({ adminMuted: !adminMuted, id }));
+      },
+    []
+  );
+
+  return { changeMutedWrapper, changeAdminMutedWrapper };
 };

@@ -60,6 +60,7 @@ import storeMessage from '../store/message';
 import storeCanConnect from '../store/canConnect';
 import storeRoomIsInactive, { changeRoomIsInactive } from '../store/roomIsInactive';
 import storeMuted from '../store/muted';
+import storeAdminMuted from '../store/adminMuted';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -77,6 +78,8 @@ export const useConnection = ({
   setToMute,
   setToUnMute,
   setToBan,
+  clickToMuteWrapper,
+  clickToUnMuteWrapper,
 }: {
   id: number | string;
   roomId: number | string | null;
@@ -92,10 +95,11 @@ export const useConnection = ({
   setToMute: React.Dispatch<React.SetStateAction<string | number>>;
   setToUnMute: React.Dispatch<React.SetStateAction<string | number>>;
   setToBan: React.Dispatch<React.SetStateAction<string | number>>;
+  clickToMuteWrapper: (context: string) => () => void;
+  clickToUnMuteWrapper: (context: string) => () => void;
 }) => {
   const ws = useMemo(() => new WS({ server, port, protocol: 'room' }), [server, port]);
   const rtc = useMemo(() => new RTC({ ws }), [ws]);
-
   const [streams, setStreams] = useState<Stream[]>([]);
   const [shareScreen, setShareScreen] = useState<boolean>(false);
   const [selfStream, setSelfStream] = useState<Stream | null>(null);
@@ -268,6 +272,26 @@ export const useConnection = ({
       cleanSubs();
     };
   }, [muted, changeMuted, id]);
+
+  /**
+   * Listen change admin muted
+   */
+  useEffect(() => {
+    const cleanSubs = storeAdminMuted.subscribe(() => {
+      const { id: _id, adminMuted: _adminMuted } = storeAdminMuted.getState();
+      const context = JSON.stringify({ userId: _id });
+      if (!_adminMuted) {
+        if (_id) {
+          clickToUnMuteWrapper(context)();
+        }
+      } else if (_id) {
+        clickToMuteWrapper(context)();
+      }
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, [muted, changeMuted, id, clickToMuteWrapper, clickToUnMuteWrapper]);
 
   /**
    * Change muted
@@ -1311,23 +1335,22 @@ export const useSettingsDialog = () => {
       }, 0);
     };
 
-  const clickToMuteWrapper =
-    (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-      const { userId } = getSettingsContext(context);
-      setToMute(userId);
-    };
+  const clickToMuteWrapper = (context: string) => () => {
+    const { userId } = getSettingsContext(context);
+    console.log('mute', userId);
+    setToMute(userId);
+  };
 
-  const clickToBanWrapper =
-    (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-      const { userId } = getSettingsContext(context);
-      setToBan(userId);
-    };
+  const clickToBanWrapper = (context: string) => () => {
+    const { userId } = getSettingsContext(context);
+    setToBan(userId);
+  };
 
-  const clickToUnMuteWrapper =
-    (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-      const { userId } = getSettingsContext(context);
-      setToUnMute(userId);
-    };
+  const clickToUnMuteWrapper = (context: string) => () => {
+    const { userId } = getSettingsContext(context);
+    console.log('unmute', userId);
+    setToUnMute(userId);
+  };
 
   /**
    * Listen click document
