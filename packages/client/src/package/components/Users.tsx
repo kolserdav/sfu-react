@@ -12,6 +12,7 @@ import { checkIsRecord } from '../utils/lib';
 import CrownIcon from '../Icons/Crown';
 import MicrophoneIcon from '../Icons/MicrophoneIcon';
 import HandUpIcon from '../Icons/HandUp';
+import { useSpeaker } from '../utils/hooks';
 
 function Users({
   theme,
@@ -28,13 +29,16 @@ function Users({
   backLinks: GlobalProps['backLinks'];
   openUserList: boolean;
 }) {
-  const { users, isOwner, banneds, unBanWrapper, askeds } = useUsers({ userId, roomId });
+  const { users, isOwner, banneds, unBanWrapper, askeds, speaker, muteds, adminMuteds } = useUsers({
+    userId,
+    roomId,
+  });
   const { changeMutedWrapper, changeAdminMutedWrapper, askForTheFloorWrapper } = useActions({
     userId,
   });
 
   const asked = useMemo(() => askeds.indexOf(userId) !== -1, [askeds, userId]);
-
+  const _speaker = useSpeaker({ muteds, adminMuteds, speaker });
   return (
     <div
       className={clsx(s.wrapper, openUserList ? s.open : '')}
@@ -48,7 +52,9 @@ function Users({
         ) : (
           <div key={item.id} className={s.users__item}>
             <div className={s.user}>
-              <span className={s.name}>{item.name}</span>
+              <span className={clsx(s.name, _speaker === item.id ? s.speaker : '')}>
+                {item.name}
+              </span>
               <div className={s.icons}>
                 {item.isOwner && (
                   <IconButton

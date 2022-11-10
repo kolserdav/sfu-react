@@ -30,7 +30,7 @@ export const CODECS = [
   'video/webm;codecs=h264,vp9,opus',
   'video/x-matroska;codecs=avc1',
 ];
-export const SPEAKER_LEVEL = 0.4;
+export const SPEAKER_LEVEL = 0.5;
 export const CHAT_TAKE_MESSAGES = 10;
 export const TEXT_AREA_MAX_ROWS = 5;
 export const TEXT_AREA_ROW_LENGTH = 60;

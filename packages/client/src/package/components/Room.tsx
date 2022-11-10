@@ -49,6 +49,7 @@ import MenuIcon from '../Icons/Menu';
 import CrownIcon from '../Icons/Crown';
 import PseudoButton from './ui/PseudoButton';
 import HandUpIcon from '../Icons/HandUp';
+import { useSpeaker } from '../utils/hooks';
 
 function Room({ userId, iceServers, server, port, roomId, locale, name, theme }: RoomProps) {
   const container = useRef<HTMLDivElement>(null);
@@ -139,10 +140,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
   );
 
   const isAsked = useMemo(() => askeds.indexOf(userId) !== -1, [askeds, userId]);
-  const _speaker = useMemo(
-    () => (muteds.indexOf(speaker) === -1 && adminMuteds.indexOf(speaker) === -1 ? speaker : 0),
-    [speaker, muteds, adminMuteds]
-  );
+  const _speaker = useSpeaker({ muteds, adminMuteds, speaker });
   return (
     <div
       className={s.wrapper}

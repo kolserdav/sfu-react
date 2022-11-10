@@ -63,6 +63,7 @@ import storeMuted from '../store/muted';
 import storeAdminMuted from '../store/adminMuted';
 import storeAsked, { changeAsked } from '../store/asked';
 import storeUserList, { changeUserList } from '../store/userList';
+import storeSpeaker, { changeSpeaker } from '../store/speaker';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -1250,6 +1251,7 @@ export const useAudioAnalyzer = () => {
           _speaker = target[0].uid;
         }
         setSpeaker(_speaker);
+        storeSpeaker.dispatch(changeSpeaker({ speaker: _speaker }));
       }
     }, 1000);
     return () => {

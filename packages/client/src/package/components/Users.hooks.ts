@@ -6,6 +6,7 @@ import storeMessage, { changeMessage } from '../store/message';
 import storeMuted, { changeMuted } from '../store/muted';
 import storeAdminMuted, { changeAdminMuted } from '../store/adminMuted';
 import storeAsked, { changeAsked } from '../store/asked';
+import storeSpeaker from '../store/speaker';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useUsers = ({
@@ -22,6 +23,7 @@ export const useUsers = ({
   const [muteds, setMuteds] = useState<(string | number)[]>([]);
   const [askeds, setAskeds] = useState<(string | number)[]>([]);
   const [adminMuteds, setAdminMuteds] = useState<(string | number)[]>([]);
+  const [speaker, setSpeaker] = useState<string | number>(0);
 
   const unBanWrapper = (target: string | number) => () => {
     storeMessage.dispatch(
@@ -104,7 +106,20 @@ export const useUsers = ({
     };
   }, []);
 
-  return { users, isOwner, banneds, unBanWrapper, askeds };
+  /**
+   * Listen speaker
+   */
+  useEffect(() => {
+    const cleanSubs = storeSpeaker.subscribe(() => {
+      const { speaker: _speaker } = storeSpeaker.getState();
+      setSpeaker(_speaker);
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, []);
+
+  return { users, isOwner, banneds, unBanWrapper, askeds, speaker, muteds, adminMuteds };
 };
 
 export const useActions = ({ userId }: { userId: string | number }) => {

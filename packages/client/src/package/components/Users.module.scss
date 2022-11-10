@@ -34,6 +34,12 @@
   align-items: center;
   justify-content: center;
 
+  .name {
+    &.speaker {
+      color: cyan;
+    }
+  }
+
   .icons {
     display: flex;
     flex-direction: row;
