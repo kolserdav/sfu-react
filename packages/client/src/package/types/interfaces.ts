@@ -202,6 +202,7 @@ export namespace Locale {
     editMessage: string;
     messageDeleted: string;
     askForTheFloor: string;
+    requestedTheFloor: string;
   }
 }
 
@@ -251,7 +252,7 @@ export namespace DataTypes {
       roomLength: number;
       isOwner: boolean;
       muteds: (string | number)[];
-      asked: (string | number)[];
+      asked: RoomList[any];
       adminMuteds: (string | number)[];
     };
     export type SetUserId = {
@@ -342,6 +343,7 @@ export namespace DataTypes {
     export type SetMuteList = {
       muteds: RoomList[any];
       adminMuteds: RoomList[any];
+      askeds: RoomList[any];
     };
     export type SetError = {
       message: string;

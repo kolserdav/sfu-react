@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import clsx from 'clsx';
 import s from './Users.module.scss';
 import { Theme } from '../Theme';
@@ -11,6 +11,7 @@ import CloseIcon from '../Icons/Close';
 import { checkIsRecord } from '../utils/lib';
 import CrownIcon from '../Icons/Crown';
 import MicrophoneIcon from '../Icons/MicrophoneIcon';
+import HandUpIcon from '../Icons/HandUp';
 
 function Users({
   theme,
@@ -27,8 +28,12 @@ function Users({
   backLinks: GlobalProps['backLinks'];
   openUserList: boolean;
 }) {
-  const { users, isOwner, banneds, unBanWrapper } = useUsers({ userId, roomId });
-  const { changeMutedWrapper, changeAdminMutedWrapper } = useActions({ userId });
+  const { users, isOwner, banneds, unBanWrapper, askeds } = useUsers({ userId, roomId });
+  const { changeMutedWrapper, changeAdminMutedWrapper, askForTheFloorWrapper } = useActions({
+    userId,
+  });
+
+  const asked = useMemo(() => askeds.indexOf(userId) !== -1, [askeds, userId]);
 
   return (
     <div
@@ -53,6 +58,11 @@ function Users({
                     <CrownIcon width={16} height={16} color={theme?.colors.yellow} />
                   </IconButton>
                 )}
+                {askeds.indexOf(item.id) !== -1 && (
+                  <IconButton disabled title={locale.requestedTheFloor}>
+                    <HandUpIcon width={16} height={16} color={theme?.colors.blue} />
+                  </IconButton>
+                )}
               </div>
             </div>
             <div className={s.actions}>
@@ -64,12 +74,17 @@ function Users({
                   <MicrophoneOffIcon
                     width={16}
                     height={16}
-                    color={!item.adminMuted ? theme?.colors.text : theme?.colors.blue}
+                    color={item.adminMuted ? theme?.colors.blue : theme?.colors.text}
                   />
                 ) : (
                   <MicrophoneIcon width={16} height={16} color={theme?.colors.text} />
                 )}
               </IconButton>
+              {item.adminMuted && item.id === userId && !asked && (
+                <IconButton onClick={askForTheFloorWrapper(item)} title={locale.askForTheFloor}>
+                  <HandUpIcon width={20} height={20} color={theme?.colors.text} />
+                </IconButton>
+              )}
               {isOwner && item.id !== userId && (
                 <IconButton
                   onClick={changeAdminMutedWrapper(item)}

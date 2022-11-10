@@ -19,6 +19,8 @@ interface State {
     adminMuteds: RoomList[any];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     banneds: Banneds[any];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    askeds: RoomList[any];
   };
 }
 
@@ -33,6 +35,7 @@ const slice = createSlice({
       muteds: [],
       adminMuteds: [],
       banneds: [],
+      askeds: [],
     },
   } as State,
   reducers: {

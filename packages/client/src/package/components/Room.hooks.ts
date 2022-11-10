@@ -61,6 +61,8 @@ import storeCanConnect from '../store/canConnect';
 import storeRoomIsInactive, { changeRoomIsInactive } from '../store/roomIsInactive';
 import storeMuted from '../store/muted';
 import storeAdminMuted from '../store/adminMuted';
+import storeAsked, { changeAsked } from '../store/asked';
+import storeUserList, { changeUserList } from '../store/userList';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -255,6 +257,10 @@ export const useConnection = ({
     () =>
       ({ data: { asked } }: SendMessageArgs<MessageType.SET_ASK_FLOOR>) => {
         setAskeds(asked);
+        const { userList } = storeUserList.getState();
+        const _userList = { ...userList };
+        _userList.askeds = asked;
+        storeUserList.dispatch(changeUserList({ userList: _userList }));
       },
     []
   );
@@ -273,6 +279,21 @@ export const useConnection = ({
       cleanSubs();
     };
   }, [muted, changeMuted, id]);
+
+  /**
+   * Listen ask floor
+   */
+  useEffect(() => {
+    const cleanSubs = storeAsked.subscribe(() => {
+      const { userId } = storeAsked.getState();
+      if (userId === id) {
+        askFloor();
+      }
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, [askFloor, id]);
 
   /**
    * Listen change admin muted
@@ -817,8 +838,19 @@ export const useConnection = ({
         },
       });
       setToMute(0);
+      if (askeds.indexOf(toMute) !== -1) {
+        ws.sendMessage({
+          type: MessageType.GET_ASK_FLOOR,
+          connId: connectionId,
+          id: roomId,
+          data: {
+            userId: toMute,
+            command: 'delete',
+          },
+        });
+      }
     }
-  }, [toMute, connectionId, ws, roomId, setToMute]);
+  }, [toMute, connectionId, ws, roomId, setToMute, askeds]);
 
   /**
    * Listen can connect
@@ -894,7 +926,7 @@ export const useConnection = ({
       }
       setToUnMute(0);
     }
-  }, [toUnMute, connectionId, ws, roomId, setToUnMute]);
+  }, [toUnMute, connectionId, ws, roomId, setToUnMute, askeds]);
 
   /**
    * Send message from storeMessage

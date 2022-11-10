@@ -40,7 +40,7 @@ const lang: LocaleServer = {
     unmute: 'Вкл. звук',
     ban: 'Забанить',
     unban: 'Разбанить',
-    isAdminOfRoom: 'Админимтратор комнаты',
+    isAdminOfRoom: 'Администратор комнаты',
     youAreAdminOfRoom: 'Вы администратор комнаты',
     banneds: 'Забаненые гости',
     recordVideo: 'Запись видео',
@@ -64,6 +64,7 @@ const lang: LocaleServer = {
     editMessage: 'Редактируется ссобщение',
     messageDeleted: 'Сообщение удалено',
     askForTheFloor: 'Попросить слово',
+    requestedTheFloor: 'Запросил слово',
   },
 };
 

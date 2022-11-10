@@ -200,7 +200,7 @@ export const getSettingsContext = (context: string): { userId: string | number }
   JSON.parse(context);
 
 export const changeMuteList = ({
-  data: { muteds: _muteds, adminMuteds: _adminMuteds },
+  data: { muteds: _muteds, adminMuteds: _adminMuteds, askeds },
 }: SendMessageArgs<MessageType.SET_MUTE_LIST>) => {
   const {
     userList: { banneds },
@@ -211,6 +211,7 @@ export const changeMuteList = ({
         banneds,
         muteds: _muteds,
         adminMuteds: _adminMuteds,
+        askeds,
       },
     })
   );
@@ -218,7 +219,7 @@ export const changeMuteList = ({
 
 export const changeBanList = ({ data: { banneds } }: SendMessageArgs<MessageType.SET_BAN_LIST>) => {
   const {
-    userList: { muteds: _muteds, adminMuteds: _adminMuteds },
+    userList: { muteds: _muteds, adminMuteds: _adminMuteds, askeds },
   } = storeUserList.getState();
   storeUserList.dispatch(
     changeUserList({
@@ -226,6 +227,7 @@ export const changeBanList = ({ data: { banneds } }: SendMessageArgs<MessageType
         banneds,
         muteds: _muteds,
         adminMuteds: _adminMuteds,
+        askeds,
       },
     })
   );

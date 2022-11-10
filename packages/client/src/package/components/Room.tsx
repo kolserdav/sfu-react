@@ -293,6 +293,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
                     {askeds.indexOf(item.target) !== -1 && (
                       <IconButton
                         disabled
+                        title={locale.requestedTheFloor}
                         onClick={() => {
                           /** */
                         }}

@@ -848,6 +848,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       data: {
         muteds: this.muteds[id],
         adminMuteds: this.adminMuteds[id],
+        askeds: this.askeds[id],
       },
       connId,
     });
@@ -919,6 +920,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         data: {
           muteds: this.muteds[roomId],
           adminMuteds: this.adminMuteds[roomId],
+          askeds: this.askeds[roomId],
         },
         connId: '',
       });
@@ -990,6 +992,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         data: {
           muteds: this.muteds[roomId],
           adminMuteds: this.adminMuteds[roomId],
+          askeds: this.askeds[roomId],
         },
         connId: '',
       });
@@ -1084,6 +1087,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         data: {
           muteds: this.muteds[roomId],
           adminMuteds: this.adminMuteds[roomId],
+          askeds: this.askeds[roomId],
         },
         connId: '',
       });

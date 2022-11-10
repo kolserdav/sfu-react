@@ -5,6 +5,7 @@ import storeUserList from '../store/userList';
 import storeMessage, { changeMessage } from '../store/message';
 import storeMuted, { changeMuted } from '../store/muted';
 import storeAdminMuted, { changeAdminMuted } from '../store/adminMuted';
+import storeAsked, { changeAsked } from '../store/asked';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useUsers = ({
@@ -19,27 +20,27 @@ export const useUsers = ({
   const [users, setUsers] = useState<UserList[]>([]);
   const [banneds, setBanneds] = useState<RoomUser[]>([]);
   const [muteds, setMuteds] = useState<(string | number)[]>([]);
+  const [askeds, setAskeds] = useState<(string | number)[]>([]);
   const [adminMuteds, setAdminMuteds] = useState<(string | number)[]>([]);
 
-  const unBanWrapper =
-    (target: string | number) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-      storeMessage.dispatch(
-        changeMessage({
-          message: {
-            type: 'room',
-            value: {
-              type: MessageType.GET_TO_UNBAN,
-              id: roomId,
-              connId: '',
-              data: {
-                target,
-                userId,
-              },
+  const unBanWrapper = (target: string | number) => () => {
+    storeMessage.dispatch(
+      changeMessage({
+        message: {
+          type: 'room',
+          value: {
+            type: MessageType.GET_TO_UNBAN,
+            id: roomId,
+            connId: '',
+            data: {
+              target,
+              userId,
             },
           },
-        })
-      );
-    };
+        },
+      })
+    );
+  };
 
   /**
    * Listen change users
@@ -86,18 +87,24 @@ export const useUsers = ({
   useEffect(() => {
     const cleanSubs = storeUserList.subscribe(() => {
       const {
-        userList: { banneds: _banneds, muteds: _muteds, adminMuteds: _adminMuteds },
+        userList: {
+          banneds: _banneds,
+          muteds: _muteds,
+          adminMuteds: _adminMuteds,
+          askeds: _askeds,
+        },
       } = storeUserList.getState();
       setBanneds(_banneds);
       setMuteds(_muteds);
       setAdminMuteds(_adminMuteds);
+      setAskeds(_askeds);
     });
     return () => {
       cleanSubs();
     };
   }, []);
 
-  return { users, isOwner, banneds, unBanWrapper };
+  return { users, isOwner, banneds, unBanWrapper, askeds };
 };
 
 export const useActions = ({ userId }: { userId: string | number }) => {
@@ -121,5 +128,14 @@ export const useActions = ({ userId }: { userId: string | number }) => {
     []
   );
 
-  return { changeMutedWrapper, changeAdminMutedWrapper };
+  const askForTheFloorWrapper = useMemo(
+    () =>
+      ({ id }: UserList) =>
+      () => {
+        storeAsked.dispatch(changeAsked({ command: 'add', userId: id }));
+      },
+    []
+  );
+
+  return { changeMutedWrapper, changeAdminMutedWrapper, askForTheFloorWrapper };
 };
