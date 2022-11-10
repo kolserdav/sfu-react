@@ -4,7 +4,7 @@ import s from './Users.module.scss';
 import { Theme } from '../Theme';
 import { Locale } from '../types/interfaces';
 import { GlobalProps } from '../types';
-import { useActions, useUsers } from './Users.hooks';
+import { useActions, useSortAdminMuted, useSortIsMe, useUsers } from './Users.hooks';
 import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
 import IconButton from './ui/IconButton';
 import CloseIcon from '../Icons/Close';
@@ -29,16 +29,20 @@ function Users({
   backLinks: GlobalProps['backLinks'];
   openUserList: boolean;
 }) {
-  const { users, isOwner, banneds, unBanWrapper, askeds, speaker, muteds, adminMuteds } = useUsers({
-    userId,
-    roomId,
-  });
+  const { users, isOwner, banneds, unBanWrapper, askeds, speaker, muteds, adminMuteds, asked } =
+    useUsers({
+      userId,
+      roomId,
+    });
   const { changeMutedWrapper, changeAdminMutedWrapper, askForTheFloorWrapper } = useActions({
     userId,
   });
 
-  const asked = useMemo(() => askeds.indexOf(userId) !== -1, [askeds, userId]);
-  const _speaker = useSpeaker({ muteds, adminMuteds, speaker });
+  const { speaker: _speaker } = useSpeaker({ muteds, adminMuteds, speaker });
+
+  let _users = useSortAdminMuted({ users, adminMuteds });
+  _users = useSortIsMe({ users: _users, userId });
+
   return (
     <div
       className={clsx(s.wrapper, openUserList ? s.open : '')}
@@ -46,7 +50,7 @@ function Users({
     >
       {backLinks && <div className={s.users}>{backLinks}</div>}
       <div className={s.title}>{locale.guests}</div>
-      {users.map((item) =>
+      {_users.map((item) =>
         checkIsRecord(item.id.toString()) ? (
           ''
         ) : (
@@ -66,7 +70,7 @@ function Users({
                 )}
                 {askeds.indexOf(item.id) !== -1 && (
                   <IconButton disabled title={locale.requestedTheFloor}>
-                    <HandUpIcon width={16} height={16} color={theme?.colors.blue} />
+                    <HandUpIcon width={20} height={20} color={theme?.colors.red} />
                   </IconButton>
                 )}
               </div>

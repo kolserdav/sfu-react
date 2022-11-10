@@ -140,7 +140,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
   );
 
   const isAsked = useMemo(() => askeds.indexOf(userId) !== -1, [askeds, userId]);
-  const _speaker = useSpeaker({ muteds, adminMuteds, speaker });
+  const { speaker: _speaker } = useSpeaker({ muteds, adminMuteds, speaker });
   return (
     <div
       className={s.wrapper}

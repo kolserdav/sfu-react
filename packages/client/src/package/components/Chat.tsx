@@ -74,7 +74,12 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
                 className={clsx(s.message, item.unitId === userId.toString() ? s.self : '')}
               >
                 {item.unitId !== userId.toString() && (
-                  <div className={s.name}>{item.Unit.name}</div>
+                  <div className={s.name}>
+                    <span className={s.name__text}>{item.Unit.name}</span>
+                    {item.unitId === item.Unit.id && (
+                      <span className={s.role}>{locale.shortAdmin}</span>
+                    )}
+                  </div>
                 )}
                 {item.Quote && (
                   <a className={s.quote__link} href={`#${item.Quote.MessageQuote?.id || ''}`}>

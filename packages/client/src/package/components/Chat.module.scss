@@ -136,7 +136,17 @@ $text-area-border-radius: 6px;
   }
 
   .name {
-    font-weight: bold;
+    display: flex;
+    flex-direction: row;
+
+    .name__text {
+      font-weight: bold;
+    }
+
+    .role {
+      font-size: x-small;
+      margin-left: 1rem;
+    }
   }
 
   .text {

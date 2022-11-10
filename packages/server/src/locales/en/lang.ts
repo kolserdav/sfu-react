@@ -65,6 +65,7 @@ const lang: LocaleServer = {
     messageDeleted: 'Message deleted',
     askForTheFloor: 'Ask for the floor',
     requestedTheFloor: 'Requested the floor',
+    shortAdmin: 'admin',
   },
 };
 

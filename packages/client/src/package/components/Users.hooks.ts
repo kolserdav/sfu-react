@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { MessageType, RoomUser, UserItem, UserList } from '../types/interfaces';
+import { MessageType, RoomList, RoomUser, UserItem, UserList } from '../types/interfaces';
 import storeStreams from '../store/streams';
 import storeUserList from '../store/userList';
 import storeMessage, { changeMessage } from '../store/message';
@@ -119,7 +119,9 @@ export const useUsers = ({
     };
   }, []);
 
-  return { users, isOwner, banneds, unBanWrapper, askeds, speaker, muteds, adminMuteds };
+  const asked = useMemo(() => askeds.indexOf(userId) !== -1, [askeds, userId]);
+
+  return { users, isOwner, banneds, unBanWrapper, askeds, speaker, muteds, adminMuteds, asked };
 };
 
 export const useActions = ({ userId }: { userId: string | number }) => {
@@ -153,4 +155,45 @@ export const useActions = ({ userId }: { userId: string | number }) => {
   );
 
   return { changeMutedWrapper, changeAdminMutedWrapper, askForTheFloorWrapper };
+};
+
+export const useSortAdminMuted = ({
+  users: _users,
+  adminMuteds,
+}: {
+  users: UserList[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  adminMuteds: RoomList[any];
+}) => {
+  const users = useMemo(
+    () =>
+      _users.sort((a, b) => {
+        if (adminMuteds.indexOf(a.id) !== -1 && adminMuteds.indexOf(b.id) === -1) {
+          return 1;
+        }
+        return -1;
+      }),
+    [_users, adminMuteds]
+  );
+  return users;
+};
+
+export const useSortIsMe = ({
+  users: _users,
+  userId,
+}: {
+  users: UserList[];
+  userId: string | number;
+}) => {
+  const users = useMemo(
+    () =>
+      _users.sort((a, b) => {
+        if (a.id !== userId && b.id === userId) {
+          return 1;
+        }
+        return -1;
+      }),
+    [_users, userId]
+  );
+  return users;
 };

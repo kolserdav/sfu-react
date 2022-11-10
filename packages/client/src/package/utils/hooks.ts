@@ -17,5 +17,5 @@ export const useSpeaker = ({
     () => (muteds.indexOf(_speaker) === -1 && adminMuteds.indexOf(_speaker) === -1 ? _speaker : 0),
     [_speaker, muteds, adminMuteds]
   );
-  return speaker;
+  return { speaker };
 };

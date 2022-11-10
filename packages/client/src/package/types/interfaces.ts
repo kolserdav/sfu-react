@@ -203,6 +203,7 @@ export namespace Locale {
     messageDeleted: string;
     askForTheFloor: string;
     requestedTheFloor: string;
+    shortAdmin: string;
   }
 }
 
