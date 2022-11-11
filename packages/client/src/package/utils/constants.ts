@@ -84,3 +84,4 @@ export const TEXT_AREA_PADDING_LEFT = 16;
 // dependency to five  packages/client/src/package/components/Chat.module.scss $text-area-border-width
 export const TEXT_AREA_BORDER_WIDTH = 5;
 export const ROOM_LENGTH_TEST = 0;
+export const CHANGE_SPEAKER_SORT_TIMEOUT = 8000;

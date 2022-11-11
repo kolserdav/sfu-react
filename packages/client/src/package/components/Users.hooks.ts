@@ -7,6 +7,7 @@ import storeMuted, { changeMuted } from '../store/muted';
 import storeAdminMuted, { changeAdminMuted } from '../store/adminMuted';
 import storeAsked, { changeAsked } from '../store/asked';
 import storeSpeaker from '../store/speaker';
+import { CHANGE_SPEAKER_SORT_TIMEOUT } from '../utils/constants';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useUsers = ({
@@ -198,6 +199,52 @@ export const useSortIsMe = ({
   return users;
 };
 
+export const useSortSpeaker = ({
+  users: _users,
+  speaker,
+}: {
+  users: UserList[];
+  speaker: string | number;
+}) => {
+  const [sortBy, setSortBy] = useState<string | number>(0);
+
+  const users = useMemo(
+    () =>
+      sortBy
+        ? _users.sort((a, b) => {
+            if (a.id !== sortBy && b.id === sortBy) {
+              return 1;
+            }
+            return -1;
+          })
+        : _users,
+    [_users, sortBy]
+  );
+
+  /**
+   * Listen timeout
+   */
+  useEffect(() => {
+    let mounted = true;
+    let timeout = setTimeout(() => {
+      /** */
+    }, 0);
+    if (speaker !== sortBy) {
+      timeout = setTimeout(() => {
+        if (mounted) {
+          setSortBy(speaker);
+        }
+      }, CHANGE_SPEAKER_SORT_TIMEOUT);
+    }
+    return () => {
+      clearTimeout(timeout);
+      mounted = false;
+    };
+  }, [speaker, sortBy]);
+
+  return users;
+};
+
 export const useMuteAll = ({
   adminMuteds,
   users,
@@ -216,5 +263,6 @@ export const useMuteAll = ({
     },
     [users, adminMuteds]
   );
+
   return muteAllHandler;
 };

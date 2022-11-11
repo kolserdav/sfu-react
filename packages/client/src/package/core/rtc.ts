@@ -329,7 +329,7 @@ class RTC
             this.peerConnections[peerId]!.addTrack(track, this.localStream);
           }
         });
-        cb(0, localStream);
+        cb(0, this.localStream);
       } else {
         let error = false;
         const videoStream = await navigator.mediaDevices

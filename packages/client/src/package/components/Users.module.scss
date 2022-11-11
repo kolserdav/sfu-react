@@ -2,7 +2,7 @@
 
 .wrapper {
   position: relative;
-  flex-basis: 20%;
+  flex-basis: 30%;
   height: 100%;
 
   .title {
@@ -68,7 +68,8 @@
   justify-content: space-between;
   line-height: 1.6;
   @media (max-width: $mobile-width) {
-    justify-content: space-around;
+    justify-content: space-between;
+    margin-left: 10px;
   }
 
   .actions {

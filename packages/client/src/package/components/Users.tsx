@@ -4,11 +4,18 @@ import s from './Users.module.scss';
 import { Theme } from '../Theme';
 import { Locale } from '../types/interfaces';
 import { GlobalProps } from '../types';
-import { useActions, useMuteAll, useSortAdminMuted, useSortIsMe, useUsers } from './Users.hooks';
+import {
+  useActions,
+  useMuteAll,
+  useSortAdminMuted,
+  useSortIsMe,
+  useSortSpeaker,
+  useUsers,
+} from './Users.hooks';
 import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
 import IconButton from './ui/IconButton';
 import CloseIcon from '../Icons/Close';
-import { checkIsRecord } from '../utils/lib';
+import { checkIsRecord, isDev } from '../utils/lib';
 import CrownIcon from '../Icons/Crown';
 import MicrophoneIcon from '../Icons/MicrophoneIcon';
 import HandUpIcon from '../Icons/HandUp';
@@ -42,7 +49,7 @@ function Users({
 
   let _users = useSortAdminMuted({ users, adminMuteds });
   _users = useSortIsMe({ users: _users, userId });
-
+  _users = useSortSpeaker({ users: _users, speaker: _speaker });
   const muteAllHandler = useMuteAll({ users, adminMuteds });
 
   return (
@@ -66,7 +73,7 @@ function Users({
           <div key={item.id} className={s.users__item}>
             <div className={s.user}>
               <span className={clsx(s.name, _speaker === item.id ? s.speaker : '')}>
-                {item.name}
+                {isDev() ? `${item.name}-${item.id}` : item.name}
               </span>
               <div className={s.icons}>
                 {item.isOwner && (
