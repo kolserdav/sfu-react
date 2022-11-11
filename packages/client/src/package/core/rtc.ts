@@ -318,14 +318,16 @@ class RTC
         log('info', '> Adding tracks to new local media stream', {
           streamId: localStream.id,
         });
-        localStream.getTracks().forEach((track) => {
+        this.localStream.getTracks().forEach((track) => {
           const sender = this.peerConnections[peerId]!.getSenders().find(
             (item) => item.track?.kind === track.kind
           );
           if (sender) {
             this.peerConnections[peerId]!.removeTrack(sender);
           }
-          this.peerConnections[peerId]!.addTrack(track, localStream);
+          if (this.localStream) {
+            this.peerConnections[peerId]!.addTrack(track, this.localStream);
+          }
         });
         cb(0, localStream);
       } else {
@@ -344,7 +346,7 @@ class RTC
           });
         if (!error) {
           this.localStream = videoStream;
-          const audio = localStream.getTracks().find((item) => item.kind === 'audio');
+          const audio = this.localStream.getTracks().find((item) => item.kind === 'audio');
           if (audio) {
             this.localStream.addTrack(audio);
             this.localStream.getTracks().forEach((track) => {
