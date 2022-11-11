@@ -56,19 +56,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
   const roomLink = useMemo(() => getRoomLink(roomId), [roomId]);
   const { createAudioAnalyzer, analyzeSoundLevel, cleanAudioAnalyzer, speaker } =
     useAudioAnalyzer();
-  const {
-    dialogSettings,
-    clickToSettingsWrapper,
-    clickToBanWrapper,
-    clickToMuteWrapper,
-    clickToUnMuteWrapper,
-    toBan,
-    toMute,
-    toUnMute,
-    setToMute,
-    setToUnMute,
-    setToBan,
-  } = useSettingsDialog();
+  const { dialogSettings, clickToSettingsWrapper } = useSettingsDialog();
   const {
     askFloor,
     askeds,
@@ -88,6 +76,9 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     adminMuteds,
     isRecord,
     isRecording,
+    clickToMuteWrapper,
+    clickToUnMuteWrapper,
+    clickToBanWrapper,
   } = useConnection({
     id: userId,
     roomId,
@@ -97,14 +88,6 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     cleanAudioAnalyzer,
     locale,
     userName: name || USER_NAME_DEFAULT,
-    toMute,
-    toBan,
-    toUnMute,
-    setToMute,
-    setToUnMute,
-    setToBan,
-    clickToMuteWrapper,
-    clickToUnMuteWrapper,
   });
   const setVideoDimensions = useVideoDimensions({
     container: container.current,

@@ -52,7 +52,7 @@ const colors: Colors = {
   light: {
     red: 'red',
     yellow: 'orange',
-    blue: 'lightblue',
+    blue: '#2748ce',
     paper: '#fff',
     text: '#5d5e60',
     active: 'rgb(182 181 181)',

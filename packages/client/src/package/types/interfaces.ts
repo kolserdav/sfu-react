@@ -204,6 +204,7 @@ export namespace Locale {
     askForTheFloor: string;
     requestedTheFloor: string;
     shortAdmin: string;
+    muteAll: string;
   }
 }
 

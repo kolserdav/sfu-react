@@ -61,7 +61,7 @@ import storeCanConnect from '../store/canConnect';
 import storeRoomIsInactive, { changeRoomIsInactive } from '../store/roomIsInactive';
 import storeMuted from '../store/muted';
 import storeAdminMuted from '../store/adminMuted';
-import storeAsked, { changeAsked } from '../store/asked';
+import storeAsked from '../store/asked';
 import storeUserList, { changeUserList } from '../store/userList';
 import storeSpeaker, { changeSpeaker } from '../store/speaker';
 
@@ -75,14 +75,6 @@ export const useConnection = ({
   userName,
   cleanAudioAnalyzer,
   locale,
-  toBan,
-  toMute,
-  toUnMute,
-  setToMute,
-  setToUnMute,
-  setToBan,
-  clickToMuteWrapper,
-  clickToUnMuteWrapper,
 }: {
   id: number | string;
   roomId: number | string | null;
@@ -92,14 +84,6 @@ export const useConnection = ({
   userName: string;
   cleanAudioAnalyzer: (uid: string | number) => void;
   locale: LocaleServer['client'];
-  toBan: string | number;
-  toMute: string | number;
-  toUnMute: string | number;
-  setToMute: React.Dispatch<React.SetStateAction<string | number>>;
-  setToUnMute: React.Dispatch<React.SetStateAction<string | number>>;
-  setToBan: React.Dispatch<React.SetStateAction<string | number>>;
-  clickToMuteWrapper: (context: string) => () => void;
-  clickToUnMuteWrapper: (context: string) => () => void;
 }) => {
   const ws = useMemo(() => new WS({ server, port, protocol: 'room' }), [server, port]);
   const rtc = useMemo(() => new RTC({ ws }), [ws]);
@@ -252,6 +236,83 @@ export const useConnection = ({
       }
     },
     [connectionId, id, roomId, ws, muted, changeMuted]
+  );
+
+  const clickToMuteWrapper = useMemo(
+    () => (context: string) => () => {
+      const { userId } = getSettingsContext(context);
+      if (!userId || !roomId) {
+        return;
+      }
+      ws.sendMessage({
+        type: MessageType.GET_TO_MUTE,
+        connId: connectionId,
+        id: roomId,
+        data: {
+          target: userId,
+        },
+      });
+      if (askeds.indexOf(userId) !== -1) {
+        ws.sendMessage({
+          type: MessageType.GET_ASK_FLOOR,
+          connId: connectionId,
+          id: roomId,
+          data: {
+            userId,
+            command: 'delete',
+          },
+        });
+      }
+    },
+    [askeds, connectionId, roomId, ws]
+  );
+
+  const clickToUnMuteWrapper = useMemo(
+    () => (context: string) => () => {
+      const { userId } = getSettingsContext(context);
+      if (!userId || !roomId) {
+        return;
+      }
+      ws.sendMessage({
+        type: MessageType.GET_TO_UNMUTE,
+        connId: connectionId,
+        id: roomId,
+        data: {
+          target: userId,
+        },
+      });
+      if (askeds.indexOf(userId) !== -1) {
+        ws.sendMessage({
+          type: MessageType.GET_ASK_FLOOR,
+          connId: connectionId,
+          id: roomId,
+          data: {
+            userId,
+            command: 'delete',
+          },
+        });
+      }
+    },
+    [askeds, connectionId, roomId, ws]
+  );
+
+  const clickToBanWrapper = useMemo(
+    () => (context: string) => () => {
+      const { userId } = getSettingsContext(context);
+      if (!userId || !roomId) {
+        return;
+      }
+      ws.sendMessage({
+        type: MessageType.GET_TO_BAN,
+        connId: connectionId,
+        id: roomId,
+        data: {
+          target: userId,
+          userId: ws.userId,
+        },
+      });
+    },
+    [connectionId, roomId, ws]
   );
 
   const setAskFloorHandler = useMemo(
@@ -826,34 +887,6 @@ export const useConnection = ({
   ]);
 
   /**
-   * Listen toMute
-   */
-  useEffect(() => {
-    if (toMute && roomId) {
-      ws.sendMessage({
-        type: MessageType.GET_TO_MUTE,
-        connId: connectionId,
-        id: roomId,
-        data: {
-          target: toMute,
-        },
-      });
-      setToMute(0);
-      if (askeds.indexOf(toMute) !== -1) {
-        ws.sendMessage({
-          type: MessageType.GET_ASK_FLOOR,
-          connId: connectionId,
-          id: roomId,
-          data: {
-            userId: toMute,
-            command: 'delete',
-          },
-        });
-      }
-    }
-  }, [toMute, connectionId, ws, roomId, setToMute, askeds]);
-
-  /**
    * Listen can connect
    */
   useEffect(() => {
@@ -882,52 +915,6 @@ export const useConnection = ({
       setIsPublic(_isPublic);
     }
   }, []);
-
-  /**
-   * Listen toBan
-   */
-  useEffect(() => {
-    if (toBan && roomId) {
-      ws.sendMessage({
-        type: MessageType.GET_TO_BAN,
-        connId: connectionId,
-        id: roomId,
-        data: {
-          target: toBan,
-          userId: ws.userId,
-        },
-      });
-      setToBan(0);
-    }
-  }, [toBan, connectionId, ws, roomId, setToBan]);
-
-  /**
-   * Listen toUnMute
-   */
-  useEffect(() => {
-    if (toUnMute && roomId) {
-      ws.sendMessage({
-        type: MessageType.GET_TO_UNMUTE,
-        connId: connectionId,
-        id: roomId,
-        data: {
-          target: toUnMute,
-        },
-      });
-      if (askeds.indexOf(toUnMute) !== -1) {
-        ws.sendMessage({
-          type: MessageType.GET_ASK_FLOOR,
-          connId: connectionId,
-          id: roomId,
-          data: {
-            userId: toUnMute,
-            command: 'delete',
-          },
-        });
-      }
-      setToUnMute(0);
-    }
-  }, [toUnMute, connectionId, ws, roomId, setToUnMute, askeds]);
 
   /**
    * Send message from storeMessage
@@ -1019,6 +1006,9 @@ export const useConnection = ({
     adminMuteds,
     isRecord,
     isRecording,
+    clickToMuteWrapper,
+    clickToUnMuteWrapper,
+    clickToBanWrapper,
   };
 };
 
@@ -1357,10 +1347,6 @@ export const useVolumeDialog = ({
 };
 
 export const useSettingsDialog = () => {
-  const [toMute, setToMute] = useState<number | string>(0);
-  const [toBan, setToBan] = useState<number | string>(0);
-  const [toUnMute, setToUnMute] = useState<number | string>(0);
-
   const [dialogSettings, setDialogSettings] =
     useState<Omit<DialogProps, 'children'>>(DIALOG_DEFAULT);
 
@@ -1380,21 +1366,6 @@ export const useSettingsDialog = () => {
         });
       }, 0);
     };
-
-  const clickToMuteWrapper = (context: string) => () => {
-    const { userId } = getSettingsContext(context);
-    setToMute(userId);
-  };
-
-  const clickToBanWrapper = (context: string) => () => {
-    const { userId } = getSettingsContext(context);
-    setToBan(userId);
-  };
-
-  const clickToUnMuteWrapper = (context: string) => () => {
-    const { userId } = getSettingsContext(context);
-    setToUnMute(userId);
-  };
 
   /**
    * Listen click document
@@ -1419,15 +1390,6 @@ export const useSettingsDialog = () => {
   return {
     dialogSettings,
     clickToSettingsWrapper,
-    clickToMuteWrapper,
-    clickToBanWrapper,
-    clickToUnMuteWrapper,
-    toMute,
-    toBan,
-    toUnMute,
-    setToMute,
-    setToUnMute,
-    setToBan,
   };
 };
 

@@ -27,6 +27,14 @@
   }
 }
 
+.users__actions {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+}
+
 .user {
   position: relative;
   display: flex;

@@ -1,10 +1,10 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import clsx from 'clsx';
 import s from './Users.module.scss';
 import { Theme } from '../Theme';
 import { Locale } from '../types/interfaces';
 import { GlobalProps } from '../types';
-import { useActions, useSortAdminMuted, useSortIsMe, useUsers } from './Users.hooks';
+import { useActions, useMuteAll, useSortAdminMuted, useSortIsMe, useUsers } from './Users.hooks';
 import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
 import IconButton from './ui/IconButton';
 import CloseIcon from '../Icons/Close';
@@ -43,13 +43,22 @@ function Users({
   let _users = useSortAdminMuted({ users, adminMuteds });
   _users = useSortIsMe({ users: _users, userId });
 
+  const muteAllHandler = useMuteAll({ users, adminMuteds });
+
   return (
     <div
       className={clsx(s.wrapper, openUserList ? s.open : '')}
       style={{ color: theme?.colors.text, backgroundColor: theme?.colors.paper }}
     >
-      {backLinks && <div className={s.users}>{backLinks}</div>}
+      {backLinks && <div className={s.back__links}>{backLinks}</div>}
       <div className={s.title}>{locale.guests}</div>
+      <div className={s.users__actions}>
+        {isOwner && (
+          <IconButton onClick={muteAllHandler} title={locale.muteAll}>
+            <MicrophoneOffIcon color={theme?.colors.blue} width={24} height={24} />
+          </IconButton>
+        )}
+      </div>
       {_users.map((item) =>
         checkIsRecord(item.id.toString()) ? (
           ''

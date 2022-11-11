@@ -197,3 +197,24 @@ export const useSortIsMe = ({
   );
   return users;
 };
+
+export const useMuteAll = ({
+  adminMuteds,
+  users,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  adminMuteds: RoomList[any];
+  users: UserList[];
+}) => {
+  const muteAllHandler = useMemo(
+    () => () => {
+      users.forEach((user) => {
+        if (adminMuteds.indexOf(user.id) === -1 && !user.isOwner) {
+          storeAdminMuted.dispatch(changeAdminMuted({ adminMuted: true, id: user.id }));
+        }
+      });
+    },
+    [users, adminMuteds]
+  );
+  return muteAllHandler;
+};
