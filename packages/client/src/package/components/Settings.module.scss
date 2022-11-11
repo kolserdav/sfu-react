@@ -5,6 +5,7 @@ $settings-item-padding: 1rem;
 
 .wrapper {
   position: relative;
+  overflow: hidden;
   max-width: calc(20% + #{$settings-item-padding} * 2);
   margin-left: $settings-item-padding;
   display: flex;
@@ -12,28 +13,23 @@ $settings-item-padding: 1rem;
   align-items: center;
   justify-content: center;
 
-  &.open {
-    z-index: 105;
-    position: fixed;
-    right: 0;
-    border-radius: 6px;
-    align-items: flex-start;
-    width: 80vw;
-    max-width: 100%;
-    max-height: calc(90% + #{$border-width} * 2);
-    @media (max-width: $mobile-width) {
-      width: calc(100vw - #{$settings-item-padding} * 2);
-      height: 500px;
-    }
-
-    @media (max-width: $small-width) {
-      width: calc(100vw - #{$settings-item-padding} * 2);
-      height: 500px;
-    }
-  }
   @media (max-width: $mobile-width) {
-    width: 0;
+    position: fixed;
+    width: 100%;
     height: 0;
+    top: 0;
+    left: 0;
+    max-width: 100vw;
+    transition: all 0.3s ease-in;
+    margin-left: 0;
+
+    &.open {
+      z-index: 105;
+      height: 100vh;
+      transition: all 0.3s ease-out;
+      padding: 0 3rem;
+      width: calc(100% - 2rem);
+    }
   }
 
   .item {
@@ -44,6 +40,11 @@ $settings-item-padding: 1rem;
     padding: $settings-item-padding;
     flex-direction: column;
     align-items: flex-start;
+
+    @media (max-width: $mobile-width) {
+      padding-top: 10%;
+      padding-left: 0;
+    }
 
     .item__title {
       text-align: center;

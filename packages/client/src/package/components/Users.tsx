@@ -28,14 +28,14 @@ function Users({
   backLinks,
   userId,
   roomId,
-  openUserList,
+  open,
 }: {
   locale: Locale.Client;
   theme: Theme | undefined;
   userId: string | number;
   roomId: string | number;
   backLinks: GlobalProps['backLinks'];
-  openUserList: boolean;
+  open: boolean;
 }) {
   const { users, isOwner, banneds, unBanWrapper, askeds, speaker, muteds, adminMuteds, asked } =
     useUsers({
@@ -55,7 +55,7 @@ function Users({
 
   return (
     <div
-      className={clsx(s.wrapper, openUserList ? s.open : '')}
+      className={clsx(s.wrapper, open ? s.open : '')}
       style={{ color: theme?.colors.text, backgroundColor: theme?.colors.paper }}
     >
       {backLinks && <div className={s.back__links}>{backLinks}</div>}

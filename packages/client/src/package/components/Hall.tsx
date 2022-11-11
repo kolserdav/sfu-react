@@ -48,7 +48,7 @@ function Hall({
       >
         <div className={s.block}>
           <Users
-            openUserList={openUserList}
+            open={openUserList}
             theme={theme}
             locale={locale}
             backLinks={backLinks}
@@ -77,7 +77,7 @@ function Hall({
             port={port}
             videoRecord={videoRecord}
           />
-          {open && (
+          {open && !openSettings && (
             <IconButton
               onClick={openUserListHandler}
               className={clsx(s.userlist__button, openUserList ? s.open : '')}

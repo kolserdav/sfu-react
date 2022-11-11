@@ -8,7 +8,7 @@ export const useSettings = ({ open }: { open: boolean }) => {
     localStorage.getItem(LocalStorageName.SETTINGS_OPEN) === 'true' &&
       getDocumentWidth() <= MOBILE_WIDTH
   );
-  const openSettingsDialog = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+  const openSettingsDialog = () => {
     setLocalStorage(LocalStorageName.SETTINGS_OPEN, !openSettings);
     setOpenSettings(!openSettings);
   };
