@@ -20,6 +20,7 @@ import CrownIcon from '../Icons/Crown';
 import MicrophoneIcon from '../Icons/MicrophoneIcon';
 import HandUpIcon from '../Icons/HandUp';
 import { useSpeaker } from '../utils/hooks';
+import BullHornIcon from '../Icons/BullHorn';
 
 function Users({
   theme,
@@ -72,10 +73,18 @@ function Users({
         ) : (
           <div key={item.id} className={s.users__item}>
             <div className={s.user}>
-              <span className={clsx(s.name, _speaker === item.id ? s.speaker : '')}>
+              <span
+                className={s.name}
+                style={userId === item.id ? { color: theme?.colors.cyan } : {}}
+              >
                 {isDev() ? `${item.name}-${item.id}` : item.name}
               </span>
               <div className={s.icons}>
+                {_speaker === item.id && (
+                  <IconButton disabled>
+                    <BullHornIcon color={theme?.colors.green} width={16} height={16} />
+                  </IconButton>
+                )}
                 {item.isOwner && (
                   <IconButton
                     disabled

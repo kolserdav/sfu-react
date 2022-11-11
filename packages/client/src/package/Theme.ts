@@ -24,6 +24,8 @@ export interface Color {
   yellow: string;
   blue: string;
   black: string;
+  green: string;
+  cyan: string;
 }
 
 export interface Colors {
@@ -48,6 +50,8 @@ const colors: Colors = {
     red: 'orange',
     yellow: 'lightgoldenrodyellow',
     blue: '#1a6aaf',
+    green: '#02e721',
+    cyan: 'cyan',
   },
   light: {
     red: 'red',
@@ -58,6 +62,8 @@ const colors: Colors = {
     active: 'rgb(182 181 181)',
     white: '#fff',
     black: '#000',
+    green: 'green',
+    cyan: '#0ab1db',
   },
 };
 
