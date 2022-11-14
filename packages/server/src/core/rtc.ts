@@ -270,6 +270,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
                   asked: this.askeds[roomId],
                   adminMuteds: this.adminMuteds[roomId],
                   isOwner: this.rooms[roomId]?.find((_item) => _item.id === userId)?.isOwner,
+                  banneds: this.banneds[roomId],
                 },
                 connId,
               });

@@ -537,6 +537,7 @@ export const useConnection = ({
         adminMuteds: _adminMuteds,
         isOwner: _isOwner,
         asked,
+        banneds,
       },
       connId,
     }: SendMessageArgs<MessageType.SET_CHANGE_UNIT>) => {
@@ -548,6 +549,16 @@ export const useConnection = ({
       setMuteds(rtc.muteds);
       setAdminMuteds(_adminMuteds);
       setAdminMuted(_adminMuteds.indexOf(userId) !== -1);
+      storeUserList.dispatch(
+        changeUserList({
+          userList: {
+            adminMuteds: _adminMuteds,
+            muteds: _muteds,
+            askeds: asked,
+            banneds,
+          },
+        })
+      );
       switch (eventName) {
         case 'add':
         case 'added':
@@ -594,6 +605,7 @@ export const useConnection = ({
                       adminMuteds: _adminMuteds,
                       isOwner,
                       asked: askeds,
+                      banneds,
                     },
                   });
                 }
@@ -716,7 +728,7 @@ export const useConnection = ({
         return;
       }
       const {
-        data: { roomUsers, muteds: _muteds, adminMuteds: _adminMuteds, asked },
+        data: { roomUsers, muteds: _muteds, adminMuteds: _adminMuteds, asked, banneds },
         connId,
       } = ws.getMessage(MessageType.SET_ROOM_GUESTS, rawMessage);
       rtc.muteds = (_muteds || []).concat(_adminMuteds || []);
@@ -734,6 +746,16 @@ export const useConnection = ({
       setMuteds(rtc.muteds);
       setAskeds(asked);
       setAdminMuted(_adminMuteds.indexOf(id) !== -1);
+      storeUserList.dispatch(
+        changeUserList({
+          userList: {
+            adminMuteds: _adminMuteds,
+            muteds: _muteds,
+            askeds: asked,
+            banneds,
+          },
+        })
+      );
       roomUsers.forEach((item) => {
         if (item.id !== id) {
           const _isExists = _streams.filter((_item) => item.id === _item.target);

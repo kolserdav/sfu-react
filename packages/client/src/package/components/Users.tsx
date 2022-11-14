@@ -107,19 +107,17 @@ function Users({
                     <HandUpIcon width={20} height={20} color={theme?.colors.red} />
                   </IconButton>
                 )}
+                {item.adminMuted && !isOwner && (
+                  <IconButton disabled>
+                    <MicrophoneOffIcon width={16} height={16} color={theme?.colors.blue} />
+                  </IconButton>
+                )}
               </div>
             </div>
             <div className={s.actions}>
-              <IconButton
-                disabled={item.id === userId ? item.adminMuted : true}
-                onClick={changeMutedWrapper(item)}
-              >
-                {item.muted || item.adminMuted ? (
-                  <MicrophoneOffIcon
-                    width={16}
-                    height={16}
-                    color={item.adminMuted ? theme?.colors.blue : theme?.colors.text}
-                  />
+              <IconButton disabled={item.id !== userId} onClick={changeMutedWrapper(item)}>
+                {item.muted ? (
+                  <MicrophoneOffIcon width={16} height={16} color={theme?.colors.text} />
                 ) : (
                   <MicrophoneIcon width={16} height={16} color={theme?.colors.text} />
                 )}

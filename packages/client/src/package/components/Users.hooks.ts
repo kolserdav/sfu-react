@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { MessageType, RoomList, RoomUser, UserItem, UserList } from '../types/interfaces';
+import { MessageType, RoomList, RoomUser, UserList } from '../types/interfaces';
 import storeStreams from '../store/streams';
 import storeUserList from '../store/userList';
 import storeMessage, { changeMessage } from '../store/message';

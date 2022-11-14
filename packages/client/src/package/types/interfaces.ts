@@ -260,6 +260,7 @@ export namespace DataTypes {
       roomLength: number;
       isOwner: boolean;
       muteds: (string | number)[];
+      banneds: RoomUser[];
       asked: RoomList[any];
       adminMuteds: (string | number)[];
     };
@@ -303,6 +304,7 @@ export namespace DataTypes {
     export type SetRoomGuests = {
       roomUsers: RoomUser[];
       muteds: (string | number)[];
+      banneds: RoomUser[];
       adminMuteds: (string | number)[];
       asked: (string | number)[];
     };

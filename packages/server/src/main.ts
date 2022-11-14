@@ -176,6 +176,7 @@ export function createServer(
               muteds: rtc.muteds[_roomId],
               adminMuteds: rtc.adminMuteds[_roomId],
               asked: rtc.askeds[_roomId],
+              banneds: rtc.banneds[_roomId],
             },
             connId,
           });
@@ -363,6 +364,7 @@ export function createServer(
                   eventName: 'delete',
                   isOwner: _item.isOwner,
                   asked: rtc.askeds[item],
+                  banneds: rtc.banneds[item],
                 },
                 connId: _connId,
               });
