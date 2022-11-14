@@ -8,6 +8,7 @@ import storeAdminMuted, { changeAdminMuted } from '../store/adminMuted';
 import storeAsked, { changeAsked } from '../store/asked';
 import storeSpeaker from '../store/speaker';
 import { CHANGE_SPEAKER_SORT_TIMEOUT } from '../utils/constants';
+import storeMuteForAll, { changeMuteForAll } from '../store/muteForAll';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useUsers = ({
@@ -253,6 +254,8 @@ export const useMuteAll = ({
   adminMuteds: RoomList[any];
   users: UserList[];
 }) => {
+  const [muteForAll, setMuteForAll] = useState<boolean>(false);
+
   const muteAllHandler = useMemo(
     () => () => {
       users.forEach((user) => {
@@ -264,5 +267,35 @@ export const useMuteAll = ({
     [users, adminMuteds]
   );
 
-  return muteAllHandler;
+  const changeMuteForAllHandler = useMemo(
+    () => (e: React.ChangeEvent<HTMLInputElement>) => {
+      const {
+        target: { checked },
+      } = e;
+      storeMuteForAll.dispatch(
+        changeMuteForAll({
+          type: MessageType.GET_MUTE_FOR_ALL,
+          muteForAll: checked,
+        })
+      );
+    },
+    []
+  );
+
+  /**
+   * Listen mute for all
+   */
+  useEffect(() => {
+    const cleanSubs = storeMuteForAll.subscribe(() => {
+      const { type, muteForAll: _muteForAll } = storeMuteForAll.getState();
+      if (type === MessageType.SET_MUTE_FOR_ALL) {
+        setMuteForAll(_muteForAll);
+      }
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, []);
+
+  return { muteAllHandler, changeMuteForAllHandler, muteForAll };
 };

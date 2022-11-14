@@ -67,6 +67,7 @@ const lang: LocaleServer = {
     requestedTheFloor: 'Requested the floor',
     shortAdmin: 'admin',
     muteAll: 'Mute all',
+    muteForNew: 'Mute for new',
   },
 };
 

@@ -9,6 +9,7 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import storeAlert, { changeAlert } from '../store/alert';
+import storeMuteForAll, { changeMuteForAll } from '../store/muteForAll';
 import storeUserList, { changeUserList } from '../store/userList';
 import { MessageType, SendMessageArgs } from '../types/interfaces';
 import s from './Room.module.scss';
@@ -229,6 +230,17 @@ export const changeBanList = ({ data: { banneds } }: SendMessageArgs<MessageType
         adminMuteds: _adminMuteds,
         askeds,
       },
+    })
+  );
+};
+
+export const setMuteForAllHandler = ({
+  data: { value },
+}: SendMessageArgs<MessageType.SET_MUTE_FOR_ALL>) => {
+  storeMuteForAll.dispatch(
+    changeMuteForAll({
+      type: MessageType.SET_MUTE_FOR_ALL,
+      muteForAll: value,
     })
   );
 };

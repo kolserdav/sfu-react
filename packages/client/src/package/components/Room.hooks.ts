@@ -28,6 +28,7 @@ import {
   getWidthOfItem,
   changeBanList,
   changeMuteList,
+  setMuteForAllHandler,
 } from './Room.lib';
 import {
   LocaleServer,
@@ -64,6 +65,7 @@ import storeAdminMuted from '../store/adminMuted';
 import storeAsked from '../store/asked';
 import storeUserList, { changeUserList } from '../store/userList';
 import storeSpeaker, { changeSpeaker } from '../store/speaker';
+import storeMuteForAll from '../store/muteForAll';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -341,6 +343,33 @@ export const useConnection = ({
       cleanSubs();
     };
   }, [muted, changeMuted, id]);
+
+  /**
+   * Listen mute for all
+   */
+  useEffect(() => {
+    if (!roomId) {
+      return () => {
+        /** */
+      };
+    }
+    const cleanSubs = storeMuteForAll.subscribe(() => {
+      const { type, muteForAll } = storeMuteForAll.getState();
+      if (type === MessageType.GET_MUTE_FOR_ALL) {
+        ws.sendMessage({
+          type: MessageType.GET_MUTE_FOR_ALL,
+          id: roomId,
+          connId: connectionId,
+          data: {
+            value: muteForAll,
+          },
+        });
+      }
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, [ws, connectionId, roomId]);
 
   /**
    * Listen ask floor
@@ -832,6 +861,9 @@ export const useConnection = ({
           break;
         case MessageType.SET_MUTE_LIST:
           changeMuteList(rawMessage);
+          break;
+        case MessageType.SET_MUTE_FOR_ALL:
+          setMuteForAllHandler(rawMessage);
           break;
         case MessageType.SET_BAN_LIST:
           changeBanList(rawMessage);

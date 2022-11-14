@@ -1,0 +1,18 @@
+@import '../../Global.module';
+
+.wrapper {
+  position: relative;
+  padding: $crown-padding;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  input {
+    cursor: pointer;
+  }
+
+  label {
+    margin-top: $text-shift;
+    margin-left: 5px;
+  }
+}

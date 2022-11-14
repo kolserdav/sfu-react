@@ -132,6 +132,8 @@ export enum MessageType {
   SET_VIDEO_FIND_FIRST = 'SET_VIDEO_FIND_FIRST',
   GET_ASK_FLOOR = 'GET_ASK_FLOOR',
   SET_ASK_FLOOR = 'SET_ASK_FLOOR',
+  GET_MUTE_FOR_ALL = 'GET_MUTE_FOR_ALL',
+  SET_MUTE_FOR_ALL = 'SET_MUTE_FOR_ALL',
 }
 
 export namespace Locale {
@@ -205,6 +207,7 @@ export namespace Locale {
     requestedTheFloor: string;
     shortAdmin: string;
     muteAll: string;
+    muteForNew: string;
   }
 }
 
@@ -246,6 +249,9 @@ export namespace DataTypes {
       isRoom?: boolean;
       userName: string;
       locale: LocaleValue;
+    };
+    export type GetMuteForAll = {
+      value: boolean;
     };
     export type SetChangeRoomUnit = {
       target: number | string;
@@ -335,6 +341,9 @@ export namespace DataTypes {
     };
     export type SetVideoFindMany = {
       videos: GetManyResult<Video>;
+    };
+    export type SetMuteForAll = {
+      value: boolean;
     };
     export type SetVideoFindFirst = {
       video: Video;
@@ -429,6 +438,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.GetToBan
     : T extends MessageType.GET_TO_UNMUTE
     ? DataTypes.MessageTypes.GetToUnMute
+    : T extends MessageType.GET_MUTE_FOR_ALL
+    ? DataTypes.MessageTypes.GetMuteForAll
     : T extends MessageType.GET_TO_UNBAN
     ? DataTypes.MessageTypes.GetToUnBan
     : T extends MessageType.GET_ASK_FLOOR
@@ -487,6 +498,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetRoomMessage
     : T extends MessageType.SET_BAN_LIST
     ? DataTypes.MessageTypes.SetBanList
+    : T extends MessageType.SET_MUTE_FOR_ALL
+    ? DataTypes.MessageTypes.SetMuteForAll
     : T extends MessageType.SET_MUTE_LIST
     ? DataTypes.MessageTypes.SetMuteList
     : T extends MessageType.SET_CLOSE_PEER_CONNECTION

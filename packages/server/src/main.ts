@@ -224,6 +224,9 @@ export function createServer(
         case MessageType.GET_TO_UNBAN:
           rtc.handleGetToUnBan(rawMessage);
           break;
+        case MessageType.GET_MUTE_FOR_ALL:
+          rtc.getMuteForAllHandler(rawMessage);
+          break;
         case MessageType.GET_MUTE:
           rtc.getMuteHandler(rawMessage);
           break;
@@ -385,6 +388,7 @@ export function createServer(
               delete rtc.streams[item];
               delete rtc.banneds[item];
               delete rtc.askeds[item];
+              delete rtc.muteForAll[item];
               delete rtc.peerConnectionsServer[item];
               db.changeRoomArchive({ userId: item.toString(), archive: true });
               delete rtc.muteds[item];

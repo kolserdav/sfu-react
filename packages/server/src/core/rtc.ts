@@ -57,6 +57,8 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
 
   public banneds: Record<string, RoomUser[]> = {};
 
+  public muteForAll: Record<string, boolean> = {};
+
   private ws: WS;
 
   /**
@@ -833,6 +835,13 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     if (this.muteds[id].indexOf(uid) === -1) {
       this.muteds[id].push(uid);
     }
+    if (
+      this.adminMuteds[id].indexOf(uid) === -1 &&
+      !this.rooms[id].find((item) => item.id === uid).isOwner &&
+      this.muteForAll[id]
+    ) {
+      this.adminMuteds[id].push(uid);
+    }
     this.ws.sendMessage({
       type: MessageType.SET_ROOM,
       id: uid,
@@ -858,6 +867,14 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         id: uid,
         data: {
           banneds: this.banneds[id],
+        },
+        connId,
+      });
+      this.ws.sendMessage({
+        type: MessageType.SET_MUTE_FOR_ALL,
+        id: uid,
+        data: {
+          value: this.muteForAll[id],
         },
         connId,
       });
@@ -926,6 +943,25 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       });
     });
   }
+
+  public getMuteForAllHandler = ({
+    id,
+    data: { value },
+  }: SendMessageArgs<MessageType.GET_MUTE_FOR_ALL>) => {
+    this.muteForAll[id] = value;
+    this.rooms[id].forEach((item) => {
+      if (item.isOwner) {
+        this.ws.sendMessage({
+          type: MessageType.SET_MUTE_FOR_ALL,
+          connId: '',
+          id: item.id,
+          data: {
+            value,
+          },
+        });
+      }
+    });
+  };
 
   public setAskedFloorHandler = ({
     id,

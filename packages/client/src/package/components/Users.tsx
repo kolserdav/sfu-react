@@ -21,6 +21,7 @@ import MicrophoneIcon from '../Icons/MicrophoneIcon';
 import HandUpIcon from '../Icons/HandUp';
 import { useSpeaker } from '../utils/hooks';
 import BullHornIcon from '../Icons/BullHorn';
+import Checkbox from './ui/Checkbox';
 
 function Users({
   theme,
@@ -51,7 +52,10 @@ function Users({
   let _users = useSortAdminMuted({ users, adminMuteds });
   _users = useSortIsMe({ users: _users, userId });
   _users = useSortSpeaker({ users: _users, speaker: _speaker });
-  const muteAllHandler = useMuteAll({ users, adminMuteds });
+  const { muteAllHandler, changeMuteForAllHandler, muteForAll } = useMuteAll({
+    users,
+    adminMuteds,
+  });
 
   return (
     <div
@@ -65,6 +69,11 @@ function Users({
           <IconButton onClick={muteAllHandler} title={locale.muteAll}>
             <MicrophoneOffIcon color={theme?.colors.blue} width={24} height={24} />
           </IconButton>
+        )}
+        {isOwner && (
+          <Checkbox checked={muteForAll} onChange={changeMuteForAllHandler}>
+            {locale.muteForNew}
+          </Checkbox>
         )}
       </div>
       {_users.map((item) =>

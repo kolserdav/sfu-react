@@ -75,19 +75,9 @@ export const useMesages = ({
   >([]);
 
   const textAreaLeft = useMemo(
-    () => () => {
-      const { current } = inputRef;
-      let res = 0;
-      if (current) {
-        const { left, width } = current.getBoundingClientRect();
-        res =
-          document.body.clientWidth > MOBILE_WIDTH
-            ? left - width - TEXT_AREA_PADDING_LEFT + TEXT_AREA_BORDER_WIDTH
-            : TEXT_AREA_BORDER_WIDTH;
-      }
-      return res;
-    },
-    [inputRef]
+    () => () =>
+      document.body.clientWidth > MOBILE_WIDTH ? TEXT_AREA_PADDING_LEFT : TEXT_AREA_BORDER_WIDTH,
+    []
   );
 
   const editMessage = useMemo(
@@ -123,21 +113,19 @@ export const useMesages = ({
     setMessage(value);
   };
 
-  const clickQuoteWrapper =
-    (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-      const { id, text } = JSON.parse(context);
-      setQuotedMessage(id);
-      setEditedMessage(0);
-      setMessage(text);
-      let _rows = gettextAreaRows(text);
-      _rows = _rows <= TEXT_AREA_MAX_ROWS ? _rows : TEXT_AREA_MAX_ROWS;
-      setRows(_rows);
-      const { current } = inputRef;
-      if (current) {
-        current.select();
-        current.selectionStart = text.length;
-      }
-    };
+  const clickQuoteWrapper = (context: string) => () => {
+    const { id, text } = JSON.parse(context);
+    setQuotedMessage(id);
+    setEditedMessage(0);
+    let _rows = gettextAreaRows(text);
+    _rows = _rows <= TEXT_AREA_MAX_ROWS ? _rows : TEXT_AREA_MAX_ROWS;
+    setRows(_rows);
+    const { current } = inputRef;
+    if (current) {
+      current.select();
+      current.selectionStart = text.length;
+    }
+  };
 
   const clickEditWrapper =
     (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
