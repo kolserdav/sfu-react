@@ -39,6 +39,8 @@ import storeClickDocument from '../store/clickDocument';
 import { CookieName, getCookie } from '../utils/cookies';
 import storeCanConnect, { changeCanConnect } from '../store/canConnect';
 import storeRoomIsInactive from '../store/roomIsInactive';
+import storeChatBlockeds, { changeChatBlockeds } from '../store/chatBlockeds';
+import storeMessage from '../store/message';
 
 let oldSkip = 0;
 let scrolled = false;
@@ -70,6 +72,7 @@ export const useMesages = ({
   const [rows, setRows] = useState<number>(1);
   const [editedMessage, setEditedMessage] = useState<number>(0);
   const [quotedMessage, setQuotedMessage] = useState<number>(0);
+  const [blocked, setBlocked] = useState<boolean>(false);
   const [messages, setMessages] = useState<
     SendMessageArgs<MessageType.SET_CHAT_MESSAGES>['data']['result']
   >([]);
@@ -102,9 +105,18 @@ export const useMesages = ({
 
   const clickBlockChatWrapper = useMemo(
     () => (context: DialogProps['context']) => () => {
-      console.log(context);
+      const { unitId } = context;
+      ws.sendMessage({
+        id: roomId,
+        type: MessageType.GET_BLOCK_CHAT,
+        connId: '',
+        data: {
+          target: unitId,
+          command: 'add',
+        },
+      });
     },
-    []
+    [roomId, ws]
   );
 
   const changeText = useMemo(
@@ -378,6 +390,32 @@ export const useMesages = ({
   }, [ws, roomId, chatUnit, userId, skip, error]);
 
   /**
+   * Send message from storeMessage
+   */
+  useEffect(() => {
+    const storeMessageHandler = (second = false) => {
+      const {
+        message: { type, value },
+      } = storeMessage.getState();
+      if (type === 'chat') {
+        if (ws.connection.readyState === ws.connection.OPEN) {
+          ws.sendMessage(value);
+        } else if (second === false) {
+          setTimeout(() => {
+            storeMessageHandler(true);
+          }, 1000);
+        } else {
+          log('warn', 'Ws not found on sendMessage', { type, value });
+        }
+      }
+    };
+    const cleanSubs = storeMessage.subscribe(storeMessageHandler);
+    return () => {
+      cleanSubs();
+    };
+  }, [ws]);
+
+  /**
    * Handle messages
    */
   useEffect(() => {
@@ -534,6 +572,23 @@ export const useMesages = ({
       });
     };
 
+    const setBlockChatHandler = ({
+      data: { blocked: _blocked },
+    }: SendMessageArgs<MessageType.SET_BLOCK_CHAT>) => {
+      if (_blocked.indexOf(userId) !== -1) {
+        if (!blocked) {
+          setBlocked(true);
+        }
+      } else if (blocked) {
+        setBlocked(false);
+      }
+      storeChatBlockeds.dispatch(
+        changeChatBlockeds({
+          chatBlockeds: _blocked,
+        })
+      );
+    };
+
     ws.onMessage = (ev) => {
       const { data } = ev;
       const rawMessage = ws.parseMessage(data);
@@ -559,6 +614,9 @@ export const useMesages = ({
           break;
         case MessageType.SET_CREATE_QUOTE:
           setCreateQuoteHandler(rawMessage);
+          break;
+        case MessageType.SET_BLOCK_CHAT:
+          setBlockChatHandler(rawMessage);
           break;
         case MessageType.SET_ERROR:
           setErrorHandler(rawMessage);
@@ -586,9 +644,22 @@ export const useMesages = ({
         /** */
       };
     };
-  }, [roomId, userId, ws, messages, message, myMessage, containerRef, skip, locale, quotedMessage]);
+  }, [
+    roomId,
+    userId,
+    ws,
+    messages,
+    message,
+    myMessage,
+    containerRef,
+    skip,
+    locale,
+    quotedMessage,
+    blocked,
+  ]);
   return {
     changeText,
+    blocked,
     sendMessage,
     messages,
     message,

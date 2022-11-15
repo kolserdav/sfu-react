@@ -210,6 +210,9 @@ export function createServer(
         case MessageType.GET_DELETE_MESSAGE:
           chat.handleDeleteMessage(rawMessage);
           break;
+        case MessageType.GET_BLOCK_CHAT:
+          chat.getBlockChatHandler(rawMessage);
+          break;
         case MessageType.GET_TO_MUTE:
           rtc.getToMuteHandler(rawMessage);
           break;
@@ -395,6 +398,8 @@ export function createServer(
               db.changeRoomArchive({ userId: item.toString(), archive: true });
               delete rtc.muteds[item];
               delete rtc.adminMuteds[item];
+              delete chat.users[item];
+              delete chat.blocked[item];
               if (onRoomClose) {
                 onRoomClose({ roomId: item, roomLength: rtc.getRoomLenght(), port });
               }

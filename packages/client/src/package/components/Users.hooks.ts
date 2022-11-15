@@ -9,6 +9,7 @@ import storeSpeaker from '../store/speaker';
 import { CHANGE_SPEAKER_SORT_TIMEOUT } from '../utils/constants';
 import storeMuteForAll, { changeMuteForAll } from '../store/muteForAll';
 import { useIsOwner } from '../utils/hooks';
+import storeChatBlockeds from '../store/chatBlockeds';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useUsers = ({
@@ -24,27 +25,53 @@ export const useUsers = ({
   const [askeds, setAskeds] = useState<(string | number)[]>([]);
   const [adminMuteds, setAdminMuteds] = useState<(string | number)[]>([]);
   const [speaker, setSpeaker] = useState<string | number>(0);
+  const [chatBlockeds, setChatBlockeds] = useState<(string | number)[]>([]);
 
   const { roomUsers, isOwner } = useIsOwner({ userId });
 
-  const unBanWrapper = (target: string | number) => () => {
-    storeMessage.dispatch(
-      changeMessage({
-        message: {
-          type: 'room',
-          value: {
-            type: MessageType.GET_TO_UNBAN,
-            id: roomId,
-            connId: '',
-            data: {
-              target,
-              userId,
+  const unBanWrapper = useMemo(
+    () => (target: string | number) => () => {
+      storeMessage.dispatch(
+        changeMessage({
+          message: {
+            type: 'room',
+            value: {
+              type: MessageType.GET_TO_UNBAN,
+              id: roomId,
+              connId: '',
+              data: {
+                target,
+                userId,
+              },
             },
           },
-        },
-      })
-    );
-  };
+        })
+      );
+    },
+    [roomId, userId]
+  );
+
+  const unblockChatWrapper = useMemo(
+    () => (target: string | number) => () => {
+      storeMessage.dispatch(
+        changeMessage({
+          message: {
+            type: 'chat',
+            value: {
+              type: MessageType.GET_BLOCK_CHAT,
+              id: roomId,
+              connId: '',
+              data: {
+                command: 'delete',
+                target,
+              },
+            },
+          },
+        })
+      );
+    },
+    [roomId]
+  );
 
   /**
    * Create user list
@@ -96,9 +123,34 @@ export const useUsers = ({
     };
   }, []);
 
+  /**
+   * Listen chat blockeds
+   */
+  useEffect(() => {
+    const cleanSubs = storeChatBlockeds.subscribe(() => {
+      const { chatBlockeds: _chatBlockeds } = storeChatBlockeds.getState();
+      setChatBlockeds(_chatBlockeds);
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, []);
+
   const asked = useMemo(() => askeds.indexOf(userId) !== -1, [askeds, userId]);
 
-  return { users, isOwner, banneds, unBanWrapper, askeds, speaker, muteds, adminMuteds, asked };
+  return {
+    users,
+    isOwner,
+    banneds,
+    unBanWrapper,
+    unblockChatWrapper,
+    askeds,
+    speaker,
+    muteds,
+    adminMuteds,
+    asked,
+    chatBlockeds,
+  };
 };
 
 export const useActions = ({ userId }: { userId: string | number }) => {

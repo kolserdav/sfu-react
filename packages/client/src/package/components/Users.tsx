@@ -22,6 +22,7 @@ import HandUpIcon from '../Icons/HandUp';
 import { useSpeaker } from '../utils/hooks';
 import BullHornIcon from '../Icons/BullHorn';
 import Checkbox from './ui/Checkbox';
+import MessageOffIcon from '../Icons/MessageOff';
 
 function Users({
   theme,
@@ -38,11 +39,22 @@ function Users({
   backLinks: GlobalProps['backLinks'];
   open: boolean;
 }) {
-  const { users, isOwner, banneds, unBanWrapper, askeds, speaker, muteds, adminMuteds, asked } =
-    useUsers({
-      userId,
-      roomId,
-    });
+  const {
+    users,
+    isOwner,
+    banneds,
+    unBanWrapper,
+    unblockChatWrapper,
+    askeds,
+    speaker,
+    muteds,
+    adminMuteds,
+    asked,
+    chatBlockeds,
+  } = useUsers({
+    userId,
+    roomId,
+  });
   const { changeMutedWrapper, changeAdminMutedWrapper, askForTheFloorWrapper } = useActions({
     userId,
   });
@@ -125,6 +137,11 @@ function Users({
               {item.adminMuted && item.id === userId && !asked && (
                 <IconButton onClick={askForTheFloorWrapper(item)} title={locale.askForTheFloor}>
                   <HandUpIcon width={20} height={20} color={theme?.colors.text} />
+                </IconButton>
+              )}
+              {isOwner && chatBlockeds.indexOf(item.id) !== -1 && (
+                <IconButton title={locale.unblockChat} onClick={unblockChatWrapper(item.id)}>
+                  <MessageOffIcon width={16} height={16} color={theme?.colors.text} />
                 </IconButton>
               )}
               {isOwner && item.id !== userId && (

@@ -30,6 +30,7 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
   const { isOwner } = useIsOwner({ userId });
 
   const {
+    blocked,
     message,
     messages,
     changeText,
@@ -147,11 +148,12 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
             ref={inputRef}
             onInput={changeText}
             value={message}
-            disabled={roomIsInactive}
+            disabled={roomIsInactive || blocked}
+            placeholder={blocked ? locale.chatBlocked : ''}
           />
           <IconButton
             id="send-message"
-            disabled={roomIsInactive}
+            disabled={roomIsInactive || blocked}
             className={s.send__icon}
             title={locale.send}
             onClick={sendMessage}

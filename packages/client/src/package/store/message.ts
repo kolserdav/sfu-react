@@ -13,7 +13,7 @@ import { MessageType, SendMessageArgs, ArgsSubset } from '../types/interfaces';
 
 interface Action<T extends keyof typeof MessageType> {
   message: {
-    type: 'room';
+    type: 'room' | 'chat';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: Omit<SendMessageArgs<any>, 'data' | 'type'> & {
       type: T;

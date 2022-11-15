@@ -134,6 +134,8 @@ export enum MessageType {
   SET_ASK_FLOOR = 'SET_ASK_FLOOR',
   GET_MUTE_FOR_ALL = 'GET_MUTE_FOR_ALL',
   SET_MUTE_FOR_ALL = 'SET_MUTE_FOR_ALL',
+  GET_BLOCK_CHAT = 'GET_BLOCK_CHAT',
+  SET_BLOCK_CHAT = 'SET_BLOCK_CHAT',
 }
 
 export namespace Locale {
@@ -315,6 +317,10 @@ export namespace DataTypes {
       args: Prisma.MessageFindManyArgs;
       userId: string | number;
     };
+    export type GetBlockChat = {
+      command: 'add' | 'delete';
+      target: string | number;
+    };
     export type GetEditMessage = {
       args: Prisma.MessageUpdateArgs;
       userId: string | number;
@@ -355,6 +361,10 @@ export namespace DataTypes {
     };
     export type SetBanList = {
       banneds: Banneds[any];
+    };
+    export type SetBlockChat = {
+      target: string | number;
+      blocked: (string | number)[];
     };
     export type SetMuteList = {
       muteds: RoomList[any];
@@ -447,6 +457,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.GetMuteForAll
     : T extends MessageType.GET_TO_UNBAN
     ? DataTypes.MessageTypes.GetToUnBan
+    : T extends MessageType.GET_BLOCK_CHAT
+    ? DataTypes.MessageTypes.GetBlockChat
     : T extends MessageType.GET_ASK_FLOOR
     ? DataTypes.MessageTypes.GetAskFloor
     : T extends MessageType.GET_RECORD
@@ -471,6 +483,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetAskFloor
     : T extends MessageType.SET_SETTINGS_UNIT
     ? DataTypes.MessageTypes.SetSettingsUnit
+    : T extends MessageType.SET_BLOCK_CHAT
+    ? DataTypes.MessageTypes.SetBlockChat
     : T extends MessageType.SET_CHAT_MESSAGES
     ? DataTypes.MessageTypes.SetChatMessages
     : T extends MessageType.GET_ROOM_MESSAGE

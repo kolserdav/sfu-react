@@ -17,6 +17,8 @@ import { IS_DEV } from '../utils/constants';
 class Chat extends DB implements ConnectorInterface {
   public users: ConnectorInterface['users'] = {};
 
+  public blocked: Record<string, (string | number)[]> = {};
+
   public setUnit: ConnectorInterface['setUnit'] = async ({
     roomId,
     userId,
@@ -26,6 +28,9 @@ class Chat extends DB implements ConnectorInterface {
   }) => {
     if (!this.users[roomId]) {
       this.users[roomId] = {};
+    }
+    if (!this.blocked[roomId]) {
+      this.blocked[roomId] = [];
     }
     const lang = getLocale(locale).server;
     if (this.users[roomId][userId] && !IS_DEV) {
@@ -56,6 +61,18 @@ class Chat extends DB implements ConnectorInterface {
         connId,
         type: MessageType.SET_CHAT_UNIT,
         data: undefined,
+      },
+    });
+    this.sendMessage({
+      roomId,
+      msg: {
+        id: userId,
+        connId,
+        type: MessageType.SET_BLOCK_CHAT,
+        data: {
+          target: 0,
+          blocked: this.blocked[roomId],
+        },
       },
     });
   };
@@ -192,6 +209,45 @@ class Chat extends DB implements ConnectorInterface {
       });
     });
   }
+
+  public getBlockChatHandler = ({
+    id,
+    data: { target, command },
+  }: SendMessageArgs<MessageType.GET_BLOCK_CHAT>) => {
+    let index = -1;
+    switch (command) {
+      case 'add':
+        if (this.blocked[id].indexOf(target) === -1) {
+          this.blocked[id].push(target);
+        } else {
+          log('warn', 'Duplicate block chat', { id, target });
+        }
+        break;
+      case 'delete':
+        index = this.blocked[id].indexOf(target);
+        if (index !== -1) {
+          this.blocked[id].splice(index, 1);
+        } else {
+          log('warn', 'Removed block chat is missing', { id, target });
+        }
+        break;
+      default:
+    }
+    Object.keys(this.users[id]).forEach((item) => {
+      this.sendMessage({
+        msg: {
+          type: MessageType.SET_BLOCK_CHAT,
+          id: item,
+          connId: '',
+          data: {
+            target,
+            blocked: this.blocked[id],
+          },
+        },
+        roomId: id,
+      });
+    });
+  };
 
   public async handleCreateQuote({
     id,
