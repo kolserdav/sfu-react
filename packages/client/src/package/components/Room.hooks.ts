@@ -21,15 +21,7 @@ import {
   checkIsRecord,
   getRoomId,
 } from '../utils/lib';
-import {
-  createSettingsContext,
-  createVolumeContext,
-  getSettingsContext,
-  getWidthOfItem,
-  changeBanList,
-  changeMuteList,
-  setMuteForAllHandler,
-} from './Room.lib';
+import { getWidthOfItem, changeBanList, changeMuteList, setMuteForAllHandler } from './Room.lib';
 import {
   LocaleServer,
   LocaleDefault,
@@ -241,8 +233,8 @@ export const useConnection = ({
   );
 
   const clickToMuteWrapper = useMemo(
-    () => (context: string) => () => {
-      const { userId } = getSettingsContext(context);
+    () => (context: DialogProps['context']) => () => {
+      const { unitId: userId } = context;
       if (!userId || !roomId) {
         return;
       }
@@ -270,8 +262,8 @@ export const useConnection = ({
   );
 
   const clickToUnMuteWrapper = useMemo(
-    () => (context: string) => () => {
-      const { userId } = getSettingsContext(context);
+    () => (context: DialogProps['context']) => () => {
+      const { unitId: userId } = context;
       if (!userId || !roomId) {
         return;
       }
@@ -299,8 +291,8 @@ export const useConnection = ({
   );
 
   const clickToBanWrapper = useMemo(
-    () => (context: string) => () => {
-      const { userId } = getSettingsContext(context);
+    () => (context: DialogProps['context']) => () => {
+      const { unitId: userId } = context;
       if (!userId || !roomId) {
         return;
       }
@@ -392,7 +384,7 @@ export const useConnection = ({
   useEffect(() => {
     const cleanSubs = storeAdminMuted.subscribe(() => {
       const { id: _id, adminMuted: _adminMuted } = storeAdminMuted.getState();
-      const context = JSON.stringify({ userId: _id });
+      const context: DialogProps['context'] = { unitId: _id.toString(), id: 0, text: '' };
       if (!_adminMuted) {
         if (_id) {
           clickToUnMuteWrapper(context)();
@@ -1364,7 +1356,7 @@ export const useVolumeDialog = ({
           open: true,
           clientX,
           clientY,
-          context: createVolumeContext({ userId: targetId }),
+          context: { unitId: targetId.toString(), id: 0, text: '' },
           width,
           height,
         });
@@ -1414,7 +1406,7 @@ export const useSettingsDialog = () => {
           open: true,
           clientX,
           clientY,
-          context: createSettingsContext({ userId: targetId }),
+          context: { unitId: targetId.toString(), id: 0, text: '' },
           width,
           height,
         });

@@ -23,14 +23,7 @@ import {
   useSettingsDialog,
   useVideoStarted,
 } from './Room.hooks';
-import {
-  getRoomLink,
-  onClickVideo,
-  copyLink,
-  supportDisplayMedia,
-  getVolumeContext,
-  getSettingsContext,
-} from './Room.lib';
+import { getRoomLink, onClickVideo, copyLink, supportDisplayMedia } from './Room.lib';
 import { ROOM_LENGTH_TEST, USER_NAME_DEFAULT } from '../utils/constants';
 import CloseButton from './ui/CloseButton';
 import ScreenIcon from '../Icons/ScreeenIcon';
@@ -106,11 +99,8 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     container,
     userId,
   });
-  const volumeUserId = useMemo(() => getVolumeContext(dialog.context).userId, [dialog.context]);
-  const settingsUserId = useMemo(
-    () => getSettingsContext(dialogSettings.context).userId,
-    [dialogSettings.context]
-  );
+  const volumeUserId = useMemo(() => dialog.context.unitId, [dialog.context]);
+  const settingsUserId = useMemo(() => dialogSettings.context.unitId, [dialogSettings.context]);
   const _streams = useMemo(
     () =>
       ROOM_LENGTH_TEST && isDev()
@@ -118,10 +108,13 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
             .fill(0)
             .map(() => streams[0])
             .filter((item) => item !== undefined)
-        : streams,
+        : // eslint-disable-next-line arrow-body-style
+          streams.map((item) => {
+            // console.log(item.stream.getAudioTracks());
+            return item;
+          }),
     [streams]
   );
-
   const isAsked = useMemo(() => askeds.indexOf(userId) !== -1, [askeds, userId]);
 
   const { speaker: _speaker } = useSpeaker({ muteds, adminMuteds, speaker });

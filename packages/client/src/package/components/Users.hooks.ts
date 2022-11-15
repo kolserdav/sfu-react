@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import { MessageType, RoomList, RoomUser, UserList } from '../types/interfaces';
-import storeStreams from '../store/streams';
 import storeUserList from '../store/userList';
 import storeMessage, { changeMessage } from '../store/message';
 import storeMuted, { changeMuted } from '../store/muted';
@@ -9,6 +8,7 @@ import storeAsked, { changeAsked } from '../store/asked';
 import storeSpeaker from '../store/speaker';
 import { CHANGE_SPEAKER_SORT_TIMEOUT } from '../utils/constants';
 import storeMuteForAll, { changeMuteForAll } from '../store/muteForAll';
+import { useIsOwner } from '../utils/hooks';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useUsers = ({
@@ -18,14 +18,14 @@ export const useUsers = ({
   userId: string | number;
   roomId: string | number;
 }) => {
-  const [isOwner, setIsOwner] = useState<boolean>(false);
-  const [roomUsers, setRoomUsers] = useState<RoomUser[]>([]);
   const [users, setUsers] = useState<UserList[]>([]);
   const [banneds, setBanneds] = useState<RoomUser[]>([]);
   const [muteds, setMuteds] = useState<(string | number)[]>([]);
   const [askeds, setAskeds] = useState<(string | number)[]>([]);
   const [adminMuteds, setAdminMuteds] = useState<(string | number)[]>([]);
   const [speaker, setSpeaker] = useState<string | number>(0);
+
+  const { roomUsers, isOwner } = useIsOwner({ userId });
 
   const unBanWrapper = (target: string | number) => () => {
     storeMessage.dispatch(
@@ -45,31 +45,6 @@ export const useUsers = ({
       })
     );
   };
-
-  /**
-   * Listen change users
-   */
-  useEffect(() => {
-    const cleanSubs = storeStreams.subscribe(() => {
-      const state = storeStreams.getState();
-      let _isOwner = false;
-      const _users = state.streams.map((item) => {
-        if (item.target === userId) {
-          _isOwner = item.isOwner;
-        }
-        return {
-          id: item.target,
-          name: item.name,
-          isOwner: item.isOwner,
-        };
-      });
-      setIsOwner(_isOwner);
-      setRoomUsers(_users);
-    });
-    return () => {
-      cleanSubs();
-    };
-  }, [userId]);
 
   /**
    * Create user list

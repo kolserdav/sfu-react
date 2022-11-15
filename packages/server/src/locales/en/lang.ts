@@ -68,6 +68,9 @@ const lang: LocaleServer = {
     shortAdmin: 'admin',
     muteAll: 'Mute all',
     muteForNew: 'Mute for new',
+    blockChat: 'Block chat',
+    unblockChat: 'Unblock chat',
+    chatBlocked: 'Chat blocked by administrator',
   },
 };
 

@@ -208,6 +208,9 @@ export namespace Locale {
     shortAdmin: string;
     muteAll: string;
     muteForNew: string;
+    blockChat: string;
+    unblockChat: string;
+    chatBlocked: string;
   }
 }
 

@@ -100,36 +100,49 @@ export const useMesages = ({
     []
   );
 
-  const changeText = (e: React.FormEvent<HTMLTextAreaElement>) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { target }: any = e;
-    const { value } = target;
-    const c = gettextAreaRows(value);
-    if (c <= TEXT_AREA_MAX_ROWS) {
-      setRows(c);
-    } else {
-      setRows(TEXT_AREA_MAX_ROWS);
-    }
-    setMessage(value);
-  };
+  const clickBlockChatWrapper = useMemo(
+    () => (context: DialogProps['context']) => () => {
+      console.log(context);
+    },
+    []
+  );
 
-  const clickQuoteWrapper = (context: string) => () => {
-    const { id, text } = JSON.parse(context);
-    setQuotedMessage(id);
-    setEditedMessage(0);
-    let _rows = gettextAreaRows(text);
-    _rows = _rows <= TEXT_AREA_MAX_ROWS ? _rows : TEXT_AREA_MAX_ROWS;
-    setRows(_rows);
-    const { current } = inputRef;
-    if (current) {
-      current.select();
-      current.selectionStart = text.length;
-    }
-  };
+  const changeText = useMemo(
+    () => (e: React.FormEvent<HTMLTextAreaElement>) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { target }: any = e;
+      const { value } = target;
+      const c = gettextAreaRows(value);
+      if (c <= TEXT_AREA_MAX_ROWS) {
+        setRows(c);
+      } else {
+        setRows(TEXT_AREA_MAX_ROWS);
+      }
+      setMessage(value);
+    },
+    []
+  );
 
-  const clickEditWrapper =
-    (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-      const { text, id } = JSON.parse(context);
+  const clickQuoteWrapper = useMemo(
+    () => (context: DialogProps['context']) => () => {
+      const { id, text } = context;
+      setQuotedMessage(id);
+      setEditedMessage(0);
+      let _rows = gettextAreaRows(text);
+      _rows = _rows <= TEXT_AREA_MAX_ROWS ? _rows : TEXT_AREA_MAX_ROWS;
+      setRows(_rows);
+      const { current } = inputRef;
+      if (current) {
+        current.select();
+        current.selectionStart = text.length;
+      }
+    },
+    [inputRef]
+  );
+
+  const clickEditWrapper = useMemo(
+    () => (context: DialogProps['context']) => () => {
+      const { text, id } = context;
       setEditedMessage(id);
       setQuotedMessage(0);
       setMessage(text);
@@ -141,11 +154,13 @@ export const useMesages = ({
         current.select();
         current.selectionStart = text.length;
       }
-    };
+    },
+    [inputRef]
+  );
 
-  const clickDeleteWrapper =
-    (context: string) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-      const { id } = JSON.parse(context);
+  const clickDeleteWrapper = useMemo(
+    () => (context: DialogProps['context']) => () => {
+      const { id } = context;
       ws.sendMessage({
         type: MessageType.GET_DELETE_MESSAGE,
         connId: '',
@@ -159,7 +174,9 @@ export const useMesages = ({
           userId,
         },
       });
-    };
+    },
+    [roomId, userId, ws]
+  );
 
   const sendMessage = useMemo(
     () => () => {
@@ -585,6 +602,7 @@ export const useMesages = ({
     onClickCloseEditMessage,
     quoteMessage,
     textAreaLeft,
+    clickBlockChatWrapper,
   };
 };
 
@@ -598,14 +616,13 @@ export const useDialog = () => {
         const { clientX: _clientX, clientY: _clientY } = ev;
         const { width, height } = DIALOG_MESSAGE_DIMENSION;
         const { clientX, clientY } = getDialogPosition({ _clientX, _clientY, width, height });
-        const context = JSON.stringify(item);
         setDialog({
           open: true,
           clientY,
           clientX,
           width,
           height,
-          context,
+          context: item,
           secure,
         });
       }

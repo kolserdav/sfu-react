@@ -184,22 +184,6 @@ export const copyLink = (link: string, children: string) => {
 export const supportDisplayMedia = () =>
   typeof navigator.mediaDevices.getDisplayMedia !== 'undefined';
 
-export const createVolumeContext = ({ userId }: { userId: string | number }) =>
-  JSON.stringify({
-    userId,
-  });
-
-export const getVolumeContext = (context: string): { userId: string | number } =>
-  JSON.parse(context);
-
-export const createSettingsContext = ({ userId }: { userId: string | number }) =>
-  JSON.stringify({
-    userId,
-  });
-
-export const getSettingsContext = (context: string): { userId: string | number } =>
-  JSON.parse(context);
-
 export const changeMuteList = ({
   data: { muteds: _muteds, adminMuteds: _adminMuteds, askeds },
 }: SendMessageArgs<MessageType.SET_MUTE_LIST>) => {

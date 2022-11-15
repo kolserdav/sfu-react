@@ -40,7 +40,7 @@ export const ALERT_DEFAULT: AlertProps = {
   type: 'log',
 };
 export const ALERT_TIMEOUT = 3000;
-export const CONTEXT_DEFAULT = '"{}"';
+export const CONTEXT_DEFAULT = { unitId: '0', id: 0, text: '' };
 export const DIALOG_DEFAULT: DialogProps = {
   open: false,
   children: '',
@@ -61,7 +61,7 @@ export const DIALOG_VOLUME_DIMENSION = {
 };
 export const DIALOG_MESSAGE_DIMENSION = {
   width: 150,
-  height: 100,
+  height: 150,
 };
 export const DIALOG_SETTINGS_DIMENSION = {
   width: 120,

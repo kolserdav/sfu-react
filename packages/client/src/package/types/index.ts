@@ -11,7 +11,7 @@
 import { Video } from '@prisma/client';
 import React from 'react';
 import { Colors, Theme } from '../Theme';
-import { LocaleServer, LogLevel } from './interfaces';
+import { LocaleServer, LogLevel, MessageFull } from './interfaces';
 
 export type VideoFull = Video;
 
@@ -78,7 +78,11 @@ export interface DialogProps {
   clientY: number;
   width: number;
   height: number;
-  context: string;
+  context: {
+    id: number;
+    unitId: string;
+    text: string;
+  };
   secure?: boolean;
   theme?: Theme;
 }

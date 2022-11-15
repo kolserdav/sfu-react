@@ -21,10 +21,13 @@ import Dialog from './ui/Dialog';
 import { ChatProps } from '../types';
 import CheckIcon from '../Icons/Check';
 import CloseIcon from '../Icons/Close';
+import { useIsOwner } from '../utils/hooks';
 
 function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const { isOwner } = useIsOwner({ userId });
 
   const {
     message,
@@ -39,6 +42,7 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
     editMessage,
     quoteMessage,
     onClickCloseEditMessage,
+    clickBlockChatWrapper,
     textAreaLeft,
   } = useMesages({
     port,
@@ -171,7 +175,6 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
           >
             {locale.quote}
           </div>
-
           {dialog.secure && (
             // eslint-disable-next-line jsx-a11y/click-events-have-key-events
             <div
@@ -183,7 +186,7 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
               {locale.edit}
             </div>
           )}
-          {dialog.secure && (
+          {(dialog.secure || isOwner) && (
             // eslint-disable-next-line jsx-a11y/click-events-have-key-events
             <div
               tabIndex={-3}
@@ -192,6 +195,17 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
               className={g.dialog__item}
             >
               {locale.delete}
+            </div>
+          )}
+          {isOwner && (
+            // eslint-disable-next-line jsx-a11y/click-events-have-key-events
+            <div
+              tabIndex={-4}
+              role="button"
+              onClick={clickBlockChatWrapper(dialog.context)}
+              className={g.dialog__item}
+            >
+              {locale.blockChat}
             </div>
           )}
         </div>
