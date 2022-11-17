@@ -9,7 +9,8 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import React, { useMemo, useRef } from 'react';
-import { log, checkIsRecord, isDev } from '../utils/lib';
+import clsx from 'clsx';
+import { log, checkIsRecord } from '../utils/lib';
 import s from './Room.module.scss';
 import g from '../Global.module.scss';
 import { RoomProps } from '../types/index';
@@ -24,7 +25,7 @@ import {
   useVideoStarted,
 } from './Room.hooks';
 import { getRoomLink, onClickVideo, copyLink, supportDisplayMedia } from './Room.lib';
-import { ROOM_LENGTH_TEST, USER_NAME_DEFAULT } from '../utils/constants';
+import { USER_NAME_DEFAULT } from '../utils/constants';
 import CloseButton from './ui/CloseButton';
 import ScreenIcon from '../Icons/ScreeenIcon';
 import IconButton from './ui/IconButton';
@@ -69,6 +70,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     adminMuteds,
     isRecord,
     isRecording,
+    offVideo,
     clickToMuteWrapper,
     clickToUnMuteWrapper,
     clickToBanWrapper,
@@ -84,7 +86,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
   });
   const setVideoDimensions = useVideoDimensions({
     container: container.current,
-    lenght,
+    lenght: streams.length - offVideo.length,
   });
   const onClickClose = useOnclickClose({ container: container.current, lenght });
   const onPressEscape = usePressEscape();
@@ -101,23 +103,11 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
   });
   const volumeUserId = useMemo(() => dialog.context.unitId, [dialog.context]);
   const settingsUserId = useMemo(() => dialogSettings.context.unitId, [dialogSettings.context]);
-  const _streams = useMemo(
-    () =>
-      ROOM_LENGTH_TEST && isDev()
-        ? new Array(ROOM_LENGTH_TEST)
-            .fill(0)
-            .map(() => streams[0])
-            .filter((item) => item !== undefined)
-        : // eslint-disable-next-line arrow-body-style
-          streams.map((item) => {
-            // console.log(item.stream.getAudioTracks());
-            return item;
-          }),
-    [streams]
-  );
+
   const isAsked = useMemo(() => askeds.indexOf(userId) !== -1, [askeds, userId]);
 
   const { speaker: _speaker } = useSpeaker({ muteds, adminMuteds, speaker });
+
   return (
     <div
       className={s.wrapper}
@@ -127,7 +117,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
       }}
     >
       <div className={s.container} ref={container}>
-        {_streams.map((item, index) =>
+        {streams.map((item, index) =>
           (isRecord && item.target === userId) ||
           (isRecording && checkIsRecord(item.target.toString())) ? (
             ''
@@ -136,7 +126,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
               id={item.stream.id}
               // eslint-disable-next-line react/no-array-index-key
               key={`${item.target}${index}`}
-              className={s.video}
+              className={clsx(s.video, item.hidden ? s.hidden : '')}
               data-connid={item.connId}
             >
               {/** CloseButton is strong first child */}
@@ -242,8 +232,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
                 }}
               />
               {/** actions is strong third child */}
-
-              <div className={s.video__actions}>
+              <div className={clsx(s.video__actions, item.hidden ? s.hidden : '')}>
                 {item.isOwner && (
                   <PseudoButton title={isOwner ? locale.youAreAdminOfRoom : locale.isAdminOfRoom}>
                     <CrownIcon color={theme?.colors.yellow} />

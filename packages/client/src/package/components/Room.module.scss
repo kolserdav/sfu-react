@@ -47,6 +47,10 @@
   min-width: 0;
   transition: width 0.3s ease-in;
   margin: auto;
+
+  &.hidden {
+    display: none;
+  }
 }
 
 .video__fixed {
@@ -70,6 +74,10 @@
   align-items: center;
   justify-content: flex-end;
   width: 100%;
+
+  &.hidden {
+    display: none;
+  }
 }
 
 .video__volume__input {

@@ -51,6 +51,8 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
 
   public muteds: RoomList = {};
 
+  public offVideo: RoomList = {};
+
   public askeds: RoomList = {};
 
   public adminMuteds: RoomList = {};
@@ -281,6 +283,42 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         }
       }
     };
+  };
+
+  public getVideoTrackHandler = ({
+    id,
+    data: { command, target },
+  }: SendMessageArgs<MessageType.GET_VIDEO_TRACK>) => {
+    let index = -1;
+    switch (command) {
+      case 'add':
+        if (this.offVideo[id].indexOf(target) === -1) {
+          this.offVideo[id].push(target);
+        } else {
+          log('warn', 'Duplicate off video', { id, target });
+        }
+        break;
+      case 'delete':
+        index = this.offVideo[id].indexOf(target);
+        if (index !== -1) {
+          this.offVideo[id].splice(index, 1);
+        } else {
+          log('warn', 'Deleted offVideo is missting', { id, target });
+        }
+        break;
+      default:
+    }
+    console.log(Object.keys(this.ws.rooms[id]));
+    Object.keys(this.ws.rooms[id]).forEach((item) => {
+      this.ws.sendMessage({
+        type: MessageType.SET_VIDEO_TRACK,
+        id: item,
+        connId: '',
+        data: {
+          offVideo: this.offVideo[id],
+        },
+      });
+    });
   };
 
   public handleCandidateMessage: RTCInterface['handleCandidateMessage'] = async (msg, cb) => {
@@ -707,6 +745,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       this.muteds[roomId] = [];
       this.adminMuteds[roomId] = [];
       this.banneds[roomId] = [];
+      this.offVideo[roomId] = [];
     } else if (!this.rooms[roomId].find((item) => userId === item.id)) {
       this.rooms[roomId].push({
         id: userId,
@@ -751,6 +790,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       this.muteds[id] = [];
       this.adminMuteds[id] = [];
       this.banneds[id] = [];
+      this.offVideo[id] = [];
     }
     let index = -1;
     this.banneds[id].every((item, i) => {
@@ -836,6 +876,9 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     if (this.muteds[id].indexOf(uid) === -1) {
       this.muteds[id].push(uid);
     }
+    if (this.offVideo[id].indexOf(uid) === -1) {
+      this.offVideo[id].push(uid);
+    }
     if (
       this.adminMuteds[id].indexOf(uid) === -1 &&
       !this.rooms[id].find((item) => item.id === uid).isOwner &&
@@ -859,6 +902,14 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         muteds: this.muteds[id],
         adminMuteds: this.adminMuteds[id],
         askeds: this.askeds[id],
+      },
+      connId,
+    });
+    this.ws.sendMessage({
+      type: MessageType.SET_VIDEO_TRACK,
+      id: uid,
+      data: {
+        offVideo: this.offVideo[id],
       },
       connId,
     });

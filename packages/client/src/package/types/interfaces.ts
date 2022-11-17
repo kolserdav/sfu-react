@@ -136,6 +136,8 @@ export enum MessageType {
   SET_MUTE_FOR_ALL = 'SET_MUTE_FOR_ALL',
   GET_BLOCK_CHAT = 'GET_BLOCK_CHAT',
   SET_BLOCK_CHAT = 'SET_BLOCK_CHAT',
+  GET_VIDEO_TRACK = 'GET_VIDEO_TRACK',
+  SET_VIDEO_TRACK = 'SET_VIDEO_TRACK',
 }
 
 export namespace Locale {
@@ -289,6 +291,10 @@ export namespace DataTypes {
       userId: string | number;
       command: 'add' | 'delete';
     };
+    export type GetVideoTrack = {
+      target: string | number;
+      command: 'add' | 'delete';
+    };
     export type GetVideoFindMany = {
       userId: string | number;
       token: string;
@@ -333,6 +339,9 @@ export namespace DataTypes {
     export type GetCreateMessage = {
       args: Prisma.MessageCreateArgs;
       userId: string | number;
+    };
+    export type SetVideoTrack = {
+      offVideo: (string | number)[];
     };
     export type GetCreateQuote = {
       args: Prisma.QuoteCreateArgs;
@@ -461,6 +470,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.GetBlockChat
     : T extends MessageType.GET_ASK_FLOOR
     ? DataTypes.MessageTypes.GetAskFloor
+    : T extends MessageType.GET_VIDEO_TRACK
+    ? DataTypes.MessageTypes.GetVideoTrack
     : T extends MessageType.GET_RECORD
     ? DataTypes.MessageTypes.GetRecord
     : T extends MessageType.SET_ROOM
@@ -495,6 +506,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.GetCreateMessage
     : T extends MessageType.GET_CREATE_QUOTE
     ? DataTypes.MessageTypes.GetCreateQuote
+    : T extends MessageType.SET_VIDEO_TRACK
+    ? DataTypes.MessageTypes.SetVideoTrack
     : T extends MessageType.SET_EDIT_MESSAGE
     ? DataTypes.MessageTypes.SetEditMessage
     : T extends MessageType.SET_CREATE_MESSAGE

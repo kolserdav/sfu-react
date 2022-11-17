@@ -62,6 +62,7 @@ export interface Stream {
   stream: MediaStream;
   connId: string;
   ref: React.Ref<HTMLVideoElement>;
+  hidden?: boolean;
 }
 
 export interface AlertProps {

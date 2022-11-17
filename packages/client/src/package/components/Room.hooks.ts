@@ -20,6 +20,7 @@ import {
   parseQueryString,
   checkIsRecord,
   getRoomId,
+  isDev,
 } from '../utils/lib';
 import { getWidthOfItem, changeBanList, changeMuteList, setMuteForAllHandler } from './Room.lib';
 import {
@@ -89,6 +90,7 @@ export const useConnection = ({
   const [muted, setMuted] = useState<boolean>(true);
   const [adminMuted, setAdminMuted] = useState<boolean>(false);
   const [muteds, setMuteds] = useState<(string | number)[]>([]);
+  const [offVideo, setOffVideo] = useState<(string | number)[]>([]);
   const [askeds, setAskeds] = useState<(string | number)[]>([]);
   const [adminMuteds, setAdminMuteds] = useState<(string | number)[]>([]);
   const [video, setVideo] = useState<boolean>(false);
@@ -418,10 +420,22 @@ export const useConnection = ({
 
   const changeVideo = useMemo(
     () => () => {
+      if (!roomId) {
+        return;
+      }
       const _video = !video;
       setVideo(_video);
+      ws.sendMessage({
+        id: roomId,
+        type: MessageType.GET_VIDEO_TRACK,
+        connId: connectionId,
+        data: {
+          target: ws.userId,
+          command: !_video ? 'add' : 'delete',
+        },
+      });
     },
-    [video]
+    [video, roomId, ws, connectionId]
   );
 
   /**
@@ -820,6 +834,14 @@ export const useConnection = ({
         return isExists[0] !== undefined;
       });
     };
+
+    const setVideoTrackHandler = ({
+      data: { offVideo: _offVideo },
+    }: SendMessageArgs<MessageType.SET_VIDEO_TRACK>) => {
+      console.log(_offVideo);
+      setOffVideo(_offVideo);
+    };
+
     ws.onMessage = (ev) => {
       const { data } = ev;
       const rawMessage = ws.parseMessage(data);
@@ -875,6 +897,9 @@ export const useConnection = ({
           break;
         case MessageType.SET_MUTE_LIST:
           changeMuteList(rawMessage);
+          break;
+        case MessageType.SET_VIDEO_TRACK:
+          setVideoTrackHandler(rawMessage);
           break;
         case MessageType.SET_MUTE_FOR_ALL:
           setMuteForAllHandler(rawMessage);
@@ -1033,10 +1058,25 @@ export const useConnection = ({
     };
   }, [roomId, ws, lenght, streams, connectionId, id, shareScreen, error]);
 
+  const _streams = useMemo(
+    () =>
+      ROOM_LENGTH_TEST && isDev()
+        ? new Array(ROOM_LENGTH_TEST)
+            .fill(0)
+            .map(() => streams[0])
+            .filter((item) => item !== undefined)
+        : streams.map((item) => {
+            const _item = { ...item };
+            _item.hidden = offVideo.indexOf(item.target) !== -1;
+            return _item;
+          }),
+    [streams, offVideo]
+  );
+
   return {
     askFloor,
     askeds,
-    streams,
+    streams: _streams,
     lenght,
     rtc,
     lostStreamHandler: rtc.lostStreamHandler,
@@ -1046,6 +1086,7 @@ export const useConnection = ({
     changeMuted,
     muteds,
     video,
+    offVideo,
     changeVideo,
     isOwner,
     adminMuted,

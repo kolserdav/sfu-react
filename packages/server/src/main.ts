@@ -240,6 +240,9 @@ export function createServer(
         case MessageType.GET_ASK_FLOOR:
           rtc.setAskedFloorHandler(rawMessage);
           break;
+        case MessageType.GET_VIDEO_TRACK:
+          rtc.getVideoTrackHandler(rawMessage);
+          break;
         case MessageType.GET_VIDEO_FIND_FIRST:
           settings.videoFindFirstHandler(rawMessage);
           break;
@@ -335,6 +338,11 @@ export function createServer(
             if (mute !== -1) {
               rtc.muteds[item].splice(mute, 1);
             }
+            // delete offVideo
+            const offVideo = rtc.offVideo[item].indexOf(userId);
+            if (offVideo !== -1) {
+              rtc.offVideo[item].splice(offVideo, 1);
+            }
             // delete askeds
             const askeds = rtc.askeds[item].indexOf(userId);
             if (askeds !== -1) {
@@ -394,6 +402,7 @@ export function createServer(
               delete rtc.banneds[item];
               delete rtc.askeds[item];
               delete rtc.muteForAll[item];
+              delete rtc.offVideo[item];
               delete rtc.peerConnectionsServer[item];
               db.changeRoomArchive({ userId: item.toString(), archive: true });
               delete rtc.muteds[item];
