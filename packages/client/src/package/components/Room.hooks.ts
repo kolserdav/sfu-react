@@ -838,7 +838,6 @@ export const useConnection = ({
     const setVideoTrackHandler = ({
       data: { offVideo: _offVideo },
     }: SendMessageArgs<MessageType.SET_VIDEO_TRACK>) => {
-      console.log(_offVideo);
       setOffVideo(_offVideo);
     };
 

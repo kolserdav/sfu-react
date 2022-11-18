@@ -308,11 +308,10 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         break;
       default:
     }
-    console.log(Object.keys(this.ws.rooms[id]));
-    Object.keys(this.ws.rooms[id]).forEach((item) => {
+    this.rooms[id].forEach((item) => {
       this.ws.sendMessage({
         type: MessageType.SET_VIDEO_TRACK,
-        id: item,
+        id: item.id,
         connId: '',
         data: {
           offVideo: this.offVideo[id],
@@ -895,6 +894,16 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
       },
       connId,
     });
+    this.rooms[id].forEach((item) => {
+      this.ws.sendMessage({
+        type: MessageType.SET_VIDEO_TRACK,
+        id: item.id,
+        data: {
+          offVideo: this.offVideo[id],
+        },
+        connId,
+      });
+    });
     this.ws.sendMessage({
       type: MessageType.SET_MUTE_LIST,
       id: uid,
@@ -902,14 +911,6 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         muteds: this.muteds[id],
         adminMuteds: this.adminMuteds[id],
         askeds: this.askeds[id],
-      },
-      connId,
-    });
-    this.ws.sendMessage({
-      type: MessageType.SET_VIDEO_TRACK,
-      id: uid,
-      data: {
-        offVideo: this.offVideo[id],
       },
       connId,
     });
