@@ -9,7 +9,7 @@ generator client {
 
 model Unit {
   id      String    @id
-  name    String    @default("No Name")
+  name    String    @default("No Name") @db.VarChar(50)
   online  Boolean   @default(true)
   updated DateTime  @default(now())
   created DateTime  @default(now())
