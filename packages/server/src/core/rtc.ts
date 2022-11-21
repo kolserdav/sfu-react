@@ -26,6 +26,8 @@ import {
   SENT_RTCP_INTERVAL,
   SSL_RTC_CONNECTION,
   SSL_SIGNATURE_HASH,
+  ICE_PORT_MIN,
+  ICE_PORT_MAX,
 } from '../utils/constants';
 import WS from './ws';
 import DB from './db';
@@ -159,6 +161,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
           credential: process.env.TURN_SERVER_PASSWORD,
         },
       ],
+      icePortRange: [ICE_PORT_MIN, ICE_PORT_MAX],
       dtls: {
         keys: SSL_RTC_CONNECTION
           ? {
