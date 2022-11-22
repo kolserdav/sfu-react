@@ -20,7 +20,7 @@ function Badge({
         className={s.value}
         style={{ backgroundColor: theme.colors.active, color: theme.colors.text }}
       >
-        <div className={s.text}>{value}</div>
+        <span className={s.text}>{value}</span>
       </div>
     </div>
   );

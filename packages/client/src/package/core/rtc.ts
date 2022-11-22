@@ -345,11 +345,10 @@ class RTC
             return empStr;
           });
         if (!error) {
-          this.localStream = videoStream;
           const audio = this.localStream.getTracks().find((item) => item.kind === 'audio');
           if (audio) {
-            this.localStream.addTrack(audio);
-            this.localStream.getTracks().forEach((track) => {
+            videoStream.addTrack(audio);
+            videoStream.getTracks().forEach((track) => {
               if (this.localStream) {
                 const sender = this.peerConnections[peerId]!.getSenders().find(
                   (item) => item.track?.kind === track.kind
@@ -357,7 +356,7 @@ class RTC
                 if (sender) {
                   this.peerConnections[peerId]!.removeTrack(sender);
                 }
-                this.peerConnections[peerId]!.addTrack(track, this.localStream);
+                this.peerConnections[peerId]!.addTrack(track, videoStream);
               } else {
                 log('warn', 'Add share screen track without local stream', this.localStream);
               }
@@ -365,6 +364,7 @@ class RTC
           } else {
             log('warn', locale?.erorGetSound || 'Share screen without sound', audio, true);
           }
+          this.localStream = videoStream;
           cb(0, this.localStream);
         }
       }

@@ -25,6 +25,7 @@ import Checkbox from './ui/Checkbox';
 import MessageOffIcon from '../Icons/MessageOff';
 import Badge from './ui/Badge';
 import AccountOutlineIcon from '../Icons/AccountOutline';
+import { USERS_ICON_WIDTH, USERS_ICON_WIDTH_BIG } from '../utils/constants';
 
 function Users({
   theme,
@@ -115,7 +116,11 @@ function Users({
               <div className={s.icons}>
                 {_speaker === item.id && (
                   <IconButton disabled>
-                    <BullHornIcon color={theme?.colors.green} width={16} height={16} />
+                    <BullHornIcon
+                      color={theme?.colors.green}
+                      width={USERS_ICON_WIDTH}
+                      height={USERS_ICON_WIDTH}
+                    />
                   </IconButton>
                 )}
                 {item.isOwner && (
@@ -123,17 +128,29 @@ function Users({
                     disabled
                     title={isOwner ? locale.youAreAdminOfRoom : locale.isAdminOfRoom}
                   >
-                    <CrownIcon width={16} height={16} color={theme?.colors.yellow} />
+                    <CrownIcon
+                      width={USERS_ICON_WIDTH}
+                      height={USERS_ICON_WIDTH}
+                      color={theme?.colors.yellow}
+                    />
                   </IconButton>
                 )}
                 {askeds.indexOf(item.id) !== -1 && (
                   <IconButton disabled title={locale.requestedTheFloor}>
-                    <HandUpIcon width={20} height={20} color={theme?.colors.red} />
+                    <HandUpIcon
+                      width={USERS_ICON_WIDTH_BIG}
+                      height={USERS_ICON_WIDTH_BIG}
+                      color={theme?.colors.red}
+                    />
                   </IconButton>
                 )}
                 {item.adminMuted && !isOwner && (
                   <IconButton disabled>
-                    <MicrophoneOffIcon width={16} height={16} color={theme?.colors.blue} />
+                    <MicrophoneOffIcon
+                      width={USERS_ICON_WIDTH}
+                      height={USERS_ICON_WIDTH}
+                      color={theme?.colors.blue}
+                    />
                   </IconButton>
                 )}
               </div>
@@ -141,19 +158,35 @@ function Users({
             <div className={s.actions}>
               <IconButton disabled={item.id !== userId} onClick={changeMutedWrapper(item)}>
                 {item.muted ? (
-                  <MicrophoneOffIcon width={16} height={16} color={theme?.colors.text} />
+                  <MicrophoneOffIcon
+                    width={USERS_ICON_WIDTH}
+                    height={USERS_ICON_WIDTH}
+                    color={theme?.colors.text}
+                  />
                 ) : (
-                  <MicrophoneIcon width={16} height={16} color={theme?.colors.text} />
+                  <MicrophoneIcon
+                    width={USERS_ICON_WIDTH}
+                    height={USERS_ICON_WIDTH}
+                    color={theme?.colors.text}
+                  />
                 )}
               </IconButton>
               {item.adminMuted && item.id === userId && !asked && (
                 <IconButton onClick={askForTheFloorWrapper(item)} title={locale.askForTheFloor}>
-                  <HandUpIcon width={20} height={20} color={theme?.colors.text} />
+                  <HandUpIcon
+                    width={USERS_ICON_WIDTH_BIG}
+                    height={USERS_ICON_WIDTH_BIG}
+                    color={theme?.colors.text}
+                  />
                 </IconButton>
               )}
               {isOwner && chatBlockeds.indexOf(item.id) !== -1 && (
                 <IconButton title={locale.unblockChat} onClick={unblockChatWrapper(item.id)}>
-                  <MessageOffIcon width={16} height={16} color={theme?.colors.text} />
+                  <MessageOffIcon
+                    width={USERS_ICON_WIDTH}
+                    height={USERS_ICON_WIDTH}
+                    color={theme?.colors.text}
+                  />
                 </IconButton>
               )}
               {isOwner && item.id !== userId && (
@@ -162,9 +195,17 @@ function Users({
                   title={item.adminMuted ? locale.unmute : locale.mute}
                 >
                   {item.adminMuted ? (
-                    <MicrophoneOffIcon width={16} height={16} color={theme?.colors.blue} />
+                    <MicrophoneOffIcon
+                      width={USERS_ICON_WIDTH}
+                      height={USERS_ICON_WIDTH}
+                      color={theme?.colors.blue}
+                    />
                   ) : (
-                    <MicrophoneIcon width={16} height={16} color={theme?.colors.blue} />
+                    <MicrophoneIcon
+                      width={USERS_ICON_WIDTH}
+                      height={USERS_ICON_WIDTH}
+                      color={theme?.colors.blue}
+                    />
                   )}
                 </IconButton>
               )}
@@ -180,7 +221,11 @@ function Users({
               <div className={s.users__name}>{item.name}</div>
               <div className={s.users__actions}>
                 <IconButton onClick={unBanWrapper(item.id)}>
-                  <CloseIcon width={16} height={16} color={theme?.colors.red} />
+                  <CloseIcon
+                    width={USERS_ICON_WIDTH}
+                    height={USERS_ICON_WIDTH}
+                    color={theme?.colors.red}
+                  />
                 </IconButton>
               </div>
             </div>

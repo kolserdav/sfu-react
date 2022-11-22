@@ -227,11 +227,8 @@ export const useConnection = ({
           command: 'add',
         },
       });
-      if (muted) {
-        changeMuted();
-      }
     },
-    [connectionId, id, roomId, ws, muted, changeMuted]
+    [connectionId, id, roomId, ws]
   );
 
   const clickToMuteWrapper = useMemo(
@@ -313,7 +310,7 @@ export const useConnection = ({
 
   const setAskFloorHandler = useMemo(
     () =>
-      ({ data: { asked } }: SendMessageArgs<MessageType.SET_ASK_FLOOR>) => {
+      ({ data: { asked, userId } }: SendMessageArgs<MessageType.SET_ASK_FLOOR>) => {
         setAskeds(asked);
         const { userList } = storeUserList.getState();
         const _userList = { ...userList };
