@@ -70,7 +70,6 @@ function Users({
     users,
     adminMuteds,
   });
-
   return (
     <div
       className={clsx(s.wrapper, open ? s.open : '')}

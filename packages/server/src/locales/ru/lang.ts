@@ -72,6 +72,7 @@ const lang: LocaleServer = {
     unblockChat: 'Разболокировать чат',
     chatBlocked: 'Чат заблокирован администратором',
     numberOfGuests: 'Количество участников',
+    noActiveVideoStreams: 'Активные видеопотки отсутствуют',
   },
 };
 

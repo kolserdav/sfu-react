@@ -216,6 +216,7 @@ export namespace Locale {
     unblockChat: string;
     chatBlocked: string;
     numberOfGuests: string;
+    noActiveVideoStreams: string;
   }
 }
 

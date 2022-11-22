@@ -72,6 +72,7 @@ const lang: LocaleServer = {
     unblockChat: 'Unblock chat',
     chatBlocked: 'Chat blocked by administrator',
     numberOfGuests: 'Number of guests',
+    noActiveVideoStreams: 'No active video streams',
   },
 };
 

@@ -110,6 +110,11 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
 
   const { speaker: _speaker } = useSpeaker({ muteds, adminMuteds, speaker });
 
+  const noActiveVideoStreams = useMemo(
+    () => streams.find((item) => item.hidden !== true) === undefined,
+    [streams]
+  );
+
   return (
     <div
       className={s.wrapper}
@@ -119,6 +124,11 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
       }}
     >
       <div className={s.container} ref={container}>
+        {noActiveVideoStreams && (
+          <div className={s.empty} style={{ color: theme?.colors.text }}>
+            {locale.noActiveVideoStreams}
+          </div>
+        )}
         {streams.map((item, index) =>
           (isRecord && item.target === userId) ||
           (isRecording && checkIsRecord(item.target.toString())) ? (

@@ -8,6 +8,13 @@
   height: 100vh;
   width: 100%;
   padding: 0;
+
+  .empty {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 .room__link {

@@ -885,6 +885,9 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     if (this.offVideo[id].indexOf(uid) === -1) {
       this.offVideo[id].push(uid);
     }
+    if (this.muteForAll[id] === undefined) {
+      this.muteForAll[id] = false;
+    }
     if (
       this.adminMuteds[id].indexOf(uid) === -1 &&
       !this.rooms[id].find((item) => item.id === uid).isOwner &&
