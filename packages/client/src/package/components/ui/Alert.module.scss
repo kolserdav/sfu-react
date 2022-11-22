@@ -1,9 +1,10 @@
 @import '../../Main';
 
 $border-radius: 8px;
-$block-padding: 0.5rem;
+$block-padding: 0.2rem;
 
 .wrapper {
+  opacity: 0;
   z-index: 101;
   position: fixed;
   bottom: calc((#{$button-width}) * -1 - 10px);
@@ -13,24 +14,28 @@ $block-padding: 0.5rem;
   display: flex;
   padding: $block-padding;
   flex-direction: row;
-  justify-content: space-around;
+  justify-content: space-between;
   align-items: center;
   border-radius: $border-radius;
   box-shadow: -2px -2px $border-radius rgb(0 0 0 / 30%);
   font-size: large;
-  transition: bottom $alert-transition ease-in;
+  transition: all $alert-transition ease-in;
+
+  .text {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
 
   @media (max-width: $mobile-width) {
     width: calc(100vw - #{$block-padding} - #{$block-padding} * 2);
-    bottom: calc(100vh + #{$button-width});
     right: 0;
   }
 
   &.open {
+    opacity: 1;
     bottom: calc(#{$button-width} / 2);
-    transition: bottom $alert-transition ease-out;
-    @media (max-width: $mobile-width) {
-      bottom: calc(100vh - #{$button-width} - #{$button-width} / 2 - #{$block-padding} * 3);
-    }
+    transition: all $alert-transition ease-out;
   }
 }

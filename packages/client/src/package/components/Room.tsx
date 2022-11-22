@@ -317,7 +317,11 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
             </IconButton>
           )}
           {displayMediaSupported && (
-            <IconButton onClick={screenShare} title={locale.shareScreen}>
+            <IconButton
+              disabled={streams.length === 0}
+              onClick={screenShare}
+              title={locale.shareScreen}
+            >
               {shareScreen ? (
                 <CameraIcon color={theme?.colors.text} />
               ) : (
@@ -326,18 +330,30 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
             </IconButton>
           )}
           {adminMuted && (
-            <IconButton title={locale.askForTheFloor} onClick={askFloor} disabled={isAsked}>
+            <IconButton
+              title={locale.askForTheFloor}
+              onClick={askFloor}
+              disabled={streams.length === 0 || isAsked}
+            >
               <HandUpIcon width={40} height={40} color={theme?.colors.text} />
             </IconButton>
           )}
-          <IconButton title={muted ? locale.micOn : locale.micOff} onClick={changeMuted}>
+          <IconButton
+            disabled={streams.length === 0}
+            title={muted ? locale.micOn : locale.micOff}
+            onClick={changeMuted}
+          >
             {muted ? (
               <MicrophoneOffIcon color={theme?.colors.text} />
             ) : (
               <MicrophoneIcon color={theme?.colors.text} />
             )}
           </IconButton>
-          <IconButton title={video ? locale.cameraOff : locale.cameraOn} onClick={changeVideo}>
+          <IconButton
+            disabled={streams.length === 0}
+            title={video ? locale.cameraOff : locale.cameraOn}
+            onClick={changeVideo}
+          >
             {video ? (
               <CameraOutlineIcon color={theme?.colors.text} />
             ) : (

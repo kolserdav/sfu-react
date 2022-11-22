@@ -8,17 +8,37 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import clsx from 'clsx';
 import s from './Alert.module.scss';
 import { AlertProps } from '../../types';
 import { ALERT_TIMEOUT, ALERT_TRANSITION } from '../../utils/constants';
 import storeAlert, { changeAlert } from '../../store/alert';
+import IconButton from './IconButton';
+import CloseIcon from '../../Icons/Close';
 
 function Alert({ children, type, open, theme }: AlertProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const [mouseMove, setMouseMove] = useState<boolean>(false);
   const [opened, setOpened] = useState<boolean>(false);
+
+  const closeAlert = useMemo(
+    () => () => {
+      setOpened(false);
+      setTimeout(() => {
+        storeAlert.dispatch(
+          changeAlert({
+            alert: {
+              open: false,
+              type,
+              children,
+            },
+          })
+        );
+      }, ALERT_TRANSITION);
+    },
+    [type, children]
+  );
 
   /**
    * Close alert
@@ -29,24 +49,13 @@ function Alert({ children, type, open, theme }: AlertProps) {
     }, 0);
     if (!mouseMove && opened) {
       timeout = setTimeout(async () => {
-        setOpened(false);
-        setTimeout(() => {
-          storeAlert.dispatch(
-            changeAlert({
-              alert: {
-                open: false,
-                type,
-                children,
-              },
-            })
-          );
-        }, ALERT_TRANSITION);
+        closeAlert();
       }, ALERT_TIMEOUT);
     }
     return () => {
       clearTimeout(timeout);
     };
-  }, [open, mouseMove, children, type, opened]);
+  }, [open, mouseMove, closeAlert, opened]);
 
   useEffect(() => {
     if (open) {
@@ -105,7 +114,12 @@ function Alert({ children, type, open, theme }: AlertProps) {
         display: open ? 'flex' : 'none',
       }}
     >
-      {children}
+      <div className={s.text}>{children}</div>
+      <div className={s.closeNutton}>
+        <IconButton onClick={closeAlert}>
+          <CloseIcon color={theme?.colors.text} />
+        </IconButton>
+      </div>
     </div>
   );
 }
