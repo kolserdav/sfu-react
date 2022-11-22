@@ -23,6 +23,8 @@ import { useSpeaker } from '../utils/hooks';
 import BullHornIcon from '../Icons/BullHorn';
 import Checkbox from './ui/Checkbox';
 import MessageOffIcon from '../Icons/MessageOff';
+import Badge from './ui/Badge';
+import AccountOutlineIcon from '../Icons/AccountOutline';
 
 function Users({
   theme,
@@ -77,16 +79,27 @@ function Users({
       {backLinks && <div className={s.back__links}>{backLinks}</div>}
       <div className={s.title}>{locale.guests}</div>
       <div className={s.users__actions}>
-        {isOwner && (
-          <IconButton onClick={muteAllHandler} title={locale.muteAll}>
-            <MicrophoneOffIcon color={theme?.colors.blue} width={24} height={24} />
-          </IconButton>
-        )}
-        {isOwner && (
-          <Checkbox checked={muteForAll} onChange={changeMuteForAllHandler}>
-            {locale.muteForNew}
-          </Checkbox>
-        )}
+        <div className={s.icons}>
+          {theme && (
+            <Badge title={locale.numberOfGuests} value={users.length} theme={theme}>
+              <IconButton title={locale.numberOfGuests} disabled>
+                <AccountOutlineIcon color={theme.colors.text} />
+              </IconButton>
+            </Badge>
+          )}
+        </div>
+        <div className={s.buttons}>
+          {isOwner && (
+            <IconButton onClick={muteAllHandler} title={locale.muteAll}>
+              <MicrophoneOffIcon color={theme?.colors.blue} width={24} height={24} />
+            </IconButton>
+          )}
+          {isOwner && (
+            <Checkbox checked={muteForAll} onChange={changeMuteForAllHandler}>
+              {locale.muteForNew}
+            </Checkbox>
+          )}
+        </div>
       </div>
       {_users.map((item) =>
         checkIsRecord(item.id.toString()) ? (

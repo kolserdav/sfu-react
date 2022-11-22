@@ -71,6 +71,7 @@ const lang: LocaleServer = {
     blockChat: 'Block chat',
     unblockChat: 'Unblock chat',
     chatBlocked: 'Chat blocked by administrator',
+    numberOfGuests: 'Number of guests',
   },
 };
 

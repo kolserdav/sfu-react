@@ -63,6 +63,9 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
 
   public muteForAll: Record<string, boolean> = {};
 
+  readonly icePortRange: [number, number] | undefined =
+    ICE_PORT_MAX && ICE_PORT_MAX ? [ICE_PORT_MIN, ICE_PORT_MAX] : undefined;
+
   private ws: WS;
 
   /**
@@ -76,6 +79,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
   constructor({ ws, db }: { ws: WS; db: DB }) {
     this.ws = ws;
     this.db = db;
+    log('info', 'Ice port range env.(ICE_PORT_MAX, ICE_PORT_MAX) is', this.icePortRange, true);
   }
 
   public getPeerId(
@@ -161,7 +165,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
           credential: process.env.TURN_SERVER_PASSWORD,
         },
       ],
-      icePortRange: [ICE_PORT_MIN, ICE_PORT_MAX],
+      icePortRange: this.icePortRange,
       dtls: {
         keys: SSL_RTC_CONNECTION
           ? {

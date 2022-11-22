@@ -1,0 +1,24 @@
+@import '../../Global.module';
+
+.wrapper {
+  position: relative;
+
+  .value {
+    cursor: default;
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 0;
+    right: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+
+    .text {
+      margin-top: 5px;
+    }
+  }
+}

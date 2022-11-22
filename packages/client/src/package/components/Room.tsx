@@ -44,6 +44,8 @@ import CrownIcon from '../Icons/Crown';
 import PseudoButton from './ui/PseudoButton';
 import HandUpIcon from '../Icons/HandUp';
 import { useSpeaker } from '../utils/hooks';
+import AccountOutlineIcon from '../Icons/AccountOutline';
+import Badge from './ui/Badge';
 
 function Room({ userId, iceServers, server, port, roomId, locale, name, theme }: RoomProps) {
   const container = useRef<HTMLDivElement>(null);
@@ -284,42 +286,53 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
         )}
       </div>
       <div className={s.actions}>
-        {roomLink && (
-          <IconButton
-            title={locale.copyRoomLink}
-            onClick={() => copyLink(roomLink, locale.linkCopied)}
-          >
-            <CopyIcon color={theme?.colors.text} />
-          </IconButton>
-        )}
-        {displayMediaSupported && (
-          <IconButton onClick={screenShare} title={locale.shareScreen}>
-            {shareScreen ? (
-              <CameraIcon color={theme?.colors.text} />
+        <div className={s.icons}>
+          {theme && (
+            <Badge title={locale.numberOfGuests} value={streams.length} theme={theme}>
+              <IconButton title={locale.numberOfGuests} disabled>
+                <AccountOutlineIcon color={theme.colors.text} />
+              </IconButton>
+            </Badge>
+          )}
+        </div>
+        <div className={s.buttons}>
+          {roomLink && (
+            <IconButton
+              title={locale.copyRoomLink}
+              onClick={() => copyLink(roomLink, locale.linkCopied)}
+            >
+              <CopyIcon color={theme?.colors.text} />
+            </IconButton>
+          )}
+          {displayMediaSupported && (
+            <IconButton onClick={screenShare} title={locale.shareScreen}>
+              {shareScreen ? (
+                <CameraIcon color={theme?.colors.text} />
+              ) : (
+                <ScreenIcon color={theme?.colors.text} />
+              )}
+            </IconButton>
+          )}
+          {adminMuted && (
+            <IconButton title={locale.askForTheFloor} onClick={askFloor} disabled={isAsked}>
+              <HandUpIcon width={40} height={40} color={theme?.colors.text} />
+            </IconButton>
+          )}
+          <IconButton title={muted ? locale.micOn : locale.micOff} onClick={changeMuted}>
+            {muted ? (
+              <MicrophoneOffIcon color={theme?.colors.text} />
             ) : (
-              <ScreenIcon color={theme?.colors.text} />
+              <MicrophoneIcon color={theme?.colors.text} />
             )}
           </IconButton>
-        )}
-        {adminMuted && (
-          <IconButton title={locale.askForTheFloor} onClick={askFloor} disabled={isAsked}>
-            <HandUpIcon width={40} height={40} color={theme?.colors.text} />
+          <IconButton title={video ? locale.cameraOff : locale.cameraOn} onClick={changeVideo}>
+            {video ? (
+              <CameraOutlineIcon color={theme?.colors.text} />
+            ) : (
+              <CameraOutlineOffIcon color={theme?.colors.text} />
+            )}
           </IconButton>
-        )}
-        <IconButton title={muted ? locale.micOn : locale.micOff} onClick={changeMuted}>
-          {muted ? (
-            <MicrophoneOffIcon color={theme?.colors.text} />
-          ) : (
-            <MicrophoneIcon color={theme?.colors.text} />
-          )}
-        </IconButton>
-        <IconButton title={video ? locale.cameraOff : locale.cameraOn} onClick={changeVideo}>
-          {video ? (
-            <CameraOutlineIcon color={theme?.colors.text} />
-          ) : (
-            <CameraOutlineOffIcon color={theme?.colors.text} />
-          )}
-        </IconButton>
+        </div>
       </div>
       <Dialog {...dialog} theme={theme}>
         <input

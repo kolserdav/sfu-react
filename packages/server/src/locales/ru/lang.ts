@@ -71,6 +71,7 @@ const lang: LocaleServer = {
     blockChat: 'Заблокировать чат',
     unblockChat: 'Разболокировать чат',
     chatBlocked: 'Чат заблокирован администратором',
+    numberOfGuests: 'Количество участников',
   },
 };
 

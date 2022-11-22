@@ -215,6 +215,7 @@ export namespace Locale {
     blockChat: string;
     unblockChat: string;
     chatBlocked: string;
+    numberOfGuests: string;
   }
 }
 
@@ -609,6 +610,7 @@ export namespace Connection {
       userId: number | string;
       target: string | number;
       mimeType: string;
+      icePortRange?: [number, number];
     }): void;
 
     public abstract handleIceCandidate(args: {

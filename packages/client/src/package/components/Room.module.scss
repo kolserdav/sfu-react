@@ -87,12 +87,26 @@
 .actions {
   position: relative;
   display: flex;
-  justify-content: center;
+  justify-content: space-around;
   align-items: center;
   flex-wrap: wrap;
   height: 10vh;
   width: 100%;
   background-image: rgba($color: gray, $alpha: 5%);
+
+  .icons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .buttons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 .error {
