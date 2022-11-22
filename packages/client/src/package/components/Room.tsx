@@ -165,7 +165,9 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
                       _played[item.target] = true;
                       setPlayed(_played);
                     }
-                    setVideoDimensions(e, item.stream);
+                    if (!item.hidden) {
+                      setVideoDimensions(e, item.stream);
+                    }
                   }
                 }}
                 onClick={onClickVideo}

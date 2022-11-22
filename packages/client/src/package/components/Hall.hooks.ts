@@ -19,6 +19,7 @@ export const useSettings = ({ open }: { open: boolean }) => {
   useEffect(() => {
     if (openSettings && !open) {
       setOpenSettings(false);
+      setLocalStorage(LocalStorageName.SETTINGS_OPEN, false);
     }
   }, [open, openSettings]);
 
@@ -26,19 +27,14 @@ export const useSettings = ({ open }: { open: boolean }) => {
 };
 
 export const useUserList = ({ open }: { open: boolean }) => {
-  const [openUserList, setOpenUserList] = useState<boolean>(false);
+  const [openUserList, setOpenUserList] = useState<boolean>(
+    localStorage.getItem(LocalStorageName.USERS_OPEN) === 'true' &&
+      getDocumentWidth() <= MOBILE_WIDTH
+  );
   const openUserListHandler = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    setLocalStorage(LocalStorageName.USERS_OPEN, !openUserList);
     setOpenUserList(!openUserList);
   };
-
-  /**
-   * Listen close
-   */
-  useEffect(() => {
-    if (openUserList && !open) {
-      setOpenUserList(false);
-    }
-  }, [open, openUserList]);
 
   return { openUserList, openUserListHandler };
 };

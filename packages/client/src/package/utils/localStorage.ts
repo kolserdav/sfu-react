@@ -20,6 +20,8 @@ export enum LocalStorageName {
   VOLUMES = 'VOLUMES',
   // eslint-disable-next-line no-unused-vars
   SETTINGS_OPEN = 'SETTINGS_OPEN',
+  // eslint-disable-next-line no-unused-vars
+  USERS_OPEN = 'USERS_OPEN',
 }
 
 type LocalStorageValue<T extends keyof typeof LocalStorageName> = T extends LocalStorageName.THEME
@@ -29,6 +31,8 @@ type LocalStorageValue<T extends keyof typeof LocalStorageName> = T extends Loca
   : T extends LocalStorageName.VOLUMES
   ? Record<string, Volumes>
   : T extends LocalStorageName.SETTINGS_OPEN
+  ? boolean
+  : T extends LocalStorageName.USERS_OPEN
   ? boolean
   : never;
 
