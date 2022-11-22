@@ -8,7 +8,7 @@ import storeLocale from './store/locale';
 import { LocaleServer, LogLevel, MessageType } from './types/interfaces';
 import { getLocalStorage, LocalStorageName, setLocalStorage } from './utils/localStorage';
 import { CookieName, setCookie } from './utils/cookies';
-import storeDialog from './store/alert';
+import storeAlert from './store/alert';
 import storeClickDocument, { changeClickDocument } from './store/clickDocument';
 import WS from './core/ws';
 import { log } from './utils/lib';
@@ -127,8 +127,8 @@ export const useListeners = ({
    * Alert listener
    */
   useEffect(() => {
-    const cleanStore = storeDialog.subscribe(() => {
-      const state = storeDialog.getState();
+    const cleanStore = storeAlert.subscribe(() => {
+      const state = storeAlert.getState();
       setAlert(state.alert);
     });
     return () => {

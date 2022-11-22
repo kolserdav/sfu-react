@@ -401,7 +401,7 @@ export const useConnection = ({
    * Change muted
    */
   useEffect(() => {
-    if (rtc.localStream) {
+    if (rtc.localStream && rtc.localStream.getAudioTracks().length) {
       rtc.localStream.getAudioTracks()[0].enabled = !muted;
     }
   }, [muted, rtc.localStream]);
@@ -410,7 +410,7 @@ export const useConnection = ({
    * Change adminMuted
    */
   useEffect(() => {
-    if (rtc.localStream) {
+    if (rtc.localStream && rtc.localStream.getAudioTracks().length) {
       rtc.localStream.getAudioTracks()[0].enabled = !adminMuted;
     }
   }, [adminMuted, rtc.localStream]);
@@ -439,7 +439,7 @@ export const useConnection = ({
    * Change video enabled
    */
   useEffect(() => {
-    if (rtc.localStream) {
+    if (rtc.localStream && rtc.localStream.getVideoTracks().length) {
       rtc.localStream.getVideoTracks()[0].enabled = video;
     }
   }, [video, rtc.localStream]);

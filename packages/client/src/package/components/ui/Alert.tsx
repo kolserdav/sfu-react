@@ -99,6 +99,11 @@ function Alert({ children, type, open, theme }: AlertProps) {
     };
   }, []);
 
+  const color = useMemo(
+    () => (type === 'warn' || type === 'error' ? theme?.colors.black : theme?.colors.white),
+    []
+  );
+
   return (
     <div
       ref={dialogRef}
@@ -110,14 +115,14 @@ function Alert({ children, type, open, theme }: AlertProps) {
             : type === 'warn'
             ? theme?.colors.yellow
             : theme?.colors.blue,
-        color: type === 'warn' || type === 'error' ? theme?.colors.black : theme?.colors.white,
+        color,
         display: open ? 'flex' : 'none',
       }}
     >
       <div className={s.text}>{children}</div>
       <div className={s.closeNutton}>
         <IconButton onClick={closeAlert}>
-          <CloseIcon color={theme?.colors.text} />
+          <CloseIcon color={color} />
         </IconButton>
       </div>
     </div>
