@@ -152,8 +152,6 @@ export const isClickByDialog = ({
 export const rangeRandom = ({ min, max }: { min: number; max: number }) =>
   Math.floor(Math.random() * (max - min) + min);
 
-export const checkIsRecord = (uid: string) => /record=/.test(uid);
-
 export const getTime = (startTime: number) => {
   const nowTime = new Date().getTime();
   const diffTime = nowTime - startTime;

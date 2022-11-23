@@ -18,7 +18,6 @@ import {
   log,
   isClickByDialog,
   parseQueryString,
-  checkIsRecord,
   getRoomId,
   isDev,
 } from '../utils/lib';
@@ -138,21 +137,6 @@ export const useConnection = ({
       },
     [selfStream, ws.userId]
   );
-  const { isRecord } = useMemo(() => {
-    const qS = parseQueryString();
-    return {
-      isRecord: qS?.record === '1',
-    };
-  }, []);
-  const { isRecording } = useMemo(() => {
-    let check = false;
-    streams.forEach((item) => {
-      if (checkIsRecord(item.target.toString())) {
-        check = true;
-      }
-    });
-    return { isRecording: check };
-  }, [streams]);
 
   const screenShare = useMemo(
     () => (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -545,7 +529,7 @@ export const useConnection = ({
       connId,
     }: SendMessageArgs<MessageType.SET_CHANGE_UNIT>) => {
       if (lenght !== roomLength) {
-        setLenght(ROOM_LENGTH_TEST || (isRecord || isRecording ? roomLength - 1 : roomLength));
+        setLenght(ROOM_LENGTH_TEST || roomLength);
       }
       setAskeds(asked);
       rtc.muteds = _muteds.concat(_adminMuteds);
@@ -742,9 +726,7 @@ export const useConnection = ({
         st: _streams.map((i) => i.target),
       });
       rtc.roomLength = roomUsers?.length || 0;
-      setLenght(
-        ROOM_LENGTH_TEST || (isRecord || isRecording ? roomUsers.length - 1 : roomUsers.length)
-      );
+      setLenght(ROOM_LENGTH_TEST || roomUsers.length);
       setAdminMuteds(_adminMuteds);
       setMuteds(rtc.muteds);
       setAskeds(asked);
@@ -947,8 +929,6 @@ export const useConnection = ({
     userName,
     addStream,
     isOwner,
-    isRecord,
-    isRecording,
     canConnect,
     isPublic,
   ]);
@@ -1087,8 +1067,6 @@ export const useConnection = ({
     isOwner,
     adminMuted,
     adminMuteds,
-    isRecord,
-    isRecording,
     clickToMuteWrapper,
     clickToUnMuteWrapper,
     clickToBanWrapper,
@@ -1511,7 +1489,7 @@ export const useVideoStarted = ({
         }
         const _attempts = { ...attempts };
         diffs.forEach((item) => {
-          if (!played[item.target] && mounted && !checkIsRecord(item.target.toString())) {
+          if (!played[item.target] && mounted) {
             lostStreamHandler({ ...item, eventName: 'not-played' });
             log('warn', `Video not played ${item.target}`, {
               target: item.target,

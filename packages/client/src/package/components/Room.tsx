@@ -10,7 +10,6 @@
  ******************************************************************************************/
 import React, { useMemo, useRef } from 'react';
 import clsx from 'clsx';
-import { checkIsRecord } from '../utils/lib';
 import s from './Room.module.scss';
 import g from '../Global.module.scss';
 import { RoomProps } from '../types/index';
@@ -51,8 +50,12 @@ import Badge from './ui/Badge';
 function Room({ userId, iceServers, server, port, roomId, locale, name, theme }: RoomProps) {
   const container = useRef<HTMLDivElement>(null);
   const roomLink = useMemo(() => getRoomLink(roomId), [roomId]);
-  const { createAudioAnalyzer, analyzeSoundLevel, cleanAudioAnalyzer, speaker } =
-    useAudioAnalyzer();
+  const {
+    createAudioAnalyzer,
+    analyzeSoundLevel,
+    cleanAudioAnalyzer,
+    speaker: _speaker,
+  } = useAudioAnalyzer();
   const { dialogSettings, clickToSettingsWrapper } = useSettingsDialog();
   const {
     askFloor,
@@ -71,8 +74,6 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     isOwner,
     adminMuted,
     adminMuteds,
-    isRecord,
-    isRecording,
     offVideo,
     clickToMuteWrapper,
     clickToUnMuteWrapper,
@@ -109,7 +110,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
 
   const isAsked = useMemo(() => askeds.indexOf(userId) !== -1, [askeds, userId]);
 
-  const { speaker: _speaker } = useSpeaker({ muteds, adminMuteds, speaker });
+  const { speaker } = useSpeaker({ muteds, adminMuteds, speaker: _speaker });
 
   const noActiveVideoStreams = useMemo(
     () => streams.find((item) => item.hidden !== true) === undefined,
@@ -149,99 +150,94 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
             {locale.noActiveVideoStreams}
           </div>
         )}
-        {streams.map((item, index) =>
-          (isRecord && item.target === userId) ||
-          (isRecording && checkIsRecord(item.target.toString())) ? (
-            ''
-          ) : (
-            <div
-              id={item.stream.id}
-              // eslint-disable-next-line react/no-array-index-key
-              key={`${item.target}${index}`}
-              className={clsx(s.video, item.hidden ? s.hidden : '')}
-              data-connid={item.connId}
-            >
-              {/** CloseButton is strong first child */}
-              <CloseButton onClick={onClickClose} onKeyDown={onPressEscape} tabindex={index} />
-              {/** video is strong second child */}
-              <video
-                style={
-                  _speaker === item.target
-                    ? {
-                        border: `2px solid ${theme?.colors.blue}`,
-                      }
-                    : {}
-                }
-                muted={
-                  item.target === userId ||
-                  muteds.indexOf(item.target) !== -1 ||
-                  adminMuteds.indexOf(item.target) !== -1
-                }
-                onTimeUpdate={onTimeUpdateWrapper(item)}
-                onClick={onClickVideo}
-                ref={item.ref}
-                title={item.target.toString()}
-                id={item.target.toString()}
-                onLoadedData={onLoadedDataWrapper(item)}
-                onEmptied={onEmptiedWrapper(item)}
-                onSuspend={onSuspendWrapper(item)}
-                onStalled={onStalledWrapper(item)}
-                onAbort={onAbortWrapper(item)}
-                onEnded={onEndedWrapper(item)}
-                onWaiting={onWaitingWrapper(item)}
-                onLoadedMetadata={onLoadedMetadataWrapper(item)}
-              />
-              {/** actions is strong third child */}
-              <div className={clsx(s.video__actions, item.hidden ? s.hidden : '')}>
-                {item.isOwner && (
-                  <PseudoButton title={isOwner ? locale.youAreAdminOfRoom : locale.isAdminOfRoom}>
-                    <CrownIcon color={theme?.colors.yellow} />
-                  </PseudoButton>
-                )}
-                {item.target !== userId && (
-                  <IconButton onClick={clickToVolume(item.target)}>
-                    {volumes[item.target] === undefined || volumes[item.target] >= 8 ? (
-                      <VolumeHeightIcon color={theme?.colors.white} />
-                    ) : volumes[item.target] >= 3 ? (
-                      <VolumeMediumIcon color={theme?.colors.white} />
-                    ) : (
-                      <VolumeLowIcon color={theme?.colors.white} />
-                    )}
-                  </IconButton>
-                )}
-                {isOwner && item.target !== userId && (
-                  <div className={s.setting__actions}>
-                    <IconButton onClick={clickToSettingsWrapper(item.target)}>
-                      <MenuIcon color={theme?.colors.white} />
-                    </IconButton>
-                    {askeds.indexOf(item.target) !== -1 && (
-                      <IconButton
-                        disabled
-                        title={locale.requestedTheFloor}
-                        onClick={() => {
-                          /** */
-                        }}
-                      >
-                        <HandUpIcon color={theme?.colors.white} />
-                      </IconButton>
-                    )}
-                  </div>
-                )}
-              </div>
-              <div className={s.muted}>
-                {muteds.indexOf(item.target) !== -1 && (
-                  <MicrophoneOffIcon
-                    color={
-                      adminMuteds.indexOf(item.target) !== -1 && (isOwner || userId === item.target)
-                        ? theme?.colors.blue
-                        : theme?.colors.white
+        {streams.map((item, index) => (
+          <div
+            id={item.stream.id}
+            // eslint-disable-next-line react/no-array-index-key
+            key={`${item.target}${index}`}
+            className={clsx(s.video, item.hidden ? s.hidden : '')}
+            data-connid={item.connId}
+          >
+            {/** CloseButton is strong first child */}
+            <CloseButton onClick={onClickClose} onKeyDown={onPressEscape} tabindex={index} />
+            {/** video is strong second child */}
+            <video
+              style={
+                speaker === item.target
+                  ? {
+                      border: `2px solid ${theme?.colors.blue}`,
                     }
-                  />
-                )}
-              </div>
+                  : {}
+              }
+              muted={
+                item.target === userId ||
+                muteds.indexOf(item.target) !== -1 ||
+                adminMuteds.indexOf(item.target) !== -1
+              }
+              onTimeUpdate={onTimeUpdateWrapper(item)}
+              onClick={onClickVideo}
+              ref={item.ref}
+              title={item.target.toString()}
+              id={item.target.toString()}
+              onLoadedData={onLoadedDataWrapper(item)}
+              onEmptied={onEmptiedWrapper(item)}
+              onSuspend={onSuspendWrapper(item)}
+              onStalled={onStalledWrapper(item)}
+              onAbort={onAbortWrapper(item)}
+              onEnded={onEndedWrapper(item)}
+              onWaiting={onWaitingWrapper(item)}
+              onLoadedMetadata={onLoadedMetadataWrapper(item)}
+            />
+            {/** actions is strong third child */}
+            <div className={clsx(s.video__actions, item.hidden ? s.hidden : '')}>
+              {item.isOwner && (
+                <PseudoButton title={isOwner ? locale.youAreAdminOfRoom : locale.isAdminOfRoom}>
+                  <CrownIcon color={theme?.colors.yellow} />
+                </PseudoButton>
+              )}
+              {item.target !== userId && (
+                <IconButton onClick={clickToVolume(item.target)}>
+                  {volumes[item.target] === undefined || volumes[item.target] >= 8 ? (
+                    <VolumeHeightIcon color={theme?.colors.white} />
+                  ) : volumes[item.target] >= 3 ? (
+                    <VolumeMediumIcon color={theme?.colors.white} />
+                  ) : (
+                    <VolumeLowIcon color={theme?.colors.white} />
+                  )}
+                </IconButton>
+              )}
+              {isOwner && item.target !== userId && (
+                <div className={s.setting__actions}>
+                  <IconButton onClick={clickToSettingsWrapper(item.target)}>
+                    <MenuIcon color={theme?.colors.white} />
+                  </IconButton>
+                  {askeds.indexOf(item.target) !== -1 && (
+                    <IconButton
+                      disabled
+                      title={locale.requestedTheFloor}
+                      onClick={() => {
+                        /** */
+                      }}
+                    >
+                      <HandUpIcon color={theme?.colors.white} />
+                    </IconButton>
+                  )}
+                </div>
+              )}
             </div>
-          )
-        )}
+            <div className={s.muted}>
+              {muteds.indexOf(item.target) !== -1 && (
+                <MicrophoneOffIcon
+                  color={
+                    adminMuteds.indexOf(item.target) !== -1 && (isOwner || userId === item.target)
+                      ? theme?.colors.blue
+                      : theme?.colors.white
+                  }
+                />
+              )}
+            </div>
+          </div>
+        ))}
       </div>
       <div className={s.actions}>
         <div className={s.icons}>
