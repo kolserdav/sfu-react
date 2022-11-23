@@ -1,3 +1,13 @@
+/******************************************************************************************
+ * Repository: https://github.com/kolserdav/werift-sfu-react.git
+ * File name: Main.hooks.ts
+ * Author: Sergey Kolmiller
+ * Email: <uyem.ru@gmail.com>
+ * License: MIT
+ * License text: See in LICENSE file
+ * Copyright: kolserdav, All rights reserved (c)
+ * Create Date: Wed Nov 23 2022 15:23:26 GMT+0700 (Krasnoyarsk Standard Time)
+ ******************************************************************************************/
 import { useEffect, useState, useMemo } from 'react';
 import { AlertProps } from './types';
 import { ALERT_DEFAULT } from './utils/constants';

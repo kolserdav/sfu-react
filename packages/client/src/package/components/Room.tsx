@@ -10,10 +10,10 @@
  ******************************************************************************************/
 import React, { useMemo, useRef } from 'react';
 import clsx from 'clsx';
-import { log, checkIsRecord } from '../utils/lib';
+import { checkIsRecord } from '../utils/lib';
 import s from './Room.module.scss';
 import g from '../Global.module.scss';
-import { RoomProps, Stream } from '../types/index';
+import { RoomProps } from '../types/index';
 import {
   useConnection,
   useVideoDimensions,
