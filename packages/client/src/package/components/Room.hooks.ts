@@ -44,6 +44,7 @@ import {
   VIDEO_ACTIONS_STYLE,
   VIDEO_STARTED_HOOK_TIMEOUT,
   ROOM_LENGTH_TEST,
+  MAX_VIDEO_STREAMS,
 } from '../utils/constants';
 import { CookieName, getCookie } from '../utils/cookies';
 import storeError, { changeError } from '../store/error';
@@ -1657,4 +1658,25 @@ export const useVideoHandlers = ({
     onWaitingWrapper,
     onTimeUpdateWrapper,
   };
+};
+
+export const useMaxVideoStreams = ({ streams }: { streams: Stream[] }) => {
+  const [canPlayVideo, setCanPlayVideo] = useState<boolean>(false);
+
+  const activeVideoLength = useMemo(
+    () => streams.filter((item) => item.hidden !== true).length,
+    [streams]
+  );
+
+  /**
+   * Set can play video
+   */
+  useEffect(() => {
+    const _canPlayVideo = activeVideoLength < MAX_VIDEO_STREAMS;
+    if (_canPlayVideo !== canPlayVideo) {
+      setCanPlayVideo(_canPlayVideo);
+    }
+  }, [canPlayVideo, activeVideoLength]);
+
+  return { canPlayVideo, activeVideoLength };
 };

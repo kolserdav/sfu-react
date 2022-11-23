@@ -87,3 +87,4 @@ export const ROOM_LENGTH_TEST = 0;
 export const CHANGE_SPEAKER_SORT_TIMEOUT = 8000;
 export const USERS_ICON_WIDTH = 24;
 export const USERS_ICON_WIDTH_BIG = 30;
+export const MAX_VIDEO_STREAMS = 4;

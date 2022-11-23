@@ -23,6 +23,7 @@ import {
   useSettingsDialog,
   useVideoStarted,
   useVideoHandlers,
+  useMaxVideoStreams,
 } from './Room.hooks';
 import { getRoomLink, onClickVideo, copyLink, supportDisplayMedia } from './Room.lib';
 import { USER_NAME_DEFAULT } from '../utils/constants';
@@ -112,11 +113,6 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
 
   const { speaker } = useSpeaker({ muteds, adminMuteds, speaker: _speaker });
 
-  const noActiveVideoStreams = useMemo(
-    () => streams.find((item) => item.hidden !== true) === undefined,
-    [streams]
-  );
-
   const {
     onAbortWrapper,
     onEmptiedWrapper,
@@ -136,6 +132,8 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     analyzeSoundLevel,
   });
 
+  const { canPlayVideo, activeVideoLength } = useMaxVideoStreams({ streams });
+
   return (
     <div
       className={s.wrapper}
@@ -145,7 +143,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
       }}
     >
       <div className={s.container} ref={container}>
-        {noActiveVideoStreams && (
+        {activeVideoLength === 0 && (
           <div className={s.empty} style={{ color: theme?.colors.text }}>
             {locale.noActiveVideoStreams}
           </div>
@@ -292,7 +290,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
             )}
           </IconButton>
           <IconButton
-            disabled={streams.length === 0}
+            disabled={streams.length === 0 || video ? false : !canPlayVideo}
             title={video ? locale.cameraOff : locale.cameraOn}
             onClick={changeVideo}
           >
