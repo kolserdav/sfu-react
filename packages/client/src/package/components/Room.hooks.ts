@@ -1548,3 +1548,153 @@ export const useVideoStarted = ({
 
   return { played, setPlayed };
 };
+
+export const useVideoHandlers = ({
+  analyzeSoundLevel,
+  createAudioAnalyzer,
+  lostStreamHandler,
+  setPlayed,
+  played,
+  setVideoDimensions,
+}: {
+  analyzeSoundLevel: (uid: string | number) => void;
+  createAudioAnalyzer: (item: Stream) => void;
+  lostStreamHandler: (args: { target: string | number; connId: string; eventName: string }) => void;
+  setPlayed: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+  played: Record<string, boolean>;
+  setVideoDimensions: (
+    e: React.SyntheticEvent<HTMLVideoElement, Event>,
+    stream: MediaStream
+  ) => void;
+}) => {
+  const onTimeUpdateWrapper = useMemo(
+    () => (item: Stream) => (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+      analyzeSoundLevel(item.target);
+      if (item.stream.active === false) {
+        log('warn', `Stream is not active ${item.target}`, {
+          uid: item.target,
+          stream: item.stream,
+        });
+        lostStreamHandler({
+          target: item.target,
+          connId: item.connId,
+          eventName: 'stream-not-active',
+        });
+      } else {
+        if (!played[item.target]) {
+          const _played = { ...played };
+          _played[item.target] = true;
+          setPlayed(_played);
+        }
+        if (!item.hidden) {
+          setVideoDimensions(e, item.stream);
+        }
+      }
+    },
+    [analyzeSoundLevel, lostStreamHandler, setPlayed, setVideoDimensions, played]
+  );
+
+  const onLoadedDataWrapper = useMemo(
+    () => (item: Stream) => (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { target }: { target: HTMLVideoElement } = e as any;
+      target.play();
+      const tracks = item.stream.getTracks();
+      if (tracks.length < 2) {
+        log('warn', 'Stream have less than 2 tracks', { item, tracks });
+      }
+    },
+    []
+  );
+
+  const onLoadedMetadataWrapper = useMemo(
+    () => (item: Stream) => (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+      log('info', 'Meta data loaded', { ...item });
+      createAudioAnalyzer(item);
+      if (!played[item.target]) {
+        const _played = { ...played };
+        _played[item.target] = true;
+        setPlayed(_played);
+      }
+    },
+    [played, createAudioAnalyzer, setPlayed]
+  );
+
+  const onEmptiedWrapper = useMemo(
+    () => (item: Stream) => (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+      log('info', 'Empty video data', {
+        stream: item.stream,
+        id: item.target,
+        tracks: item.stream.getTracks(),
+      });
+    },
+    []
+  );
+
+  const onSuspendWrapper = useMemo(
+    () => (item: Stream) => (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+      log('info', 'Suspend video data', {
+        stream: item.stream,
+        id: item.target,
+        tracks: item.stream.getTracks(),
+      });
+    },
+    []
+  );
+
+  const onStalledWrapper = useMemo(
+    () => (item: Stream) => (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+      log('warn', 'Stalled video data', {
+        stream: item.stream,
+        id: item.target,
+        tracks: item.stream.getTracks(),
+      });
+    },
+    []
+  );
+
+  const onAbortWrapper = useMemo(
+    () => (item: Stream) => (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+      log('info', 'Abort video data', {
+        stream: item.stream,
+        id: item.target,
+        tracks: item.stream.getTracks(),
+      });
+    },
+    []
+  );
+
+  const onEndedWrapper = useMemo(
+    () => (item: Stream) => (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+      log('warn', 'End video data', {
+        stream: item.stream,
+        id: item.target,
+        tracks: item.stream.getTracks(),
+      });
+    },
+    []
+  );
+
+  const onWaitingWrapper = useMemo(
+    () => (item: Stream) => (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+      log('warn', 'Waiting video data', {
+        active: item.stream.active,
+        id: item.target,
+        t: (e.target as HTMLVideoElement).played,
+      });
+    },
+    []
+  );
+
+  return {
+    onAbortWrapper,
+    onEmptiedWrapper,
+    onEndedWrapper,
+    onLoadedDataWrapper,
+    onLoadedMetadataWrapper,
+    onStalledWrapper,
+    onSuspendWrapper,
+    onWaitingWrapper,
+    onTimeUpdateWrapper,
+  };
+};

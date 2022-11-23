@@ -13,7 +13,7 @@ import clsx from 'clsx';
 import { log, checkIsRecord } from '../utils/lib';
 import s from './Room.module.scss';
 import g from '../Global.module.scss';
-import { RoomProps } from '../types/index';
+import { RoomProps, Stream } from '../types/index';
 import {
   useConnection,
   useVideoDimensions,
@@ -23,6 +23,7 @@ import {
   useVolumeDialog,
   useSettingsDialog,
   useVideoStarted,
+  useVideoHandlers,
 } from './Room.hooks';
 import { getRoomLink, onClickVideo, copyLink, supportDisplayMedia } from './Room.lib';
 import { USER_NAME_DEFAULT } from '../utils/constants';
@@ -115,6 +116,25 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     [streams]
   );
 
+  const {
+    onAbortWrapper,
+    onEmptiedWrapper,
+    onEndedWrapper,
+    onLoadedDataWrapper,
+    onLoadedMetadataWrapper,
+    onStalledWrapper,
+    onSuspendWrapper,
+    onTimeUpdateWrapper,
+    onWaitingWrapper,
+  } = useVideoHandlers({
+    createAudioAnalyzer,
+    lostStreamHandler,
+    setVideoDimensions,
+    setPlayed,
+    played,
+    analyzeSoundLevel,
+  });
+
   return (
     <div
       className={s.wrapper}
@@ -157,93 +177,19 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
                   muteds.indexOf(item.target) !== -1 ||
                   adminMuteds.indexOf(item.target) !== -1
                 }
-                onTimeUpdate={(e) => {
-                  analyzeSoundLevel(item.target);
-                  if (item.stream.active === false) {
-                    log('warn', `Stream is not active ${item.target}`, {
-                      uid: item.target,
-                      stream: item.stream,
-                    });
-                    lostStreamHandler({
-                      target: item.target,
-                      connId: item.connId,
-                      eventName: 'stream-not-active',
-                    });
-                  } else {
-                    if (!played[item.target]) {
-                      const _played = { ...played };
-                      _played[item.target] = true;
-                      setPlayed(_played);
-                    }
-                    if (!item.hidden) {
-                      setVideoDimensions(e, item.stream);
-                    }
-                  }
-                }}
+                onTimeUpdate={onTimeUpdateWrapper(item)}
                 onClick={onClickVideo}
                 ref={item.ref}
                 title={item.target.toString()}
                 id={item.target.toString()}
-                onLoadedData={(e) => {
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  const { target }: { target: HTMLVideoElement } = e as any;
-                  target.play();
-                  const tracks = item.stream.getTracks();
-                  if (tracks.length < 2) {
-                    log('warn', 'Stream have less than 2 tracks', { item, tracks });
-                  }
-                }}
-                onEmptied={(e) => {
-                  log('info', 'Empty video data', {
-                    stream: item.stream,
-                    id: item.target,
-                    tracks: item.stream.getTracks(),
-                  });
-                }}
-                onSuspend={() => {
-                  log('info', 'Suspend video data', {
-                    stream: item.stream,
-                    id: item.target,
-                    tracks: item.stream.getTracks(),
-                  });
-                }}
-                onStalled={(e) => {
-                  log('warn', 'Stalled video data', {
-                    stream: item.stream,
-                    id: item.target,
-                    tracks: item.stream.getTracks(),
-                  });
-                }}
-                onAbort={(e) => {
-                  log('info', 'Abort video data', {
-                    stream: item.stream,
-                    id: item.target,
-                    tracks: item.stream.getTracks(),
-                  });
-                }}
-                onEnded={(e) => {
-                  log('warn', 'End video data', {
-                    stream: item.stream,
-                    id: item.target,
-                    tracks: item.stream.getTracks(),
-                  });
-                }}
-                onWaiting={(e) => {
-                  log('warn', 'Waiting video data', {
-                    active: item.stream.active,
-                    id: item.target,
-                    t: (e.target as HTMLVideoElement).played,
-                  });
-                }}
-                onLoadedMetadata={() => {
-                  log('info', 'Meta data loaded', { ...item });
-                  createAudioAnalyzer(item);
-                  if (!played[item.target]) {
-                    const _played = { ...played };
-                    _played[item.target] = true;
-                    setPlayed(_played);
-                  }
-                }}
+                onLoadedData={onLoadedDataWrapper(item)}
+                onEmptied={onEmptiedWrapper(item)}
+                onSuspend={onSuspendWrapper(item)}
+                onStalled={onStalledWrapper(item)}
+                onAbort={onAbortWrapper(item)}
+                onEnded={onEndedWrapper(item)}
+                onWaiting={onWaitingWrapper(item)}
+                onLoadedMetadata={onLoadedMetadataWrapper(item)}
               />
               {/** actions is strong third child */}
               <div className={clsx(s.video__actions, item.hidden ? s.hidden : '')}>
