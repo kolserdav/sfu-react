@@ -73,6 +73,10 @@ const lang: LocaleServer = {
     chatBlocked: 'Chat blocked by administrator',
     numberOfGuests: 'Number of guests',
     noActiveVideoStreams: 'No active video streams',
+    videoDeviceRequired:
+      'A video capture device (webcam) is required to get started. At startup, the video stream is disabled by default.',
+    audioDeviceRequired:
+      'An audio capture device (microphone) is required to get started. At startup, the audio stream is disabled by default.',
   },
 };
 

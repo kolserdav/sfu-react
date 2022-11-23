@@ -42,7 +42,10 @@ export type OnRoomConnect = (args: {
 // eslint-disable-next-line no-unused-vars
 export type OnRoomOpen = (args: { roomId: string | number; ownerId: string | number }) => void;
 
-class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handleVideoAnswerMsg'> {
+class RTC
+  implements
+    Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handleVideoAnswerMsg' | 'addTracks'>
+{
   public peerConnectionsServer: RTCInterface['peerConnectionsServer'] = {};
 
   public readonly delimiter = '_';
@@ -203,7 +206,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const core = this;
     const { ws, delimiter, rooms } = this;
-    const { addTracks, peerConnectionsServer } = this;
+    const { addTracksServer, peerConnectionsServer } = this;
     this.peerConnectionsServer[roomId][peerId]!.onsignalingstatechange =
       function handleSignalingStateChangeEvent() {
         if (!core.peerConnectionsServer[roomId][peerId]) {
@@ -214,7 +217,7 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
         log('log', 'On connection state change', { peerId, state, target });
         // Add tracks from remote offer
         if (state === 'have-remote-offer' && target.toString() !== '0') {
-          addTracks({ roomId, userId, target, connId }, () => {
+          addTracksServer({ roomId, userId, target, connId }, () => {
             //
           });
         }
@@ -524,7 +527,12 @@ class RTC implements Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handl
     return Object.keys(this.streams[roomId]);
   }
 
-  public addTracks: RTCInterface['addTracks'] = ({ roomId, connId, userId, target }) => {
+  public addTracksServer: RTCInterface['addTracksServer'] = ({
+    roomId,
+    connId,
+    userId,
+    target,
+  }) => {
     const _connId = this.getStreamConnId(roomId, target);
     const _connId1 = this.getPeerConnId(roomId, userId, target);
     const peerId = this.getPeerId(roomId, userId, target, _connId1);

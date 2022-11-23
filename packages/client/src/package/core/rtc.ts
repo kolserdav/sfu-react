@@ -9,12 +9,17 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import 'webrtc-adapter';
+import storeAlert, { changeAlert } from '../store/alert';
 import { RTCInterface, MessageType } from '../types/interfaces';
 import { getCodec, log } from '../utils/lib';
 import WS from './ws';
 
 class RTC
-  implements Omit<RTCInterface, 'peerConnectionsServer' | 'createRTCServer' | 'handleOfferMessage'>
+  implements
+    Omit<
+      RTCInterface,
+      'peerConnectionsServer' | 'createRTCServer' | 'handleOfferMessage' | 'addTracksServer'
+    >
 {
   public peerConnections: RTCInterface['peerConnections'] = {};
 
@@ -291,6 +296,18 @@ class RTC
     };
   };
 
+  // eslint-disable-next-line class-methods-use-this
+  private async checkMediaDevice(kind: 'video' | 'audio') {
+    const cV = navigator.mediaDevices.getUserMedia({ [kind]: true });
+    return new Promise<boolean>((resolve) => {
+      cV.then(() => {
+        resolve(true);
+      }).catch(() => {
+        resolve(false);
+      });
+    });
+  }
+
   public addTracks: RTCInterface['addTracks'] = async (
     { roomId, userId, target, connId, locale },
     cb
@@ -303,6 +320,32 @@ class RTC
       return;
     }
     if (!this.localStream) {
+      const video = await this.checkMediaDevice('video');
+      if (!video) {
+        storeAlert.dispatch(
+          changeAlert({
+            alert: {
+              open: true,
+              type: 'warn',
+              children: locale.videoDeviceRequired,
+            },
+          })
+        );
+        return;
+      }
+      const audio = await this.checkMediaDevice('audio');
+      if (!audio) {
+        storeAlert.dispatch(
+          changeAlert({
+            alert: {
+              open: true,
+              type: 'warn',
+              children: locale.audioDeviceRequired,
+            },
+          })
+        );
+        return;
+      }
       const localStream = await navigator.mediaDevices
         .getUserMedia({
           video: true,
@@ -345,9 +388,9 @@ class RTC
             return empStr;
           });
         if (!error) {
-          const audio = this.localStream.getTracks().find((item) => item.kind === 'audio');
-          if (audio) {
-            videoStream.addTrack(audio);
+          const audioSrc = this.localStream.getTracks().find((item) => item.kind === 'audio');
+          if (audioSrc) {
+            videoStream.addTrack(audioSrc);
             videoStream.getTracks().forEach((track) => {
               if (this.localStream) {
                 const sender = this.peerConnections[peerId]!.getSenders().find(

@@ -217,6 +217,8 @@ export namespace Locale {
     chatBlocked: string;
     numberOfGuests: string;
     noActiveVideoStreams: string;
+    videoDeviceRequired: string;
+    audioDeviceRequired: string;
   }
 }
 
@@ -585,7 +587,7 @@ export namespace Connection {
     connId: string;
     userId: number | string;
     target: number | string;
-    locale?: LocaleServer['client'];
+    locale: LocaleServer['client'];
   };
   export abstract class RTCInterface {
     public abstract peerConnections: Record<string, RTCPeerConnection | undefined>;
@@ -652,6 +654,11 @@ export namespace Connection {
 
     public abstract addTracks(
       args: AddTracksProps,
+      cb: (e: 1 | 0, stream: MediaStream) => void
+    ): void;
+
+    public abstract addTracksServer(
+      args: Omit<AddTracksProps, 'locale'>,
       cb: (e: 1 | 0, stream: MediaStream) => void
     ): void;
   }
