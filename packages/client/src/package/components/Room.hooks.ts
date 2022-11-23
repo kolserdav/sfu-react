@@ -1173,24 +1173,6 @@ export const useVideoDimensions = ({
                   grid-template-rows: repeat(${rows}, auto);
                   transition: width 0.3s ease-in;`
                 );
-                /*
-                item
-                  .applyConstraints(coeff < 1 ? { height: _height } : { width: _width })
-                  .then(() => {
-                    log('log', 'Constraints changed', {
-                      width,
-                      oldWidth,
-                    });
-                  })
-                  .catch((error) => {
-                    log('log', 'Constraints not changed', {
-                      error,
-                      width: _width,
-                      height: _height,
-                      oldWidth,
-                    });
-                  });
-                  */
               }
             });
           }
