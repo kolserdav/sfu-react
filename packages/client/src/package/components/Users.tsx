@@ -8,9 +8,10 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Nov 23 2022 15:23:26 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import React from 'react';
+import React, { useMemo } from 'react';
 import clsx from 'clsx';
 import s from './Users.module.scss';
+import g from '../Global.module.scss';
 import { Theme } from '../Theme';
 import { Locale } from '../types/interfaces';
 import { GlobalProps } from '../types';
@@ -21,6 +22,7 @@ import {
   useSortIsMe,
   useSortSpeaker,
   useUsers,
+  useSettings,
 } from './Users.hooks';
 import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
 import IconButton from './ui/IconButton';
@@ -35,7 +37,8 @@ import Checkbox from './ui/Checkbox';
 import MessageOffIcon from '../Icons/MessageOff';
 import Badge from './ui/Badge';
 import AccountOutlineIcon from '../Icons/AccountOutline';
-import { USERS_ICON_WIDTH, USERS_ICON_WIDTH_BIG } from '../utils/constants';
+import { ROOM_LENGTH_TEST, USERS_ICON_WIDTH, USERS_ICON_WIDTH_BIG } from '../utils/constants';
+import Dialog from './ui/Dialog';
 
 function Users({
   theme,
@@ -77,10 +80,23 @@ function Users({
   let _users = useSortAdminMuted({ users, adminMuteds });
   _users = useSortIsMe({ users: _users, userId });
   _users = useSortSpeaker({ users: _users, speaker: _speaker });
+  _users = useMemo(
+    () =>
+      ROOM_LENGTH_TEST
+        ? new Array(ROOM_LENGTH_TEST)
+            .fill(0)
+            .map(() => _users[0])
+            .filter((item) => item !== undefined)
+        : _users,
+    [_users]
+  );
   const { muteAllHandler, changeMuteForAllHandler, muteForAll } = useMuteAll({
     users,
     adminMuteds,
   });
+
+  const { dialogSettings, clickToBanWrapper, onContextMenuWrapper } = useSettings({ isOwner });
+
   return (
     <div
       className={clsx(s.wrapper, open ? s.open : '')}
@@ -112,7 +128,15 @@ function Users({
         </div>
       </div>
       {_users.map((item) => (
-        <div key={item.id} className={s.users__item}>
+        <div
+          key={item.id}
+          className={s.users__item}
+          onContextMenu={onContextMenuWrapper({
+            unitId: item.id.toString(),
+            text: '',
+            id: 0,
+          })}
+        >
           <div className={s.user}>
             <span
               className={s.name}
@@ -226,6 +250,15 @@ function Users({
             <div key={`${item.id}-ban`} className={s.users__item}>
               <div className={s.users__name}>{item.name}</div>
               <div className={s.users__actions}>
+                {chatBlockeds.indexOf(item.id) !== -1 && (
+                  <IconButton title={locale.unblockChat} onClick={unblockChatWrapper(item.id)}>
+                    <MessageOffIcon
+                      width={USERS_ICON_WIDTH}
+                      height={USERS_ICON_WIDTH}
+                      color={theme?.colors.text}
+                    />
+                  </IconButton>
+                )}
                 <IconButton onClick={unBanWrapper(item.id)}>
                   <CloseIcon
                     width={USERS_ICON_WIDTH}
@@ -238,6 +271,17 @@ function Users({
           ))}
         </div>
       )}
+      <Dialog {...dialogSettings} theme={theme}>
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}
+        <div
+          tabIndex={-1}
+          role="button"
+          onClick={clickToBanWrapper(dialogSettings.context)}
+          className={g.dialog__item}
+        >
+          {locale.ban}
+        </div>
+      </Dialog>
     </div>
   );
 }

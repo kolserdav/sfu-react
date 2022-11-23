@@ -16,10 +16,19 @@ import storeMuted, { changeMuted } from '../store/muted';
 import storeAdminMuted, { changeAdminMuted } from '../store/adminMuted';
 import storeAsked, { changeAsked } from '../store/asked';
 import storeSpeaker from '../store/speaker';
-import { CHANGE_SPEAKER_SORT_TIMEOUT } from '../utils/constants';
+import {
+  CHANGE_SPEAKER_SORT_TIMEOUT,
+  CONTEXT_DEFAULT,
+  DIALOG_DEFAULT,
+  DIALOG_USER_DIMENSION,
+} from '../utils/constants';
 import storeMuteForAll, { changeMuteForAll } from '../store/muteForAll';
 import { useIsOwner } from '../utils/hooks';
 import storeChatBlockeds from '../store/chatBlockeds';
+import { DialogProps } from '../types';
+import { getDialogPosition } from '../utils/lib';
+import storeClickDocument from '../store/clickDocument';
+import storeBanned, { changeBanned } from '../store/banned';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useUsers = ({
@@ -335,4 +344,75 @@ export const useMuteAll = ({
   }, []);
 
   return { muteAllHandler, changeMuteForAllHandler, muteForAll };
+};
+
+export const useSettings = ({ isOwner }: { isOwner: boolean }) => {
+  const [dialogSettings, setDialogSettings] =
+    useState<Omit<DialogProps, 'children'>>(DIALOG_DEFAULT);
+
+  const clickToBanWrapper = useMemo(
+    () =>
+      ({ unitId }: Omit<DialogProps, 'children'>['context']) =>
+      () => {
+        storeBanned.dispatch(
+          changeBanned({
+            id: unitId,
+            banned: true,
+          })
+        );
+      },
+    []
+  );
+
+  const onContextMenuWrapper = useMemo(
+    () =>
+      (context: DialogProps['context']) =>
+      (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        if (!isOwner) {
+          return;
+        }
+        const { shiftKey } = ev;
+        if (!shiftKey) {
+          ev.preventDefault();
+          const { clientX: _clientX, clientY: _clientY } = ev;
+          const { width, height } = DIALOG_USER_DIMENSION;
+          const { clientX, clientY } = getDialogPosition({ _clientX, _clientY, width, height });
+          setDialogSettings({
+            open: true,
+            clientY,
+            clientX,
+            width,
+            height,
+            context,
+          });
+        }
+      },
+    [isOwner]
+  );
+
+  /**
+   * Listen click document
+   */
+  useEffect(() => {
+    const cleanStore = storeClickDocument.subscribe(() => {
+      // TODO check area
+      const {
+        clickDocument: { clientX, clientY },
+      } = storeClickDocument.getState();
+      setDialogSettings({
+        open: false,
+        clientY: dialogSettings.clientY,
+        clientX: dialogSettings.clientX,
+        width: 0,
+        height: 0,
+        context: CONTEXT_DEFAULT,
+        secure: false,
+      });
+    });
+    return () => {
+      cleanStore();
+    };
+  }, [dialogSettings]);
+
+  return { dialogSettings, clickToBanWrapper, onContextMenuWrapper };
 };

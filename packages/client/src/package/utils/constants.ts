@@ -67,6 +67,10 @@ export const DIALOG_SETTINGS_DIMENSION = {
   width: 120,
   height: 60,
 };
+export const DIALOG_USER_DIMENSION = {
+  width: 120,
+  height: 60,
+};
 export const SHORT_MESS_LENGTH = 30;
 export const FIRST_MESSAGE_INDENT = 20;
 export const FOLOW_QUOTE_STYLE = 'border: 3px solid lightblue';
@@ -83,7 +87,9 @@ export const MOBILE_WIDTH = 760;
 export const TEXT_AREA_PADDING_LEFT = 16;
 // dependency to five  packages/client/src/package/components/Chat.module.scss $text-area-border-width
 export const TEXT_AREA_BORDER_WIDTH = 5;
-export const ROOM_LENGTH_TEST = 0;
+// in prod is strong of 0, other values only for test on development
+// eslint-disable-next-line @typescript-eslint/prefer-as-const
+export const ROOM_LENGTH_TEST: 0 = 0;
 export const CHANGE_SPEAKER_SORT_TIMEOUT = 8000;
 export const USERS_ICON_WIDTH = 24;
 export const USERS_ICON_WIDTH_BIG = 30;

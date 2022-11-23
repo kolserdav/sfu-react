@@ -290,7 +290,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
             )}
           </IconButton>
           <IconButton
-            disabled={streams.length === 0 || video ? false : !canPlayVideo}
+            disabled={streams.length === 0 ? true : video ? false : !canPlayVideo}
             title={video ? locale.cameraOff : locale.cameraOn}
             onClick={changeVideo}
           >

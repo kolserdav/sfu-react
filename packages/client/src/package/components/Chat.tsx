@@ -27,7 +27,7 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const { isOwner } = useIsOwner({ userId });
+  const { isOwner, roomUsers } = useIsOwner({ userId });
 
   const {
     blocked,
@@ -81,7 +81,7 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
                 {item.unitId !== userId.toString() && (
                   <div className={s.name}>
                     <span className={s.name__text}>{item.Unit.name}</span>
-                    {item.unitId === item.Unit.id && (
+                    {roomUsers.find((_item) => _item.id === item.unitId)?.isOwner && (
                       <span className={s.role}>{locale.shortAdmin}</span>
                     )}
                   </div>

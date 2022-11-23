@@ -59,6 +59,7 @@ import storeAsked from '../store/asked';
 import storeUserList, { changeUserList } from '../store/userList';
 import storeSpeaker, { changeSpeaker } from '../store/speaker';
 import storeMuteForAll from '../store/muteForAll';
+import storeBanned from '../store/banned';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -319,6 +320,21 @@ export const useConnection = ({
       cleanSubs();
     };
   }, [muted, changeMuted, id]);
+
+  /**
+   * Listen banned
+   */
+  useEffect(() => {
+    const cleanSubs = storeBanned.subscribe(() => {
+      const { id: _id } = storeBanned.getState();
+      if (isOwner && _id !== id) {
+        clickToBanWrapper({ unitId: _id.toString(), text: '', id: 0 })();
+      }
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, [clickToBanWrapper, isOwner, id]);
 
   /**
    * Listen mute for all
@@ -641,9 +657,7 @@ export const useConnection = ({
       );
       switch (code) {
         case ErrorCode.youAreBanned:
-          setTimeout(() => {
-            window.history.go(-1);
-          }, ALERT_TIMEOUT);
+          setCanConnect(false);
           break;
         case ErrorCode.roomIsInactive:
           if (message !== '') {
