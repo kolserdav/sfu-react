@@ -71,7 +71,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     muteds,
     video,
     rtc,
-    changeVideo,
+    changeVideoWrapper,
     isOwner,
     adminMuted,
     adminMuteds,
@@ -79,6 +79,8 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     clickToMuteWrapper,
     clickToUnMuteWrapper,
     clickToBanWrapper,
+    clickToVideoOffWrapper,
+    onVideoTimer,
   } = useConnection({
     id: userId,
     roomId,
@@ -289,17 +291,32 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
               <MicrophoneIcon color={theme?.colors.text} />
             )}
           </IconButton>
-          <IconButton
-            disabled={streams.length === 0 ? true : video ? false : !canPlayVideo}
-            title={video ? locale.cameraOff : locale.cameraOn}
-            onClick={changeVideo}
-          >
-            {video ? (
-              <CameraOutlineIcon color={theme?.colors.text} />
-            ) : (
-              <CameraOutlineOffIcon color={theme?.colors.text} />
+          <div className={s.button__back}>
+            <IconButton
+              disabled={
+                onVideoTimer !== 0
+                  ? true
+                  : streams.length === 0
+                  ? true
+                  : video
+                  ? false
+                  : !canPlayVideo
+              }
+              title={video ? locale.cameraOff : locale.cameraOn}
+              onClick={changeVideoWrapper(userId)}
+            >
+              {video ? (
+                <CameraOutlineIcon color={theme?.colors.text} />
+              ) : (
+                <CameraOutlineOffIcon color={theme?.colors.text} />
+              )}
+            </IconButton>
+            {onVideoTimer !== 0 && (
+              <div color={theme?.colors.text} className={s.video__timer}>
+                <span className={s.text}>{onVideoTimer}</span>
+              </div>
             )}
-          </IconButton>
+          </div>
         </div>
       </div>
       <Dialog {...dialog} theme={theme}>
@@ -328,12 +345,21 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
         </div>
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}
         <div
-          tabIndex={-1}
+          tabIndex={-2}
           role="button"
           onClick={clickToBanWrapper(dialogSettings.context)}
           className={g.dialog__item}
         >
           {locale.ban}
+        </div>
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}
+        <div
+          tabIndex={-3}
+          role="button"
+          onClick={clickToVideoOffWrapper(dialogSettings.context)}
+          className={g.dialog__item}
+        >
+          {locale.cameraOff}
         </div>
       </Dialog>
     </div>

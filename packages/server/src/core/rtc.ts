@@ -297,7 +297,7 @@ class RTC
 
   public getVideoTrackHandler = ({
     id,
-    data: { command, target },
+    data: { command, target, userId },
   }: SendMessageArgs<MessageType.GET_VIDEO_TRACK>) => {
     let index = -1;
     switch (command) {
@@ -325,6 +325,9 @@ class RTC
         connId: '',
         data: {
           offVideo: this.offVideo[id],
+          command,
+          target,
+          userId,
         },
       });
     });
@@ -918,6 +921,9 @@ class RTC
         id: item.id,
         data: {
           offVideo: this.offVideo[id],
+          command: 'add',
+          target: item.id,
+          userId: item.id,
         },
         connId,
       });

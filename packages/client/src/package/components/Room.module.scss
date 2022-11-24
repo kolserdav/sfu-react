@@ -138,3 +138,32 @@
   align-items: center;
   width: 25%;
 }
+
+.button__back {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.video__timer {
+  cursor: default;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+
+  .text {
+    position: relative;
+  }
+
+  @supports (-moz-appearance: none) {
+    .text {
+      margin-top: 5px;
+    }
+  }
+}

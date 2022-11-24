@@ -222,6 +222,7 @@ export namespace Locale {
   }
 }
 
+export type Command = 'add' | 'delete';
 export type LocaleServer = {
   server: Locale.Server;
   client: Locale.Client;
@@ -293,11 +294,12 @@ export namespace DataTypes {
     };
     export type GetAskFloor = {
       userId: string | number;
-      command: 'add' | 'delete';
+      command: Command;
     };
     export type GetVideoTrack = {
       target: string | number;
-      command: 'add' | 'delete';
+      userId: string | number;
+      command: Command;
     };
     export type GetVideoFindMany = {
       userId: string | number;
@@ -328,7 +330,7 @@ export namespace DataTypes {
       userId: string | number;
     };
     export type GetBlockChat = {
-      command: 'add' | 'delete';
+      command: Command;
       target: string | number;
     };
     export type GetEditMessage = {
@@ -346,6 +348,9 @@ export namespace DataTypes {
     };
     export type SetVideoTrack = {
       offVideo: (string | number)[];
+      command: Command;
+      target: string | number;
+      userId: string | number;
     };
     export type GetCreateQuote = {
       args: Prisma.QuoteCreateArgs;

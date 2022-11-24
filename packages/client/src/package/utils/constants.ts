@@ -65,7 +65,7 @@ export const DIALOG_MESSAGE_DIMENSION = {
 };
 export const DIALOG_SETTINGS_DIMENSION = {
   width: 120,
-  height: 60,
+  height: 120,
 };
 export const DIALOG_USER_DIMENSION = {
   width: 120,
@@ -94,3 +94,4 @@ export const CHANGE_SPEAKER_SORT_TIMEOUT = 8000;
 export const USERS_ICON_WIDTH = 24;
 export const USERS_ICON_WIDTH_BIG = 30;
 export const MAX_VIDEO_STREAMS = 4;
+export const PLAY_VIDEO_TIMEOUT = 30000;

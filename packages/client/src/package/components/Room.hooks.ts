@@ -28,6 +28,7 @@ import {
   MessageType,
   SendMessageArgs,
   ErrorCode,
+  Command,
 } from '../types/interfaces';
 import { Stream, DialogProps, Volumes } from '../types';
 import s from './Room.module.scss';
@@ -45,6 +46,7 @@ import {
   VIDEO_STARTED_HOOK_TIMEOUT,
   ROOM_LENGTH_TEST,
   MAX_VIDEO_STREAMS,
+  PLAY_VIDEO_TIMEOUT,
 } from '../utils/constants';
 import { CookieName, getCookie } from '../utils/cookies';
 import storeError, { changeError } from '../store/error';
@@ -100,6 +102,7 @@ export const useConnection = ({
   const [connectionId, setConnectionId] = useState<string>('');
   const [canConnect, setCanConnect] = useState<boolean>(false);
   const [isPublic, setIsPublic] = useState<boolean>();
+  const [onVideoTimer, setOnVideoTimer] = useState<number>(0);
 
   const addStream = useMemo(
     () =>
@@ -416,25 +419,60 @@ export const useConnection = ({
     }
   }, [adminMuted, rtc.localStream]);
 
-  const changeVideo = useMemo(
-    () => () => {
-      if (!roomId) {
-        return;
-      }
+  const setVideoHandler = useMemo(
+    () =>
+      ({ target, command }: { target: string | number; command: Command }) => {
+        if (!roomId) {
+          return;
+        }
+        ws.sendMessage({
+          id: roomId,
+          type: MessageType.GET_VIDEO_TRACK,
+          connId: connectionId,
+          data: {
+            target,
+            userId: ws.userId,
+            command,
+          },
+        });
+      },
+    [roomId, ws, connectionId]
+  );
+
+  const clickToVideoOffWrapper = useMemo(
+    () =>
+      ({ unitId }: DialogProps['context']) =>
+      () => {
+        setVideoHandler({ target: unitId, command: 'add' });
+      },
+    [setVideoHandler]
+  );
+
+  const changeVideoWrapper = useMemo(
+    () => (target: string | number) => () => {
       const _video = !video;
       setVideo(_video);
-      ws.sendMessage({
-        id: roomId,
-        type: MessageType.GET_VIDEO_TRACK,
-        connId: connectionId,
-        data: {
-          target: ws.userId,
-          command: !_video ? 'add' : 'delete',
-        },
-      });
+      setVideoHandler({ target, command: !_video ? 'add' : 'delete' });
     },
-    [video, roomId, ws, connectionId]
+    [video, setVideoHandler]
   );
+
+  /**
+   * On play video timer
+   */
+  useEffect(() => {
+    let interval = setInterval(() => {
+      /** */
+    }, 0);
+    if (onVideoTimer !== 0) {
+      interval = setInterval(() => {
+        setOnVideoTimer(onVideoTimer - 1);
+      }, 1000);
+    }
+    return () => {
+      clearInterval(interval);
+    };
+  }, [onVideoTimer]);
 
   /**
    * Change video enabled
@@ -830,9 +868,13 @@ export const useConnection = ({
     };
 
     const setVideoTrackHandler = ({
-      data: { offVideo: _offVideo },
+      data: { offVideo: _offVideo, command, target, userId },
     }: SendMessageArgs<MessageType.SET_VIDEO_TRACK>) => {
       setOffVideo(_offVideo);
+      if (target !== userId && target === ws.userId && command === 'add') {
+        setOnVideoTimer(PLAY_VIDEO_TIMEOUT / 1000);
+        setVideo(false);
+      }
     };
 
     ws.onMessage = (ev) => {
@@ -1078,13 +1120,15 @@ export const useConnection = ({
     muteds,
     video,
     offVideo,
-    changeVideo,
+    changeVideoWrapper,
     isOwner,
     adminMuted,
     adminMuteds,
     clickToMuteWrapper,
     clickToUnMuteWrapper,
     clickToBanWrapper,
+    clickToVideoOffWrapper,
+    onVideoTimer,
   };
 };
 
