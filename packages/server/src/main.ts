@@ -70,7 +70,7 @@ export function createServer(
   },
   cb?: ServerCallback
 ) {
-  if (require.main === module) {
+  if (require.main !== module) {
     log('info', 'Using DATABASE_URL:', cleanDbUrl(), true);
   }
   setLogLevel(logLevel);
