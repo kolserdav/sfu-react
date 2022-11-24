@@ -12,7 +12,7 @@
 /* eslint-disable no-case-declarations */
 import { spawn } from 'child_process';
 import path from 'path';
-import { log } from './utils/lib';
+import { cleanDbUrl, log } from './utils/lib';
 import { LogLevel } from './types/interfaces';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 //@ts-ignore
@@ -127,7 +127,7 @@ let skipMigrate = false;
         if (db === DEFAULT_PARAMS.db && !skipMigrate) {
           log('warn', 'Parameter "db" not specified, using default:', DEFAULT_PARAMS.db, true);
         } else if (!skipMigrate) {
-          log('info', 'Using database url:', db, true);
+          log('info', 'Using database url:', cleanDbUrl(db), true);
         }
         process.env.DATABASE_URL = db;
         break;

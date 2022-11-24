@@ -76,3 +76,15 @@ export const checkTockenDefault = async (token: string) => {
   log('warn', 'Check token callback not set, use default all yes', { token });
   return true;
 };
+
+export const cleanDbUrl = (db?: string) => {
+  const dbUrl = db || process.env.DATABASE_URL;
+  let password: RegExpMatchArray | string = dbUrl.match(/:(?!\/).+@/);
+  const _password = password[0] || '';
+  password = ':';
+  new Array(_password.length - 2).fill('•').forEach((item) => {
+    password += item;
+  });
+  password = `${password}@`;
+  return dbUrl.replace(_password, password);
+};

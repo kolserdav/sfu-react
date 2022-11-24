@@ -19,7 +19,7 @@ import WS from './core/ws';
 import { ServerCallback } from './types';
 import RTC, { OnRoomConnect, OnRoomOpen } from './core/rtc';
 import { MessageType, LogLevel } from './types/interfaces';
-import { getLocale, log, setLogLevel } from './utils/lib';
+import { cleanDbUrl, getLocale, log, setLogLevel } from './utils/lib';
 import { PORT, CORS } from './utils/constants';
 import DB from './core/db';
 import Chat from './addons/chat';
@@ -70,8 +70,8 @@ export function createServer(
   },
   cb?: ServerCallback
 ) {
-  if (require.main !== module) {
-    log('info', 'Using DATABASE_URL:', process.env.DATABASE_URL, true);
+  if (require.main === module) {
+    log('info', 'Using DATABASE_URL:', cleanDbUrl(), true);
   }
   setLogLevel(logLevel);
   const wss = new WS({ port, db });
