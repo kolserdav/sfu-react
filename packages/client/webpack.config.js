@@ -19,7 +19,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = ({ NODE_ENV }) => ({
   mode: NODE_ENV,
-  target: 'web',
+  target: 'node',
   context: __dirname,
   entry: './src/package/Main.tsx',
   output: {
