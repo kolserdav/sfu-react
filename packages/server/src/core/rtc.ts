@@ -435,6 +435,8 @@ class RTC
       sendersLength = this.peerConnectionsServer[roomId][peerId]!.getSenders().length;
       if (sendersLength === 0) {
         log('error', 'Error set remote description', { e: e.message, stack: e.stack, ...opts });
+      } else {
+        log('warn', 'Senders length is not zero:', sendersLength);
       }
       error = true;
     });
@@ -456,6 +458,7 @@ class RTC
       error = true;
     });
     if (!answ) {
+      log('warn', 'Answer is', answ);
       error = true;
       return;
     }
