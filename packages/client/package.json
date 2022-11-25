@@ -11,6 +11,7 @@
     "dev:test": "cross-env BROWSER=none NODE_ENV=test react-scripts start",
     "compile": "cross-env NODE_ENV=production tsc -p ./tsconfig.compile.json",
     "build": "cross-env CI=false react-scripts build",
+    "rollup": "rollup -c",
     "clean": "rimraf dist",
     "test": "react-scripts test",
     "eject": "react-scripts eject",

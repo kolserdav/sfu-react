@@ -16,13 +16,11 @@ console.log('Styles copied', srcPath, distPath);
  */
 function readDir(dir, prefix = './') {
   dir.forEach((item) => {
-    if (!/\.scss$/.test(item)) {
-      return;
-    }
     const _srcPath = path.resolve(srcPath, prefix, item);
     if (fs.lstatSync(_srcPath).isDirectory()) {
+      console.log(_srcPath);
       return readDir(fs.readdirSync(_srcPath), `${prefix}/${item}`);
-    } else {
+    } else if (/\.scss$/.test(item)) {
       fs.copyFileSync(_srcPath, path.resolve(distPath, prefix, item));
     }
   });
