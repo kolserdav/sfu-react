@@ -1,3 +1,4 @@
+// @ts-check
 /******************************************************************************************
  * Repository: https://github.com/kolserdav/werift-sfu-react.git
  * File name: webpack.config.js
@@ -9,7 +10,6 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 /* eslint-disable @typescript-eslint/no-var-requires */
-// @ts-check
 
 const webpack = require('webpack');
 const path = require('path');
@@ -19,12 +19,13 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = ({ NODE_ENV }) => ({
   mode: NODE_ENV,
+  target: 'web',
   context: __dirname,
   entry: './src/package/Main.tsx',
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'Main.js',
-    libraryTarget: 'commonjs',
+    libraryTarget: 'umd',
   },
   devtool: 'source-map',
   resolve: {
