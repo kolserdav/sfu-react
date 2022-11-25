@@ -13,7 +13,7 @@ import React, { useMemo } from 'react';
 import clsx from 'clsx';
 import Room from './components/Room';
 import Hall from './components/Hall';
-import { GlobalProps } from './types';
+import type { GlobalProps } from './types';
 import { getPathname, getRoomId, parseQueryString } from './utils/lib';
 import ChevronLeftIcon from './Icons/ChevronLeftIcon';
 import ChevronRightIcon from './Icons/ChevronRightIcon';

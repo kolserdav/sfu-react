@@ -11,7 +11,7 @@
 import { Video } from '@prisma/client';
 import React from 'react';
 import { Colors, Theme } from '../Theme';
-import { LocaleServer, LogLevel, MessageFull } from './interfaces';
+import { LocaleServer, LogLevel } from './interfaces';
 
 export type VideoFull = Video;
 
