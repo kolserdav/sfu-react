@@ -23,6 +23,7 @@ import {
   useSortSpeaker,
   useUsers,
   useSettings,
+  useVolume,
 } from './Users.hooks';
 import MicrophoneOffIcon from '../Icons/MicrophoneOffIcon';
 import IconButton from './ui/IconButton';
@@ -39,6 +40,7 @@ import Badge from './ui/Badge';
 import AccountOutlineIcon from '../Icons/AccountOutline';
 import { ROOM_LENGTH_TEST, USERS_ICON_WIDTH, USERS_ICON_WIDTH_BIG } from '../utils/constants';
 import Dialog from './ui/Dialog';
+import Volume from './ui/Volume';
 
 function Users({
   theme,
@@ -96,6 +98,9 @@ function Users({
   });
 
   const { dialogSettings, clickToBanWrapper, onContextMenuWrapper } = useSettings({ isOwner });
+  const { dialogVolume, changeVolumeWrapper, clickToVolume, volumes, volumeUserId } = useVolume({
+    roomId,
+  });
 
   return (
     <div
@@ -187,21 +192,31 @@ function Users({
             </div>
           </div>
           <div className={s.actions}>
-            <IconButton disabled={item.id !== userId} onClick={changeMutedWrapper(item)}>
-              {item.muted ? (
-                <MicrophoneOffIcon
-                  width={USERS_ICON_WIDTH}
-                  height={USERS_ICON_WIDTH}
-                  color={theme?.colors.text}
-                />
-              ) : (
-                <MicrophoneIcon
-                  width={USERS_ICON_WIDTH}
-                  height={USERS_ICON_WIDTH}
-                  color={theme?.colors.text}
-                />
+            <div className={s.button__procent}>
+              {item.id !== userId && (
+                <div className={s.text}>
+                  {volumes[item.id] && volumes[item.id] !== 100 ? `${volumes[item.id]}%` : ''}
+                </div>
               )}
-            </IconButton>
+              <IconButton
+                disabled={item.id !== userId && item.muted}
+                onClick={item.id === userId ? changeMutedWrapper(item) : clickToVolume(item.id)}
+              >
+                {item.muted ? (
+                  <MicrophoneOffIcon
+                    width={USERS_ICON_WIDTH}
+                    height={USERS_ICON_WIDTH}
+                    color={theme?.colors.text}
+                  />
+                ) : (
+                  <MicrophoneIcon
+                    width={USERS_ICON_WIDTH}
+                    height={USERS_ICON_WIDTH}
+                    color={theme?.colors.text}
+                  />
+                )}
+              </IconButton>
+            </div>
             {item.adminMuted && item.id === userId && !asked && (
               <IconButton onClick={askForTheFloorWrapper(item)} title={locale.askForTheFloor}>
                 <HandUpIcon
@@ -281,6 +296,9 @@ function Users({
         >
           {locale.ban}
         </div>
+      </Dialog>
+      <Dialog {...dialogVolume} theme={theme}>
+        <Volume onChange={changeVolumeWrapper(volumeUserId)} value={volumes[volumeUserId] || 100} />
       </Dialog>
     </div>
   );

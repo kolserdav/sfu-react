@@ -47,6 +47,7 @@ import HandUpIcon from '../Icons/HandUp';
 import { useSpeaker } from '../utils/hooks';
 import AccountOutlineIcon from '../Icons/AccountOutline';
 import Badge from './ui/Badge';
+import Volume from './ui/Volume';
 
 function Room({ userId, iceServers, server, port, roomId, locale, name, theme }: RoomProps) {
   const container = useRef<HTMLDivElement>(null);
@@ -320,14 +321,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
         </div>
       </div>
       <Dialog {...dialog} theme={theme}>
-        <input
-          onChange={changeVolumeWrapper(volumeUserId)}
-          className={s.video__volume__input}
-          value={volumes[volumeUserId] || 10}
-          type="range"
-          min="0"
-          max="10"
-        />
+        <Volume onChange={changeVolumeWrapper(volumeUserId)} value={volumes[volumeUserId] || 100} />
       </Dialog>
       <Dialog {...dialogSettings} theme={theme}>
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}

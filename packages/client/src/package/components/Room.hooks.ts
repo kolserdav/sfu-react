@@ -62,6 +62,7 @@ import storeUserList, { changeUserList } from '../store/userList';
 import storeSpeaker, { changeSpeaker } from '../store/speaker';
 import storeMuteForAll from '../store/muteForAll';
 import storeBanned from '../store/banned';
+import storeVolume from '../store/volume';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -1374,7 +1375,6 @@ export const useVolumeDialog = ({
 
   /**
    * Change volume
-   * TODO test it
    */
   useMemo(() => {
     const { current } = container;
@@ -1383,26 +1383,44 @@ export const useVolumeDialog = ({
       for (let i = 0; videos[i]; i++) {
         const video = videos[i];
         if (volumes[video.id] && video.id !== userId) {
-          video.volume = volumes[video.id] / 10;
+          video.volume = volumes[video.id] / 100;
         }
       }
     }
   }, [volumes, container, userId]);
 
-  const changeVolumeWrapper =
-    (targetId: number | string) => (ev: React.ChangeEvent<HTMLInputElement>) => {
-      const { value } = ev.target;
-      const _volumes = { ...volumes };
-      const volumeNum = parseInt(value, 10);
-      _volumes[targetId] = volumeNum >= VOLUME_MIN ? volumeNum : VOLUME_MIN;
-      setVolumes(_volumes);
-      setLocalStorage(LocalStorageName.VOLUMES, {
-        [roomId]: _volumes,
-      });
-    };
+  const changeVolumeWrapper = useMemo(
+    () =>
+      (targetId: number | string) =>
+      (ev: { target: { value: React.ChangeEvent<HTMLInputElement>['target']['value'] } }) => {
+        const { value } = ev.target;
+        const _volumes = { ...volumes };
+        const volumeNum = parseInt(value, 10);
+        _volumes[targetId] = volumeNum >= VOLUME_MIN ? volumeNum : VOLUME_MIN;
+        _volumes['0'] = _volumes[targetId];
+        setVolumes(_volumes);
+        setLocalStorage(LocalStorageName.VOLUMES, {
+          [roomId]: _volumes,
+        });
+      },
+    [roomId, volumes]
+  );
 
-  const clickToVolume =
-    (targetId: string | number) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+  /**
+   * Listen volume
+   */
+  useEffect(() => {
+    const cleanSubs = storeVolume.subscribe(() => {
+      const { id, volume } = storeVolume.getState();
+      changeVolumeWrapper(id)({ target: { value: volume.toString() } });
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, [changeVolumeWrapper]);
+
+  const clickToVolume = useMemo(
+    () => (targetId: string | number) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       const { clientX: _clientX, clientY: _clientY } = ev;
       const { width, height } = DIALOG_VOLUME_DIMENSION;
       const { clientX, clientY } = getDialogPosition({ _clientX, _clientY, width, height });
@@ -1416,7 +1434,9 @@ export const useVolumeDialog = ({
           height,
         });
       }, 0);
-    };
+    },
+    []
+  );
 
   /**
    * Listen click document

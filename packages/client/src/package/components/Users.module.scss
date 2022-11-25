@@ -24,6 +24,7 @@
     overflow: hidden;
     height: 0;
     transition: height 0.3s ease-in;
+    overflow-y: auto;
 
     &.open {
       height: 100vh;
@@ -97,5 +98,23 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+  }
+}
+
+.button__procent {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+
+  .text {
+    position: relative;
+  }
+
+  @supports (-moz-appearance: none) {
+    .text {
+      margin-top: 5px;
+    }
   }
 }

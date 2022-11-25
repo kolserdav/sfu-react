@@ -21,14 +21,18 @@ import {
   CONTEXT_DEFAULT,
   DIALOG_DEFAULT,
   DIALOG_USER_DIMENSION,
+  DIALOG_VOLUME_DIMENSION,
+  VOLUME_MIN,
 } from '../utils/constants';
 import storeMuteForAll, { changeMuteForAll } from '../store/muteForAll';
 import { useIsOwner } from '../utils/hooks';
 import storeChatBlockeds from '../store/chatBlockeds';
-import { DialogProps } from '../types';
-import { getDialogPosition } from '../utils/lib';
+import { DialogProps, Volumes } from '../types';
+import { getDialogPosition, isClickByDialog } from '../utils/lib';
 import storeClickDocument from '../store/clickDocument';
 import storeBanned, { changeBanned } from '../store/banned';
+import { getLocalStorage, LocalStorageName } from '../utils/localStorage';
+import storeVolume, { changeVolume } from '../store/volume';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useUsers = ({
@@ -415,4 +419,85 @@ export const useSettings = ({ isOwner }: { isOwner: boolean }) => {
   }, [dialogSettings]);
 
   return { dialogSettings, clickToBanWrapper, onContextMenuWrapper };
+};
+
+export const useVolume = ({ roomId }: { roomId: string | number }) => {
+  const [dialogVolume, setDialogVolume] = useState<Omit<DialogProps, 'children'>>(DIALOG_DEFAULT);
+  const savedVolumes = useMemo(() => {
+    const ls = getLocalStorage(LocalStorageName.VOLUMES);
+    if (!ls) {
+      return null;
+    }
+    return ls[roomId] || null;
+  }, [roomId]);
+  const [volumes, setVolumes] = useState<Volumes>(savedVolumes || {});
+
+  const changeVolumeWrapper = useMemo(
+    () =>
+      (targetId: number | string) =>
+      (ev: { target: { value: React.ChangeEvent<HTMLInputElement>['target']['value'] } }) => {
+        const { value } = ev.target;
+        const _volumes = { ...volumes };
+        const volumeNum = parseInt(value, 10);
+        _volumes[targetId] = volumeNum >= VOLUME_MIN ? volumeNum : VOLUME_MIN;
+        _volumes['0'] = _volumes[targetId];
+        setVolumes(_volumes);
+        storeVolume.dispatch(
+          changeVolume({
+            id: targetId,
+            volume: volumeNum,
+          })
+        );
+      },
+    [volumes]
+  );
+
+  const clickToVolume = useMemo(
+    () => (targetId: string | number) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      const { clientX: _clientX, clientY: _clientY } = ev;
+      const { width, height } = DIALOG_VOLUME_DIMENSION;
+      const { clientX, clientY } = getDialogPosition({ _clientX, _clientY, width, height });
+      setTimeout(() => {
+        setDialogVolume({
+          open: true,
+          clientX,
+          clientY,
+          context: { unitId: targetId.toString(), id: 0, text: '' },
+          width,
+          height,
+        });
+      }, 0);
+    },
+    []
+  );
+
+  /**
+   * Listen click document
+   */
+  useEffect(() => {
+    const cleanStore = storeClickDocument.subscribe(() => {
+      const {
+        clickDocument: { clientX, clientY },
+      } = storeClickDocument.getState();
+      const isTarget = isClickByDialog({ clientX, clientY, dialog: dialogVolume });
+      if (!isTarget) {
+        setDialogVolume({
+          open: false,
+          clientY: dialogVolume.clientY,
+          clientX: dialogVolume.clientX,
+          width: 0,
+          height: 0,
+          context: DIALOG_DEFAULT.context,
+          secure: false,
+        });
+      }
+    });
+    return () => {
+      cleanStore();
+    };
+  }, [dialogVolume]);
+
+  const volumeUserId = useMemo(() => dialogVolume.context.unitId, [dialogVolume.context]);
+
+  return { dialogVolume, volumes, changeVolumeWrapper, clickToVolume, volumeUserId };
 };
