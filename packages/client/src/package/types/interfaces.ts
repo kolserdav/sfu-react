@@ -164,6 +164,7 @@ export namespace Locale {
     forbidden: string;
     notAuthorised: string;
     duplicateTab: string;
+    connected: string;
   }
 
   export interface Client {

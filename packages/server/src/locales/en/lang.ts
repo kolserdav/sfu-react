@@ -21,6 +21,7 @@ const lang: LocaleServer = {
     notAuthorised: 'Not authorised',
     duplicateTab:
       'An unsupported attempt was made to reconnect in a new tab. Only one point can be connected to a room at a time.',
+    connected: 'Connected',
   },
   client: {
     shareScreen: 'Share screen',

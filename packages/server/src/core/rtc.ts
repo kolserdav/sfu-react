@@ -647,7 +647,7 @@ class RTC
         id: userId,
         connId: '',
         data: {
-          message: '',
+          message: locale.connected,
           type: 'log',
           code: ErrorCode.initial,
         },
@@ -688,7 +688,7 @@ class RTC
         id: userId,
         connId: '',
         data: {
-          message: '',
+          message: locale.connected,
           type: 'log',
           code: ErrorCode.initial,
         },

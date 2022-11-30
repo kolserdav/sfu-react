@@ -799,7 +799,7 @@ export const useConnection = ({
         if (item.id !== id) {
           const _isExists = _streams.filter((_item) => item.id === _item.target);
           if (!_isExists[0]) {
-            log('info', `Check new user ${item}`, { uid: id });
+            log('info', 'Check new user', { uid: id, item });
             const skip = rtc.createPeerConnection({
               roomId,
               target: item.id,

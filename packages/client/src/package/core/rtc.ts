@@ -244,56 +244,72 @@ class RTC
             break;
         }
       };
-    this.peerConnections[peerId]!.onnegotiationneeded = function handleNegotiationNeededEvent() {
-      if (!core.peerConnections[peerId]) {
-        log('warn', 'On negotiation needed without peer connection', { peerId });
-        return;
-      }
-      log('info', '--> Creating offer', {
-        roomId,
-        userId,
-        target,
-        state: core.peerConnections[peerId]!.signalingState,
-        cs: core.peerConnections[peerId]!.signalingState,
-        is: core.peerConnections[peerId]!.iceConnectionState,
-      });
-      core.peerConnections[peerId]!.createOffer()
-        .then((offer): 1 | void | PromiseLike<void> => {
-          if (!core.peerConnections[peerId]) {
-            log(
-              'warn',
-              'Can not set local description because peerConnection is',
-              core.peerConnections[peerId]
-            );
-            return 1;
-          }
-          return core.peerConnections[peerId]!.setLocalDescription(offer).catch((err) => {
-            log('error', 'Error create local description', {
-              err,
-              peerId,
-              peer: core.peerConnections[peerId],
-            });
-          });
-        })
-        .then(() => {
-          const { localDescription } = core.peerConnections[peerId]!;
-          if (localDescription) {
-            log('info', '---> Sending offer to remote peer', { roomId, userId, target });
-            core.ws.sendMessage({
-              id: roomId,
-              type: MessageType.OFFER,
-              data: {
-                sdp: localDescription,
-                userId,
-                target,
-                mimeType: getCodec(),
-                roomId,
-              },
-              connId,
-            });
-          }
+    this.peerConnections[peerId]!.onnegotiationneeded =
+      async function handleNegotiationNeededEvent() {
+        if (!core.peerConnections[peerId]) {
+          log('warn', 'On negotiation needed without peer connection', { peerId });
+          return;
+        }
+        /*
+        console.log(1, {
+          roomId,
+          userId,
+          target,
+          state: core.peerConnections[peerId]!.signalingState,
+          cs: core.peerConnections[peerId]!.connectionState,
+          is: core.peerConnections[peerId]!.iceConnectionState,
         });
-    };
+        await new Promise((resolve) => {
+          setTimeout(() => {
+            resolve(0);
+          }, 1000);
+        });
+        */
+        log('info', '--> Creating offer', {
+          roomId,
+          userId,
+          target,
+          state: core.peerConnections[peerId]!.signalingState,
+          cs: core.peerConnections[peerId]!.connectionState,
+          is: core.peerConnections[peerId]!.iceConnectionState,
+        });
+        core.peerConnections[peerId]!.createOffer()
+          .then((offer): 1 | void | PromiseLike<void> => {
+            if (!core.peerConnections[peerId]) {
+              log(
+                'warn',
+                'Can not set local description because peerConnection is',
+                core.peerConnections[peerId]
+              );
+              return 1;
+            }
+            return core.peerConnections[peerId]!.setLocalDescription(offer).catch((err) => {
+              log('error', 'Error create local description', {
+                err,
+                peerId,
+                peer: core.peerConnections[peerId],
+              });
+            });
+          })
+          .then(() => {
+            const { localDescription } = core.peerConnections[peerId]!;
+            if (localDescription) {
+              log('info', '---> Sending offer to remote peer', { roomId, userId, target });
+              core.ws.sendMessage({
+                id: roomId,
+                type: MessageType.OFFER,
+                data: {
+                  sdp: localDescription,
+                  userId,
+                  target,
+                  mimeType: getCodec(),
+                  roomId,
+                },
+                connId,
+              });
+            }
+          });
+      };
   };
 
   // eslint-disable-next-line class-methods-use-this
