@@ -11,7 +11,7 @@
 import * as Types from '../types/interfaces';
 import { log } from '../utils/lib';
 
-export type Protocol = 'room' | 'chat' | 'check' | 'settings' | 'video-record';
+export type Protocol = 'main' | 'room' | 'chat' | 'check' | 'settings' | 'video-record';
 
 class WS implements Types.WSInterface {
   public connection: WebSocket;
@@ -140,7 +140,7 @@ class WS implements Types.WSInterface {
     return this.connection;
   }
 
-  constructor({ server, port, protocol }: { server: string; port: number; protocol?: Protocol }) {
+  constructor({ server, port, protocol }: { server: string; port: number; protocol: Protocol }) {
     this.connection = this.createConnection({ server, port, protocol });
   }
 }

@@ -105,6 +105,11 @@ $text-area-border-radius: 6px;
         padding-top: 0.3rem;
       }
     }
+
+    @media (max-width: $mobile-width) {
+      position: fixed;
+      bottom: 0;
+    }
   }
 
   @media (max-width: $mobile-width) {

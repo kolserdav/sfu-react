@@ -64,7 +64,7 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
         className={s.container}
         ref={containerRef}
         id="messages"
-        style={{ height: `calc(90% - ${rows} * ${isMobile() ? '0.5rem' : '1rem'})` }}
+        style={{ height: `calc(90% - ${rows} * ${isMobile() ? '0.8rem' : '1rem'})` }}
       >
         {messages.length ? (
           messages.map((item, index) => (

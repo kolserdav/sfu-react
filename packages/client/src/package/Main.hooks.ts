@@ -36,7 +36,7 @@ export const useListeners = ({
   logLevel: LogLevel | undefined;
   colors?: Colors;
 }) => {
-  const ws = useMemo(() => new WS({ port, server }), [port, server]);
+  const ws = useMemo(() => new WS({ port, server, protocol: 'main' }), [port, server]);
   const savedTheme = getLocalStorage(LocalStorageName.THEME);
   const [currentTheme, setCurrentTheme] = useState<keyof Themes>(savedTheme || 'light');
   const _themes = useMemo(() => changeColors({ colors, themes }), [colors]);

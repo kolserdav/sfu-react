@@ -5,6 +5,7 @@
   flex-basis: 30%;
   height: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
 
   &::after {
     content: '_____________________________________________________________________________________';
