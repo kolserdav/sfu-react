@@ -404,7 +404,7 @@ export function createServer(
               delete rtc.muteForAll[item];
               delete rtc.offVideo[item];
               delete rtc.peerConnectionsServer[item];
-              db.changeRoomArchive({ userId: item.toString(), archive: true });
+              db.changeRoomArchive({ roomId: item.toString(), archive: true });
               delete rtc.muteds[item];
               delete rtc.adminMuteds[item];
               delete chat.users[item];

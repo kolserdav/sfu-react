@@ -385,10 +385,10 @@ class DB extends Auth implements DBInterface {
     });
   }
 
-  public changeRoomArchive({ userId, archive }: { userId: string; archive: boolean }) {
-    this.roomUpdate({
+  public async changeRoomArchive({ roomId, archive }: { roomId: string; archive: boolean }) {
+    await this.roomUpdate({
       where: {
-        id: userId,
+        id: roomId,
       },
       data: {
         archive,
@@ -420,6 +420,64 @@ class DB extends Auth implements DBInterface {
       log('warn', 'Video not found', { roomId, time });
     }
   };
+
+  public saveGuest({ userId, roomId }: { userId: string; roomId: string }) {
+    this.unitFindFirst({
+      where: {
+        id: userId,
+      },
+      select: {
+        IGuest: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    }).then((g) => {
+      const id = roomId;
+      if (!g) {
+        log('warn', 'Unit not found', { id: userId });
+      } else if (!g?.IGuest[0]) {
+        this.unitUpdate({
+          where: {
+            id: userId,
+          },
+          data: {
+            IGuest: {
+              create: {
+                roomId: id,
+              },
+            },
+            updated: new Date(),
+          },
+        }).then((r) => {
+          if (!r) {
+            log('warn', 'Room not updated', { roomId });
+          }
+        });
+      } else if (g.IGuest[0].id) {
+        this.unitUpdate({
+          where: {
+            id: userId,
+          },
+          data: {
+            IGuest: {
+              update: {
+                where: {
+                  id: g.IGuest[0].id,
+                },
+                data: {
+                  updated: new Date(),
+                },
+              },
+            },
+          },
+        });
+      } else {
+        log('warn', 'Room not saved', { g: g.IGuest[0]?.id, id });
+      }
+    });
+  }
 }
 
 export default DB;
