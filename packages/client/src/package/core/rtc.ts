@@ -539,6 +539,9 @@ class RTC
     this.peerConnections[peerId]!.onsignalingstatechange = null;
     this.peerConnections[peerId]!.onnegotiationneeded = null;
     this.peerConnections[peerId]!.ontrack = null;
+    this.peerConnections[peerId]!.getSenders().forEach((item) => {
+      this.peerConnections[peerId]!.removeTrack(item);
+    });
     this.peerConnections[peerId]!.close();
     delete this.peerConnections[peerId];
     delete this.onAddTrack[peerId];

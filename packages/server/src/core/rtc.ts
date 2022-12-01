@@ -602,6 +602,9 @@ class RTC
     this.peerConnectionsServer[roomId][peerId]!.onsignalingstatechange = null;
     this.peerConnectionsServer[roomId][peerId]!.onnegotiationneeded = null;
     this.peerConnectionsServer[roomId][peerId]!.ontrack = null;
+    this.peerConnectionsServer[roomId][peerId]!.getSenders().forEach((item) => {
+      this.peerConnectionsServer[roomId][peerId]!.removeTrack(item);
+    });
     this.peerConnectionsServer[roomId][peerId]!.close();
     delete this.peerConnectionsServer[roomId][peerId];
     if (target.toString() === '0') {

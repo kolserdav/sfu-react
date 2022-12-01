@@ -501,6 +501,28 @@ export const useConnection = ({
   );
 
   /**
+   * Listen reload page
+   */
+  useEffect(() => {
+    const reloadHandler = (ev: BeforeUnloadEvent) => {
+      ev.preventDefault();
+      Object.keys(rtc.peerConnections).forEach((item) => {
+        const peer = item.split(rtc.delimiter);
+        rtc.closeVideoCall({
+          roomId: peer[0],
+          userId: id,
+          target: peer[1],
+          connId: peer[2],
+        });
+      });
+    };
+    window.addEventListener('beforeunload', reloadHandler);
+    return () => {
+      window.removeEventListener('beforeunload', reloadHandler);
+    };
+  }, [id, rtc]);
+
+  /**
    * Connections handlers
    */
   useEffect(() => {
