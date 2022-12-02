@@ -142,7 +142,8 @@ export const isClickByDialog = ({
 }: {
   clientX: number;
   clientY: number;
-  dialog: Omit<DialogProps, 'children'>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  dialog: Omit<DialogProps<any>, 'children'>;
 }) => {
   const isX = clientX > dialog.clientX && clientX < dialog.clientX + dialog.width;
   const isY = clientY > dialog.clientY && clientY < dialog.clientY + dialog.height;

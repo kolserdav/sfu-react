@@ -72,18 +72,25 @@ export interface AlertProps {
   theme?: Theme;
 }
 
-export interface DialogProps {
+export type DialogPropsDefaultContext = {
+  id: number;
+  unitId: string;
+  text: string;
+};
+
+export type DialogPropsUsersContext = {
+  unitId: string;
+  isOwner: boolean;
+};
+
+export interface DialogProps<T> {
   open: boolean;
   children: React.ReactNode;
   clientX: number;
   clientY: number;
   width: number;
   height: number;
-  context: {
-    id: number;
-    unitId: string;
-    text: string;
-  };
+  context: T;
   secure?: boolean;
   theme?: Theme;
 }

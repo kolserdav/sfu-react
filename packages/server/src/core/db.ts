@@ -19,7 +19,7 @@ class DB extends Auth implements DBInterface {
   // eslint-disable-next-line class-methods-use-this
   public roomFindFirst: DBInterface['roomFindFirst'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let result: any = null;
+    let result: any;
     try {
       result = await prisma.room.findFirst(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -32,7 +32,7 @@ class DB extends Auth implements DBInterface {
   // eslint-disable-next-line class-methods-use-this
   public roomUpdate: DBInterface['roomUpdate'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let result: any = null;
+    let result: any;
     try {
       result = await prisma.room.update(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,7 +45,7 @@ class DB extends Auth implements DBInterface {
   // eslint-disable-next-line class-methods-use-this
   public roomCreate: DBInterface['roomCreate'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let result: any = null;
+    let result: any;
     try {
       result = await prisma.room.create(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -58,7 +58,7 @@ class DB extends Auth implements DBInterface {
   // eslint-disable-next-line class-methods-use-this
   public unitCreate: DBInterface['unitCreate'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let result: any = null;
+    let result: any;
     try {
       result = await prisma.unit.create(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -71,7 +71,7 @@ class DB extends Auth implements DBInterface {
   // eslint-disable-next-line class-methods-use-this
   public unitUpdate: DBInterface['unitUpdate'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let result: any = null;
+    let result: any;
     try {
       result = await prisma.unit.update(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -84,7 +84,7 @@ class DB extends Auth implements DBInterface {
   // eslint-disable-next-line class-methods-use-this
   public unitFindFirst: DBInterface['unitFindFirst'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let result: any = null;
+    let result: any;
     try {
       result = await prisma.unit.findFirst(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -97,7 +97,7 @@ class DB extends Auth implements DBInterface {
   // eslint-disable-next-line class-methods-use-this
   public messageUpdate: DBInterface['messageUpdate'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let result: any = null;
+    let result: any;
     try {
       result = await prisma.message.update(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -110,7 +110,7 @@ class DB extends Auth implements DBInterface {
   // eslint-disable-next-line class-methods-use-this
   public messageCreate: DBInterface['messageCreate'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let result: any = null;
+    let result: any;
     try {
       result = await prisma.message.create(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -123,7 +123,7 @@ class DB extends Auth implements DBInterface {
   // eslint-disable-next-line class-methods-use-this
   public quoteCreate: DBInterface['quoteCreate'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let result: any = null;
+    let result: any;
     try {
       result = await prisma.quote.create(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -178,7 +178,6 @@ class DB extends Auth implements DBInterface {
     if (!message) {
       return null;
     }
-    console.log(message);
     if (message.Message?.length) {
       try {
         message = await prisma.message.update({
@@ -206,7 +205,7 @@ class DB extends Auth implements DBInterface {
       }
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let result: any = null;
+    let result: any;
     try {
       result = await prisma.message.delete(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -249,7 +248,7 @@ class DB extends Auth implements DBInterface {
   // eslint-disable-next-line class-methods-use-this
   public videoFindFirst: DBInterface['videoFindFirst'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let result: any = null;
+    let result: any;
     try {
       result = await prisma.video.findFirst(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -262,7 +261,7 @@ class DB extends Auth implements DBInterface {
   // eslint-disable-next-line class-methods-use-this
   public videoUpdate: DBInterface['videoUpdate'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let result: any = null;
+    let result: any;
     try {
       result = await prisma.video.update(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -275,7 +274,7 @@ class DB extends Auth implements DBInterface {
   // eslint-disable-next-line class-methods-use-this
   public videoCreate: DBInterface['videoCreate'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let result: any = null;
+    let result: any;
     try {
       result = await prisma.video.create(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -288,12 +287,64 @@ class DB extends Auth implements DBInterface {
   // eslint-disable-next-line class-methods-use-this
   public videoDelete: DBInterface['videoDelete'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let result: any = null;
+    let result: any;
     try {
       result = await prisma.video.delete(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error delete video', { args, err });
+    }
+    return result;
+  };
+
+  // eslint-disable-next-line class-methods-use-this
+  public adminsFindFirst: DBInterface['adminsFindFirst'] = async (args) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let result: any;
+    try {
+      result = await prisma.admins.findFirst(args);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      log('error', 'DB Error admins find first', { args, err });
+    }
+    return result;
+  };
+
+  // eslint-disable-next-line class-methods-use-this
+  public adminsCreate: DBInterface['adminsCreate'] = async (args) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let result: any;
+    try {
+      result = await prisma.admins.create(args);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      log('error', 'DB Error admins create', { args, err });
+    }
+    return result;
+  };
+
+  // eslint-disable-next-line class-methods-use-this
+  public adminsUpdate: DBInterface['adminsUpdate'] = async (args) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let result: any;
+    try {
+      result = await prisma.admins.update(args);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      log('error', 'DB Error admins update', { args, err });
+    }
+    return result;
+  };
+
+  // eslint-disable-next-line class-methods-use-this
+  public adminsDelete: DBInterface['adminsDelete'] = async (args) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let result: any;
+    try {
+      result = await prisma.admins.delete(args);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      log('error', 'DB Error admins delete', { args, err });
     }
     return result;
   };

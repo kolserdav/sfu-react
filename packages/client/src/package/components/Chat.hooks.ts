@@ -32,7 +32,7 @@ import {
   TEXT_AREA_PADDING_LEFT,
   TEXT_AREA_BORDER_WIDTH,
 } from '../utils/constants';
-import { DialogProps } from '../types';
+import { DialogProps, DialogPropsDefaultContext } from '../types';
 import { scrollToBottom, scrollToTop, scrollTo, gettextAreaRows } from './Chat.lib';
 import storeError from '../store/error';
 import storeClickDocument from '../store/clickDocument';
@@ -104,7 +104,7 @@ export const useMesages = ({
   );
 
   const clickBlockChatWrapper = useMemo(
-    () => (context: DialogProps['context']) => () => {
+    () => (context: DialogProps<DialogPropsDefaultContext>['context']) => () => {
       const { unitId } = context;
       ws.sendMessage({
         id: roomId,
@@ -136,7 +136,7 @@ export const useMesages = ({
   );
 
   const clickQuoteWrapper = useMemo(
-    () => (context: DialogProps['context']) => () => {
+    () => (context: DialogProps<DialogPropsDefaultContext>['context']) => () => {
       const { id, text } = context;
       setQuotedMessage(id);
       setEditedMessage(0);
@@ -153,7 +153,7 @@ export const useMesages = ({
   );
 
   const clickEditWrapper = useMemo(
-    () => (context: DialogProps['context']) => () => {
+    () => (context: DialogProps<DialogPropsDefaultContext>['context']) => () => {
       const { text, id } = context;
       setEditedMessage(id);
       setQuotedMessage(0);
@@ -171,7 +171,7 @@ export const useMesages = ({
   );
 
   const clickDeleteWrapper = useMemo(
-    () => (context: DialogProps['context']) => () => {
+    () => (context: DialogProps<DialogPropsDefaultContext>['context']) => () => {
       const { id } = context;
       ws.sendMessage({
         type: MessageType.GET_DELETE_MESSAGE,
@@ -678,7 +678,8 @@ export const useMesages = ({
 };
 
 export const useDialog = () => {
-  const [dialog, setDialog] = useState<Omit<DialogProps, 'children'>>(DIALOG_DEFAULT);
+  const [dialog, setDialog] =
+    useState<Omit<DialogProps<DialogPropsDefaultContext>, 'children'>>(DIALOG_DEFAULT);
   const messageContextWrapper =
     (item: MessageFull, secure: boolean) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       const { shiftKey } = ev;

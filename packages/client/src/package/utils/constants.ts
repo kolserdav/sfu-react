@@ -8,7 +8,13 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import { AlertProps, ClickPosition, DialogProps } from '../types';
+import {
+  AlertProps,
+  ClickPosition,
+  DialogProps,
+  DialogPropsDefaultContext,
+  DialogPropsUsersContext,
+} from '../types';
 import { LogLevel } from '../types/interfaces';
 
 export const LOG_LEVEL: LogLevel = parseInt(process.env.REACT_APP_LOG_LEVEL as string, 10);
@@ -40,8 +46,8 @@ export const ALERT_DEFAULT: AlertProps = {
   type: 'log',
 };
 export const ALERT_TIMEOUT = 3000;
-export const CONTEXT_DEFAULT = { unitId: '0', id: 0, text: '' };
-export const DIALOG_DEFAULT: DialogProps = {
+export const CONTEXT_DEFAULT = { unitId: '0', id: 0, text: '', isOwner: false };
+export const DIALOG_DEFAULT: DialogProps<DialogPropsDefaultContext & DialogPropsUsersContext> = {
   open: false,
   children: '',
   clientX: 0,
@@ -65,11 +71,11 @@ export const DIALOG_MESSAGE_DIMENSION = {
 };
 export const DIALOG_SETTINGS_DIMENSION = {
   width: 120,
-  height: 120,
+  height: 180,
 };
 export const DIALOG_USER_DIMENSION = {
   width: 120,
-  height: 60,
+  height: 100,
 };
 export const SHORT_MESS_LENGTH = 30;
 export const FIRST_MESSAGE_INDENT = 20;

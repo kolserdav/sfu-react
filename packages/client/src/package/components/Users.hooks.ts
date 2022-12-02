@@ -27,12 +27,13 @@ import {
 import storeMuteForAll, { changeMuteForAll } from '../store/muteForAll';
 import { useIsOwner } from '../utils/hooks';
 import storeChatBlockeds from '../store/chatBlockeds';
-import { DialogProps, Volumes } from '../types';
+import { DialogProps, DialogPropsUsersContext, Volumes } from '../types';
 import { getDialogPosition, isClickByDialog } from '../utils/lib';
 import storeClickDocument from '../store/clickDocument';
 import storeBanned, { changeBanned } from '../store/banned';
 import { getLocalStorage, LocalStorageName } from '../utils/localStorage';
 import storeVolume, { changeVolume } from '../store/volume';
+import storeAdmin, { changeAdmin } from '../store/admin';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useUsers = ({
@@ -352,11 +353,11 @@ export const useMuteAll = ({
 
 export const useSettings = ({ isOwner }: { isOwner: boolean }) => {
   const [dialogSettings, setDialogSettings] =
-    useState<Omit<DialogProps, 'children'>>(DIALOG_DEFAULT);
+    useState<Omit<DialogProps<DialogPropsUsersContext>, 'children'>>(DIALOG_DEFAULT);
 
   const clickToBanWrapper = useMemo(
     () =>
-      ({ unitId }: Omit<DialogProps, 'children'>['context']) =>
+      ({ unitId }: Omit<DialogProps<DialogPropsUsersContext>, 'children'>['context']) =>
       () => {
         storeBanned.dispatch(
           changeBanned({
@@ -368,9 +369,26 @@ export const useSettings = ({ isOwner }: { isOwner: boolean }) => {
     []
   );
 
+  const clickToSetAdminWrapper = useMemo(
+    () =>
+      ({
+        unitId,
+        isOwner: _isOwner,
+      }: Omit<DialogProps<DialogPropsUsersContext>, 'children'>['context']) =>
+      () => {
+        storeAdmin.dispatch(
+          changeAdmin({
+            id: unitId,
+            admin: !_isOwner,
+          })
+        );
+      },
+    []
+  );
+
   const onContextMenuWrapper = useMemo(
     () =>
-      (context: DialogProps['context']) =>
+      (context: DialogProps<DialogPropsUsersContext>['context']) =>
       (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
         if (!isOwner) {
           return;
@@ -418,11 +436,12 @@ export const useSettings = ({ isOwner }: { isOwner: boolean }) => {
     };
   }, [dialogSettings]);
 
-  return { dialogSettings, clickToBanWrapper, onContextMenuWrapper };
+  return { dialogSettings, clickToBanWrapper, onContextMenuWrapper, clickToSetAdminWrapper };
 };
 
 export const useVolume = ({ roomId }: { roomId: string | number }) => {
-  const [dialogVolume, setDialogVolume] = useState<Omit<DialogProps, 'children'>>(DIALOG_DEFAULT);
+  const [dialogVolume, setDialogVolume] =
+    useState<Omit<DialogProps<DialogPropsUsersContext>, 'children'>>(DIALOG_DEFAULT);
   const savedVolumes = useMemo(() => {
     const ls = getLocalStorage(LocalStorageName.VOLUMES);
     if (!ls) {
@@ -453,21 +472,23 @@ export const useVolume = ({ roomId }: { roomId: string | number }) => {
   );
 
   const clickToVolume = useMemo(
-    () => (targetId: string | number) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-      const { clientX: _clientX, clientY: _clientY } = ev;
-      const { width, height } = DIALOG_VOLUME_DIMENSION;
-      const { clientX, clientY } = getDialogPosition({ _clientX, _clientY, width, height });
-      setTimeout(() => {
-        setDialogVolume({
-          open: true,
-          clientX,
-          clientY,
-          context: { unitId: targetId.toString(), id: 0, text: '' },
-          width,
-          height,
-        });
-      }, 0);
-    },
+    () =>
+      ({ target, isOwner }: { target: string | number; isOwner: boolean }) =>
+      (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        const { clientX: _clientX, clientY: _clientY } = ev;
+        const { width, height } = DIALOG_VOLUME_DIMENSION;
+        const { clientX, clientY } = getDialogPosition({ _clientX, _clientY, width, height });
+        setTimeout(() => {
+          setDialogVolume({
+            open: true,
+            clientX,
+            clientY,
+            context: { unitId: target.toString(), isOwner },
+            width,
+            height,
+          });
+        }, 0);
+      },
     []
   );
 

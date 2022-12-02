@@ -30,7 +30,7 @@ import {
   ErrorCode,
   Command,
 } from '../types/interfaces';
-import { Stream, DialogProps, Volumes } from '../types';
+import { Stream, DialogProps, Volumes, DialogPropsUsersContext } from '../types';
 import s from './Room.module.scss';
 import c from './ui/CloseButton.module.scss';
 import storeStreams, { changeStreams } from '../store/streams';
@@ -41,7 +41,6 @@ import {
   DIALOG_VOLUME_DIMENSION,
   VOLUME_MIN,
   DIALOG_SETTINGS_DIMENSION,
-  ALERT_TIMEOUT,
   VIDEO_ACTIONS_STYLE,
   VIDEO_STARTED_HOOK_TIMEOUT,
   ROOM_LENGTH_TEST,
@@ -63,6 +62,7 @@ import storeSpeaker, { changeSpeaker } from '../store/speaker';
 import storeMuteForAll from '../store/muteForAll';
 import storeBanned from '../store/banned';
 import storeVolume from '../store/volume';
+import storeAdmin from '../store/admin';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
@@ -222,7 +222,7 @@ export const useConnection = ({
   );
 
   const clickToMuteWrapper = useMemo(
-    () => (context: DialogProps['context']) => () => {
+    () => (context: DialogProps<DialogPropsUsersContext>['context']) => () => {
       const { unitId: userId } = context;
       if (!userId || !roomId) {
         return;
@@ -251,7 +251,7 @@ export const useConnection = ({
   );
 
   const clickToUnMuteWrapper = useMemo(
-    () => (context: DialogProps['context']) => () => {
+    () => (context: DialogProps<DialogPropsUsersContext>['context']) => () => {
       const { unitId: userId } = context;
       if (!userId || !roomId) {
         return;
@@ -280,7 +280,7 @@ export const useConnection = ({
   );
 
   const clickToBanWrapper = useMemo(
-    () => (context: DialogProps['context']) => () => {
+    () => (context: DialogProps<DialogPropsUsersContext>['context']) => () => {
       const { unitId: userId } = context;
       if (!userId || !roomId) {
         return;
@@ -332,7 +332,7 @@ export const useConnection = ({
     const cleanSubs = storeBanned.subscribe(() => {
       const { id: _id } = storeBanned.getState();
       if (isOwner && _id !== id) {
-        clickToBanWrapper({ unitId: _id.toString(), text: '', id: 0 })();
+        clickToBanWrapper({ unitId: _id.toString(), isOwner: false })();
       }
     });
     return () => {
@@ -388,7 +388,10 @@ export const useConnection = ({
   useEffect(() => {
     const cleanSubs = storeAdminMuted.subscribe(() => {
       const { id: _id, adminMuted: _adminMuted } = storeAdminMuted.getState();
-      const context: DialogProps['context'] = { unitId: _id.toString(), id: 0, text: '' };
+      const context: DialogProps<DialogPropsUsersContext>['context'] = {
+        unitId: _id.toString(),
+        isOwner: false,
+      };
       if (!_adminMuted) {
         if (_id) {
           clickToUnMuteWrapper(context)();
@@ -442,7 +445,7 @@ export const useConnection = ({
 
   const clickToVideoOffWrapper = useMemo(
     () =>
-      ({ unitId }: DialogProps['context']) =>
+      ({ unitId }: DialogProps<DialogPropsUsersContext>['context']) =>
       () => {
         setVideoHandler({ target: unitId, command: 'add' });
       },
@@ -456,6 +459,27 @@ export const useConnection = ({
       setVideoHandler({ target, command: !_video ? 'add' : 'delete' });
     },
     [video, setVideoHandler]
+  );
+
+  const clickToSetAdminWrapper = useMemo(
+    () =>
+      ({ unitId, isOwner: _isOwner }: DialogProps<DialogPropsUsersContext>['context']) =>
+      () => {
+        if (!roomId) {
+          return;
+        }
+        ws.sendMessage({
+          id: roomId,
+          type: MessageType.GET_TO_ADMIN,
+          connId: connectionId,
+          data: {
+            target: unitId,
+            userId: ws.userId,
+            command: !_isOwner ? 'add' : 'delete',
+          },
+        });
+      },
+    [roomId, ws, connectionId]
   );
 
   /**
@@ -521,6 +545,19 @@ export const useConnection = ({
       window.removeEventListener('beforeunload', reloadHandler);
     };
   }, [id, rtc]);
+
+  /**
+   * Listen set admin
+   */
+  useEffect(() => {
+    const cleanSubs = storeAdmin.subscribe(() => {
+      const { id: _id, admin } = storeAdmin.getState();
+      clickToSetAdminWrapper({ unitId: _id.toString(), isOwner: !admin })();
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, [clickToSetAdminWrapper]);
 
   /**
    * Connections handlers
@@ -900,6 +937,42 @@ export const useConnection = ({
       }
     };
 
+    const setToAdminHandler = ({
+      data: { target, command },
+    }: SendMessageArgs<MessageType.SET_TO_ADMIN>) => {
+      const { streams: _streams } = storeStreams.getState();
+      let stream: Stream | undefined;
+      _streams.every((item, i) => {
+        if (item.target === target) {
+          stream = { ...item };
+          return false;
+        }
+        return true;
+      });
+      if (typeof stream !== 'undefined') {
+        stream.isOwner = command === 'add';
+        if (stream.isOwner !== isOwner) {
+          setIsOwner(stream.isOwner);
+        }
+        storeStreams.dispatch(
+          changeStreams({
+            stream,
+            type: 'delete',
+            change: true,
+          })
+        );
+        storeStreams.dispatch(
+          changeStreams({
+            stream,
+            type: 'add',
+            change: true,
+          })
+        );
+      } else {
+        log('warn', 'Stream for change isOwner is missing', { target, command });
+      }
+    };
+
     ws.onMessage = (ev) => {
       const { data } = ev;
       const rawMessage = ws.parseMessage(data);
@@ -964,6 +1037,9 @@ export const useConnection = ({
           break;
         case MessageType.SET_BAN_LIST:
           changeBanList(rawMessage);
+          break;
+        case MessageType.SET_TO_ADMIN:
+          setToAdminHandler(rawMessage);
           break;
         case MessageType.SET_ERROR:
           handleError(rawMessage);
@@ -1151,6 +1227,7 @@ export const useConnection = ({
     clickToUnMuteWrapper,
     clickToBanWrapper,
     clickToVideoOffWrapper,
+    clickToSetAdminWrapper,
     onVideoTimer,
   };
 };
@@ -1385,7 +1462,8 @@ export const useVolumeDialog = ({
   container: React.MutableRefObject<HTMLDivElement | null>;
   userId: string | number;
 }) => {
-  const [dialog, setDialog] = useState<Omit<DialogProps, 'children'>>(DIALOG_DEFAULT);
+  const [dialog, setDialog] =
+    useState<Omit<DialogProps<DialogPropsUsersContext>, 'children'>>(DIALOG_DEFAULT);
   const savedVolumes = useMemo(() => {
     const ls = getLocalStorage(LocalStorageName.VOLUMES);
     if (!ls) {
@@ -1451,7 +1529,7 @@ export const useVolumeDialog = ({
           open: true,
           clientX,
           clientY,
-          context: { unitId: targetId.toString(), id: 0, text: '' },
+          context: { unitId: targetId.toString(), isOwner: false },
           width,
           height,
         });
@@ -1491,10 +1569,11 @@ export const useVolumeDialog = ({
 
 export const useSettingsDialog = () => {
   const [dialogSettings, setDialogSettings] =
-    useState<Omit<DialogProps, 'children'>>(DIALOG_DEFAULT);
+    useState<Omit<DialogProps<DialogPropsUsersContext>, 'children'>>(DIALOG_DEFAULT);
 
   const clickToSettingsWrapper =
-    (targetId: string | number) => (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    ({ target, isOwner }: { target: string | number; isOwner: boolean }) =>
+    (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       const { clientX: _clientX, clientY: _clientY } = ev;
       const { width, height } = DIALOG_SETTINGS_DIMENSION;
       const { clientX, clientY } = getDialogPosition({ _clientX, _clientY, width, height });
@@ -1503,7 +1582,7 @@ export const useSettingsDialog = () => {
           open: true,
           clientX,
           clientY,
-          context: { unitId: targetId.toString(), id: 0, text: '' },
+          context: { unitId: target.toString(), isOwner },
           width,
           height,
         });

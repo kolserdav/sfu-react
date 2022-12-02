@@ -16,6 +16,17 @@ model Unit {
   MyRooms Room[]
   IGuest  Guest[]
   Message Message[]
+  Admins  Admins[]
+}
+
+model Admins {
+  id      Int      @id @default(autoincrement())
+  roomId  String
+  unitId  String
+  Room    Room     @relation(fields: [roomId], references: [id])
+  Unit    Unit     @relation(fields: [unitId], references: [id])
+  updated DateTime @default(now())
+  created DateTime @default(now())
 }
 
 model Room {
@@ -28,6 +39,7 @@ model Room {
   Guests   Guest[]
   Message  Message[]
   Video    Video[]
+  Admins   Admins[]
 }
 
 model Guest {

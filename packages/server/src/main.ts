@@ -75,7 +75,7 @@ export function createServer(
   }
   setLogLevel(logLevel);
   const wss = new WS({ port, db });
-  const rtc: RTC | null = new RTC({ ws: wss, db });
+  const rtc: RTC | null = new RTC({ ws: wss });
   const recordVideo = new RecordVideo({ settings, rtc });
   settings.checkTokenCb = checkTokenCb || settings.checkTokenCb;
   chat.checkTokenCb = checkTokenCb || chat.checkTokenCb;
@@ -242,6 +242,9 @@ export function createServer(
           break;
         case MessageType.GET_VIDEO_TRACK:
           rtc.getVideoTrackHandler(rawMessage);
+          break;
+        case MessageType.GET_TO_ADMIN:
+          rtc.getToAdminHandler(rawMessage);
           break;
         case MessageType.GET_VIDEO_FIND_FIRST:
           settings.videoFindFirstHandler(rawMessage);

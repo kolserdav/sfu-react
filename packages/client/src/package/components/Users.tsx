@@ -97,7 +97,8 @@ function Users({
     adminMuteds,
   });
 
-  const { dialogSettings, clickToBanWrapper, onContextMenuWrapper } = useSettings({ isOwner });
+  const { dialogSettings, clickToBanWrapper, onContextMenuWrapper, clickToSetAdminWrapper } =
+    useSettings({ isOwner });
   const { dialogVolume, changeVolumeWrapper, clickToVolume, volumes, volumeUserId } = useVolume({
     roomId,
   });
@@ -136,11 +137,14 @@ function Users({
         <div
           key={item.id}
           className={s.users__item}
-          onContextMenu={onContextMenuWrapper({
-            unitId: item.id.toString(),
-            text: '',
-            id: 0,
-          })}
+          onContextMenu={
+            item.id !== userId
+              ? onContextMenuWrapper({
+                  unitId: item.id.toString(),
+                  isOwner: item.isOwner,
+                })
+              : undefined
+          }
         >
           <div className={s.user}>
             <span
@@ -200,7 +204,11 @@ function Users({
               )}
               <IconButton
                 disabled={item.id !== userId && item.muted}
-                onClick={item.id === userId ? changeMutedWrapper(item) : clickToVolume(item.id)}
+                onClick={
+                  item.id === userId
+                    ? changeMutedWrapper(item)
+                    : clickToVolume({ target: item.id, isOwner: item.isOwner })
+                }
               >
                 {item.muted ? (
                   <MicrophoneOffIcon
@@ -217,7 +225,7 @@ function Users({
                 )}
               </IconButton>
             </div>
-            {item.adminMuted && item.id === userId && !asked && (
+            {item.adminMuted && item.id === userId && !asked && !item.isOwner && (
               <IconButton onClick={askForTheFloorWrapper(item)} title={locale.askForTheFloor}>
                 <HandUpIcon
                   width={USERS_ICON_WIDTH_BIG}
@@ -235,7 +243,7 @@ function Users({
                 />
               </IconButton>
             )}
-            {isOwner && item.id !== userId && (
+            {isOwner && (item.id !== userId || item.adminMuted) && (
               <IconButton
                 onClick={changeAdminMutedWrapper(item)}
                 title={item.adminMuted ? locale.unmute : locale.mute}
@@ -295,6 +303,15 @@ function Users({
           className={g.dialog__item}
         >
           {locale.ban}
+        </div>
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}
+        <div
+          tabIndex={-2}
+          role="button"
+          onClick={clickToSetAdminWrapper(dialogSettings.context)}
+          className={g.dialog__item}
+        >
+          {dialogSettings.context.isOwner ? locale.deleteFromAdmins : locale.setAsAdmin}
         </div>
       </Dialog>
       <Dialog {...dialogVolume} theme={theme}>

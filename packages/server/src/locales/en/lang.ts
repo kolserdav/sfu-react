@@ -22,6 +22,8 @@ const lang: LocaleServer = {
     duplicateTab:
       'An unsupported attempt was made to reconnect in a new tab. Only one point can be connected to a room at a time.',
     connected: 'Connected',
+    ownerCanNotBeDeleted: 'Owner can not be deleted form admins',
+    ownerCanNotBeBanned: 'Owner can not be banned',
   },
   client: {
     shareScreen: 'Share screen',
@@ -78,6 +80,8 @@ const lang: LocaleServer = {
       'A video capture device (webcam) is required to get started. At startup, the video stream is disabled by default.',
     audioDeviceRequired:
       'An audio capture device (microphone) is required to get started. At startup, the audio stream is disabled by default.',
+    setAsAdmin: 'Set as admin',
+    deleteFromAdmins: 'Delete from admins',
   },
 };
 

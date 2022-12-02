@@ -12,7 +12,8 @@ import React from 'react';
 import s from './Dialog.module.scss';
 import { DialogProps } from '../../types';
 
-function Dialog({ open, children, clientY, clientX, theme, width, height }: DialogProps) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function Dialog({ open, children, clientY, clientX, theme, width, height }: DialogProps<any>) {
   return (
     <div
       style={{

@@ -43,6 +43,7 @@ export type OnRoomConnect = (args: {
 export type OnRoomOpen = (args: { roomId: string | number; ownerId: string | number }) => void;
 
 class RTC
+  extends DB
   implements
     Omit<RTCInterface, 'peerConnections' | 'createRTC' | 'handleVideoAnswerMsg' | 'addTracks'>
 {
@@ -71,17 +72,11 @@ class RTC
 
   private ws: WS;
 
-  /**
-   * @deprecated
-   * move db
-   */
-  private db: DB;
-
   public streams: Record<string, Record<string, werift.MediaStreamTrack[]>> = {};
 
-  constructor({ ws, db }: { ws: WS; db: DB }) {
+  constructor({ ws }: { ws: WS }) {
+    super();
     this.ws = ws;
-    this.db = db;
     log('info', 'Ice port range env.(ICE_PORT_MAX, ICE_PORT_MAX) is', this.icePortRange, true);
   }
 
@@ -497,6 +492,167 @@ class RTC
     }
   };
 
+  private deleteRoomItem({ roomId, target }: { roomId: string; target: string }) {
+    let index = -1;
+    let roomUser: RoomUser | null = null;
+    this.rooms[roomId].every((item, i) => {
+      if (item.id === target) {
+        index = i;
+        roomUser = { ...item };
+        return false;
+      }
+      return true;
+    });
+    if (index !== -1) {
+      this.rooms[roomId].splice(index, 1);
+    } else {
+      log('warn', 'Room user is missing for delete', { target, roomId });
+    }
+    return roomUser;
+  }
+
+  public async getToAdminHandler({
+    data: { target, userId, command },
+    id,
+    connId,
+  }: SendMessageArgs<MessageType.GET_TO_ADMIN>) {
+    const roomId = id.toString();
+    const unitId = target.toString();
+    const locale = getLocale(this.ws.users[userId].locale).server;
+    let admins = await this.adminsFindFirst({
+      where: {
+        AND: [
+          {
+            roomId,
+          },
+          {
+            unitId,
+          },
+        ],
+      },
+    });
+    if (typeof admins === 'undefined') {
+      this.ws.sendMessage({
+        type: MessageType.SET_ERROR,
+        id: userId,
+        connId,
+        data: {
+          type: 'error',
+          code: ErrorCode.errorSetAdmin,
+          message: locale.error,
+        },
+      });
+      return;
+    }
+    const room = await this.roomFindFirst({
+      where: {
+        id: roomId,
+      },
+    });
+    if (typeof room === 'undefined') {
+      this.ws.sendMessage({
+        type: MessageType.SET_ERROR,
+        id: userId,
+        connId,
+        data: {
+          type: 'error',
+          code: ErrorCode.errorSetAdmin,
+          message: locale.error,
+        },
+      });
+      return;
+    }
+    let roomUser: RoomUser;
+    switch (command) {
+      case 'add':
+        if (admins !== null) {
+          log('warn', 'Duplicate room admin', { userId, target, id });
+          return;
+        }
+        admins = await this.adminsCreate({
+          data: {
+            unitId,
+            roomId,
+          },
+        });
+        if (typeof admins === 'undefined') {
+          this.ws.sendMessage({
+            type: MessageType.SET_ERROR,
+            id: userId,
+            connId,
+            data: {
+              type: 'error',
+              code: ErrorCode.errorSetAdmin,
+              message: locale.error,
+            },
+          });
+          return;
+        }
+        roomUser = { ...this.deleteRoomItem({ roomId, target: unitId }) };
+        if (roomUser === null) {
+          return;
+        }
+        roomUser.isOwner = true;
+        this.rooms[id].push(roomUser);
+        break;
+      case 'delete':
+        if (target.toString() === room.authorId) {
+          this.ws.sendMessage({
+            type: MessageType.SET_ERROR,
+            id: userId,
+            connId,
+            data: {
+              type: 'warn',
+              code: ErrorCode.errorSetAdmin,
+              message: locale.ownerCanNotBeDeleted,
+            },
+          });
+          return;
+        }
+        if (admins === null) {
+          log('warn', 'Delete missing admin', { userId, target, id });
+          return;
+        }
+        admins = await this.adminsDelete({
+          where: {
+            id: admins.id,
+          },
+        });
+        if (typeof admins === 'undefined') {
+          this.ws.sendMessage({
+            type: MessageType.SET_ERROR,
+            id: userId,
+            connId,
+            data: {
+              type: 'error',
+              code: ErrorCode.errorSetAdmin,
+              message: locale.error,
+            },
+          });
+          return;
+        }
+        roomUser = { ...this.deleteRoomItem({ roomId, target: unitId }) };
+        if (roomUser === null) {
+          return;
+        }
+        roomUser.isOwner = false;
+        this.rooms[id].push(roomUser);
+        break;
+      default:
+    }
+    this.rooms[roomId].forEach((item) => {
+      this.ws.sendMessage({
+        id: item.id,
+        type: MessageType.SET_TO_ADMIN,
+        connId: '',
+        data: {
+          target,
+          command,
+        },
+      });
+    });
+  }
+
   private getStreamConnId(roomId: string | number, userId: string | number) {
     let _connId = '';
     const keys = this.getKeysStreams(roomId);
@@ -624,7 +780,7 @@ class RTC
     onRoomOpen?: OnRoomOpen;
     isPublic: boolean;
   }): Promise<{ error: 1 | 0; isOwner: boolean }> {
-    let room = await this.db.roomFindFirst({
+    let room = await this.roomFindFirst({
       where: {
         id: roomId.toString(),
       },
@@ -633,7 +789,7 @@ class RTC
     let isOwner = room?.authorId === userId.toString();
     if (!room) {
       const authorId = userId.toString();
-      room = await this.db.roomCreate({
+      room = await this.roomCreate({
         data: {
           id: roomId.toString(),
           authorId: isPublic ? undefined : authorId,
@@ -656,8 +812,26 @@ class RTC
         },
       });
     } else {
+      const unitId = userId.toString();
+      if (room.authorId !== null) {
+        const admins = await this.adminsFindFirst({
+          where: {
+            AND: [
+              {
+                roomId: room.id,
+              },
+              {
+                unitId,
+              },
+            ],
+          },
+        });
+        if (admins) {
+          isOwner = true;
+        }
+      }
       if (room.archive) {
-        isOwner = !isOwner ? room?.authorId === null : isOwner;
+        isOwner = !isOwner ? room.authorId === null : isOwner;
         if (!isOwner && room?.authorId !== null) {
           this.ws.sendMessage({
             type: MessageType.SET_ERROR,
@@ -675,7 +849,7 @@ class RTC
           };
         }
         if (isOwner) {
-          await this.db.changeRoomArchive({ roomId: roomId.toString(), archive: false });
+          await this.changeRoomArchive({ roomId: roomId.toString(), archive: false });
         }
       }
       this.ws.sendMessage({
@@ -688,7 +862,7 @@ class RTC
           code: ErrorCode.initial,
         },
       });
-      this.db.saveGuest({ roomId: roomId.toString(), userId: userId.toString() });
+      this.saveGuest({ roomId: roomId.toString(), userId: userId.toString() });
     }
     const { name } = this.ws.users[userId];
     if (!this.rooms[roomId]) {
@@ -1052,10 +1226,43 @@ class RTC
     });
   }
 
-  public handleGetToBan({
+  public async handleGetToBan({
     id: roomId,
     data: { target, userId },
   }: SendMessageArgs<MessageType.GET_TO_BAN>) {
+    const locale = getLocale(this.ws.users[target].locale).server;
+    const id = roomId.toString();
+    const room = await this.roomFindFirst({
+      where: {
+        id,
+      },
+    });
+    if (typeof room === 'undefined') {
+      this.ws.sendMessage({
+        type: MessageType.SET_ERROR,
+        id: userId,
+        connId: '',
+        data: {
+          type: 'error',
+          code: ErrorCode.errorToBan,
+          message: locale.error,
+        },
+      });
+      return;
+    }
+    if (room?.authorId === target.toString()) {
+      this.ws.sendMessage({
+        type: MessageType.SET_ERROR,
+        id: userId,
+        connId: '',
+        data: {
+          type: 'warn',
+          code: ErrorCode.errorToBan,
+          message: locale.ownerCanNotBeBanned,
+        },
+      });
+      return;
+    }
     if (!this.banneds[roomId]) {
       this.banneds[roomId] = [];
     }
@@ -1078,7 +1285,6 @@ class RTC
     } else {
       log('warn', 'Duplicate to ban command', { roomId, target });
     }
-    const locale = getLocale(this.ws.users[target].locale).server;
     const connId = this.ws.users[target]?.connId;
     this.ws.sendMessage({
       type: MessageType.SET_BAN_LIST,

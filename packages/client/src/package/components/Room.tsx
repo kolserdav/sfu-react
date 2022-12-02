@@ -81,6 +81,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     clickToUnMuteWrapper,
     clickToBanWrapper,
     clickToVideoOffWrapper,
+    clickToSetAdminWrapper,
     onVideoTimer,
   } = useConnection({
     id: userId,
@@ -209,7 +210,9 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
               )}
               {isOwner && item.target !== userId && (
                 <div className={s.setting__actions}>
-                  <IconButton onClick={clickToSettingsWrapper(item.target)}>
+                  <IconButton
+                    onClick={clickToSettingsWrapper({ target: item.target, isOwner: item.isOwner })}
+                  >
                     <MenuIcon color={theme?.colors.white} />
                   </IconButton>
                   {askeds.indexOf(item.target) !== -1 && (
@@ -272,13 +275,22 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
               )}
             </IconButton>
           )}
-          {adminMuted && (
+          {adminMuted && !isOwner && (
             <IconButton
               title={locale.askForTheFloor}
               onClick={askFloor}
               disabled={streams.length === 0 || isAsked}
             >
               <HandUpIcon width={40} height={40} color={theme?.colors.text} />
+            </IconButton>
+          )}
+          {adminMuted && isOwner && (
+            <IconButton
+              title={locale.askForTheFloor}
+              onClick={clickToUnMuteWrapper({ unitId: userId.toString(), isOwner: true })}
+              disabled={streams.length === 0 || isAsked}
+            >
+              <MicrophoneOffIcon color={theme?.colors.blue} />
             </IconButton>
           )}
           <IconButton
@@ -354,6 +366,15 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
           className={g.dialog__item}
         >
           {locale.cameraOff}
+        </div>
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}
+        <div
+          tabIndex={-4}
+          role="button"
+          onClick={clickToSetAdminWrapper(dialogSettings.context)}
+          className={g.dialog__item}
+        >
+          {dialogSettings.context.isOwner ? locale.deleteFromAdmins : locale.setAsAdmin}
         </div>
       </Dialog>
     </div>

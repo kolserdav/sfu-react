@@ -13,7 +13,7 @@
 /* eslint-disable max-classes-per-file */
 /* eslint-disable no-unused-vars */
 import * as werift from 'werift';
-import { Message, Prisma, Room, Unit, Video, Quote } from '@prisma/client';
+import { Message, Prisma, Room, Unit, Video, Quote, Admins } from '@prisma/client';
 
 export const RECORD_VIDEO_NAME = 'record';
 export type LocaleValue = 'en' | 'ru';
@@ -61,6 +61,10 @@ export enum ErrorCode {
   notAuthorised = 'notAuthorised',
   duplicateTab = 'duplicateTab',
   errorDeleteMessage = 'errorDeleteMessage',
+  errorSetAdmin = 'errorSetAdmin',
+  errorToBan = 'errorToBan',
+  errorToMute = 'errorToMute',
+  errorToOffCamera = 'errorToOffCamera',
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -138,6 +142,8 @@ export enum MessageType {
   SET_BLOCK_CHAT = 'SET_BLOCK_CHAT',
   GET_VIDEO_TRACK = 'GET_VIDEO_TRACK',
   SET_VIDEO_TRACK = 'SET_VIDEO_TRACK',
+  GET_TO_ADMIN = 'GET_TO_ADMIN',
+  SET_TO_ADMIN = 'SET_TO_ADMIN',
 }
 
 export namespace Locale {
@@ -165,6 +171,8 @@ export namespace Locale {
     notAuthorised: string;
     duplicateTab: string;
     connected: string;
+    ownerCanNotBeDeleted: string;
+    ownerCanNotBeBanned: string;
   }
 
   export interface Client {
@@ -220,6 +228,8 @@ export namespace Locale {
     noActiveVideoStreams: string;
     videoDeviceRequired: string;
     audioDeviceRequired: string;
+    setAsAdmin: string;
+    deleteFromAdmins: string;
   }
 }
 
@@ -307,6 +317,11 @@ export namespace DataTypes {
       token: string;
       args: Prisma.VideoFindManyArgs;
     };
+    export type GetToAdmin = {
+      target: string | number;
+      userId: string | number;
+      command: Command;
+    };
     export type GetVideoFindFirst = {
       userId: string | number;
       token: string;
@@ -377,6 +392,10 @@ export namespace DataTypes {
     };
     export type SetVideoFindFirst = {
       video: Video;
+    };
+    export type SetToAdmin = {
+      target: string | number;
+      command: Command;
     };
     export type SetBanList = {
       banneds: Banneds[any];
@@ -472,6 +491,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.GetToBan
     : T extends MessageType.GET_TO_UNMUTE
     ? DataTypes.MessageTypes.GetToUnMute
+    : T extends MessageType.GET_TO_ADMIN
+    ? DataTypes.MessageTypes.GetToAdmin
     : T extends MessageType.GET_MUTE_FOR_ALL
     ? DataTypes.MessageTypes.GetMuteForAll
     : T extends MessageType.GET_TO_UNBAN
@@ -544,6 +565,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetMuteForAll
     : T extends MessageType.SET_MUTE_LIST
     ? DataTypes.MessageTypes.SetMuteList
+    : T extends MessageType.SET_TO_ADMIN
+    ? DataTypes.MessageTypes.SetToAdmin
     : T extends MessageType.SET_CLOSE_PEER_CONNECTION
     ? DataTypes.MessageTypes.SetClosePeerConnection
     : T extends MessageType.SET_LOCALE
@@ -750,6 +773,22 @@ export namespace Data {
     public abstract videoFindMany<T extends Prisma.VideoFindManyArgs>(
       args: Prisma.SelectSubset<T, Prisma.VideoFindManyArgs>
     ): Promise<Prisma.CheckSelect<T, GetManyResult<Video>, Prisma.VideoGetPayload<T>> | null>;
+
+    public abstract adminsFindFirst<T extends Prisma.AdminsFindFirstArgs>(
+      args: Prisma.SelectSubset<T, Prisma.AdminsFindFirstArgs>
+    ): Promise<Prisma.CheckSelect<T, Admins, Prisma.AdminsGetPayload<T>> | null>;
+
+    public abstract adminsCreate<T extends Prisma.AdminsCreateArgs>(
+      args: Prisma.SelectSubset<T, Prisma.AdminsCreateArgs>
+    ): Promise<Prisma.CheckSelect<T, Admins, Prisma.AdminsGetPayload<T>> | null>;
+
+    public abstract adminsUpdate<T extends Prisma.AdminsUpdateArgs>(
+      args: Prisma.SelectSubset<T, Prisma.AdminsUpdateArgs>
+    ): Promise<Prisma.CheckSelect<T, Admins, Prisma.AdminsGetPayload<T>> | null>;
+
+    public abstract adminsDelete<T extends Prisma.AdminsDeleteArgs>(
+      args: Prisma.SelectSubset<T, Prisma.AdminsDeleteArgs>
+    ): Promise<Prisma.CheckSelect<T, Admins, Prisma.AdminsGetPayload<T>> | null>;
   }
 }
 
