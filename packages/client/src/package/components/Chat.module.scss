@@ -195,14 +195,6 @@ $text-area-border-radius: 6px;
   height: 2rem;
 }
 
-.message__dialog {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  width: 100%;
-}
-
 .send__icon {
   margin-bottom: $input-mb-desktop;
   @media (max-width: $mobile-width) {

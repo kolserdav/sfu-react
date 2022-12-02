@@ -167,50 +167,48 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
         </div>
       </div>
       <Dialog {...dialog} theme={theme}>
-        <div className={s.message__dialog}>
-          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}
+        <div
+          tabIndex={-1}
+          role="button"
+          onClick={clickQuoteWrapper(dialog.context)}
+          className={g.dialog__item}
+        >
+          {locale.quote}
+        </div>
+        {dialog.secure && (
+          // eslint-disable-next-line jsx-a11y/click-events-have-key-events
           <div
-            tabIndex={-1}
+            tabIndex={-2}
             role="button"
-            onClick={clickQuoteWrapper(dialog.context)}
+            onClick={clickEditWrapper(dialog.context)}
             className={g.dialog__item}
           >
-            {locale.quote}
+            {locale.edit}
           </div>
-          {dialog.secure && (
-            // eslint-disable-next-line jsx-a11y/click-events-have-key-events
-            <div
-              tabIndex={-2}
-              role="button"
-              onClick={clickEditWrapper(dialog.context)}
-              className={g.dialog__item}
-            >
-              {locale.edit}
-            </div>
-          )}
-          {(dialog.secure || isOwner) && (
-            // eslint-disable-next-line jsx-a11y/click-events-have-key-events
-            <div
-              tabIndex={-3}
-              role="button"
-              onClick={clickDeleteWrapper(dialog.context)}
-              className={g.dialog__item}
-            >
-              {locale.delete}
-            </div>
-          )}
-          {isOwner && (
-            // eslint-disable-next-line jsx-a11y/click-events-have-key-events
-            <div
-              tabIndex={-4}
-              role="button"
-              onClick={clickBlockChatWrapper(dialog.context)}
-              className={g.dialog__item}
-            >
-              {locale.blockChat}
-            </div>
-          )}
-        </div>
+        )}
+        {(dialog.secure || isOwner) && (
+          // eslint-disable-next-line jsx-a11y/click-events-have-key-events
+          <div
+            tabIndex={-3}
+            role="button"
+            onClick={clickDeleteWrapper(dialog.context)}
+            className={g.dialog__item}
+          >
+            {locale.delete}
+          </div>
+        )}
+        {isOwner && (
+          // eslint-disable-next-line jsx-a11y/click-events-have-key-events
+          <div
+            tabIndex={-4}
+            role="button"
+            onClick={clickBlockChatWrapper(dialog.context)}
+            className={g.dialog__item}
+          >
+            {locale.blockChat}
+          </div>
+        )}
       </Dialog>
     </div>
   );

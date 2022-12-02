@@ -529,7 +529,6 @@ export const useConnection = ({
    */
   useEffect(() => {
     const reloadHandler = (ev: BeforeUnloadEvent) => {
-      ev.preventDefault();
       Object.keys(rtc.peerConnections).forEach((item) => {
         const peer = item.split(rtc.delimiter);
         rtc.closeVideoCall({
