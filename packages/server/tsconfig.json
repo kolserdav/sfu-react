@@ -9,7 +9,7 @@
     "declarationMap": true,
     "downlevelIteration": true,
     "target": "esnext",
-    "module": "esnext",
+    "module": "commonjs",
     "strict": true,
     "moduleResolution": "node",
     "esModuleInterop": true,

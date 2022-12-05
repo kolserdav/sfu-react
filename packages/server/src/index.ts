@@ -46,7 +46,7 @@ processArgs.forEach((item, index) => {
 
 const args = Object.keys(argv);
 
-const migrate = async (): Promise<number> => {
+const migrate = async (): Promise<number | null> => {
   log('info', 'Running "npm run prod:migrate" command...', '', true);
   const res = spawn('npm', ['run', 'prod:migrate'], {
     env: process.env,
@@ -69,7 +69,7 @@ const migrate = async (): Promise<number> => {
 const REQUIRED: (keyof typeof ARGS)[] = [];
 
 const defKeys = Object.keys(ARGS);
-const skipedReq = [];
+const skipedReq: (keyof typeof ARGS)[] = [];
 
 for (let i = 0; REQUIRED[i]; i++) {
   const rArg = REQUIRED[i];
@@ -103,7 +103,7 @@ let skipMigrate = false;
         break;
       case 'log':
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        logLevel = parseInt(argv.log, 10) as any;
+        logLevel = parseInt(argv.log as string, 10) as any;
         if (Number.isNaN(logLevel)) {
           log('warn', 'Argument "log" is not a number', argv.log, true);
           code = 1;
@@ -150,7 +150,7 @@ let skipMigrate = false;
     log('warn', 'Script end with code:', code, true);
   } else {
     if (!skipMigrate) {
-      code = await migrate();
+      code = (await migrate()) || 0;
       if (process.argv.indexOf('--migrate') !== -1) {
         log(code ? 'warn' : 'info', 'Migrate exit with code', code, true);
         return;
