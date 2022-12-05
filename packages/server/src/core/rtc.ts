@@ -435,11 +435,7 @@ class RTC
     let sendersLength = 0;
     await this.peerConnectionsServer[roomId][peerId]!.setRemoteDescription(desc).catch((e) => {
       sendersLength = this.peerConnectionsServer[roomId][peerId]!.getSenders().length;
-      if (sendersLength === 0) {
-        log('error', 'Error set remote description', { e: e.message, stack: e.stack, ...opts });
-      } else {
-        log('warn', 'Senders length is not zero:', sendersLength);
-      }
+      log('error', 'Error set remote description', { e: e.message, stack: e.stack, ...opts });
       error = true;
     });
     if (!this.peerConnectionsServer[roomId]?.[peerId]) {
