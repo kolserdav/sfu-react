@@ -129,6 +129,10 @@ class RTC
         resolve(_ssl);
       });
     });
+    if (!ssl) {
+      log('error', 'Certificate not created', { peerId, roomId });
+      return;
+    }
     this.peerConnectionsServer[roomId][peerId] = new werift.RTCPeerConnection({
       codecs: {
         audio: [
@@ -208,7 +212,7 @@ class RTC
           log('warn', 'On signalling state change without peer connection', { peerId });
           return;
         }
-        const state = peerConnectionsServer[roomId][peerId].signalingState;
+        const state = peerConnectionsServer[roomId][peerId]?.signalingState;
         log('log', 'On connection state change', { peerId, state, target });
         // Add tracks from remote offer
         if (state === 'have-remote-offer' && target.toString() !== '0') {
@@ -233,7 +237,9 @@ class RTC
         if (target.toString() === '0') {
           const [track] = await transceiver.onTrack.asPromise();
           this.ssrcIntervals[peerId] = setInterval(() => {
-            transceiver.receiver.sendRtcpPLI(track.ssrc);
+            if (track?.ssrc) {
+              transceiver.receiver.sendRtcpPLI(track.ssrc);
+            }
           }, SENT_RTCP_INTERVAL);
         }
       }
@@ -276,7 +282,8 @@ class RTC
                   muteds: this.muteds[roomId],
                   asked: this.askeds[roomId],
                   adminMuteds: this.adminMuteds[roomId],
-                  isOwner: this.rooms[roomId]?.find((_item) => _item.id === userId)?.isOwner,
+                  isOwner:
+                    this.rooms[roomId]?.find((_item) => _item.id === userId)?.isOwner || false,
                   banneds: this.banneds[roomId],
                 },
                 connId,
@@ -439,7 +446,7 @@ class RTC
       log('warn', 'Create answer without peer connection', opts);
       return;
     }
-    const { signalingState } = this.peerConnectionsServer[roomId][peerId];
+    const signalingState = this.peerConnectionsServer[roomId][peerId]?.signalingState || 'closed';
     if (!checkSignallingState(signalingState)) {
       log('info', 'Skiping create answer', { signalingState, peerId, roomId });
       return;
@@ -588,7 +595,7 @@ class RTC
           });
           return;
         }
-        roomUser = { ...this.deleteRoomItem({ roomId, target: unitId }) };
+        roomUser = this.deleteRoomItem({ roomId, target: unitId });
         if (roomUser === null) {
           return;
         }
@@ -596,7 +603,7 @@ class RTC
         this.rooms[id].push(roomUser);
         break;
       case 'delete':
-        if (target.toString() === room.authorId) {
+        if (target.toString() === room?.authorId) {
           this.ws.sendMessage({
             type: MessageType.SET_ERROR,
             id: userId,
@@ -631,7 +638,7 @@ class RTC
           });
           return;
         }
-        roomUser = { ...this.deleteRoomItem({ roomId, target: unitId }) };
+        roomUser = this.deleteRoomItem({ roomId, target: unitId });
         if (roomUser === null) {
           return;
         }
@@ -1015,7 +1022,7 @@ class RTC
     }
     if (
       this.adminMuteds[id].indexOf(uid) === -1 &&
-      !this.rooms[id].find((item) => item.id === uid).isOwner &&
+      !this.rooms[id].find((item) => item.id === uid)?.isOwner &&
       this.muteForAll[id]
     ) {
       this.adminMuteds[id].push(uid);

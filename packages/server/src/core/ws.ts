@@ -37,7 +37,7 @@ class WS implements WSInterface {
    */
   private db: DB;
 
-  constructor(connectionArgs: (ServerOptions & { db: DB }) | undefined) {
+  constructor(connectionArgs: ServerOptions & { db: DB }) {
     const _connectionArgs = { ...connectionArgs };
     this.db = connectionArgs.db;
     _connectionArgs.server = server;

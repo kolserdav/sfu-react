@@ -391,7 +391,7 @@ export namespace DataTypes {
       value: boolean;
     };
     export type SetVideoFindFirst = {
-      video: Video;
+      video: Video | null;
     };
     export type SetToAdmin = {
       target: string | number;
@@ -733,7 +733,7 @@ export namespace Data {
     public abstract messageCreate<T extends Prisma.MessageCreateArgs>(
       args: Prisma.SelectSubset<T, Prisma.MessageCreateArgs>,
       _connection?: WebSocket
-    ): Promise<Prisma.CheckSelect<T, MessageFull, Prisma.MessageGetPayload<T>> | null>;
+    ): Promise<Prisma.CheckSelect<T, MessageFull | null, Prisma.MessageGetPayload<T>> | null>;
 
     public abstract quoteCreate<T extends Prisma.QuoteCreateArgs>(
       args: Prisma.SelectSubset<T, Prisma.QuoteCreateArgs>,

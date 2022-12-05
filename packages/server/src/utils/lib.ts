@@ -78,8 +78,8 @@ export const checkTockenDefault = async (token: string) => {
 };
 
 export const cleanDbUrl = (db?: string) => {
-  const dbUrl = db || process.env.DATABASE_URL;
-  let password: RegExpMatchArray | string = dbUrl.match(/:(?!\/).+@/);
+  const dbUrl = db || (process.env.DATABASE_URL as string);
+  let password: RegExpMatchArray | string | null = dbUrl.match(/:(?!\/).+@/);
   const _password = password[0] || '';
   password = ':';
   new Array(_password.length - 2).fill('•').forEach((item) => {
