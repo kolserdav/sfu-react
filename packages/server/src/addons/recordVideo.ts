@@ -9,10 +9,9 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import puppeteer from 'puppeteer';
-import { spawn } from 'child_process';
 import * as werift from 'werift';
 import { CancelablePromise } from 'cancelable-promise';
-import FFmpeg from 'fluent-ffmpeg';
+// import FFmpeg from 'fluent-ffmpeg';
 import path from 'path';
 import fs from 'fs';
 import { PassThrough } from 'stream';
@@ -51,8 +50,8 @@ class RecordVideo extends DB {
     data: { userId },
   }: SendMessageArgs<MessageType.GET_RECORD>): Promise<{
     page: puppeteer.Page;
-    recorder?: PuppeteerScreenRecorder;
-    cancelablePromise?: CancelablePromise<string>;
+    recorder: PuppeteerScreenRecorder;
+    cancelablePromise: CancelablePromise<string>;
     intervaToClean?: NodeJS.Timeout;
   }> {
     const browser = await puppeteer.launch({
@@ -181,7 +180,9 @@ class RecordVideo extends DB {
     });
     return keys.map((item) => {
       const id = v4();
-      const audio = this.rtc.streams[roomId][item].find((_item) => _item.kind === 'audio');
+      const audio = this.rtc.streams[roomId][item].find(
+        (_item) => _item.kind === 'audio'
+      ) as werift.MediaStreamTrack;
       const _path = path.resolve(__dirname, `../../rec/${roomId}-${id}.webm`);
       const mediaRecorder = new werift.MediaRecorder([audio], _path, { width: 1, height: 1 });
       mediaRecorder.start();

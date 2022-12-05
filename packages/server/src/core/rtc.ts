@@ -499,7 +499,7 @@ class RTC
     }
   };
 
-  private deleteRoomItem({ roomId, target }: { roomId: string; target: string }) {
+  private deleteRoomItem({ roomId, target }: { roomId: string; target: string }): RoomUser | null {
     let index = -1;
     let roomUser: RoomUser | null = null;
     this.rooms[roomId].every((item, i) => {
@@ -569,7 +569,7 @@ class RTC
       });
       return;
     }
-    let roomUser: RoomUser;
+    let roomUser: RoomUser | null = null;
     switch (command) {
       case 'add':
         if (admins !== null) {

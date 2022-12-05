@@ -112,6 +112,7 @@ class Chat extends DB implements ConnectorInterface {
     connId,
     data: { userId, message },
   }: SendMessageArgs<MessageType.GET_ROOM_MESSAGE>) {
+    const locale = getLocale(this.users[id][userId].locale).server;
     const res = await this.messageCreate({
       data: {
         unitId: userId.toString(),
@@ -141,7 +142,6 @@ class Chat extends DB implements ConnectorInterface {
         },
       },
     });
-    const locale = getLocale(this.users[id][userId].locale).server;
     if (!res) {
       this.sendMessage({
         roomId: id,
@@ -177,6 +177,11 @@ class Chat extends DB implements ConnectorInterface {
     data: { args },
   }: SendMessageArgs<MessageType.GET_EDIT_MESSAGE>) {
     const res = await this.messageUpdate(args);
+    if (!res) {
+      log('error', 'Error update message');
+      // TODO send to user
+      return;
+    }
     const uKeys = Object.keys(this.users[id]);
     uKeys.forEach((item) => {
       this.sendMessage({
@@ -196,6 +201,11 @@ class Chat extends DB implements ConnectorInterface {
     data: { args },
   }: SendMessageArgs<MessageType.GET_CREATE_MESSAGE>) {
     const res = await this.messageCreate(args);
+    if (!res) {
+      log('error', 'Error create message');
+      // TODO send to user
+      return;
+    }
     const uKeys = Object.keys(this.users[id]);
     uKeys.forEach((item) => {
       this.sendMessage({
@@ -255,6 +265,11 @@ class Chat extends DB implements ConnectorInterface {
   }: SendMessageArgs<MessageType.GET_CREATE_QUOTE>) {
     const res = await this.quoteCreate(args);
     const uKeys = Object.keys(this.users[id]);
+    if (!res) {
+      // TODO send to user
+      log('error', 'Error create quote');
+      return;
+    }
     uKeys.forEach((item) => {
       this.sendMessage({
         roomId: id,

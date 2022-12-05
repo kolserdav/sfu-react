@@ -178,7 +178,7 @@ class DB extends Auth implements DBInterface {
     if (!message) {
       return null;
     }
-    if (message.Message?.length) {
+    if (message.MessageQuote?.length) {
       try {
         message = await prisma.message.update({
           where: {

@@ -41,14 +41,16 @@ export type MessageFull = Message & {
     id: string;
     name: string;
   };
-  Quote?: {
-    MessageQuote: Message & {
-      Unit: {
-        id: string;
-        name: string;
-      };
-    };
-  };
+  Quote: {
+    MessageQuote:
+      | (Message & {
+          Unit: {
+            id: string;
+            name: string;
+          };
+        })
+      | null;
+  } | null;
 };
 export type QuoteFull = Quote;
 export enum ErrorCode {
@@ -733,7 +735,7 @@ export namespace Data {
     public abstract messageCreate<T extends Prisma.MessageCreateArgs>(
       args: Prisma.SelectSubset<T, Prisma.MessageCreateArgs>,
       _connection?: WebSocket
-    ): Promise<Prisma.CheckSelect<T, MessageFull | null, Prisma.MessageGetPayload<T>> | null>;
+    ): Promise<Prisma.CheckSelect<T, MessageFull, Prisma.MessageGetPayload<T>> | null>;
 
     public abstract quoteCreate<T extends Prisma.QuoteCreateArgs>(
       args: Prisma.SelectSubset<T, Prisma.QuoteCreateArgs>,
@@ -748,11 +750,7 @@ export namespace Data {
     public abstract messageFindMany<T extends Prisma.MessageFindManyArgs>(
       args: Prisma.SelectSubset<T, Prisma.MessageFindManyArgs>,
       _connection?: WebSocket
-    ): Promise<Prisma.CheckSelect<
-      T,
-      GetManyResult<MessageFull>,
-      Prisma.MessageGetPayload<T>
-    > | null>;
+    ): Promise<Prisma.CheckSelect<T, GetManyResult<MessageFull>, Prisma.MessageGetPayload<T>>>;
 
     public abstract videoFindFirst<T extends Prisma.VideoFindFirstArgs>(
       args: Prisma.SelectSubset<T, Prisma.VideoFindFirstArgs>
@@ -772,7 +770,7 @@ export namespace Data {
 
     public abstract videoFindMany<T extends Prisma.VideoFindManyArgs>(
       args: Prisma.SelectSubset<T, Prisma.VideoFindManyArgs>
-    ): Promise<Prisma.CheckSelect<T, GetManyResult<Video>, Prisma.VideoGetPayload<T>> | null>;
+    ): Promise<Prisma.CheckSelect<T, GetManyResult<Video>, Prisma.VideoGetPayload<T>>>;
 
     public abstract adminsFindFirst<T extends Prisma.AdminsFindFirstArgs>(
       args: Prisma.SelectSubset<T, Prisma.AdminsFindFirstArgs>

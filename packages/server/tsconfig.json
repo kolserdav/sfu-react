@@ -9,7 +9,7 @@
     "declarationMap": true,
     "downlevelIteration": true,
     "target": "esnext",
-    "module": "commonjs",
+    "module": "esnext",
     "strict": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
@@ -25,7 +25,6 @@
     "sourceMap": true,
     "inlineSources": true,
     "noUnusedLocals": false,
-    "strictNullChecks": false,
     "noImplicitAny": false
   },
   "include": ["*.d.ts", "src"],

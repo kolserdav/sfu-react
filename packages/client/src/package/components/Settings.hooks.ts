@@ -166,8 +166,10 @@ export const useMessages = ({
       data: { video },
       id: _id,
     }: SendMessageArgs<MessageType.SET_VIDEO_FIND_FIRST>) => {
-      const _video = [video];
-      setVideos(_video.concat(videos));
+      if (video) {
+        const _video = [video];
+        setVideos(_video.concat(videos));
+      }
     };
 
     const handleRecordingTime = ({
