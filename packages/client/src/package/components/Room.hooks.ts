@@ -1261,7 +1261,7 @@ export const useVideoDimensions = ({
             });
             // Change track constraints
             stream.getVideoTracks().forEach((item) => {
-              if (videoWidth !== width || oldLenght !== lenght) {
+              if ((videoWidth !== width || oldLenght !== lenght) && lenght !== 0) {
                 oldLenght = lenght;
                 let _width = width;
                 let _height = width;
