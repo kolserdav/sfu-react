@@ -4,8 +4,10 @@
   position: relative;
   display: flex;
   flex-flow: column;
-  overflow: hidden;
-  height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  min-height: 100vh;
+  height: 100%;
   width: 100%;
   padding: 0;
 

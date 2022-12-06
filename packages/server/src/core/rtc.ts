@@ -261,6 +261,7 @@ class RTC
         userId,
         target,
         tracks: stream.getTracks().map((item) => item.kind),
+        isChanged,
       });
       if (isRoom) {
         if (!this.streams[roomId][peerId]) {

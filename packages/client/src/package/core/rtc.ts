@@ -378,6 +378,10 @@ class RTC
           streamId: localStream.id,
         });
         this.localStream.getTracks().forEach((track) => {
+          if (!this.peerConnections[peerId]) {
+            log('error', 'Unexpected missing peer connection', { peerId });
+            return;
+          }
           const sender = this.peerConnections[peerId]!.getSenders().find(
             (item) => item.track?.kind === track.kind
           );
@@ -407,24 +411,30 @@ class RTC
           const audioSrc = this.localStream.getTracks().find((item) => item.kind === 'audio');
           if (audioSrc) {
             videoStream.addTrack(audioSrc);
+            this.localStream = videoStream;
             videoStream.getTracks().forEach((track) => {
               if (this.localStream) {
+                if (!this.peerConnections[peerId]) {
+                  log('error', 'Unexpected missing peer connection while share screen', { peerId });
+                  return;
+                }
                 const sender = this.peerConnections[peerId]!.getSenders().find(
                   (item) => item.track?.kind === track.kind
                 );
                 if (sender) {
                   this.peerConnections[peerId]!.removeTrack(sender);
                 }
-                this.peerConnections[peerId]!.addTrack(track, videoStream);
+                this.peerConnections[peerId]!.addTrack(track, this.localStream);
               } else {
-                log('warn', 'Add share screen track without local stream', this.localStream);
+                log('warn', 'Add share screen track without local stream', videoStream);
               }
             });
           } else {
             log('warn', locale?.erorGetSound || 'Share screen without sound', audio, true);
           }
-          this.localStream = videoStream;
           cb(0, this.localStream);
+        } else {
+          log('error', 'Error share screen', { peerId });
         }
       }
     } else {
@@ -432,13 +442,21 @@ class RTC
         streamId: this.localStream.id,
       });
       this.localStream.getTracks().forEach((track) => {
-        const sender = this.peerConnections[peerId]!.getSenders().find(
-          (item) => item.track?.kind === track.kind
-        );
-        if (sender) {
-          this.peerConnections[peerId]!.removeTrack(sender);
+        if (this.localStream) {
+          if (!this.peerConnections[peerId]) {
+            log('error', 'Unexpected missing peer connection while old local stream', { peerId });
+            return;
+          }
+          const sender = this.peerConnections[peerId]!.getSenders().find(
+            (item) => item.track?.kind === track.kind
+          );
+          if (sender) {
+            this.peerConnections[peerId]!.removeTrack(sender);
+          }
+          this.peerConnections[peerId]!.addTrack(track, this.localStream);
+        } else {
+          log('error', 'Local stream is unexpectedly missing', { peerId });
         }
-        this.peerConnections[peerId]!.addTrack(track);
       });
       cb(0, this.localStream);
     }
