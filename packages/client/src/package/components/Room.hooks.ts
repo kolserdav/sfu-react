@@ -156,6 +156,7 @@ export const useConnection = ({
         { userId: ws.userId, roomId, connId: connectionId, target: 0, locale },
         (err, stream) => {
           if (!err) {
+            log('info', 'Share screen', { id: stream.id, oldId: oldStream.id });
             addStream({
               target: ws.userId,
               stream,
@@ -165,6 +166,7 @@ export const useConnection = ({
               isOwner,
             });
           } else {
+            log('error', 'Error share screen', { err });
             ws.shareScreen = !ws.shareScreen;
             rtc.setLocalStream(stream);
             addStream({

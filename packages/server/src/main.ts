@@ -41,7 +41,7 @@ process.on('unhandledRejection', (err: Error) => {
   } else {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const _err: any = err;
-    log('warn', err.message || 'Message class', _err?.response?.messageClass);
+    log('error', err.message || 'Turn error', _err?.response?.attributes[0]);
   }
 });
 /**

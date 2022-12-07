@@ -268,6 +268,11 @@ class RTC
           this.streams[roomId][peerId] = [];
         }
         this.streams[roomId][peerId].push(stream.getTracks()[0]);
+        log(
+          'info',
+          'Track ids',
+          this.streams[roomId][peerId].map((i) => i.id)
+        );
         const room = rooms[roomId];
         if (room && isNew && !isChanged) {
           setTimeout(() => {
@@ -720,12 +725,18 @@ class RTC
       iS: this.peerConnectionsServer[roomId][peerId]?.iceConnectionState,
     };
     if (!tracks || tracks?.length === 0) {
-      log('info', 'Skiping add track', { ...opts, tracks });
+      log('warn', 'Skiping add track', { ...opts, tracks });
       return;
     }
     if (this.peerConnectionsServer[roomId][peerId]) {
-      log('info', 'Add tracks', opts);
+      log('warn', 'Add tracks', opts);
       tracks.forEach((track) => {
+        const sender = this.peerConnectionsServer[roomId][peerId]
+          ?.getSenders()
+          .find((item) => item.track?.kind === track.kind);
+        if (sender) {
+          this.peerConnectionsServer[roomId][peerId]!.removeTrack(sender);
+        }
         this.peerConnectionsServer[roomId][peerId]!.addTrack(track);
       });
     } else {

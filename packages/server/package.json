@@ -13,8 +13,8 @@
   },
   "scripts": {
     "watch": "tsc -p . -w",
-    "dev:start": "nodemon dist/main.js",
-    "start": "node dist/main.js",
+    "dev:start": "cross-env NODE_ENV=development nodemon dist/main.js",
+    "start": "cross-env NODE_ENV=production node dist/main.js",
     "compile": "cd node-webrtc && npm run build",
     "clean": "rimraf dist",
     "dev": "concurrently \"npm run watch\" \"npm run dev:start\"",

@@ -45,7 +45,15 @@ export const log = (type: keyof typeof LogLevel, text: string, data?: any, cons?
     // eslint-disable-next-line no-console
     console.log(type === 'info' ? Cyan : type === 'warn' ? Yellow : type === 'error' ? Red : Reset);
     // eslint-disable-next-line no-console
-    console[type](type, Reset, text, Bright, data, Reset);
+    console[type](
+      process.env.NODE_ENV === 'development' ? new Date().getTime() : '',
+      type,
+      Reset,
+      text,
+      Bright,
+      data,
+      Reset
+    );
   } else if (LogLevel[type] >= logLevel) {
     // eslint-disable-next-line no-console
     console[type](
