@@ -32,7 +32,8 @@ import {
 import WS from './ws';
 import DB from './db';
 
-const trackCount = 0;
+// eslint-disable-next-line prefer-const
+let trackCount1 = 0;
 // eslint-disable-next-line no-unused-vars
 export type OnRoomConnect = (args: {
   roomId: string | number;
@@ -117,10 +118,10 @@ class RTC
     }
     if (this.peerConnectionsServer[roomId][peerId]) {
       log('info', 'Duplicate peer connection', opts);
-      this.closeVideoCall({ roomId, userId, target, connId });
-    } else {
-      log('log', 'Creating peer connection', opts);
+      // this.closeVideoCall({ roomId, userId, target, connId });
     }
+    log('log', 'Creating peer connection', opts);
+
     /**
      * FIXME
      * npm library pem not workinng wit OpenSSL ^3.0.7
@@ -286,29 +287,26 @@ class RTC
         );
         const room = rooms[roomId];
         if (room && isNew && !isChanged) {
-          setTimeout(() => {
-            room.forEach((item) => {
-              ws.sendMessage({
-                type: MessageType.SET_CHANGE_UNIT,
-                id: item.id,
-                data: {
-                  target: userId,
-                  name: item.name,
-                  eventName: 'add',
-                  roomLength: rooms[roomId]?.length || 0,
-                  muteds: this.muteds[roomId],
-                  asked: this.askeds[roomId],
-                  adminMuteds: this.adminMuteds[roomId],
-                  isOwner:
-                    this.rooms[roomId]?.find((_item) => _item.id === userId)?.isOwner || false,
-                  banneds: this.banneds[roomId],
-                },
-                connId,
-              });
+          room.forEach((item) => {
+            ws.sendMessage({
+              type: MessageType.SET_CHANGE_UNIT,
+              id: item.id,
+              data: {
+                target: userId,
+                name: item.name,
+                eventName: 'add',
+                roomLength: rooms[roomId]?.length || 0,
+                muteds: this.muteds[roomId],
+                asked: this.askeds[roomId],
+                adminMuteds: this.adminMuteds[roomId],
+                isOwner: this.rooms[roomId]?.find((_item) => _item.id === userId)?.isOwner || false,
+                banneds: this.banneds[roomId],
+              },
+              connId,
             });
-          }, 0);
+          });
         } else if (!room) {
-          log('warn', 'Room missing in memory', { roomId });
+          log('error', 'Room missing in memory', { roomId });
         }
       }
     };
@@ -332,7 +330,7 @@ class RTC
         if (index !== -1) {
           this.offVideo[id].splice(index, 1);
         } else {
-          log('warn', 'Deleted offVideo is missting', { id, target });
+          log('warn', 'Deleted offVideo is missing', { id, target });
         }
         break;
       default:
@@ -729,6 +727,10 @@ class RTC
       tracksL: tracks?.length,
       tracks: tracks?.map((item) => item.kind),
       ssL: streams.length,
+      peers:
+        process.env.NODE_ENV === 'development'
+          ? Object.keys(this.peerConnectionsServer[roomId])
+          : undefined,
       cS: this.peerConnectionsServer[roomId][peerId]?.connectionState,
       sS: this.peerConnectionsServer[roomId][peerId]?.signalingState,
       iS: this.peerConnectionsServer[roomId][peerId]?.iceConnectionState,
@@ -741,7 +743,7 @@ class RTC
       return;
     }
     if (this.peerConnectionsServer[roomId][peerId]) {
-      log('warn', 'Add tracks', opts);
+      log('info', 'Add tracks', opts);
       tracks.forEach((track) => {
         const sender = this.peerConnectionsServer[roomId][peerId]
           ?.getSenders()

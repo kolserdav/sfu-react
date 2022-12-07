@@ -1193,7 +1193,7 @@ export const useConnection = ({
     return () => {
       clearTimeout(interval);
     };
-  }, [roomId, ws, lenght, streams, connectionId, id, shareScreen, error]);
+  }, [roomId, ws, lenght, streams, connectionId, id, error]);
 
   const _streams = useMemo(
     () =>
