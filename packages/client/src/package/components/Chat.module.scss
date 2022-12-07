@@ -3,7 +3,7 @@
 $wrapper-padding: 0.5rem;
 
 // dependency packages/client/src/package/utils/constants.ts TEXT_AREA_PADDING_LEFT
-$text-area-padding-left: 16px;
+$text-area-padding-left: 8px;
 
 // dependency to five packages/client/src/package/utils/constants.ts TEXT_AREA_BODER_WIDTH
 $text-area-border-width: 1px;
@@ -89,18 +89,18 @@ $text-area-border-radius: 6px;
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
+    margin-bottom: 1rem;
 
     textarea {
       position: relative;
       width: 80%;
       font-size: 1rem;
       line-height: 1.2;
-      padding-top: $text-area-padding;
-      padding-left: $text-area-padding-left;
+      padding: $text-area-padding-left;
       border-radius: $text-area-border-radius;
       border-top-left-radius: 0;
       border-width: $text-area-border-width;
-      margin-bottom: $text-area-padding;
+
       @media (max-width: $mobile-width) {
         padding-top: 0.3rem;
       }
@@ -196,8 +196,5 @@ $text-area-border-radius: 6px;
 }
 
 .send__icon {
-  margin-bottom: $input-mb-desktop;
-  @media (max-width: $mobile-width) {
-    margin-bottom: $input-mb-mobile;
-  }
+  position: relative;
 }

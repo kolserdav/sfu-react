@@ -600,10 +600,13 @@ export const useConnection = ({
       }
     };
 
-    const lostStreamHandler: typeof rtc.lostStreamHandler = ({ connId, target, eventName }) => {
-      if (!roomId) {
-        return;
-      }
+    const lostStreamHandler: typeof rtc.lostStreamHandler = ({
+      connId,
+      target,
+      eventName,
+      roomId: _roomId,
+    }) => {
+      log('warn', 'Lost stream handler', { roomId, target, eventName });
       let _connId = connId;
       Object.keys(rtc.peerConnections).forEach((item) => {
         const peer = item.split(rtc.delimiter);
@@ -612,13 +615,13 @@ export const useConnection = ({
           _connId = peer[2];
         }
       });
-      rtc.closeVideoCall({ roomId, userId: ws.userId, target, connId: _connId });
+      rtc.closeVideoCall({ roomId: _roomId, userId: ws.userId, target, connId: _connId });
       ws.sendMessage({
         type: MessageType.GET_CLOSE_PEER_CONNECTION,
         connId: _connId,
         id: ws.userId,
         data: {
-          roomId,
+          roomId: _roomId,
           target,
         },
       });
@@ -779,6 +782,7 @@ export const useConnection = ({
         connId,
         target: userId,
         eventName: 'need-reconnect',
+        roomId,
       });
     };
 
@@ -1620,10 +1624,12 @@ export const useVideoStarted = ({
   streams,
   rtc,
   lostStreamHandler,
+  roomId,
 }: {
   streams: Stream[];
   rtc: RTC;
   lostStreamHandler: typeof rtc.lostStreamHandler;
+  roomId: string | number;
 }) => {
   const [played, setPlayed] = useState<Record<string, boolean>>({});
   const [timeStart, setTimeStart] = useState<boolean>(false);
@@ -1671,7 +1677,7 @@ export const useVideoStarted = ({
         const _attempts = { ...attempts };
         diffs.forEach((item) => {
           if (!played[item.target] && mounted) {
-            lostStreamHandler({ ...item, eventName: 'not-played' });
+            lostStreamHandler({ ...item, eventName: 'not-played', roomId });
             log('warn', `Video not played ${item.target}`, {
               target: item.target,
               streamL: item.stream.getTracks().length,
@@ -1685,7 +1691,7 @@ export const useVideoStarted = ({
       clearInterval(timeout);
       mounted = false;
     };
-  }, [played, streams, lostStreamHandler, attempts, timeStart, rtc.muteds, rtc.roomLength]);
+  }, [played, streams, lostStreamHandler, attempts, timeStart, rtc.muteds, rtc.roomLength, roomId]);
 
   return { played, setPlayed };
 };
@@ -1697,16 +1703,18 @@ export const useVideoHandlers = ({
   setPlayed,
   played,
   setVideoDimensions,
+  roomId,
 }: {
   analyzeSoundLevel: (uid: string | number) => void;
   createAudioAnalyzer: (item: Stream) => void;
-  lostStreamHandler: (args: { target: string | number; connId: string; eventName: string }) => void;
+  lostStreamHandler: RTC['lostStreamHandler'];
   setPlayed: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   played: Record<string, boolean>;
   setVideoDimensions: (
     e: React.SyntheticEvent<HTMLVideoElement, Event>,
     stream: MediaStream
   ) => void;
+  roomId: string | number;
 }) => {
   const onTimeUpdateWrapper = useMemo(
     () => (item: Stream) => (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
@@ -1720,6 +1728,7 @@ export const useVideoHandlers = ({
           target: item.target,
           connId: item.connId,
           eventName: 'stream-not-active',
+          roomId,
         });
       } else {
         if (!played[item.target]) {
@@ -1732,7 +1741,7 @@ export const useVideoHandlers = ({
         }
       }
     },
-    [analyzeSoundLevel, lostStreamHandler, setPlayed, setVideoDimensions, played]
+    [analyzeSoundLevel, lostStreamHandler, setPlayed, setVideoDimensions, played, roomId]
   );
 
   const onLoadedDataWrapper = useMemo(

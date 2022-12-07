@@ -20,10 +20,5 @@
     .text {
       position: relative;
     }
-    @supports (-moz-appearance: none) {
-      .text {
-        margin-top: 5px;
-      }
-    }
   }
 }

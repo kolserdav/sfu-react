@@ -690,7 +690,7 @@ export namespace Connection {
 
     public abstract addTracksServer(
       args: Omit<AddTracksProps, 'locale'>,
-      cb: (e: 1 | 0, stream: MediaStream) => void
+      cb: (e: 1 | 0) => void
     ): void;
   }
 }

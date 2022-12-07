@@ -36,6 +36,7 @@ class RTC
   // eslint-disable-next-line class-methods-use-this
   public lostStreamHandler: (args: {
     target: number | string;
+    roomId: string | number;
     connId: string;
     eventName: string;
   }) => void = () => {
@@ -165,6 +166,7 @@ class RTC
             target,
             connId,
             eventName: 'disconnected-peer',
+            roomId,
           });
           log('warn', 'Failed connection state', { cs: currentTarget.connectionState, peerId });
           break;
@@ -316,9 +318,10 @@ class RTC
   private async checkMediaDevice(kind: 'video' | 'audio') {
     const cV = navigator.mediaDevices.getUserMedia({ [kind]: true });
     return new Promise<boolean>((resolve) => {
-      cV.then(() => {
+      cV.then((d) => {
         resolve(true);
-      }).catch(() => {
+      }).catch((e) => {
+        log('error', 'Error get user media', { [kind]: e });
         resolve(false);
       });
     });

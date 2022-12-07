@@ -103,6 +103,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     streams,
     rtc,
     lostStreamHandler,
+    roomId,
   });
   const displayMediaSupported = useMemo(() => supportDisplayMedia(), []);
   const { dialog, clickToVolume, changeVolumeWrapper, volumes } = useVolumeDialog({
@@ -134,6 +135,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
     setPlayed,
     played,
     analyzeSoundLevel,
+    roomId,
   });
 
   const { canPlayVideo, activeVideoLength } = useMaxVideoStreams({ streams });

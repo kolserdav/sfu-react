@@ -32,6 +32,7 @@ import {
 import WS from './ws';
 import DB from './db';
 
+const trackCount = 0;
 // eslint-disable-next-line no-unused-vars
 export type OnRoomConnect = (args: {
   roomId: string | number;
@@ -120,19 +121,23 @@ class RTC
     } else {
       log('log', 'Creating peer connection', opts);
     }
+    /**
+     * FIXME
+     * npm library pem not workinng wit OpenSSL ^3.0.7
     const ssl: CertificateCreationResult | null = await new Promise((resolve) => {
       createCertificate({ days: 1, selfSigned: true }, (err, _ssl) => {
         if (err) {
-          log('error', 'Error create certificate');
-          resolve(null);
+          log('error', 'Error create certificate', err);
+          resolve(err);
         }
         resolve(_ssl);
       });
     });
-    if (!ssl) {
+    if (!ssl) { 
       log('error', 'Certificate not created', { peerId, roomId });
       return;
     }
+     */
     this.peerConnectionsServer[roomId][peerId] = new werift.RTCPeerConnection({
       codecs: {
         audio: [
@@ -157,17 +162,22 @@ class RTC
       },
       bundlePolicy: 'disable',
       iceTransportPolicy: 'all',
-      iceServers: [
-        {
-          urls: STUN_SERVER,
-        },
-        {
-          urls: process.env.TURN_SERVER as string,
-          username: process.env.TURN_SERVER_USER,
-          credential: process.env.TURN_SERVER_PASSWORD,
-        },
-      ],
+      iceServers:
+        process.env.NODE_ENV === 'development'
+          ? undefined
+          : [
+              {
+                urls: STUN_SERVER,
+              },
+              {
+                urls: process.env.TURN_SERVER as string,
+                username: process.env.TURN_SERVER_USER,
+                credential: process.env.TURN_SERVER_PASSWORD,
+              },
+            ],
       icePortRange: this.icePortRange,
+      /*
+      FIXME
       dtls: {
         keys: SSL_RTC_CONNECTION
           ? {
@@ -177,6 +187,7 @@ class RTC
             }
           : undefined,
       },
+      */
     });
   };
 
@@ -217,7 +228,7 @@ class RTC
         // Add tracks from remote offer
         if (state === 'have-remote-offer' && target.toString() !== '0') {
           addTracksServer({ roomId, userId, target, connId }, () => {
-            //
+            // console.log(trackCount++);
           });
         }
         log(
@@ -698,12 +709,10 @@ class RTC
     return Object.keys(this.streams[roomId]);
   }
 
-  public addTracksServer: RTCInterface['addTracksServer'] = ({
-    roomId,
-    connId,
-    userId,
-    target,
-  }) => {
+  public addTracksServer: RTCInterface['addTracksServer'] = (
+    { roomId, connId, userId, target },
+    cb
+  ) => {
     const _connId = this.getStreamConnId(roomId, target);
     const _connId1 = this.getPeerConnId(roomId, userId, target);
     const peerId = this.getPeerId(roomId, userId, target, _connId1);
@@ -726,6 +735,9 @@ class RTC
     };
     if (!tracks || tracks?.length === 0) {
       log('warn', 'Skiping add track', { ...opts, tracks });
+      if (cb) {
+        cb(1);
+      }
       return;
     }
     if (this.peerConnectionsServer[roomId][peerId]) {
@@ -739,7 +751,13 @@ class RTC
         }
         this.peerConnectionsServer[roomId][peerId]!.addTrack(track);
       });
+      if (cb) {
+        cb(0);
+      }
     } else {
+      if (cb) {
+        cb(1);
+      }
       log('error', 'Can not add tracks', { opts });
     }
   };
