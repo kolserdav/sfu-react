@@ -28,6 +28,7 @@ import {
   SSL_SIGNATURE_HASH,
   ICE_PORT_MIN,
   ICE_PORT_MAX,
+  IS_DEV,
 } from '../utils/constants';
 import WS from './ws';
 import DB from './db';
@@ -82,15 +83,8 @@ class RTC
     log('info', 'Ice port range env.(ICE_PORT_MAX, ICE_PORT_MAX) is', this.icePortRange, true);
   }
 
-  public getPeerId(
-    id: number | string,
-    userId: number | string,
-    target: number | string,
-    connId: string
-  ) {
-    return `${id}${this.delimiter}${userId}${this.delimiter}${target || 0}${
-      this.delimiter
-    }${connId}`;
+  public getPeerId(userId: number | string, target: number | string, connId: string) {
+    return `${userId}${this.delimiter}${target || 0}${this.delimiter}${connId}`;
   }
 
   public closePeerConnectionHandler({
@@ -112,12 +106,12 @@ class RTC
 
   public createRTCServer: RTCInterface['createRTCServer'] = async (opts) => {
     const { roomId, userId, target, connId, mimeType } = opts;
-    const peerId = this.getPeerId(roomId, userId, target, connId);
+    const peerId = this.getPeerId(userId, target, connId);
     if (!this.peerConnectionsServer[roomId]) {
       this.peerConnectionsServer[roomId] = {};
     }
     if (this.peerConnectionsServer[roomId][peerId]) {
-      log('info', 'Duplicate peer connection', opts);
+      log('warn', 'Duplicate peer connection', opts);
       this.closeVideoCall({ roomId, userId, target, connId });
     }
     log('log', 'Creating peer connection', opts);
@@ -157,19 +151,18 @@ class RTC
       },
       bundlePolicy: 'disable',
       iceTransportPolicy: 'all',
-      iceServers:
-        process.env.NODE_ENV === 'development'
-          ? undefined
-          : [
-              {
-                urls: STUN_SERVER,
-              },
-              {
-                urls: process.env.TURN_SERVER as string,
-                username: process.env.TURN_SERVER_USER,
-                credential: process.env.TURN_SERVER_PASSWORD,
-              },
-            ],
+      iceServers: IS_DEV
+        ? undefined
+        : [
+            {
+              urls: STUN_SERVER,
+            },
+            {
+              urls: process.env.TURN_SERVER as string,
+              username: process.env.TURN_SERVER_USER,
+              credential: process.env.TURN_SERVER_PASSWORD,
+            },
+          ],
       icePortRange: this.icePortRange,
       dtls: {
         keys: SSL_RTC_CONNECTION
@@ -186,11 +179,10 @@ class RTC
   public getRevPeerId(peerId: string) {
     const peer = peerId.split(this.delimiter);
     return {
-      peerId: `${peer[0]}${this.delimiter}${peer[2]}${this.delimiter}${peer[1]}${this.delimiter}${peer[3]}`,
-      userId: peer[2],
-      target: peer[1],
-      connId: peer[3],
-      id: peer[0],
+      peerId: `${peer[1]}${this.delimiter}${peer[0]}${this.delimiter}${peer[2]}`,
+      userId: peer[1],
+      target: peer[0],
+      connId: peer[2],
     };
   }
 
@@ -200,7 +192,7 @@ class RTC
     target,
     connId,
   }) => {
-    const peerId = this.getPeerId(roomId, userId, target, connId);
+    const peerId = this.getPeerId(userId, target, connId);
     if (!this.peerConnectionsServer[roomId]?.[peerId]) {
       log('warn', 'Handle ice candidate without peerConnection', { peerId });
       return;
@@ -250,7 +242,7 @@ class RTC
     const isChanged = false;
     this.peerConnectionsServer[roomId][peerId]!.ontrack = (e) => {
       const peer = peerId.split(delimiter);
-      const isRoom = peer[2] === '0';
+      const isRoom = peer[1] === '0';
       const stream = e.streams[0];
       if (!this.streams[roomId]) {
         this.streams[roomId] = {};
@@ -347,7 +339,7 @@ class RTC
       connId,
       data: { candidate, userId, target, roomId },
     } = msg;
-    const peerId = this.getPeerId(id, userId, target, connId);
+    const peerId = this.getPeerId(userId, target, connId);
     const cand = new werift.RTCIceCandidate(candidate as werift.RTCIceCandidate);
     log('log', 'Trying to add ice candidate:', {
       peerId,
@@ -403,7 +395,7 @@ class RTC
       log('warn', 'Message offer error because sdp is:', sdp);
       return;
     }
-    const peerId = this.getPeerId(id, userId, target, connId);
+    const peerId = this.getPeerId(userId, target, connId);
     await this.createRTCServer({
       roomId: id,
       userId,
@@ -416,6 +408,8 @@ class RTC
       userId,
       target,
       connId,
+      peerId,
+      peers: IS_DEV ? Object.keys(this.peerConnectionsServer[roomId]) : undefined,
       is: this.peerConnectionsServer[roomId][peerId]?.iceConnectionState,
       cs: this.peerConnectionsServer[roomId][peerId]?.connectionState,
       ss: this.peerConnectionsServer[roomId][peerId]?.signalingState,
@@ -667,10 +661,10 @@ class RTC
     const keys = this.getKeysStreams(roomId);
     keys.every((element) => {
       const str = element.split(this.delimiter);
-      const isTarget = str[1] === userId.toString() && str[2] === '0';
+      const isTarget = str[0] === userId.toString() && str[1] === '0';
       if (isTarget) {
         // eslint-disable-next-line prefer-destructuring
-        _connId = str[3];
+        _connId = str[2];
         return false;
       }
       return true;
@@ -683,10 +677,10 @@ class RTC
     const keys = this.getPeerConnectionKeys(roomId);
     keys.every((element) => {
       const str = element.split(this.delimiter);
-      const isTarget = str[1] === userId.toString() && str[2] === target.toString();
+      const isTarget = str[0] === userId.toString() && str[1] === target.toString();
       if (isTarget) {
         // eslint-disable-next-line prefer-destructuring
-        _connId = str[3];
+        _connId = str[2];
         return false;
       }
       return true;
@@ -704,8 +698,8 @@ class RTC
   ) => {
     const _connId = this.getStreamConnId(roomId, target);
     const _connId1 = this.getPeerConnId(roomId, userId, target);
-    const peerId = this.getPeerId(roomId, userId, target, _connId1);
-    const _peerId = this.getPeerId(roomId, target, 0, _connId);
+    const peerId = this.getPeerId(userId, target, _connId1);
+    const _peerId = this.getPeerId(target, 0, _connId);
     const tracks = this.streams[roomId][_peerId];
     const streams = this.getKeysStreams(roomId);
     const opts = {
@@ -718,10 +712,7 @@ class RTC
       tracksL: tracks?.length,
       tracks: tracks?.map((item) => item.kind),
       ssL: streams.length,
-      peers:
-        process.env.NODE_ENV === 'development'
-          ? Object.keys(this.peerConnectionsServer[roomId])
-          : undefined,
+      peers: IS_DEV ? Object.keys(this.peerConnectionsServer[roomId]) : undefined,
       cS: this.peerConnectionsServer[roomId][peerId]?.connectionState,
       sS: this.peerConnectionsServer[roomId][peerId]?.signalingState,
       iS: this.peerConnectionsServer[roomId][peerId]?.iceConnectionState,
@@ -772,10 +763,13 @@ class RTC
   }
 
   public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, userId, target, connId }) => {
-    const peerId = this.getPeerId(roomId, userId, target, connId);
+    const peerId = this.getPeerId(userId, target, connId);
     this.cleanStream({ roomId, peerId, target });
     if (!this.peerConnectionsServer[roomId]?.[peerId]) {
-      log('warn', 'Close video call without peer connection', { peerId });
+      log('warn', 'Close video call without peer connection', {
+        peerId,
+        peers: IS_DEV ? Object.keys(this.peerConnectionsServer[roomId]) : undefined,
+      });
       return;
     }
     log('info', '| Closing the call', {
@@ -1111,19 +1105,19 @@ class RTC
     const peerKeys = this.getPeerConnectionKeys(roomId);
     peerKeys.forEach((__item) => {
       const peer = __item.split(this.delimiter);
-      if (peer[1] === userId.toString()) {
+      if (peer[0] === userId.toString()) {
         this.closeVideoCall({
           roomId,
           userId,
-          target: peer[2],
-          connId: peer[3],
+          target: peer[1],
+          connId: peer[2],
         });
-      } else if (peer[2] === userId.toString()) {
+      } else if (peer[1] === userId.toString()) {
         this.closeVideoCall({
           roomId,
-          userId: peer[1],
+          userId: peer[0],
           target: userId,
-          connId: peer[3],
+          connId: peer[2],
         });
       }
     });

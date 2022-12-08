@@ -33,7 +33,7 @@ class Chat extends DB implements ConnectorInterface {
       this.blocked[roomId] = [];
     }
     const lang = getLocale(locale).server;
-    if (this.users[roomId][userId] && !IS_DEV) {
+    if (this.users[roomId][userId] && IS_DEV) {
       log('warn', 'Duplicate chat user', { roomId, userId });
       ws.send(
         JSON.stringify({

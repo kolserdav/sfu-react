@@ -357,11 +357,11 @@ export function createServer(
               keys.every((i) => {
                 const peer = i.split(rtc.delimiter);
                 if (
-                  (peer[1] === _item.id.toString() && peer[2] === userId) ||
-                  (peer[1] === userId && peer[2] === _item.id.toString())
+                  (peer[0] === _item.id.toString() && peer[1] === userId) ||
+                  (peer[0] === userId && peer[1] === _item.id.toString())
                 ) {
                   // eslint-disable-next-line prefer-destructuring
-                  _connId = peer[3];
+                  _connId = peer[2];
                   return false;
                 }
                 return true;
