@@ -20,20 +20,20 @@ export const isDev = () => process.env.NODE_ENV === 'development';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const log = (type: keyof typeof LogLevel, text: string, data?: any, forUser = false) => {
   const { logLevel } = storeLogLevel.getState();
-  if (LogLevel[type] >= logLevel || forUser) {
+  if (LogLevel[type] >= logLevel) {
     // eslint-disable-next-line no-console
     console[type](IS_DEV ? format(new Date(), 'hh:mm:ss') : undefined, type, text, data);
-    if (forUser) {
-      storeAlert.dispatch(
-        changeAlert({
-          alert: {
-            type,
-            children: text,
-            open: true,
-          },
-        })
-      );
-    }
+  }
+  if (forUser) {
+    storeAlert.dispatch(
+      changeAlert({
+        alert: {
+          type,
+          children: text,
+          open: true,
+        },
+      })
+    );
   }
 };
 

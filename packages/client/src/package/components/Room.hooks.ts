@@ -141,6 +141,55 @@ export const useConnection = ({
     []
   );
 
+  const lostStreamHandler: typeof rtc.lostStreamHandler = useMemo(
+    () =>
+      ({ connId, target, eventName, roomId: _roomId }) => {
+        log('warn', 'Lost stream handler', { roomId, target, eventName });
+        let _connId = connId;
+        Object.keys(rtc.peerConnections).forEach((item) => {
+          const peer = item.split(rtc.delimiter);
+          if (peer[1] === target.toString()) {
+            // eslint-disable-next-line prefer-destructuring
+            _connId = peer[2];
+          }
+        });
+        rtc.closeVideoCall({
+          roomId: _roomId,
+          userId: ws.userId,
+          target,
+          connId: _connId,
+          eventName: 'lost-stream-handler',
+        });
+        ws.sendMessage({
+          type: MessageType.GET_CLOSE_PEER_CONNECTION,
+          connId: _connId,
+          id: ws.userId,
+          data: {
+            roomId: _roomId,
+            target,
+          },
+        });
+      },
+    [roomId, rtc, ws]
+  );
+
+  const reloadHandler = useMemo(
+    () => () => {
+      Object.keys(rtc.peerConnections).forEach((item) => {
+        const peer = item.split(rtc.delimiter);
+        if (peer[1] !== id) {
+          lostStreamHandler({
+            roomId: peer[0],
+            target: peer[1],
+            connId: peer[2],
+            eventName: 'reload-page',
+          });
+        }
+      });
+    },
+    [id, lostStreamHandler, rtc.delimiter, rtc.peerConnections]
+  );
+
   const screenShare = useMemo(
     () => async (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       if (!roomId || !selfStream) {
@@ -155,13 +204,15 @@ export const useConnection = ({
       const stream = await rtc.getTracks({ locale });
       if (stream) {
         setSelfStream(stream);
+        rtc.sendNeedReconnect(id);
+        reloadHandler();
       } else {
         ws.shareScreen = !ws.shareScreen;
         rtc.setLocalStream(oldStream);
       }
       setShareScreen(ws.shareScreen);
     },
-    [roomId, rtc, ws, shareScreen, locale, selfStream]
+    [roomId, rtc, ws, shareScreen, locale, selfStream, reloadHandler, id]
   );
 
   const changeMuted = useMemo(
@@ -350,9 +401,11 @@ export const useConnection = ({
       rtc.setLocalStream(null);
       const stream = await rtc.getTracks({ locale });
       setSelfStream(stream);
+      rtc.sendNeedReconnect(id);
+      reloadHandler();
       setShareScreen(false);
     };
-  }, [selfStream, locale, rtc, ws]);
+  }, [selfStream, locale, rtc, ws, reloadHandler, id]);
 
   /**
    * Set self stream
@@ -582,23 +635,11 @@ export const useConnection = ({
    * Listen reload page
    */
   useEffect(() => {
-    const reloadHandler = (ev: BeforeUnloadEvent) => {
-      Object.keys(rtc.peerConnections).forEach((item) => {
-        const peer = item.split(rtc.delimiter);
-        rtc.closeVideoCall({
-          roomId: peer[0],
-          userId: id,
-          target: peer[1],
-          connId: peer[2],
-          eventName: 'reload-page',
-        });
-      });
-    };
     window.addEventListener('beforeunload', reloadHandler);
     return () => {
       window.removeEventListener('beforeunload', reloadHandler);
     };
-  }, [id, rtc]);
+  }, [id, rtc, reloadHandler]);
 
   /**
    * Listen set admin
@@ -612,38 +653,6 @@ export const useConnection = ({
       cleanSubs();
     };
   }, [clickToSetAdminWrapper]);
-
-  const lostStreamHandler: typeof rtc.lostStreamHandler = useMemo(
-    () =>
-      ({ connId, target, eventName, roomId: _roomId }) => {
-        log('warn', 'Lost stream handler', { roomId, target, eventName });
-        let _connId = connId;
-        Object.keys(rtc.peerConnections).forEach((item) => {
-          const peer = item.split(rtc.delimiter);
-          if (peer[1] === target.toString()) {
-            // eslint-disable-next-line prefer-destructuring
-            _connId = peer[2];
-          }
-        });
-        rtc.closeVideoCall({
-          roomId: _roomId,
-          userId: ws.userId,
-          target,
-          connId: _connId,
-          eventName: 'lost-stream-handler',
-        });
-        ws.sendMessage({
-          type: MessageType.GET_CLOSE_PEER_CONNECTION,
-          connId: _connId,
-          id: ws.userId,
-          data: {
-            roomId: _roomId,
-            target,
-          },
-        });
-      },
-    [roomId, rtc, ws]
-  );
 
   /**
    * Connections handlers

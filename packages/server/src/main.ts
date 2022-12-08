@@ -349,7 +349,7 @@ export function createServer(
             if (askeds !== -1) {
               rtc.askeds[item].splice(askeds, 1);
             }
-            rtc.sendCloseMessages({ roomId: item, userId, connId });
+            rtc.sendCloseMessages({ roomId: item, userId });
             rtc.cleanConnections(item, userId.toString());
             if (rtc.rooms[item].length === 0) {
               if (recordVideo.recordPages[item]) {

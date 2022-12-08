@@ -115,7 +115,7 @@ class RTC
         opts,
         peers: IS_DEV ? this.getPeerConnectionKeys(roomId) : undefined,
       });
-      this.closeVideoCall({ roomId, userId, target, connId, eventName: 'duplicate-peer' });
+      return;
     }
     log('log', 'Creating peer connection', opts);
     const ssl = selfCert({
@@ -501,14 +501,12 @@ class RTC
   public sendCloseMessages({
     roomId,
     userId,
-    connId,
   }: {
     roomId: string | number;
     userId: string | number;
-    connId: string;
   }) {
     const keys = this.getPeerConnectionKeys(roomId);
-    let _connId = connId;
+    let connId = '';
     this.rooms[roomId].forEach((_item) => {
       keys.every((i) => {
         const peer = i.split(this.delimiter);
@@ -517,7 +515,7 @@ class RTC
           (peer[0] === userId && peer[1] === _item.id.toString())
         ) {
           // eslint-disable-next-line prefer-destructuring
-          _connId = peer[2];
+          connId = peer[2];
           return false;
         }
         return true;
@@ -536,7 +534,7 @@ class RTC
           asked: this.askeds[roomId],
           banneds: this.banneds[roomId],
         },
-        connId: _connId,
+        connId,
       });
     });
   }

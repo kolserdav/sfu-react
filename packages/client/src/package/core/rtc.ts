@@ -102,7 +102,7 @@ class RTC
     return 0;
   }
 
-  private getPeerKeys() {
+  public getPeerKeys() {
     return Object.keys(this.peerConnections || {});
   }
 
@@ -118,6 +118,22 @@ class RTC
 
   public getPeerId(roomId: number | string, target: number | string, connId: string) {
     return `${roomId}${this.delimiter}${target || 0}${this.delimiter}${connId}`;
+  }
+
+  public sendNeedReconnect(userId: string | number) {
+    this.getPeerKeys().forEach((item) => {
+      const peer = item.split(this.delimiter);
+      if (peer[1] !== '0') {
+        this.ws.sendMessage({
+          type: MessageType.GET_NEED_RECONNECT,
+          id: peer[1],
+          connId: peer[2],
+          data: {
+            userId,
+          },
+        });
+      }
+    });
   }
 
   public checkPeerConnection({ target }: { target: string | number }) {
