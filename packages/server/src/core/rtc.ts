@@ -11,7 +11,7 @@
 // eslint-disable-next-line import/no-relative-packages
 //import * as werift from '../werift-webrtc/packages/webrtc/lib/webrtc/src/index';
 import * as werift from 'werift';
-import { createCertificate, CertificateCreationResult } from 'pem';
+import selfCert from 'self-cert';
 import {
   RTCInterface,
   MessageType,
@@ -118,27 +118,21 @@ class RTC
     }
     if (this.peerConnectionsServer[roomId][peerId]) {
       log('info', 'Duplicate peer connection', opts);
-      // this.closeVideoCall({ roomId, userId, target, connId });
+      this.closeVideoCall({ roomId, userId, target, connId });
     }
     log('log', 'Creating peer connection', opts);
-
-    /**
-     * FIXME
-     * npm library pem not workinng wit OpenSSL ^3.0.7
-    const ssl: CertificateCreationResult | null = await new Promise((resolve) => {
-      createCertificate({ days: 1, selfSigned: true }, (err, _ssl) => {
-        if (err) {
-          log('error', 'Error create certificate', err);
-          resolve(err);
-        }
-        resolve(_ssl);
-      });
+    const ssl = selfCert({
+      attrs: {
+        commonName: '',
+        countryName: '',
+        stateName: '',
+        locality: '',
+        orgName: '',
+        shortName: '',
+      },
+      bits: 2048,
+      expires: new Date(),
     });
-    if (!ssl) { 
-      log('error', 'Certificate not created', { peerId, roomId });
-      return;
-    }
-     */
     this.peerConnectionsServer[roomId][peerId] = new werift.RTCPeerConnection({
       codecs: {
         audio: [
@@ -177,18 +171,15 @@ class RTC
               },
             ],
       icePortRange: this.icePortRange,
-      /*
-      FIXME
       dtls: {
         keys: SSL_RTC_CONNECTION
           ? {
-              keyPem: ssl.clientKey,
+              keyPem: ssl.privateKey,
               certPem: ssl.certificate,
               signatureHash: SSL_SIGNATURE_HASH,
             }
           : undefined,
       },
-      */
     });
   };
 
