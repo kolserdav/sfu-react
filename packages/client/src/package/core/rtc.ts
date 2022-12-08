@@ -11,6 +11,7 @@
 import 'webrtc-adapter';
 import storeAlert, { changeAlert } from '../store/alert';
 import { RTCInterface, MessageType } from '../types/interfaces';
+import { IS_DEV } from '../utils/constants';
 import { getCodec, log } from '../utils/lib';
 import WS from './ws';
 
@@ -101,6 +102,10 @@ class RTC
     return 0;
   }
 
+  private getPeerKeys() {
+    return Object.keys(this.peerConnections || {});
+  }
+
   public createRTC: RTCInterface['createRTC'] = ({ connId, roomId, target, iceServers = [] }) => {
     if (!connId) {
       log('warn', 'Connection id is: ', { connId });
@@ -181,7 +186,7 @@ class RTC
           target,
           connId,
           c: event.candidate,
-          d: Object.keys(core.peerConnections),
+          d: IS_DEV ? core.getPeerKeys() : undefined,
           cs: peerConnection?.connectionState,
           ics: peerConnection?.iceConnectionState,
           ss: peerConnection?.signalingState,
@@ -536,13 +541,13 @@ class RTC
   public closeByPeer = (peerId: string, eventName: string) => {
     if (!this.peerConnections[peerId]) {
       log('warn', 'Close video call without peer connection', {
-        peers: Object.keys(this.peerConnections),
+        peers: IS_DEV ? this.getPeerKeys() : undefined,
         peerId,
         eventName,
       });
       return;
     }
-    log('info', '| Closing the call', { peerId, k: Object.keys(this.peerConnections) });
+    log('info', '| Closing the call', { peerId, k: IS_DEV ? this.getPeerKeys() : undefined });
     this.peerConnections[peerId]!.onicecandidate = null;
     this.peerConnections[peerId]!.onconnectionstatechange = null;
     this.peerConnections[peerId]!.oniceconnectionstatechange = null;
@@ -560,7 +565,7 @@ class RTC
 
   // eslint-disable-next-line class-methods-use-this
   public onClosedCall: RTCInterface['onClosedCall'] = (args) => {
-    log('warn', 'Call is closed', { ...args, peers: Object.keys(this.peerConnections) });
+    log('warn', 'Call is closed', { ...args, peers: IS_DEV ? this.getPeerKeys() : undefined });
     const { target } = args;
     if (target.toString() === '0') {
       const { href } = window.location;
@@ -570,7 +575,7 @@ class RTC
 
   public closeAllConnections(withSelfStream = false) {
     this.ws.connection.close();
-    Object.keys(this.peerConnections).forEach((item) => {
+    this.getPeerKeys().forEach((item) => {
       this.closeByPeer(item, 'close-all');
     });
     if (withSelfStream && this.localStream !== null) {
@@ -583,7 +588,7 @@ class RTC
 
   public parsePeerId({ target }: { target: string | number }) {
     let peer: string[] = [];
-    Object.keys(this.peerConnections).every((item) => {
+    this.getPeerKeys().every((item) => {
       const _peer = item.split(this.delimiter);
       if (_peer[1] === target.toString()) {
         peer = _peer;
