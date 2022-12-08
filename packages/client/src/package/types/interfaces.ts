@@ -685,8 +685,8 @@ export namespace Connection {
     ): void;
 
     public abstract addTracks(
-      args: AddTracksProps,
-      cb: (e: 1 | 0, stream: MediaStream) => void
+      args: Omit<AddTracksProps, 'locale' | 'userId'> & { stream: MediaStream },
+      cb: (e: 1 | 0) => void
     ): void;
 
     public abstract addTracksServer(

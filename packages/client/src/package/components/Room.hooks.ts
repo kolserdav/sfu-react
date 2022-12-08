@@ -88,7 +88,6 @@ export const useConnection = ({
   const rtc = useMemo(() => new RTC({ ws }), [ws]);
   const [streams, setStreams] = useState<Stream[]>([]);
   const [shareScreen, setShareScreen] = useState<boolean>(false);
-  const [selfStream, setSelfStream] = useState<Stream | null>(null);
   const [roomIsSaved, setRoomIsSaved] = useState<boolean>(false);
   const [lenght, setLenght] = useState<number>(streams.length);
   const [muted, setMuted] = useState<boolean>(true);
@@ -136,51 +135,49 @@ export const useConnection = ({
           },
         };
         storeStreams.dispatch(changeStreams({ type: 'add', stream: _stream, change }));
-        if (!selfStream && target === ws.userId) {
-          setSelfStream(_stream);
-        }
         log('info', 'Add stream', { ..._stream });
       },
-    [selfStream, ws.userId]
+    [ws.userId]
   );
 
   const screenShare = useMemo(
-    () => (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    () => async (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       if (!roomId) {
         return;
       }
       ws.shareScreen = !shareScreen;
       const oldStream = rtc.localStream || new MediaStream();
       rtc.setLocalStream(null);
-      rtc.addTracks(
-        { userId: ws.userId, roomId, connId: connectionId, target: 0, locale },
-        (err, stream) => {
-          if (!err) {
-            log('info', 'Share screen', { id: stream.id, oldId: oldStream.id }, true);
-            addStream({
-              target: ws.userId,
-              stream,
-              connId: connectionId,
-              name: ws.name,
-              change: true,
-              isOwner,
-            });
-          } else {
-            log('error', 'Error share screen', { err });
-            ws.shareScreen = !ws.shareScreen;
-            rtc.setLocalStream(stream);
-            addStream({
-              target: ws.userId,
-              stream: oldStream,
-              connId: connectionId,
-              name: ws.name,
-              change: true,
-              isOwner,
-            });
-          }
-          setShareScreen(ws.shareScreen);
+      const stream = await rtc.getTracks({ locale });
+      if (!stream) {
+        return;
+      }
+      rtc.addTracks({ stream, roomId, connId: connectionId, target: 0 }, (err) => {
+        if (!err) {
+          log('info', 'Share screen', { id: stream.id, oldId: oldStream.id }, true);
+          addStream({
+            target: ws.userId,
+            stream,
+            connId: connectionId,
+            name: ws.name,
+            change: true,
+            isOwner,
+          });
+        } else {
+          log('error', 'Error share screen', { err });
+          ws.shareScreen = !ws.shareScreen;
+          rtc.setLocalStream(stream);
+          addStream({
+            target: ws.userId,
+            stream: oldStream,
+            connId: connectionId,
+            name: ws.name,
+            change: true,
+            isOwner,
+          });
         }
-      );
+        setShareScreen(ws.shareScreen);
+      });
     },
     [addStream, connectionId, locale, roomId, rtc, ws, shareScreen, isOwner]
   );
@@ -636,7 +633,7 @@ export const useConnection = ({
     /**
      * 'add' send server/main.js and 'added' listen on Room.hooks.ts
      */
-    const changeRoomUnitHandler = ({
+    const changeRoomUnitHandler = async ({
       id: userId,
       data: {
         target,
@@ -699,7 +696,11 @@ export const useConnection = ({
               iceServers,
               eventName: 'back',
             });
-            rtc.addTracks({ roomId, userId, target, connId, locale }, (e) => {
+            const stream = await rtc.getTracks({ locale });
+            if (!stream) {
+              return;
+            }
+            rtc.addTracks({ roomId, stream, target, connId }, (e) => {
               if (!e) {
                 if (eventName !== 'added' && target !== userId) {
                   ws.sendMessage({
@@ -790,7 +791,7 @@ export const useConnection = ({
       });
     };
 
-    const setRoomHandler = ({
+    const setRoomHandler = async ({
       connId,
       data: { isOwner: _isOwner, asked },
     }: SendMessageArgs<MessageType.SET_ROOM>) => {
@@ -811,7 +812,11 @@ export const useConnection = ({
         iceServers,
         eventName: 'first',
       });
-      rtc.addTracks({ userId: ws.userId, roomId, connId, target: 0, locale }, (e, stream) => {
+      const stream = await rtc.getTracks({ locale });
+      if (!stream) {
+        return;
+      }
+      rtc.addTracks({ stream, roomId, connId, target: 0 }, (e) => {
         if (!e) {
           addStream({
             target: ws.userId,
@@ -863,7 +868,7 @@ export const useConnection = ({
           },
         })
       );
-      roomUsers.forEach((item) => {
+      roomUsers.forEach(async (item) => {
         if (item.id !== id) {
           const _isExists = _streams.filter((_item) => item.id === _item.target);
           if (!_isExists[0]) {
@@ -889,7 +894,11 @@ export const useConnection = ({
             if (skip) {
               return;
             }
-            rtc.addTracks({ roomId, userId: id, target: item.id, connId, locale }, (e) => {
+            const stream = await rtc.getTracks({ locale });
+            if (!stream) {
+              return;
+            }
+            rtc.addTracks({ roomId, stream, target: item.id, connId }, (e) => {
               if (e) {
                 log('warn', 'Failed add tracks', { roomId, userId: id, target: item, connId });
                 return;
@@ -901,13 +910,6 @@ export const useConnection = ({
                 connId,
               });
             });
-          }
-        } else if (!streams.find((_item) => _item.target === ws.userId)) {
-          const __streams = streams.map((_item) => _item);
-          if (selfStream) {
-            storeStreams.dispatch(changeStreams({ type: 'add', stream: selfStream }));
-          } else {
-            log('warn', 'Self stream is not defined', { __streams });
           }
         }
       });
@@ -1088,7 +1090,6 @@ export const useConnection = ({
     setAskFloorHandler,
     roomIsSaved,
     lenght,
-    selfStream,
     iceServers,
     rtc.lostStreamHandler,
     locale,

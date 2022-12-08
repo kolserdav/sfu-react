@@ -10,7 +10,7 @@
  ******************************************************************************************/
 import 'webrtc-adapter';
 import storeAlert, { changeAlert } from '../store/alert';
-import { RTCInterface, MessageType } from '../types/interfaces';
+import { RTCInterface, MessageType, Locale } from '../types/interfaces';
 import { IS_DEV } from '../utils/constants';
 import { getCodec, log } from '../utils/lib';
 import WS from './ws';
@@ -313,143 +313,103 @@ class RTC
     });
   }
 
-  public addTracks: RTCInterface['addTracks'] = async (
-    { roomId, userId, target, connId, locale },
-    cb
-  ) => {
+  public async getTracks({ locale }: { locale: Locale.Client }): Promise<null | MediaStream> {
+    if (this.localStream) {
+      return this.localStream;
+    }
+    const video = await this.checkMediaDevice('video');
+    if (!video) {
+      storeAlert.dispatch(
+        changeAlert({
+          alert: {
+            open: true,
+            type: 'warn',
+            children: locale.videoDeviceRequired,
+          },
+        })
+      );
+      return null;
+    }
+    const audio = await this.checkMediaDevice('audio');
+    if (!audio) {
+      storeAlert.dispatch(
+        changeAlert({
+          alert: {
+            open: true,
+            type: 'warn',
+            children: locale.audioDeviceRequired,
+          },
+        })
+      );
+      return null;
+    }
+    const localStream = await navigator.mediaDevices
+      .getUserMedia({
+        video: true,
+        audio: true,
+      })
+      .catch((err) => {
+        log('error', locale?.errorGetCamera || 'Error get self user media', err, true);
+        return null;
+      });
+    if (!localStream) {
+      return null;
+    }
+    this.localStream = localStream;
+    if (!this.ws.shareScreen) {
+      return this.localStream;
+    }
+    const videoStream = await navigator.mediaDevices.getDisplayMedia({ video: true }).catch((e) => {
+      if (e.message === 'Permission denied') {
+        log('warn', locale?.getDisplayCancelled || 'Get display cancelled', e, true);
+      } else {
+        log('error', locale?.errorGetDisplay || 'Error get display media', e, true);
+      }
+      return null;
+    });
+    if (!videoStream) {
+      return null;
+    }
+    const audioSrc = this.localStream.getTracks().find((item) => item.kind === 'audio');
+    if (audioSrc) {
+      videoStream.addTrack(audioSrc);
+      this.localStream = videoStream;
+    } else {
+      log('warn', locale?.erorGetSound || 'Share screen without sound', audio, true);
+      return null;
+    }
+    return this.localStream;
+  }
+
+  public addTracks: RTCInterface['addTracks'] = async ({ roomId, stream, target, connId }, cb) => {
     const peerId = this.getPeerId(roomId, target, connId);
-    const empStr = this.localStream || new MediaStream();
     if (!this.peerConnections[peerId]) {
       log('warn', 'Set media without peer connection', { peerId });
-      cb(1, empStr);
+      cb(1);
       return;
     }
-    if (!this.localStream) {
-      const video = await this.checkMediaDevice('video');
-      if (!video) {
-        storeAlert.dispatch(
-          changeAlert({
-            alert: {
-              open: true,
-              type: 'warn',
-              children: locale.videoDeviceRequired,
-            },
-          })
-        );
-        return;
+    log('info', '> Adding tracks to local media stream', {
+      streamId: stream.id,
+    });
+    let error: 0 | 1 = 0;
+    stream.getTracks().every((track) => {
+      if (!this.peerConnections[peerId]) {
+        log('error', 'Unexpected missing peer connection', { peerId });
+        error = 1;
+        return false;
       }
-      const audio = await this.checkMediaDevice('audio');
-      if (!audio) {
-        storeAlert.dispatch(
-          changeAlert({
-            alert: {
-              open: true,
-              type: 'warn',
-              children: locale.audioDeviceRequired,
-            },
-          })
-        );
-        return;
+      const sender = this.peerConnections[peerId]!.getSenders().find(
+        (item) => item.track?.kind === track.kind
+      );
+      if (sender) {
+        this.peerConnections[peerId]!.removeTrack(sender);
       }
-      const localStream = await navigator.mediaDevices
-        .getUserMedia({
-          video: true,
-          audio: true,
-        })
-        .catch((err) => {
-          log('error', locale?.errorGetCamera || 'Error get self user media', err, true);
-          cb(1, empStr);
-          return empStr;
-        });
-      this.localStream = localStream;
-      if (!this.ws.shareScreen) {
-        log('info', '> Adding tracks to new local media stream', {
-          streamId: localStream.id,
-        });
-        this.localStream.getTracks().forEach((track) => {
-          if (!this.peerConnections[peerId]) {
-            log('error', 'Unexpected missing peer connection', { peerId });
-            return;
-          }
-          const sender = this.peerConnections[peerId]!.getSenders().find(
-            (item) => item.track?.kind === track.kind
-          );
-          if (sender) {
-            this.peerConnections[peerId]!.removeTrack(sender);
-          }
-          if (this.localStream) {
-            this.peerConnections[peerId]!.addTrack(track, this.localStream);
-          }
-        });
-        cb(0, this.localStream);
-      } else {
-        let error = false;
-        const videoStream = await navigator.mediaDevices
-          .getDisplayMedia({ video: true })
-          .catch((e) => {
-            if (e.message === 'Permission denied') {
-              log('warn', locale?.getDisplayCancelled || 'Get display cancelled', e, true);
-            } else {
-              log('error', locale?.errorGetDisplay || 'Error get display media', e, true);
-            }
-            cb(1, empStr);
-            error = true;
-            return empStr;
-          });
-        if (!error) {
-          const audioSrc = this.localStream.getTracks().find((item) => item.kind === 'audio');
-          if (audioSrc) {
-            videoStream.addTrack(audioSrc);
-            this.localStream = videoStream;
-            videoStream.getTracks().forEach((track) => {
-              if (this.localStream) {
-                if (!this.peerConnections[peerId]) {
-                  log('error', 'Unexpected missing peer connection while share screen', { peerId });
-                  return;
-                }
-                const sender = this.peerConnections[peerId]!.getSenders().find(
-                  (item) => item.track?.kind === track.kind
-                );
-                if (sender) {
-                  this.peerConnections[peerId]!.removeTrack(sender);
-                }
-                this.peerConnections[peerId]!.addTrack(track, this.localStream);
-              } else {
-                log('warn', 'Add share screen track without local stream', videoStream);
-              }
-            });
-          } else {
-            log('warn', locale?.erorGetSound || 'Share screen without sound', audio, true);
-          }
-          cb(0, this.localStream);
-        } else {
-          log('error', 'Error share screen', { peerId });
-        }
+      if (this.localStream) {
+        this.peerConnections[peerId]!.addTrack(track, stream);
       }
-    } else {
-      log('info', '> Adding tracks to current local media stream', {
-        streamId: this.localStream.id,
-        connId,
-      });
-      this.localStream.getTracks().forEach((track) => {
-        if (this.localStream) {
-          if (!this.peerConnections[peerId]) {
-            log('error', 'Unexpected missing peer connection while old local stream', { peerId });
-            return;
-          }
-          const sender = this.peerConnections[peerId]!.getSenders().find(
-            (item) => item.track?.kind === track.kind
-          );
-          if (sender) {
-            this.peerConnections[peerId]!.removeTrack(sender);
-          }
-          this.peerConnections[peerId]!.addTrack(track, this.localStream);
-        } else {
-          log('error', 'Local stream is unexpectedly missing', { peerId });
-        }
-      });
-      cb(0, this.localStream);
-    }
+      return true;
+    });
+    cb(error);
   };
 
   /**
