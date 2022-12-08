@@ -51,3 +51,21 @@ declare module '../../node-webrtc/lib/index' {
     RTCIceCandidate,
   };
 }
+
+declare module 'self-cert' {
+  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+  export default (props: {
+    attrs: {
+      commonName: string;
+      countryName: string;
+      stateName: string;
+      locality: string;
+      orgName: string;
+      shortName: string;
+    };
+    bits: number;
+    expires: Date;
+  }): { privateKey: string; certificate: string; publicKey: string } => {
+    /** */
+  };
+}
