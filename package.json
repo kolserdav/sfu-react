@@ -1,6 +1,6 @@
 {
   "name": "uyem",
-  "version": "0.14.0",
+  "version": "0.14.1",
   "repository": "https://github.com/kolserdav/werift-sfu-react.git",
   "description": "Selective Forwarding Unit (SFU) is a WebRTC web application library, the server part of which is written in Node, and the client part is a ReactJS/Next.js shared component.",
   "keywords": [
@@ -41,6 +41,7 @@
   "files": [
     "packages/client/dist",
     "packages/server/dist",
+    "packages/server/declarations.d.ts",
     "bin",
     "docs/resources",
     "server.js",
