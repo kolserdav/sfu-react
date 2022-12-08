@@ -143,18 +143,25 @@ export const useConnection = ({
 
   const screenShare = useMemo(
     () => async (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-      if (!roomId) {
+      if (!roomId || !selfStream) {
         return;
       }
       ws.shareScreen = !shareScreen;
-      setShareScreen(ws.shareScreen);
+      if (!ws.shareScreen) {
+        selfStream.getVideoTracks()[0]?.stop();
+      }
       rtc.setLocalStream(null);
+      const oldStream = rtc.localStream;
       const stream = await rtc.getTracks({ locale });
       if (stream) {
         setSelfStream(stream);
+      } else {
+        ws.shareScreen = !ws.shareScreen;
+        rtc.setLocalStream(oldStream);
       }
+      setShareScreen(ws.shareScreen);
     },
-    [roomId, rtc, ws, shareScreen, locale]
+    [roomId, rtc, ws, shareScreen, locale, selfStream]
   );
 
   const changeMuted = useMemo(
@@ -328,7 +335,24 @@ export const useConnection = ({
     ws.name,
     ws.userId,
     roomIsSaved,
+    shareScreen,
   ]);
+
+  /**
+   * Listen end share screen
+   */
+  useEffect(() => {
+    if (!selfStream) {
+      return;
+    }
+    selfStream.getVideoTracks()[0].onended = async (_) => {
+      ws.shareScreen = false;
+      rtc.setLocalStream(null);
+      const stream = await rtc.getTracks({ locale });
+      setSelfStream(stream);
+      setShareScreen(false);
+    };
+  }, [selfStream, locale, rtc, ws]);
 
   /**
    * Set self stream
