@@ -139,7 +139,7 @@ export const useConnection = ({
         if (!selfStream && target === ws.userId) {
           setSelfStream(_stream);
         }
-        log('info', 'Add stream', { _stream });
+        log('info', 'Add stream', { ..._stream });
       },
     [selfStream, ws.userId]
   );

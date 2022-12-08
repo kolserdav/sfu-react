@@ -9,6 +9,7 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import werift from 'werift';
+import { format } from 'date-fns';
 import { IS_DEV, LOG_LEVEL } from './constants';
 import { LocaleServer, LocaleDefault, LocaleValue } from '../types/interfaces';
 import en from '../locales/en/lang';
@@ -47,10 +48,7 @@ export const log = (type: keyof typeof LogLevel, text: string, _data?: any, cons
   } catch (e) {
     /** */
   }
-  const _date = new Date();
-  const date = IS_DEV
-    ? `${_date.getHours()}:${_date.getMinutes()}:${_date.getSeconds()} `
-    : undefined;
+  const date = IS_DEV ? format(new Date(), 'hh:mm:ss') : undefined;
   if (cons) {
     // eslint-disable-next-line no-console
     console.log(

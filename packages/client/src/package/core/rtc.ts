@@ -133,6 +133,7 @@ class RTC
       log('warn', 'Handle ice candidate without peerConnection', { peerId });
       return;
     }
+    log('info', 'Handle ice candidate', { roomId, userId, target, connId });
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const core = this;
     let s1 = 0;
@@ -231,11 +232,10 @@ class RTC
           log('warn', 'On signalling state change without peer connection', { peerId });
           return;
         }
-        log(
-          'info',
-          '! WebRTC signaling state changed to:',
-          core.peerConnections[peerId]!.signalingState
-        );
+        log('info', '! WebRTC signaling state changed', {
+          signalingState: core.peerConnections[peerId]!.signalingState,
+          peerId,
+        });
         switch (core.peerConnections[peerId]!.signalingState) {
           case 'closed':
             core.onClosedCall({ roomId, userId, target, connId, command: 'signalingState' });
@@ -248,22 +248,7 @@ class RTC
           log('warn', 'On negotiation needed without peer connection', { peerId });
           return;
         }
-        /*
-        console.log(1, {
-          roomId,
-          userId,
-          target,
-          state: core.peerConnections[peerId]!.signalingState,
-          cs: core.peerConnections[peerId]!.connectionState,
-          is: core.peerConnections[peerId]!.iceConnectionState,
-        });
-        await new Promise((resolve) => {
-          setTimeout(() => {
-            resolve(0);
-          }, 1000);
-        });
-        */
-        log('info', '--> Creating offer', {
+        log('info', '--> On negotiation needed', {
           roomId,
           userId,
           target,
@@ -439,6 +424,7 @@ class RTC
     } else {
       log('info', '> Adding tracks to current local media stream', {
         streamId: this.localStream.id,
+        connId,
       });
       this.localStream.getTracks().forEach((track) => {
         if (this.localStream) {

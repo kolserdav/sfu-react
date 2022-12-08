@@ -9,7 +9,7 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { format } from 'date-fns';
-import { CODECS } from './constants';
+import { CODECS, IS_DEV } from './constants';
 import { LogLevel } from '../types/interfaces';
 import { DialogProps } from '../types';
 import storeAlert, { changeAlert } from '../store/alert';
@@ -22,7 +22,7 @@ export const log = (type: keyof typeof LogLevel, text: string, data?: any, forUs
   const { logLevel } = storeLogLevel.getState();
   if (LogLevel[type] >= logLevel || forUser) {
     // eslint-disable-next-line no-console
-    console[type](type, text, data);
+    console[type](IS_DEV ? format(new Date(), 'hh:mm:ss') : undefined, type, text, data);
     if (forUser) {
       storeAlert.dispatch(
         changeAlert({
@@ -77,7 +77,7 @@ export const getCodec = () => {
   for (let i = 0; CODECS[i]; i++) {
     const item = CODECS[i];
     if (MediaRecorder.isTypeSupported(item) && MediaSource.isTypeSupported(item)) {
-      log('info', 'Supported mimetype is', item);
+      log('log', 'Supported mimetype is', item);
       mimeType = item;
       break;
     }

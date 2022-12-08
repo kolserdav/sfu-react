@@ -18,6 +18,7 @@ import {
 import { LogLevel } from '../types/interfaces';
 
 export const LOG_LEVEL: LogLevel = parseInt(process.env.REACT_APP_LOG_LEVEL as string, 10);
+export const IS_DEV = process.env.NODE_ENV === 'development';
 export const WS_TTL = 1;
 export const START_DELAY = 1999;
 export const CODECS = [
