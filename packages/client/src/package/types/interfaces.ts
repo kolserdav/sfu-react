@@ -661,6 +661,7 @@ export namespace Connection {
       roomId: number | string;
       userId: number | string;
       target: string | number;
+      eventName: string;
     }): void;
 
     public abstract onClosedCall(args: {

@@ -79,13 +79,10 @@ class RTC
   }) {
     const peerId = this.getPeerId(roomId, target, connId);
     if (this.peerConnections[peerId]) {
-      log('info', 'Duplicate peer connection', { peerId, eventName });
-      if (eventName === 'check') {
-        return 1;
-      }
-      this.closeVideoCall({ target, userId, roomId, connId });
+      log('warn', 'Duplicate peer connection', { peerId, eventName });
+      this.closeVideoCall({ target, userId, roomId, connId, eventName: 'duplicate-peer' });
     } else {
-      log('log', 'Creating peer connection', { peerId });
+      log('info', 'Creating peer connection', { peerId });
     }
     this.createRTC({ roomId, target, userId, connId, iceServers });
     this.onAddTrack[peerId] = (addedUserId, stream) => {
@@ -144,7 +141,7 @@ class RTC
       const _stream = e.streams[0];
       stream.addTrack(_stream.getTracks()[0]);
       const tracks = stream.getTracks();
-      log('warn', 'On add remote stream', {
+      log('info', 'On add remote stream', {
         target,
         peerId,
         s1,
@@ -168,7 +165,6 @@ class RTC
             eventName: 'disconnected-peer',
             roomId,
           });
-          log('warn', 'Failed connection state', { cs: currentTarget.connectionState, peerId });
           break;
         default:
       }
@@ -178,7 +174,7 @@ class RTC
       event: RTCPeerConnectionIceEvent
     ) {
       if (event.candidate) {
-        log('info', '* Outgoing ICE candidate:', {
+        log('log', '* Outgoing ICE candidate:', {
           roomId,
           userId,
           target,
@@ -540,15 +536,23 @@ class RTC
   };
 
   // eslint-disable-next-line class-methods-use-this
-  public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, target, connId }) => {
+  public closeVideoCall: RTCInterface['closeVideoCall'] = ({
+    roomId,
+    target,
+    connId,
+    eventName,
+  }) => {
+    log('info', 'Close video call', { roomId, target, connId, eventName });
     const peerId = this.getPeerId(roomId, target, connId);
-    this.closeByPeer(peerId);
+    this.closeByPeer(peerId, eventName);
   };
 
-  public closeByPeer = (peerId: string) => {
+  public closeByPeer = (peerId: string, eventName: string) => {
     if (!this.peerConnections[peerId]) {
-      log('info', `Close video call without peer connection ${peerId}`, {
-        pcL: Object.keys(this.peerConnections)?.length,
+      log('warn', 'Close video call without peer connection', {
+        peers: Object.keys(this.peerConnections),
+        peerId,
+        eventName,
       });
       return;
     }
@@ -581,7 +585,7 @@ class RTC
   public closeAllConnections(withSelfStream = false) {
     this.ws.connection.close();
     Object.keys(this.peerConnections).forEach((item) => {
-      this.closeByPeer(item);
+      this.closeByPeer(item, 'close-all');
     });
     if (withSelfStream && this.localStream !== null) {
       this.localStream.getTracks().forEach((track) => {

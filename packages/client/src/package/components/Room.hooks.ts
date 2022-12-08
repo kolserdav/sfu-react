@@ -156,7 +156,7 @@ export const useConnection = ({
         { userId: ws.userId, roomId, connId: connectionId, target: 0, locale },
         (err, stream) => {
           if (!err) {
-            log('info', 'Share screen', { id: stream.id, oldId: oldStream.id });
+            log('info', 'Share screen', { id: stream.id, oldId: oldStream.id }, true);
             addStream({
               target: ws.userId,
               stream,
@@ -538,6 +538,7 @@ export const useConnection = ({
           userId: id,
           target: peer[1],
           connId: peer[2],
+          eventName: 'reload-page',
         });
       });
     };
@@ -559,6 +560,38 @@ export const useConnection = ({
       cleanSubs();
     };
   }, [clickToSetAdminWrapper]);
+
+  const lostStreamHandler: typeof rtc.lostStreamHandler = useMemo(
+    () =>
+      ({ connId, target, eventName, roomId: _roomId }) => {
+        log('warn', 'Lost stream handler', { roomId, target, eventName });
+        let _connId = connId;
+        Object.keys(rtc.peerConnections).forEach((item) => {
+          const peer = item.split(rtc.delimiter);
+          if (peer[1] === target.toString()) {
+            // eslint-disable-next-line prefer-destructuring
+            _connId = peer[2];
+          }
+        });
+        rtc.closeVideoCall({
+          roomId: _roomId,
+          userId: ws.userId,
+          target,
+          connId: _connId,
+          eventName: 'lost-stream-handler',
+        });
+        ws.sendMessage({
+          type: MessageType.GET_CLOSE_PEER_CONNECTION,
+          connId: _connId,
+          id: ws.userId,
+          data: {
+            roomId: _roomId,
+            target,
+          },
+        });
+      },
+    [roomId, rtc, ws]
+  );
 
   /**
    * Connections handlers
@@ -599,35 +632,6 @@ export const useConnection = ({
         log('warn', 'Close call without stream', { peerId });
       }
     };
-
-    const lostStreamHandler: typeof rtc.lostStreamHandler = ({
-      connId,
-      target,
-      eventName,
-      roomId: _roomId,
-    }) => {
-      log('warn', 'Lost stream handler', { roomId, target, eventName });
-      let _connId = connId;
-      Object.keys(rtc.peerConnections).forEach((item) => {
-        const peer = item.split(rtc.delimiter);
-        if (peer[1] === target.toString()) {
-          // eslint-disable-next-line prefer-destructuring
-          _connId = peer[2];
-        }
-      });
-      rtc.closeVideoCall({ roomId: _roomId, userId: ws.userId, target, connId: _connId });
-      ws.sendMessage({
-        type: MessageType.GET_CLOSE_PEER_CONNECTION,
-        connId: _connId,
-        id: ws.userId,
-        data: {
-          roomId: _roomId,
-          target,
-        },
-      });
-    };
-
-    rtc.lostStreamHandler = lostStreamHandler;
 
     /**
      * 'add' send server/main.js and 'added' listen on Room.hooks.ts
@@ -727,7 +731,7 @@ export const useConnection = ({
             connId,
             k: Object.keys(rtc.peerConnections),
           });
-          rtc.closeVideoCall({ roomId, target, userId, connId });
+          rtc.closeVideoCall({ roomId, target, userId, connId, eventName: 'delete-room-unit' });
           const _stream = streams.find((item) => item.target === target);
           if (_stream) {
             storeStreams.dispatch(changeStreams({ type: 'delete', stream: _stream }));
@@ -924,6 +928,7 @@ export const useConnection = ({
                 userId: id,
                 target: item.target,
                 connId: peer[2],
+                eventName: 'change-room-guests',
               });
             }
           });
@@ -1092,7 +1097,17 @@ export const useConnection = ({
     isOwner,
     canConnect,
     isPublic,
+    lostStreamHandler,
   ]);
+
+  /**
+   * Set lost stream handler
+   */
+  useEffect(() => {
+    rtc.lostStreamHandler = (opts) => {
+      lostStreamHandler(opts);
+    };
+  }, [lostStreamHandler, rtc]);
 
   /**
    * Listen can connect
@@ -1118,7 +1133,7 @@ export const useConnection = ({
     } else if (typeof window !== 'undefined' && !qS) {
       _isPublic = false;
     }
-    log('info', 'Is public is', _isPublic);
+    log('log', 'Is public is', _isPublic);
     if (typeof _isPublic === 'boolean') {
       setIsPublic(_isPublic);
     }
@@ -1678,10 +1693,6 @@ export const useVideoStarted = ({
         diffs.forEach((item) => {
           if (!played[item.target] && mounted) {
             lostStreamHandler({ ...item, eventName: 'not-played', roomId });
-            log('warn', `Video not played ${item.target}`, {
-              target: item.target,
-              streamL: item.stream.getTracks().length,
-            });
           }
         });
         setAttempts(_attempts);

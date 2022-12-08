@@ -92,7 +92,7 @@ class RTC
     data: { target, roomId },
     connId,
   }: SendMessageArgs<MessageType.GET_CLOSE_PEER_CONNECTION>) {
-    this.closeVideoCall({ roomId, userId: id, target, connId });
+    this.closeVideoCall({ roomId, userId: id, target, connId, eventName: 'close-peer-handler' });
     this.ws.sendMessage({
       type: MessageType.SET_CLOSE_PEER_CONNECTION,
       id,
@@ -115,7 +115,7 @@ class RTC
         opts,
         peers: IS_DEV ? this.getPeerConnectionKeys(roomId) : undefined,
       });
-      this.closeVideoCall({ roomId, userId, target, connId });
+      this.closeVideoCall({ roomId, userId, target, connId, eventName: 'duplicate-peer' });
     }
     log('log', 'Creating peer connection', opts);
     const ssl = selfCert({
@@ -808,18 +808,26 @@ class RTC
     }
   }
 
-  public closeVideoCall: RTCInterface['closeVideoCall'] = ({ roomId, userId, target, connId }) => {
+  public closeVideoCall: RTCInterface['closeVideoCall'] = ({
+    roomId,
+    userId,
+    target,
+    connId,
+    eventName,
+  }) => {
     const peerId = this.getPeerId(userId, target, connId);
     this.cleanStream({ roomId, peerId, target });
     if (!this.peerConnectionsServer[roomId]?.[peerId]) {
       log('warn', 'Close video call without peer connection', {
         peerId,
         peers: IS_DEV ? this.getPeerConnectionKeys(roomId) : undefined,
+        eventName,
       });
       return;
     }
     log('info', '| Closing the call', {
       peerId,
+      eventName,
     });
     this.peerConnectionsServer[roomId][peerId]!.onsignalingstatechange = null;
     this.peerConnectionsServer[roomId][peerId]!.onnegotiationneeded = null;
@@ -1157,6 +1165,7 @@ class RTC
           userId,
           target: peer[1],
           connId: peer[2],
+          eventName: 'clean-connection-1',
         });
       } else if (peer[1] === userId.toString()) {
         this.closeVideoCall({
@@ -1164,6 +1173,7 @@ class RTC
           userId: peer[0],
           target: userId,
           connId: peer[2],
+          eventName: 'clean-connection-2',
         });
       }
     });

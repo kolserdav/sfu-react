@@ -330,7 +330,6 @@ export function createServer(
             return true;
           });
           if (index !== -1) {
-            rtc.cleanConnections(item, userId.toString());
             rtc.rooms[item].splice(index, 1);
             if (onRoomDisconnect) {
               onRoomDisconnect({ roomId: item, userId, roomUsers: rtc.rooms[item] });
@@ -351,6 +350,7 @@ export function createServer(
               rtc.askeds[item].splice(askeds, 1);
             }
             rtc.sendCloseMessages({ roomId: item, userId, connId });
+            rtc.cleanConnections(item, userId.toString());
             if (rtc.rooms[item].length === 0) {
               if (recordVideo.recordPages[item]) {
                 recordVideo.recordPages[item] = {

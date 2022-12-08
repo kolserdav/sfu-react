@@ -9,7 +9,7 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import werift from 'werift';
-import { LOG_LEVEL } from './constants';
+import { IS_DEV, LOG_LEVEL } from './constants';
 import { LocaleServer, LocaleDefault, LocaleValue } from '../types/interfaces';
 import en from '../locales/en/lang';
 import ru from '../locales/ru/lang';
@@ -34,36 +34,43 @@ enum LogLevel {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const log = (type: keyof typeof LogLevel, text: string, data?: any, cons?: boolean) => {
+export const log = (type: keyof typeof LogLevel, text: string, _data?: any, cons?: boolean) => {
   const Red = '\x1b[31m';
   const Reset = '\x1b[0m';
   const Bright = '\x1b[1m';
   const Yellow = '\x1b[33m';
   const Dim = '\x1b[2m';
   const Cyan = '\x1b[36m';
+  let data = '';
+  try {
+    data = JSON.stringify(_data);
+  } catch (e) {
+    /** */
+  }
+  const _date = new Date();
+  const date = IS_DEV
+    ? `${_date.getHours()}:${_date.getMinutes()}:${_date.getSeconds()} `
+    : undefined;
   if (cons) {
     // eslint-disable-next-line no-console
-    console.log(type === 'info' ? Cyan : type === 'warn' ? Yellow : type === 'error' ? Red : Reset);
-    // eslint-disable-next-line no-console
-    console[type](
-      process.env.NODE_ENV === 'development' ? new Date().getTime() : '',
-      type,
-      Reset,
-      text,
-      Bright,
-      data,
-      Reset
+    console.log(
+      type === 'info' ? Cyan : type === 'warn' ? Yellow : type === 'error' ? Red : Reset,
+      '\n'
     );
+    // eslint-disable-next-line no-console
+    console[type](IS_DEV ? date : '', type, Reset, text, Bright, data, Reset);
   } else if (LogLevel[type] >= logLevel) {
     // eslint-disable-next-line no-console
     console[type](
+      IS_DEV ? date : '',
       type === 'error' ? Red : type === 'warn' ? Yellow : Bright,
       type,
       Reset,
       text,
       Dim,
       data,
-      Reset
+      Reset,
+      '\n'
     );
   }
 };
