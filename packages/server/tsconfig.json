@@ -24,8 +24,9 @@
     "pretty": true,
     "sourceMap": true,
     "inlineSources": true,
-    "noUnusedLocals": false
+    "noUnusedLocals": false,
+    "typeRoots": ["src/types"]
   },
-  "include": ["*.d.ts", "src"],
+  "include": ["src", "src/types/declarations.d.ts"],
   "exclude": ["node_modules", "dist", "tmp"]
 }

@@ -11,7 +11,6 @@
 // eslint-disable-next-line import/no-relative-packages
 //import * as werift from '../werift-webrtc/packages/webrtc/lib/webrtc/src/index';
 
-import '../../declarations';
 import * as werift from 'werift';
 import selfCert from 'self-cert';
 import {
