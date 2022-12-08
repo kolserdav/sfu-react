@@ -330,7 +330,6 @@ export function createServer(
             return true;
           });
           if (index !== -1) {
-            const keys = rtc.getPeerConnectionKeys(item);
             rtc.cleanConnections(item, userId.toString());
             rtc.rooms[item].splice(index, 1);
             if (onRoomDisconnect) {
@@ -351,38 +350,7 @@ export function createServer(
             if (askeds !== -1) {
               rtc.askeds[item].splice(askeds, 1);
             }
-            // Send user list of room
-            rtc.rooms[item].forEach((_item) => {
-              let _connId = connId;
-              keys.every((i) => {
-                const peer = i.split(rtc.delimiter);
-                if (
-                  (peer[0] === _item.id.toString() && peer[1] === userId) ||
-                  (peer[0] === userId && peer[1] === _item.id.toString())
-                ) {
-                  // eslint-disable-next-line prefer-destructuring
-                  _connId = peer[2];
-                  return false;
-                }
-                return true;
-              });
-              wss.sendMessage({
-                type: MessageType.SET_CHANGE_UNIT,
-                id: _item.id,
-                data: {
-                  roomLength: rtc.rooms[item].length,
-                  muteds: rtc.muteds[item],
-                  adminMuteds: rtc.adminMuteds[item],
-                  target: userId,
-                  name: _item.name,
-                  eventName: 'delete',
-                  isOwner: _item.isOwner,
-                  asked: rtc.askeds[item],
-                  banneds: rtc.banneds[item],
-                },
-                connId: _connId,
-              });
-            });
+            rtc.sendCloseMessages({ roomId: item, userId, connId });
             if (rtc.rooms[item].length === 0) {
               if (recordVideo.recordPages[item]) {
                 recordVideo.recordPages[item] = {

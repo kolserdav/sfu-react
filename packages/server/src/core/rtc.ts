@@ -111,7 +111,10 @@ class RTC
       this.peerConnectionsServer[roomId] = {};
     }
     if (this.peerConnectionsServer[roomId][peerId]) {
-      log('warn', 'Duplicate peer connection', opts);
+      log('warn', 'Duplicate peer connection', {
+        opts,
+        peers: IS_DEV ? this.getPeerConnectionKeys(roomId) : undefined,
+      });
       this.closeVideoCall({ roomId, userId, target, connId });
     }
     log('log', 'Creating peer connection', opts);
@@ -409,7 +412,7 @@ class RTC
       target,
       connId,
       peerId,
-      peers: IS_DEV ? Object.keys(this.peerConnectionsServer[roomId]) : undefined,
+      peers: IS_DEV ? this.getPeerConnectionKeys(roomId) : undefined,
       is: this.peerConnectionsServer[roomId][peerId]?.iceConnectionState,
       cs: this.peerConnectionsServer[roomId][peerId]?.connectionState,
       ss: this.peerConnectionsServer[roomId][peerId]?.signalingState,
@@ -494,6 +497,49 @@ class RTC
       log('warn', 'Failed send answer because localDescription is', localDescription);
     }
   };
+
+  public sendCloseMessages({
+    roomId,
+    userId,
+    connId,
+  }: {
+    roomId: string | number;
+    userId: string | number;
+    connId: string;
+  }) {
+    const keys = this.getPeerConnectionKeys(roomId);
+    let _connId = connId;
+    this.rooms[roomId].forEach((_item) => {
+      keys.every((i) => {
+        const peer = i.split(this.delimiter);
+        if (
+          (peer[0] === _item.id.toString() && peer[1] === userId) ||
+          (peer[0] === userId && peer[1] === _item.id.toString())
+        ) {
+          // eslint-disable-next-line prefer-destructuring
+          _connId = peer[2];
+          return false;
+        }
+        return true;
+      });
+      this.ws.sendMessage({
+        type: MessageType.SET_CHANGE_UNIT,
+        id: _item.id,
+        data: {
+          roomLength: this.rooms[roomId].length,
+          muteds: this.muteds[roomId],
+          adminMuteds: this.adminMuteds[roomId],
+          target: userId,
+          name: _item.name,
+          eventName: 'delete',
+          isOwner: _item.isOwner,
+          asked: this.askeds[roomId],
+          banneds: this.banneds[roomId],
+        },
+        connId: _connId,
+      });
+    });
+  }
 
   private deleteRoomItem({ roomId, target }: { roomId: string; target: string }): RoomUser | null {
     let index = -1;
@@ -712,7 +758,7 @@ class RTC
       tracksL: tracks?.length,
       tracks: tracks?.map((item) => item.kind),
       ssL: streams.length,
-      peers: IS_DEV ? Object.keys(this.peerConnectionsServer[roomId]) : undefined,
+      peers: IS_DEV ? this.getPeerConnectionKeys(roomId) : undefined,
       cS: this.peerConnectionsServer[roomId][peerId]?.connectionState,
       sS: this.peerConnectionsServer[roomId][peerId]?.signalingState,
       iS: this.peerConnectionsServer[roomId][peerId]?.iceConnectionState,
@@ -768,7 +814,7 @@ class RTC
     if (!this.peerConnectionsServer[roomId]?.[peerId]) {
       log('warn', 'Close video call without peer connection', {
         peerId,
-        peers: IS_DEV ? Object.keys(this.peerConnectionsServer[roomId]) : undefined,
+        peers: IS_DEV ? this.getPeerConnectionKeys(roomId) : undefined,
       });
       return;
     }
