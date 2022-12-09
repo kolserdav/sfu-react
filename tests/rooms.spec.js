@@ -8,6 +8,8 @@ const { stdout } = require('process');
 const exConfig = require('./rooms.example.json');
 const { openRoom, startServer } = require('./lib');
 
+console.log(process.env);
+
 let importErr = false;
 /**
  * @type {any}
