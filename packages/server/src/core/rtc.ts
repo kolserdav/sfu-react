@@ -20,12 +20,10 @@ import {
   ErrorCode,
   RoomList,
 } from '../types/interfaces';
-import { checkSignallingState, getLocale, log, createPem } from '../utils/lib';
+import { checkSignallingState, getLocale, log } from '../utils/lib';
 import {
   STUN_SERVER,
   SENT_RTCP_INTERVAL,
-  SSL_RTC_CONNECTION,
-  SSL_SIGNATURE_HASH,
   ICE_PORT_MIN,
   ICE_PORT_MAX,
   IS_DEV,
@@ -118,7 +116,6 @@ class RTC
       return;
     }
     log('log', 'Creating peer connection', opts);
-    const ssl = createPem();
     this.peerConnectionsServer[roomId][peerId] = new werift.RTCPeerConnection({
       codecs: {
         audio: [
@@ -156,15 +153,6 @@ class RTC
             },
           ],
       icePortRange: this.icePortRange,
-      dtls: {
-        keys: SSL_RTC_CONNECTION
-          ? {
-              keyPem: ssl.privateKey,
-              certPem: ssl.certificate,
-              signatureHash: SSL_SIGNATURE_HASH,
-            }
-          : undefined,
-      },
     });
   };
 
