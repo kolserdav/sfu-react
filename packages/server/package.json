@@ -27,8 +27,5 @@
     "studio": "prisma studio",
     "generate": "prisma generate",
     "format": "prisma format"
-  },
-  "dependencies": {
-    "@prisma/client": "^4.2.1"
   }
 }
