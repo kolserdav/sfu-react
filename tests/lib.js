@@ -1,5 +1,6 @@
 //@ts-check
 const puppeteer = require('puppeteer');
+// @ts-ignore
 const { spawn, ChildProcessWithoutNullStreams } = require('child_process');
 const { log } = require('../packages/server/dist/utils/lib');
 
@@ -42,7 +43,7 @@ async function openRoom(url, room, uid, headless) {
 
 /**
  *
- * @returns {Promise<{client: ChildProcessWithoutNullStreams; server: ChildProcessWithoutNullStreams} | 0>}
+ * @returns {Promise<{client: ChildProcessWithoutNullStreams | undefined; server: ChildProcessWithoutNullStreams} | 0>}
  */
 const startServer = async () => {
   await new Promise((resolve) => {

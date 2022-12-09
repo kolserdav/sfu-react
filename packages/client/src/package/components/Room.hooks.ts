@@ -140,7 +140,6 @@ export const useConnection = ({
       },
     []
   );
-
   const lostStreamHandler: typeof rtc.lostStreamHandler = useMemo(
     () =>
       ({ connId, target, eventName, roomId: _roomId }) => {

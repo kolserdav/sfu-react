@@ -36,24 +36,24 @@ const clickByButton = (page, selector) => {
 
   await page1.waitForSelector(openChatId);
   const button1 = await page1.$(openChatId);
-  await button1.click();
+  await button1?.click();
   await page2.waitForSelector(openChatId);
   const button2 = await page2.$(openChatId);
-  await button2.click();
+  await button2?.click();
 
   await page1.waitForSelector(textArea);
   const textArea1 = await page1.$(textArea);
-  await textArea1.focus();
-  await textArea1.type(testMessage);
+  await textArea1?.focus();
+  await textArea1?.type(testMessage);
   clickByButton(page1, sendButton);
 
   await page2.waitForTimeout(3000);
   const checkMess = await page2.evaluate(async (messContSelector) => {
     const messCont = document.querySelector(messContSelector);
-    const firstMess = messCont.firstElementChild;
+    const firstMess = messCont?.firstElementChild;
     const textEll =
-      firstMess.firstElementChild.nextElementSibling.firstElementChild.nextElementSibling;
-    return textEll.innerHTML;
+      firstMess?.firstElementChild?.nextElementSibling?.firstElementChild?.nextElementSibling;
+    return textEll?.innerHTML;
   }, messages);
   if (checkMess !== testMessage) {
     process.exit(1);

@@ -163,7 +163,8 @@ class RTC
       const _stream = e.streams[0];
       stream.addTrack(_stream.getTracks()[0]);
       const tracks = stream.getTracks();
-      log('info', 'On add remote stream', {
+      log('log', 'On add remote stream', {
+        active: stream.active,
         target,
         peerId,
         s1,

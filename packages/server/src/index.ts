@@ -47,8 +47,8 @@ processArgs.forEach((item, index) => {
 const args = Object.keys(argv);
 
 const migrate = async (): Promise<number | null> => {
-  log('info', 'Running "npm run prod:migrate" command...', '', true);
-  const res = spawn('npm', ['run', 'prod:migrate'], {
+  log('info', 'Running "npm run migrate" command...', '', true);
+  const res = spawn('npm', ['run', 'migrate'], {
     env: process.env,
     cwd: path.resolve(__dirname, '../../..'),
   });

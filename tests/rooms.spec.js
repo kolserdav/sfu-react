@@ -1,6 +1,7 @@
 // @ts-check
 const path = require('path');
 const puppeteer = require('puppeteer');
+// @ts-ignore
 const { ChildProcessWithoutNullStreams } = require('child_process');
 const { log } = require('../packages/server/dist/utils/lib');
 const { stdout } = require('process');
@@ -53,7 +54,7 @@ const EXIT_DELAY = 1000;
  *  uid: string;
  *  room: string;
  * }} EvalPage
- * @typedef {{server: ChildProcessWithoutNullStreams; client: ChildProcessWithoutNullStreams}} StartServer
+ * @typedef {{server: ChildProcessWithoutNullStreams; client: ChildProcessWithoutNullStreams | undefined}} StartServer
  */
 
 let count = 0;
@@ -166,7 +167,7 @@ async function evaluateRoom(evalPage, res, last = false) {
         if (res !== 0) {
           const { client, server } = res;
           server.kill();
-          if (process.env.TEST_NEXT) {
+          if (process.env.TEST_NEXT && client) {
             client.kill();
           }
         }
