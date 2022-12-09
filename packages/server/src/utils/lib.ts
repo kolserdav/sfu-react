@@ -48,7 +48,7 @@ export const log = (type: keyof typeof LogLevel, text: string, _data?: any, cons
   } catch (e) {
     /** */
   }
-  const date = IS_DEV ? format(new Date(), 'hh:mm:ss') : undefined;
+  const date = IS_DEV ? format(new Date(), 'hh:mm:ss') : '';
   if (cons) {
     // eslint-disable-next-line no-console
     console.log(

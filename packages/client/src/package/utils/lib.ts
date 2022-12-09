@@ -22,7 +22,7 @@ export const log = (type: keyof typeof LogLevel, text: string, data?: any, forUs
   const { logLevel } = storeLogLevel.getState();
   if (LogLevel[type] >= logLevel) {
     // eslint-disable-next-line no-console
-    console[type](IS_DEV ? format(new Date(), 'hh:mm:ss') : undefined, type, text, data);
+    console[type](IS_DEV ? format(new Date(), 'hh:mm:ss') : '', type, text, data);
   }
   if (forUser) {
     storeAlert.dispatch(
