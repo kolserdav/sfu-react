@@ -54,12 +54,12 @@ const startServer = async () => {
   if (!process.env.CI) {
     return 0;
   }
-  log('log', 'Run command:', '"npm run prod:migrate"', true);
+  log('log', 'Run command:', '"npm run migrate"', true);
   /**
    * @type {any}
    */
   const env = { PATH: process.env.PATH };
-  let server = spawn('npm', ['run', 'prod:migrate'], {
+  let server = spawn('npm', ['run', 'migrate'], {
     env,
   });
   server.stdout.on('data', (d) => {
@@ -92,8 +92,8 @@ const startServer = async () => {
   });
   let client;
   if (process.env.TEST_NEXT) {
-    log('log', 'Run command:', '"npm run start:client-next"', true);
-    client = spawn('npm', ['run', 'start:client-next'], {
+    log('log', 'Run command:', '"npm run start:client"', true);
+    client = spawn('npm', ['run', 'start:client'], {
       env,
     });
     client.stdout.on('data', (d) => {

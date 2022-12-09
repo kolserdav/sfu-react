@@ -12,7 +12,6 @@
 //import * as werift from '../werift-webrtc/packages/webrtc/lib/webrtc/src/index';
 
 import * as werift from 'werift';
-import selfCert from 'self-cert';
 import {
   RTCInterface,
   MessageType,
@@ -21,7 +20,7 @@ import {
   ErrorCode,
   RoomList,
 } from '../types/interfaces';
-import { checkSignallingState, getLocale, log } from '../utils/lib';
+import { checkSignallingState, getLocale, log, createPem } from '../utils/lib';
 import {
   STUN_SERVER,
   SENT_RTCP_INTERVAL,
@@ -119,18 +118,7 @@ class RTC
       return;
     }
     log('log', 'Creating peer connection', opts);
-    const ssl = selfCert({
-      attrs: {
-        commonName: '',
-        countryName: '',
-        stateName: '',
-        locality: '',
-        orgName: '',
-        shortName: '',
-      },
-      bits: 2048,
-      expires: new Date(),
-    });
+    const ssl = createPem();
     this.peerConnectionsServer[roomId][peerId] = new werift.RTCPeerConnection({
       codecs: {
         audio: [
