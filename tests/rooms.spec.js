@@ -167,7 +167,7 @@ async function evaluateRoom(evalPage, res, last = false) {
         if (res !== 0) {
           const { client, server } = res;
           server.kill();
-          if (process.env.TEST_NEXT && client) {
+          if (process.env.TEST_NEXT !== 'false' && client) {
             client.kill();
           }
         }

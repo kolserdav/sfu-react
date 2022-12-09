@@ -91,7 +91,7 @@ const startServer = async () => {
     }, 4000);
   });
   let client;
-  if (process.env.TEST_NEXT) {
+  if (process.env.TEST_NEXT !== 'false') {
     log('log', 'Run command:', '"npm run start:client"', true);
     client = spawn('npm', ['run', 'start:client'], {
       env,

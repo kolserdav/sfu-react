@@ -749,7 +749,7 @@ export const useConnection = ({
               userId: id,
               connId,
               onTrack: ({ addedUserId, stream: _stream }) => {
-                log('info', 'Added unit track', { addedUserId, s: _stream.id, connId });
+                log('info', 'Added unit track', { addedUserId, s: _stream, connId });
                 addStream({
                   target: addedUserId,
                   stream: _stream,
@@ -782,6 +782,8 @@ export const useConnection = ({
                     },
                   });
                 }
+              } else {
+                log('warn', 'Messagedge SET_CHANGE_UNIT not send', { userId, target, connId });
               }
             });
           }
@@ -909,13 +911,13 @@ export const useConnection = ({
             if (!selfStream) {
               return;
             }
-            log('info', 'Check new user', { uid: id, item });
             const skip = rtc.createPeerConnection({
               roomId,
               target: item.id,
               userId: id,
               connId,
               onTrack: ({ addedUserId, stream: _stream }) => {
+                log('info', 'Added tracks of new user', { addedUserId, _stream });
                 addStream({
                   target: addedUserId,
                   stream: _stream,

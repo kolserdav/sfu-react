@@ -88,7 +88,7 @@ class RTC
     this.createRTC({ roomId, target, userId, connId, iceServers });
     this.onAddTrack[peerId] = (addedUserId, stream) => {
       log('info', 'On track peer', {
-        sid: stream.id,
+        s: stream,
         userId,
         target,
         addedUserId,
