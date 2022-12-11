@@ -40,14 +40,11 @@ $text-area-border-width: 1px;
     padding-right: 1rem;
     width: calc(100% - #{$wrapper-padding} * 4);
   }
-}
 
-.no__messages {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  margin-top: auto;
-  margin-bottom: 2rem;
+  .no__messages {
+    position: relative;
+    margin: auto auto 5rem;
+  }
 }
 
 $text-area-padding: 1rem;

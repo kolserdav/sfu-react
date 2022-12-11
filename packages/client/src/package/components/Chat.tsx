@@ -119,7 +119,7 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
             </div>
           ))
         ) : (
-          <div className={s.no__messages}>{error ? locale.noMessages : locale.loading}</div>
+          <p className={s.no__messages}>{error ? locale.noMessages : locale.loading}</p>
         )}
       </div>
       <div className={s.input}>
