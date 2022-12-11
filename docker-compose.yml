@@ -36,8 +36,6 @@ services:
     container_name: nginx
     network_mode: host
     restart: always
-    ports:
-      - 3000:3000
     volumes:
       - ./packages/client/build:/home/app/werift-sfu-react/packages/client/build
       - ./docs/resources/nginx.client.conf:/etc/nginx/conf.d/app.conf
