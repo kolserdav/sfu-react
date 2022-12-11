@@ -85,6 +85,7 @@ $text-area-border-radius: 6px;
   .group {
     position: relative;
     width: 100%;
+    height: auto;
     display: flex;
     flex-direction: row;
     justify-content: space-around;
@@ -94,6 +95,7 @@ $text-area-border-radius: 6px;
     textarea {
       position: relative;
       width: 80%;
+      height: 100%;
       font-size: 1rem;
       line-height: 1.2;
       padding: $text-area-padding-left;
@@ -105,15 +107,12 @@ $text-area-border-radius: 6px;
         padding-top: 0.3rem;
       }
     }
-
-    @media (max-width: $mobile-width) {
-      position: fixed;
-      bottom: 0;
-    }
   }
 
   @media (max-width: $mobile-width) {
     margin-bottom: $input-mb-mobile;
+    position: fixed;
+    bottom: 0;
   }
 }
 
