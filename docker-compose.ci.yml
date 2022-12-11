@@ -4,7 +4,3 @@ services:
     extends:
       file: docker-compose.yml
       service: db
-  coturn:
-    extends:
-      file: docker-compose.yml
-      service: coturn
