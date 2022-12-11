@@ -8,3 +8,7 @@ services:
     extends:
       file: docker-compose.yml
       service: coturn
+  nginx:
+    extends:
+      file: docker-compose.yml
+      service: nginx
