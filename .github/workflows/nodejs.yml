@@ -32,10 +32,10 @@ jobs:
         env:
           CI: false
         run: |
-          npm run build
+          npm run build:next
       - name: test
         env:
           CI: true
-          TEST_NEXT: false
+          TEST_NEXT: true
         run: |
           npm run test

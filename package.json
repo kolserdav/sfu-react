@@ -85,6 +85,7 @@
     "start:server": "cd packages/server && npm run start",
     "generate": "cd packages/server && npm run generate",
     "start": "npm run start:server",
+    "start:next": "concurrently \"npm run start:server\" \"npm run start:client\"",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:start": "concurrently \"npm run dev:server\" \"npm run dev:client-next\"",
     "dev:dev-server": "concurrently \"npm run dev:server-server\" \"npm run dev:client\"",
