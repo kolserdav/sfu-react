@@ -111,7 +111,7 @@ class RTC
       log('warn', 'Connection id is: ', { connId });
     }
     this.peerConnections[this.getPeerId(roomId, target, connId)] = new RTCPeerConnection({
-      iceServers: process.env.CI === 'true' ? undefined : iceServers,
+      iceServers: process.env.CI === 'true' ? [] : iceServers,
     });
     return this.peerConnections;
   };

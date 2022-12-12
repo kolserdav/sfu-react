@@ -143,7 +143,7 @@ class RTC
       iceTransportPolicy: 'all',
       iceServers:
         IS_DEV || IS_CI
-          ? undefined
+          ? []
           : [
               {
                 urls: STUN_SERVER,
