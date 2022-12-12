@@ -58,7 +58,7 @@ const startServer = async () => {
   /**
    * @type {any}
    */
-  const env = { PATH: process.env.PATH };
+  const {env} = process;
   let server = spawn('npm', ['run', 'migrate'], {
     env,
   });
@@ -91,7 +91,7 @@ const startServer = async () => {
     }, 4000);
   });
   let client;
-  if (process.env.TEST_NEXT !== 'false') {
+  if (process.env.TEST_NEXT === 'true') {
     log('log', 'Run command:', '"npm run start:client"', true);
     client = spawn('npm', ['run', 'start:client'], {
       env,

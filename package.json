@@ -87,9 +87,9 @@
     "start": "npm run start:server",
     "start:next": "concurrently \"npm run start:server\" \"npm run start:client\"",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "dev:start": "concurrently \"npm run dev:server\" \"npm run dev:client-next\"",
+    "dev:next": "concurrently \"npm run dev:server\" \"npm run dev:client-next\"",
     "dev:dev-server": "concurrently \"npm run dev:server-server\" \"npm run dev:client\"",
-    "test": "node tests/rooms.spec.js",
+    "test": "cross-env CI=true TEST_NEXT=true node tests/rooms.spec.js",
     "test:chat": "node tests/chat.spec.js",
     "test:browser": "node tests/webrtc-browser.js"
   },

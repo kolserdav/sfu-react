@@ -10,7 +10,9 @@
  ******************************************************************************************/
 import React from 'react';
 import { useRouter, NextRouter } from 'next/router';
-import Main from '../../src/package/Main';
+import dynamic from 'next/dynamic';
+
+const Main = dynamic(() => import('../../src/package/Main'));
 
 const checkRouterIsLoad = (router: NextRouter) => !/\]/.test(router.asPath);
 

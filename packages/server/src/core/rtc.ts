@@ -117,6 +117,7 @@ class RTC
       return;
     }
     log('log', 'Creating peer connection', opts);
+
     this.peerConnectionsServer[roomId][peerId] = new werift.RTCPeerConnection({
       codecs: {
         audio: [
