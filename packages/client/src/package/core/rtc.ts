@@ -377,7 +377,7 @@ class RTC
       return this.localStream;
     }
     const videoStream = await navigator.mediaDevices.getDisplayMedia({ video: true }).catch((e) => {
-      if (e.message === 'Permission denied') {
+      if (e.name === 'NotAllowedError') {
         log('warn', locale?.getDisplayCancelled || 'Get display cancelled', e, true);
       } else {
         log('error', locale?.errorGetDisplay || 'Error get display media', e, true);
