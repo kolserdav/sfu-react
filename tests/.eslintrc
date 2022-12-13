@@ -1,0 +1,51 @@
+{
+  "env": {
+    "es2021": true,
+    "node": true,
+    "browser": true
+  },
+  "root": true,
+  "extends": [
+    "eslint:recommended",
+    "airbnb",
+    "eslint-config-prettier",
+    "prettier",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "plugins": ["prettier", "@typescript-eslint", "eslint-plugin-prettier"],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 12,
+    "sourceType": "module"
+  },
+  "ignorePatterns": [],
+  "rules": {
+    "import/no-dynamic-require": 1,
+    "@typescript-eslint/no-var-requires": 1,
+    "spaced-comment": 0,
+    "no-unused-vars": 1,
+    "prettier/prettier": 1,
+    "import/no-extraneous-dependencies": 0,
+    "import/no-unresolved": 0,
+    "import/extensions": [
+      2,
+      "never",
+      {
+        "ts": "always",
+        "json": "always"
+      }
+    ],
+    "no-underscore-dangle": 0,
+    "no-plusplus": 0,
+    "import/prefer-default-export": 1,
+    "jsx-a11y/media-has-caption": 0,
+    "no-nested-ternary": 0,
+    "no-param-reassign": 1,
+    "no-shadow": 0,
+    "@typescript-eslint/no-shadow": 2,
+    "@typescript-eslint/no-unused-vars": 1,
+    "@typescript-eslint/ban-ts-comment": 1,
+    "no-await-in-loop": 1,
+    "no-extra-boolean-cast": 1
+  }
+}

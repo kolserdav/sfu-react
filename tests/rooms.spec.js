@@ -1,10 +1,11 @@
+/* eslint-disable global-require */
 // @ts-check
 const path = require('path');
 const puppeteer = require('puppeteer');
 // @ts-ignore
 const { ChildProcessWithoutNullStreams } = require('child_process');
-const { log } = require('../packages/server/dist/utils/lib');
 const { stdout } = require('process');
+const { log } = require('../packages/server/dist/utils/lib');
 const exConfig = require('./rooms.example.json');
 const { openRoom, startServer } = require('./lib');
 
@@ -35,7 +36,7 @@ try {
   importErr = true;
 }
 
-let { rooms, users, headless, singleRoom, url, delay } = importErr ? exConfig : config;
+const { rooms, users, headless, singleRoom, url, delay } = importErr ? exConfig : config;
 
 process.setMaxListeners(0);
 
@@ -66,6 +67,28 @@ let warnings = 0;
  * @typedef {Record<string, boolean>} Timeupdate
  */
 
+function stdoutClean() {
+  if (!process.env.CI) {
+    stdout.clearLine(0);
+    process.stdout.cursorTo(0);
+  }
+}
+
+/**
+ *
+ * @param {number} seconds
+ * @returns {NodeJS.Timeout}
+ */
+function stdoutWrite(seconds) {
+  let oldNumber = seconds.toString();
+  stdout.write(oldNumber);
+  return setInterval(() => {
+    stdoutClean();
+    oldNumber = `${--seconds}`;
+    stdout.write(oldNumber);
+  }, 1000);
+}
+
 /**
  * @type {Timeupdate}
  */
@@ -83,11 +106,11 @@ async function evaluateRoom(evalPage, res, last = false) {
   log('log', 'Maybe wait for page evaluate:', `${d} seconds ...`, true);
   const t = stdoutWrite(d);
   timeupdate = await page.evaluate(
-    async (_uid, _delay, users) => {
+    async (_uid, _delay) => {
       /**
        * @type {Timeupdate}
        */
-      let _timeupdate = {};
+      const _timeupdate = {};
       const _videos = document.querySelectorAll('video');
       _videos[0]?.parentElement?.parentElement?.focus();
       await new Promise((resolve) => {
@@ -102,9 +125,9 @@ async function evaluateRoom(evalPage, res, last = false) {
         /**
          * @type {any}
          */
-        const { id } = video.parentElement;
-        const { id: _id } = video;
-        _timeupdate[_id] = await new Promise((resolve) => {
+        const { id: _id } = video.parentElement;
+        const { id: __id } = video;
+        _timeupdate[__id] = await new Promise((resolve) => {
           video.ontimeupdate = () => {
             resolve(true);
           };
@@ -112,12 +135,14 @@ async function evaluateRoom(evalPage, res, last = false) {
             resolve(false);
           }, 3000);
         });
-        video.ontimeupdate = () => {};
-        if (streamIds.indexOf(id) !== -1) {
-          console.log(`Non unique stream: ${id} for uid: ${_uid}`);
+        video.ontimeupdate = () => {
+          /** */
+        };
+        if (streamIds.indexOf(_id) !== -1) {
+          console.log(`Non unique stream: ${_id} for uid: ${_uid}`);
         }
-        streamIds.push(id);
-        if (_id === _uid) {
+        streamIds.push(_id);
+        if (__id === _uid) {
           check = true;
         }
       }
@@ -183,30 +208,8 @@ async function evaluateRoom(evalPage, res, last = false) {
  * @returns {number}
  */
 function getTime(startTime) {
-  const delay = Math.ceil(new Date().getTime() - startTime);
-  return delay * ROOMS * USERS;
-}
-
-/**
- *
- * @param {number} seconds
- * @returns {NodeJS.Timeout}
- */
-function stdoutWrite(seconds) {
-  let oldNumber = seconds.toString();
-  stdout.write(oldNumber);
-  return setInterval(() => {
-    stdoutClean();
-    oldNumber = `${--seconds}`;
-    stdout.write(oldNumber);
-  }, 1000);
-}
-
-function stdoutClean() {
-  if (!Boolean(process.env.CI)) {
-    stdout.clearLine(0);
-    process.stdout.cursorTo(0);
-  }
+  const _delay = Math.ceil(new Date().getTime() - startTime);
+  return _delay * ROOMS * USERS;
 }
 
 /**
