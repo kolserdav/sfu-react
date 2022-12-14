@@ -350,7 +350,7 @@ export const useConnection = ({
     }
     const peerId = rtc.getPeerId(roomId, 0, connectionId);
     if (rtc.peerConnections[peerId] !== undefined) {
-      log('info', 'Start connection is exists', { peerId });
+      log('warn', 'Start connection is exists', { peerId });
       return;
     }
     rtc.createPeerConnection({
