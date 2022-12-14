@@ -79,7 +79,7 @@ class RTC
   constructor({ ws }: { ws: WS }) {
     super();
     this.ws = ws;
-    log('info', 'Ice port range env.(ICE_PORT_MAX, ICE_PORT_MAX) is', this.icePortRange, true);
+    log('info', 'Ice port range env.(ICE_PORT_MIN, ICE_PORT_MAX) is', this.icePortRange, true);
   }
 
   public getPeerId(userId: number | string, target: number | string, connId: string) {
