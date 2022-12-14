@@ -348,6 +348,11 @@ export const useConnection = ({
     if (!selfStream || !roomId || !roomIsSaved) {
       return;
     }
+    const peerId = rtc.getPeerId(roomId, 0, connectionId);
+    if (rtc.peerConnections[peerId] !== undefined) {
+      log('info', 'Start connection is exists', { peerId });
+      return;
+    }
     rtc.createPeerConnection({
       userId: ws.userId,
       target: 0,
@@ -998,7 +1003,7 @@ export const useConnection = ({
       });
       if (typeof stream !== 'undefined') {
         stream.isOwner = command === 'add';
-        if (stream.isOwner !== isOwner) {
+        if (stream.isOwner !== isOwner && target === id) {
           setIsOwner(stream.isOwner);
         }
         storeStreams.dispatch(
