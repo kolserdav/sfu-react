@@ -181,7 +181,7 @@ function Room({ userId, iceServers, server, port, roomId, locale, name, theme }:
               onTimeUpdate={onTimeUpdateWrapper(item)}
               onClick={onClickVideo}
               ref={item.ref}
-              title={item.target.toString()}
+              title={item.name.toString()}
               id={item.target.toString()}
               onLoadedData={onLoadedDataWrapper(item)}
               onEmptied={onEmptiedWrapper(item)}

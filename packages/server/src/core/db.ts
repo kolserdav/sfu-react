@@ -437,12 +437,30 @@ class DB extends Auth implements DBInterface {
   }
 
   public async changeRoomArchive({ roomId, archive }: { roomId: string; archive: boolean }) {
+    const room = await this.roomFindFirst({
+      where: {
+        id: roomId,
+      },
+      include: {
+        Admins: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
     await this.roomUpdate({
       where: {
         id: roomId,
       },
       data: {
         archive,
+        Admins:
+          room?.authorId === null
+            ? {
+                deleteMany: room?.Admins,
+              }
+            : undefined,
         updated: new Date(),
       },
     });
