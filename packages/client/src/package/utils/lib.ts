@@ -38,7 +38,7 @@ export const log = (type: keyof typeof LogLevel, text: string, data?: any, forUs
 };
 
 export const getRoomId = (pathname: string) => {
-  const lastSection = pathname.match(/\/[a-zA-Z0-9_-]+$/);
+  const lastSection = pathname.match(/\/[a-zA-Z0-9._-]+$/);
   const roomId = lastSection ? lastSection[0] : '';
   return roomId.replace(/^\//, '');
 };
