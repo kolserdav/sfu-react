@@ -26,17 +26,6 @@ export const getRoomLink = (roomId: number | string | null): string | null => {
   return res;
 };
 
-const checkVideoFixed = (container: HTMLDivElement) => {
-  const { classList } = container;
-  let check = false;
-  for (let i = 0; classList[i]; i++) {
-    if (classList[i] === s.video__fixed) {
-      check = true;
-    }
-  }
-  return check;
-};
-
 export const getWidthOfItem = ({
   lenght,
   container,

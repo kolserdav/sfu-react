@@ -28,5 +28,5 @@
     "typeRoots": ["src/types"]
   },
   "include": ["src", "src/types/declarations.d.ts"],
-  "exclude": ["node_modules", "dist", "tmp"]
+  "exclude": ["node_modules", "dist", "tmp", "umd"]
 }

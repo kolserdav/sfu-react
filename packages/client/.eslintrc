@@ -23,7 +23,7 @@
     "sourceType": "module"
   },
   "plugins": ["@typescript-eslint", "react", "prettier", "eslint-plugin-prettier"],
-  "ignorePatterns": ["dist", "cdn"],
+  "ignorePatterns": ["dist", "umd"],
   "rules": {
     "import/no-dynamic-require": 1,
     "@typescript-eslint/no-var-requires": 1,

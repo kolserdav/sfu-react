@@ -111,6 +111,7 @@ import Uyem from 'uyem';
 
 - [ReactJS](examples/hello-world/src)
 - [Next.js](examples/ssr-client/pages)
+- [Without JSX](examples/without-jsx)
 
 ## Server examples
 
