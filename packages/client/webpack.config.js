@@ -29,9 +29,6 @@ module.exports = ({ NODE_ENV }) => ({
   devtool: 'source-map',
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
-    alias: {
-      react: path.resolve(__dirname, '../../node_modules/react'),
-    },
   },
   plugins: [
     new webpack.BannerPlugin(fs.readFileSync(path.resolve(__dirname, '../../LICENSE'), 'utf8')),

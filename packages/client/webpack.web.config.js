@@ -23,9 +23,9 @@ module.exports = ({ NODE_ENV, MIN }) => ({
   context: __dirname,
   entry: './src/package/Main.tsx',
   output: {
-    path: path.resolve(__dirname, 'cdn'),
+    path: path.resolve(__dirname, 'umd'),
     filename: `js/uyem.${MIN === 'true' ? 'min.' : ''}js`,
-    libraryTarget: 'var',
+    libraryTarget: 'umd',
     library: 'Uyem',
   },
   optimization: {
@@ -34,9 +34,6 @@ module.exports = ({ NODE_ENV, MIN }) => ({
   devtool: 'source-map',
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
-    alias: {
-      react: path.resolve(__dirname, '../../node_modules/react'),
-    },
   },
   plugins: [
     new webpack.BannerPlugin(fs.readFileSync(path.resolve(__dirname, '../../LICENSE'), 'utf8')),
