@@ -4,7 +4,7 @@ Selective Forwarding Unit (SFU) is a WebRTC web application library, the server 
 
 ## Homepage (demo)
 
-https://uyem.ru
+https://uyem.ru/en
 
 ## Know-how
 
