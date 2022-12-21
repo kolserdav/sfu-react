@@ -146,6 +146,7 @@ export enum MessageType {
   SET_VIDEO_TRACK = 'SET_VIDEO_TRACK',
   GET_TO_ADMIN = 'GET_TO_ADMIN',
   SET_TO_ADMIN = 'SET_TO_ADMIN',
+  GET_VIDEO_SETTINGS = 'GET_VIDEO_SETTINGS',
 }
 
 export namespace Locale {
@@ -262,6 +263,11 @@ export namespace DataTypes {
     export type GetSettingsUnit = {
       userId: string | number;
       locale: LocaleValue;
+    };
+    export type GetVideoSettings = {
+      width: number;
+      height: number;
+      userId: string | number;
     };
     export type GetLocale = {
       locale: LocaleValue;
@@ -551,6 +557,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.GetVideoFindMany
     : T extends MessageType.GET_VIDEO_FIND_FIRST
     ? DataTypes.MessageTypes.GetVideoFindFirst
+    : T extends MessageType.GET_VIDEO_SETTINGS
+    ? DataTypes.MessageTypes.GetVideoSettings
     : T extends MessageType.SET_VIDEO_FIND_MANY
     ? DataTypes.MessageTypes.SetVideoFindMany
     : T extends MessageType.SET_VIDEO_FIND_FIRST

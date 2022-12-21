@@ -19,6 +19,7 @@ import {
   RoomUser,
   ErrorCode,
   RoomList,
+  Command,
 } from '../types/interfaces';
 import { checkSignallingState, getLocale, log } from '../utils/lib';
 import {
@@ -31,6 +32,12 @@ import {
 } from '../utils/constants';
 import WS from './ws';
 import DB from './db';
+
+type OnChangeVideoTrack = (args: {
+  roomId: string | number;
+  command: Command;
+  target: string | number;
+}) => void;
 
 // eslint-disable-next-line prefer-const
 let trackCount1 = 0;
@@ -69,10 +76,14 @@ class RTC
 
   public muteForAll: Record<string, boolean> = {};
 
+  public onRoomConnect: OnRoomConnect | undefined;
+
+  public onChangeVideoTrack: OnChangeVideoTrack | undefined;
+
   readonly icePortRange: [number, number] | undefined =
     ICE_PORT_MAX && ICE_PORT_MAX ? [ICE_PORT_MIN, ICE_PORT_MAX] : undefined;
 
-  private ws: WS;
+  public ws: WS;
 
   public streams: Record<string, Record<string, werift.MediaStreamTrack[]>> = {};
 
@@ -300,6 +311,9 @@ class RTC
         }
         break;
       default:
+    }
+    if (this.onChangeVideoTrack) {
+      this.onChangeVideoTrack({ roomId: id, command, target });
     }
     this.rooms[id].forEach((item) => {
       this.ws.sendMessage({
@@ -1051,6 +1065,13 @@ class RTC
     };
     if (onRoomConnect) {
       onRoomConnect({
+        roomId: id,
+        userId: uid,
+        roomUsers: this.rooms[id],
+      });
+    }
+    if (this.onRoomConnect) {
+      this.onRoomConnect({
         roomId: id,
         userId: uid,
         roomUsers: this.rooms[id],

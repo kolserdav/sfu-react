@@ -58,6 +58,7 @@ function App() {
             },
           ]}
           name="John Doe"
+          videoRecord
         />
       )}
     </div>

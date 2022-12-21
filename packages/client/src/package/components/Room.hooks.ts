@@ -417,9 +417,30 @@ export const useConnection = ({
   useEffect(() => {
     (async () => {
       const stream = await rtc.getTracks({ locale });
+
       setSelfStream(stream);
     })();
   }, [rtc, locale]);
+
+  /**
+   * Save video settings
+   */
+  useEffect(() => {
+    if (!roomId) {
+      return;
+    }
+    if (selfStream) {
+      const { width, height } = selfStream.getVideoTracks()[0].getSettings();
+      if (width && height) {
+        ws.sendMessage({
+          type: MessageType.GET_VIDEO_SETTINGS,
+          id: roomId,
+          connId: connectionId,
+          data: { width, height, userId: id },
+        });
+      }
+    }
+  }, [selfStream, roomId, connectionId, ws, id]);
 
   /**
    * Listen change muted

@@ -37,7 +37,7 @@ process.on('uncaughtException', (err: Error) => {
 });
 process.on('unhandledRejection', (err: Error) => {
   if (err.name !== 'Error') {
-    log('error', 'unhandledRejection', err);
+    log('error', 'unhandledRejection', { message: err.message, stack: err.stack });
   } else {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const _err: any = err;
@@ -243,6 +243,9 @@ export function createServer(
         case MessageType.GET_VIDEO_TRACK:
           rtc.getVideoTrackHandler(rawMessage);
           break;
+        case MessageType.GET_VIDEO_SETTINGS:
+          recordVideo.getVideoSettingsHandler(rawMessage);
+          break;
         case MessageType.GET_TO_ADMIN:
           rtc.getToAdminHandler(rawMessage);
           break;
@@ -352,6 +355,7 @@ export function createServer(
             rtc.sendCloseMessages({ roomId: item, userId });
             rtc.cleanConnections(item, userId.toString());
             if (rtc.rooms[item].length === 0) {
+              /*
               if (recordVideo.recordPages[item]) {
                 recordVideo.recordPages[item] = {
                   id: item,
@@ -368,6 +372,7 @@ export function createServer(
                   }
                 }, 5000);
               }
+              */
               delete rtc.rooms[item];
               delete rtc.streams[item];
               delete rtc.banneds[item];
