@@ -394,6 +394,19 @@ export const useConnection = ({
   ]);
 
   /**
+   * On blur listener
+   */
+  useEffect(() => {
+    const onBlurHandler = () => {
+      console.log('raw blur');
+    };
+    window.addEventListener('blur', onBlurHandler);
+    return () => {
+      window.removeEventListener('blur', onBlurHandler);
+    };
+  }, []);
+
+  /**
    * Listen end share screen
    */
   useEffect(() => {
