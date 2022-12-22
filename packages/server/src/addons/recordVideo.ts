@@ -39,21 +39,30 @@ class RecordVideo extends DB {
     super();
     this.settings = _settings;
     this.rtc = _rtc;
-    this.rtc.onChangeVideoTrack = ({ roomId, target, command: _command }) => {
+    this.setHandlers();
+  }
+
+  private setHandlers() {
+    this.rtc.onChangeVideoTrack = ({ roomId, target }) => {
       if (!this.times[roomId]) {
         return;
       }
       const mediaRecorderId = this.getMediaRecorderId(target, this.startTimes[roomId][target]);
+      const recorder = this.mediaRecorders[roomId][mediaRecorderId];
       const time = parseInt(`${this.times[roomId]}`, 10);
-      this.stopStreamRecord({
-        roomId,
-        userId: target,
-        pathStr: this.mediaRecorders[roomId][mediaRecorderId].path,
-        time,
-      });
+      if (recorder) {
+        this.stopStreamRecord({
+          roomId,
+          userId: target,
+          pathStr: recorder.path,
+          time,
+        });
+      }
       this.startTimes[roomId][target] = time;
       this.startStreamRecord({ roomId, userId: target, time });
     };
+
+    this.rtc.onChangeMute = this.rtc.onChangeVideoTrack;
 
     this.rtc.onRoomConnect = ({ roomId, userId }) => {
       if (!this.times[roomId]) {
@@ -69,11 +78,15 @@ class RecordVideo extends DB {
         return;
       }
       const mediaRecorderId = this.getMediaRecorderId(userId, this.startTimes[roomId][userId]);
+      const recorder = this.mediaRecorders[roomId][mediaRecorderId];
+      if (!recorder) {
+        return;
+      }
       const time = parseInt(`${this.times[roomId]}`, 10);
       this.stopStreamRecord({
         roomId,
         userId,
-        pathStr: this.mediaRecorders[roomId][mediaRecorderId].path,
+        pathStr: recorder.path,
         time,
       });
     };
@@ -118,10 +131,11 @@ class RecordVideo extends DB {
     time: number;
     roomId: string | number;
   }) {
-    const fileName = pathStr.match(/\/\d+_0_[a-zA-Z0-9\\-]+.webm/);
+    const fileName = pathStr.match(/\/\d+_0_[a-zA-Z0-9_\\-]+.webm/);
     const cleanFileName = fileName ? fileName[0].replace(/\//, '').replace('.webm', '') : '';
     const fileNames = cleanFileName.split(this.rtc.delimiter);
-    const newFileName = `${fileNames[0]}_${time}_${fileNames[2]}.webm`;
+    const ul = this.rtc.delimiter;
+    const newFileName = `${fileNames[0]}${ul}${time}${ul}${fileNames[2]}${ul}${fileNames[3]}${ul}${fileNames[4]}.webm`;
     fs.renameSync(pathStr, path.resolve(this.dirPath[roomId], newFileName));
   }
 
@@ -185,15 +199,30 @@ class RecordVideo extends DB {
     userId: string | number;
     time: number;
   }) {
+    const videoPlayed = this.checkVideoPlayed({ roomId, userId });
+    const audioPlayed = !this.checkIsMuted({ roomId, userId });
+    if (!videoPlayed && !audioPlayed) {
+      return;
+    }
     const connId = this.getConnId({ roomId, userId });
     const peerId = this.rtc.getPeerId(userId, 0, connId);
     const { width, height } = this.videoSettings[roomId][userId];
-    const _path = path.resolve(this.dirPath[roomId], `${time}_0_${connId}.webm`);
+    const ul = this.rtc.delimiter;
+    const _path = path.resolve(
+      this.dirPath[roomId],
+      `${time}${ul}0${ul}${connId}${ul}${videoPlayed ? 1 : 0}${ul}${audioPlayed ? 1 : 0}.webm`
+    );
     const mediaRecorderId = this.getMediaRecorderId(userId, time);
-    this.mediaRecorders[roomId][mediaRecorderId] = new werift.MediaRecorder([], _path, {
-      width,
-      height,
-    });
+    this.mediaRecorders[roomId][mediaRecorderId] = new werift.MediaRecorder(
+      [],
+      _path,
+      videoPlayed
+        ? {
+            width,
+            height,
+          }
+        : { width: 1, height: 1 }
+    );
     this.rtc.streams[roomId][peerId].forEach((item) => {
       this.mediaRecorders[roomId][mediaRecorderId].addTrack(item);
     });
@@ -258,13 +287,17 @@ class RecordVideo extends DB {
         this.getMediaRecorderKeys(roomId).forEach((item) => {
           const peer = item.split(this.rtc.delimiter);
           const userId = peer[0];
+          const recorder =
+            this.mediaRecorders[roomId][
+              this.getMediaRecorderId(userId, this.startTimes[roomId][userId])
+            ];
+          if (!recorder) {
+            return;
+          }
           this.stopStreamRecord({
             roomId,
             userId,
-            pathStr:
-              this.mediaRecorders[roomId][
-                this.getMediaRecorderId(userId, this.startTimes[roomId][userId])
-              ].path,
+            pathStr: recorder.path,
             time: this.times[roomId],
           });
         });

@@ -2,11 +2,7 @@
   "compilerOptions": {
     "target": "es5",
     "incremental": true,
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "declaration": true,
     "skipLibCheck": true,
@@ -24,12 +20,6 @@
     "jsxFactory": "",
     "jsxFragmentFactory": ""
   },
-  "include": [
-    "*.d.ts",
-    "**/*.ts",
-    "**/*.tsx"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["*.d.ts", "**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "dist", "umd", "build"]
 }

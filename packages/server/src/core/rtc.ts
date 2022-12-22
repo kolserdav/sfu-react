@@ -84,6 +84,8 @@ class RTC
 
   public onChangeVideoTrack: OnChangeVideoTrack | undefined;
 
+  public onChangeMute: OnChangeVideoTrack | undefined;
+
   readonly icePortRange: [number, number] | undefined =
     ICE_PORT_MAX && ICE_PORT_MAX ? [ICE_PORT_MIN, ICE_PORT_MAX] : undefined;
 
@@ -1189,6 +1191,9 @@ class RTC
     } else {
       this.muteds[roomId].splice(index, 1);
     }
+    if (this.onChangeMute) {
+      this.onChangeMute({ roomId, target: id, command: muted ? 'add' : 'delete' });
+    }
     this.rooms[roomId].forEach((item) => {
       this.ws.sendMessage({
         type: MessageType.SET_MUTE,
@@ -1279,6 +1284,9 @@ class RTC
       this.adminMuteds[roomId].push(target);
     } else {
       log('warn', 'Duplicate to mute command', { roomId, target });
+    }
+    if (this.onChangeMute) {
+      this.onChangeMute({ roomId, target, command: 'add' });
     }
     this.rooms[roomId].forEach((item) => {
       this.ws.sendMessage({
@@ -1406,6 +1414,9 @@ class RTC
       this.adminMuteds[roomId].splice(index, 1);
     } else {
       log('warn', 'Unmute of not muted', { roomId, target });
+    }
+    if (this.onChangeMute) {
+      this.onChangeMute({ roomId, target, command: 'delete' });
     }
     this.rooms[roomId].forEach((item) => {
       this.ws.sendMessage({

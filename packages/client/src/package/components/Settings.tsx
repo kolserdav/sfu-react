@@ -30,6 +30,7 @@ import {
 import PlayIcon from '../Icons/Play';
 import Video from './Video';
 import DeleteIcon from '../Icons/Delete';
+import { useIsOwner } from '../utils/hooks';
 
 function Settings({
   theme,
@@ -68,6 +69,8 @@ function Settings({
     ws,
   });
 
+  const { isOwner } = useIsOwner({ userId });
+
   return (
     <div
       style={{ background: theme?.colors.paper }}
@@ -89,7 +92,7 @@ function Settings({
           </div>
         </div>
       </div>
-      {videoRecord && (
+      {videoRecord && isOwner && (
         <div
           className={s.item}
           ref={settingsRef}
