@@ -33,11 +33,11 @@ const chat = new Chat();
 const settings = new Settings();
 
 process.on('uncaughtException', (err: Error) => {
-  log('error', 'uncaughtException', { message: err.message, stack: err.stack });
+  log('error', 'uncaughtException', err);
 });
 process.on('unhandledRejection', (err: Error) => {
   if (err.name !== 'Error') {
-    log('error', 'unhandledRejection', { message: err.message, stack: err.stack });
+    log('error', 'unhandledRejection', err);
   } else {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const _err: any = err;

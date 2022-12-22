@@ -144,6 +144,9 @@ class RecordVideo extends DB {
           time,
           roomId,
         });
+        if (this.mediaRecorders[roomId]?.[recorderId]) {
+          delete this.mediaRecorders[roomId][recorderId];
+        }
       }, 1000);
     });
   }
