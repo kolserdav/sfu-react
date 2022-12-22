@@ -9,15 +9,10 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import * as werift from 'werift';
-import { CancelablePromise } from 'cancelable-promise';
 // import FFmpeg from 'fluent-ffmpeg';
 import path from 'path';
 import fs from 'fs';
-import { PassThrough } from 'stream';
-import { PuppeteerScreenRecorder } from 'puppeteer-screen-recorder';
-import { v4 } from 'uuid';
-import { HEADLESS, VIEWPORT, APP_URL } from '../utils/constants';
-import { ErrorCode, MessageType, SendMessageArgs, RECORD_VIDEO_NAME } from '../types/interfaces';
+import { ErrorCode, MessageType, SendMessageArgs } from '../types/interfaces';
 import DB from '../core/db';
 import { getLocale, log } from '../utils/lib';
 import Settings from './settings';
@@ -58,6 +53,29 @@ class RecordVideo extends DB {
       });
       this.startTimes[roomId][target] = time;
       this.startStreamRecord({ roomId, userId: target, time });
+    };
+
+    this.rtc.onRoomConnect = ({ roomId, userId }) => {
+      if (!this.times[roomId]) {
+        return;
+      }
+      const time = parseInt(`${this.times[roomId]}`, 10);
+      this.startTimes[roomId][userId] = time;
+      this.startStreamRecord({ roomId, userId, time });
+    };
+
+    this.rtc.onRoomDisconnect = ({ roomId, userId }) => {
+      if (!this.times[roomId]) {
+        return;
+      }
+      const mediaRecorderId = this.getMediaRecorderId(userId, this.startTimes[roomId][userId]);
+      const time = parseInt(`${this.times[roomId]}`, 10);
+      this.stopStreamRecord({
+        roomId,
+        userId,
+        pathStr: this.mediaRecorders[roomId][mediaRecorderId].path,
+        time,
+      });
     };
   }
 
@@ -126,7 +144,6 @@ class RecordVideo extends DB {
           time,
           roomId,
         });
-        delete this.mediaRecorders[roomId][recorderId];
       }, 1000);
     });
   }
@@ -150,6 +167,10 @@ class RecordVideo extends DB {
 
   private getMediaRecorderId(userId: string | number, startTime: number) {
     return `${userId}${this.rtc.delimiter}${startTime}`;
+  }
+
+  private getMediaRecorderKeys(roomId: string | number) {
+    return Object.keys(this.mediaRecorders[roomId]) || [];
   }
 
   private startStreamRecord({
@@ -178,64 +199,75 @@ class RecordVideo extends DB {
 
   public async handleVideoRecord(args: SendMessageArgs<MessageType.GET_RECORD>) {
     const {
-      id,
-      data: { command, userId },
+      id: roomId,
+      data: { command, userId: id },
     } = args;
-    if (!this.mediaRecorders[id]) {
-      this.mediaRecorders[id] = {};
+    if (!this.mediaRecorders[roomId]) {
+      this.mediaRecorders[roomId] = {};
     }
     switch (command) {
       case 'start':
-        this.times[id] = 0;
-        this.intervals[id] = setInterval(() => {
-          this.times[id]++;
+        this.times[roomId] = 0;
+        this.intervals[roomId] = setInterval(() => {
+          this.times[roomId]++;
           this.settings.sendMessage({
             msg: {
               type: MessageType.SET_RECORDING,
-              id: userId,
+              id,
               connId: '',
               data: {
-                time: this.times[id],
+                time: this.times[roomId],
                 command,
               },
             },
-            roomId: id,
+            roomId,
           });
         }, 1000);
-        this.dirPath[id] = path.resolve(__dirname, `../../rec/${new Date().getTime()}-${id}`);
-        fs.mkdirSync(this.dirPath[id]);
-        if (!this.startTimes[id]) {
-          this.startTimes[id] = {};
+        this.dirPath[roomId] = path.resolve(
+          __dirname,
+          `../../rec/${new Date().getTime()}-${roomId}`
+        );
+        fs.mkdirSync(this.dirPath[roomId]);
+        if (!this.startTimes[roomId]) {
+          this.startTimes[roomId] = {};
         }
-
-        this.startTimes[id][userId] = 0;
-        this.startStreamRecord({ roomId: id, userId, time: 0 });
+        this.rtc.getKeysStreams(roomId).forEach((item) => {
+          const peer = item.split(this.rtc.delimiter);
+          const userId = peer[0];
+          this.startTimes[roomId][userId] = 0;
+          this.startStreamRecord({ roomId, userId, time: 0 });
+        });
         break;
       case 'stop':
-        clearInterval(this.intervals[id]);
+        clearInterval(this.intervals[roomId]);
         this.settings.sendMessage({
           msg: {
             type: MessageType.SET_RECORDING,
-            id: userId,
+            id,
             connId: '',
             data: {
-              time: this.times[id],
+              time: this.times[roomId],
               command,
             },
           },
-          roomId: id,
+          roomId,
         });
-        this.stopStreamRecord({
-          roomId: id,
-          userId,
-          pathStr:
-            this.mediaRecorders[id][this.getMediaRecorderId(userId, this.startTimes[id][userId])]
-              .path,
-          time: this.times[id],
+        this.getMediaRecorderKeys(roomId).forEach((item) => {
+          const peer = item.split(this.rtc.delimiter);
+          const userId = peer[0];
+          this.stopStreamRecord({
+            roomId,
+            userId,
+            pathStr:
+              this.mediaRecorders[roomId][
+                this.getMediaRecorderId(userId, this.startTimes[roomId][userId])
+              ].path,
+            time: this.times[roomId],
+          });
         });
-        delete this.times[id];
-        delete this.startTimes[id];
-        delete this.mediaRecorders[id];
+        delete this.times[roomId];
+        delete this.startTimes[roomId];
+        delete this.mediaRecorders[roomId];
         break;
       default:
     }

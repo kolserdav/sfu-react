@@ -42,12 +42,6 @@ export const log = (type: keyof typeof LogLevel, text: string, _data?: any, cons
   const Yellow = '\x1b[33m';
   const Dim = '\x1b[2m';
   const Cyan = '\x1b[36m';
-  let data = '';
-  try {
-    data = JSON.stringify(_data);
-  } catch (e) {
-    /** */
-  }
   const date = IS_DEV ? format(new Date(), 'hh:mm:ss') : '';
   if (cons) {
     // eslint-disable-next-line no-console
@@ -56,7 +50,7 @@ export const log = (type: keyof typeof LogLevel, text: string, _data?: any, cons
       '\n'
     );
     // eslint-disable-next-line no-console
-    console[type](IS_DEV ? date : '', type, Reset, text, Bright, data, Reset);
+    console[type](IS_DEV ? date : '', type, Reset, text, Bright, _data, Reset);
   } else if (LogLevel[type] >= logLevel) {
     // eslint-disable-next-line no-console
     console[type](
@@ -66,7 +60,7 @@ export const log = (type: keyof typeof LogLevel, text: string, _data?: any, cons
       Reset,
       text,
       Dim,
-      data,
+      _data,
       Reset,
       '\n'
     );

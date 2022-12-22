@@ -33,14 +33,16 @@ import {
 import WS from './ws';
 import DB from './db';
 
+// eslint-disable-next-line prefer-const
+let trackCount1 = 0;
+
+// eslint-disable-next-line no-unused-vars
 type OnChangeVideoTrack = (args: {
   roomId: string | number;
   command: Command;
   target: string | number;
 }) => void;
 
-// eslint-disable-next-line prefer-const
-let trackCount1 = 0;
 // eslint-disable-next-line no-unused-vars
 export type OnRoomConnect = (args: {
   roomId: string | number;
@@ -77,6 +79,8 @@ class RTC
   public muteForAll: Record<string, boolean> = {};
 
   public onRoomConnect: OnRoomConnect | undefined;
+
+  public onRoomDisconnect: OnRoomConnect | undefined;
 
   public onChangeVideoTrack: OnChangeVideoTrack | undefined;
 
@@ -193,8 +197,7 @@ class RTC
     }
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const core = this;
-    const { ws, delimiter, rooms } = this;
-    const { addTracksServer, peerConnectionsServer } = this;
+    const { ws, delimiter, rooms, addTracksServer, peerConnectionsServer, onRoomConnect } = this;
     this.peerConnectionsServer[roomId][peerId]!.onsignalingstatechange =
       function handleSignalingStateChangeEvent() {
         if (!core.peerConnectionsServer[roomId][peerId]) {
@@ -206,7 +209,13 @@ class RTC
         // Add tracks from remote offer
         if (state === 'have-remote-offer' && target.toString() !== '0') {
           addTracksServer({ roomId, userId, target, connId }, () => {
-            // console.log(trackCount++);
+            if (onRoomConnect) {
+              onRoomConnect({
+                roomId,
+                userId,
+                roomUsers: rooms[roomId],
+              });
+            }
           });
         }
         log(
@@ -1065,13 +1074,6 @@ class RTC
     };
     if (onRoomConnect) {
       onRoomConnect({
-        roomId: id,
-        userId: uid,
-        roomUsers: this.rooms[id],
-      });
-    }
-    if (this.onRoomConnect) {
-      this.onRoomConnect({
         roomId: id,
         userId: uid,
         roomUsers: this.rooms[id],

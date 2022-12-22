@@ -33,7 +33,7 @@ const chat = new Chat();
 const settings = new Settings();
 
 process.on('uncaughtException', (err: Error) => {
-  log('error', 'uncaughtException', err);
+  log('error', 'uncaughtException', { message: err.message, stack: err.stack });
 });
 process.on('unhandledRejection', (err: Error) => {
   if (err.name !== 'Error') {
@@ -336,6 +336,9 @@ export function createServer(
             rtc.rooms[item].splice(index, 1);
             if (onRoomDisconnect) {
               onRoomDisconnect({ roomId: item, userId, roomUsers: rtc.rooms[item] });
+            }
+            if (rtc.onRoomDisconnect) {
+              rtc.onRoomDisconnect({ roomId: item, userId, roomUsers: rtc.rooms[item] });
             }
             // delete mute
             const mute = rtc.muteds[item].indexOf(userId);
