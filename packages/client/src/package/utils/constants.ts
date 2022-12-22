@@ -102,3 +102,5 @@ export const USERS_ICON_WIDTH = 24;
 export const USERS_ICON_WIDTH_BIG = 30;
 export const MAX_VIDEO_STREAMS = 4;
 export const PLAY_VIDEO_TIMEOUT = 30000;
+export const BLUR_DISCONNECT_TIMEOUT = 3 * 60 * 1000;
+export const MOBILE_REGEXP = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i;

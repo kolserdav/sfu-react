@@ -46,6 +46,8 @@ import {
   ROOM_LENGTH_TEST,
   MAX_VIDEO_STREAMS,
   PLAY_VIDEO_TIMEOUT,
+  MOBILE_REGEXP,
+  BLUR_DISCONNECT_TIMEOUT,
 } from '../utils/constants';
 import { CookieName, getCookie } from '../utils/cookies';
 import storeError, { changeError } from '../store/error';
@@ -104,6 +106,11 @@ export const useConnection = ({
   const [canConnect, setCanConnect] = useState<boolean>(false);
   const [isPublic, setIsPublic] = useState<boolean>();
   const [onVideoTimer, setOnVideoTimer] = useState<number>(0);
+  const [blurTimeout, setBlurTimeout] = useState<NodeJS.Timeout>(
+    setTimeout(() => {
+      /** */
+    }, 0)
+  );
 
   const addStream = useMemo(
     () =>
@@ -398,13 +405,32 @@ export const useConnection = ({
    */
   useEffect(() => {
     const onBlurHandler = () => {
-      console.log('raw blur');
+      if (MOBILE_REGEXP.test(navigator.userAgent) || MOBILE_REGEXP.test(navigator.platform)) {
+        const _blurTimeout = setTimeout(() => {
+          // TODO test it and provide for chat and settings
+          ws.connection.close();
+        }, BLUR_DISCONNECT_TIMEOUT);
+        setBlurTimeout(_blurTimeout);
+      }
     };
     window.addEventListener('blur', onBlurHandler);
     return () => {
       window.removeEventListener('blur', onBlurHandler);
     };
-  }, []);
+  }, [ws.connection]);
+
+  /**
+   * On focus listener
+   */
+  useEffect(() => {
+    const onFocusHandler = () => {
+      clearTimeout(blurTimeout);
+    };
+    window.addEventListener('focus', onFocusHandler);
+    return () => {
+      window.removeEventListener('focus', onFocusHandler);
+    };
+  }, [blurTimeout]);
 
   /**
    * Listen end share screen
