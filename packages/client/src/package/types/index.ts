@@ -70,6 +70,7 @@ export interface AlertProps {
   type: keyof typeof LogLevel;
   open: boolean;
   theme?: Theme;
+  infinity?: boolean;
 }
 
 export type DialogPropsDefaultContext = {

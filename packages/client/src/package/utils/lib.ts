@@ -18,7 +18,13 @@ import storeLogLevel from '../store/logLevel';
 export const isDev = () => process.env.NODE_ENV === 'development';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const log = (type: keyof typeof LogLevel, text: string, data?: any, forUser = false) => {
+export const log = (
+  type: keyof typeof LogLevel,
+  text: string,
+  data?: any,
+  forUser = false,
+  infinity = false
+) => {
   const { logLevel } = storeLogLevel.getState();
   if (LogLevel[type] >= logLevel) {
     // eslint-disable-next-line no-console
@@ -31,6 +37,7 @@ export const log = (type: keyof typeof LogLevel, text: string, data?: any, forUs
           type,
           children: text,
           open: true,
+          infinity,
         },
       })
     );

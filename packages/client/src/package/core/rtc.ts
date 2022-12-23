@@ -9,7 +9,6 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import 'webrtc-adapter';
-import storeAlert, { changeAlert } from '../store/alert';
 import { RTCInterface, MessageType, Locale } from '../types/interfaces';
 import { IS_DEV } from '../utils/constants';
 import { getCodec, log } from '../utils/lib';
@@ -336,28 +335,12 @@ class RTC
     }
     const video = await this.checkMediaDevice('video');
     if (!video) {
-      storeAlert.dispatch(
-        changeAlert({
-          alert: {
-            open: true,
-            type: 'warn',
-            children: locale.videoDeviceRequired,
-          },
-        })
-      );
+      log('warn', locale.videoDeviceRequired, {}, true, true);
       return null;
     }
     const audio = await this.checkMediaDevice('audio');
     if (!audio) {
-      storeAlert.dispatch(
-        changeAlert({
-          alert: {
-            open: true,
-            type: 'warn',
-            children: locale.audioDeviceRequired,
-          },
-        })
-      );
+      log('warn', locale.audioDeviceRequired, {}, true, true);
       return null;
     }
     const localStream = await navigator.mediaDevices

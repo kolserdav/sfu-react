@@ -233,6 +233,7 @@ export namespace Locale {
     audioDeviceRequired: string;
     setAsAdmin: string;
     deleteFromAdmins: string;
+    inactivityDisconnect: string;
   }
 }
 

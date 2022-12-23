@@ -192,6 +192,7 @@ class RTC
     target,
     connId,
   }) => {
+    const name = this.rooms[roomId].find((item) => item.id === userId)?.name || 'Err get name';
     const peerId = this.getPeerId(userId, target, connId);
     if (!this.peerConnectionsServer[roomId]?.[peerId]) {
       log('warn', 'Handle ice candidate without peerConnection', { peerId });
@@ -281,7 +282,7 @@ class RTC
               id: item.id,
               data: {
                 target: userId,
-                name: item.name,
+                name,
                 eventName: 'add',
                 roomLength: rooms[roomId]?.length || 0,
                 muteds: this.muteds[roomId],

@@ -92,7 +92,7 @@ function Main({
           videoRecord={videoRecord}
         />
       )}
-      <Alert open={alert.open} type={alert.type} theme={theme}>
+      <Alert open={alert.open} type={alert.type} theme={theme} infinity={alert.infinity}>
         {alert.children}
       </Alert>
     </div>

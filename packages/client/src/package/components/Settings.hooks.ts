@@ -17,6 +17,7 @@ import { getCookie, CookieName, setCookie } from '../utils/cookies';
 import { RECORDED_VIDEO_TAKE_DEFAULT } from '../utils/constants';
 import { getVideoSrc } from './Settings.lib';
 import WS, { Protocol } from '../core/ws';
+import storeCanConnect from '../store/canConnect';
 
 export const useLang = () => {
   const [lang, setLang] = useState<LocaleValue>(getCookie(CookieName.lang) || LocaleDefault);
@@ -130,6 +131,21 @@ export const useMessages = ({
   const [count, setCount] = useState<number>(0);
   const [videos, setVideos] = useState<VideoFull[]>([]);
   const [buttonDisabled, setButtonDisabled] = useState<boolean>(false);
+
+  /**
+   * Listen can connect
+   */
+  useEffect(() => {
+    const cleanSubs = storeCanConnect.subscribe(() => {
+      const { canConnect: _canConnect } = storeCanConnect.getState();
+      if (!_canConnect) {
+        ws.connection.close();
+      }
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, [ws.connection]);
 
   /**
    * Handle messages
@@ -266,7 +282,7 @@ export const useMessages = ({
       log('error', 'Error chat', { e });
     };
     ws.onClose = () => {
-      log('warn', 'Chat connection closed', {});
+      log('warn', 'Settings connection closed', {});
     };
     return () => {
       ws.onOpen = () => {

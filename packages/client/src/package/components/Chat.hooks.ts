@@ -416,6 +416,21 @@ export const useMesages = ({
   }, [ws]);
 
   /**
+   * Listen can connect
+   */
+  useEffect(() => {
+    const cleanSubs = storeCanConnect.subscribe(() => {
+      const { canConnect: _canConnect } = storeCanConnect.getState();
+      if (!_canConnect) {
+        ws.connection.close();
+      }
+    });
+    return () => {
+      cleanSubs();
+    };
+  }, [ws.connection]);
+
+  /**
    * Handle messages
    */
   useEffect(() => {

@@ -57,7 +57,7 @@ function App() {
               credential: process.env.REACT_APP_TURN_SERVER_PASSWORD,
             },
           ]}
-          name="John Doe"
+          name={Math.random().toString()}
           videoRecord
         />
       )}

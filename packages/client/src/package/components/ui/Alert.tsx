@@ -17,7 +17,7 @@ import storeAlert, { changeAlert } from '../../store/alert';
 import IconButton from './IconButton';
 import CloseIcon from '../../Icons/Close';
 
-function Alert({ children, type, open, theme }: AlertProps) {
+function Alert({ children, type, open, theme, infinity }: AlertProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const [mouseMove, setMouseMove] = useState<boolean>(false);
   const [opened, setOpened] = useState<boolean>(false);
@@ -47,7 +47,7 @@ function Alert({ children, type, open, theme }: AlertProps) {
     let timeout = setTimeout(() => {
       /** */
     }, 0);
-    if (!mouseMove && opened) {
+    if (!mouseMove && opened && !infinity) {
       timeout = setTimeout(async () => {
         closeAlert();
       }, ALERT_TIMEOUT);
@@ -55,7 +55,7 @@ function Alert({ children, type, open, theme }: AlertProps) {
     return () => {
       clearTimeout(timeout);
     };
-  }, [open, mouseMove, closeAlert, opened]);
+  }, [open, mouseMove, closeAlert, opened, infinity]);
 
   useEffect(() => {
     if (open) {

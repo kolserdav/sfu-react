@@ -54,7 +54,7 @@ import storeError, { changeError } from '../store/error';
 import storeClickDocument from '../store/clickDocument';
 import { getLocalStorage, LocalStorageName, setLocalStorage } from '../utils/localStorage';
 import storeMessage from '../store/message';
-import storeCanConnect from '../store/canConnect';
+import storeCanConnect, { changeCanConnect } from '../store/canConnect';
 import storeRoomIsInactive, { changeRoomIsInactive } from '../store/roomIsInactive';
 import storeMuted from '../store/muted';
 import storeAdminMuted from '../store/adminMuted';
@@ -407,8 +407,15 @@ export const useConnection = ({
     const onBlurHandler = () => {
       if (MOBILE_REGEXP.test(navigator.userAgent) || MOBILE_REGEXP.test(navigator.platform)) {
         const _blurTimeout = setTimeout(() => {
-          // TODO test it and provide for chat and settings
+          storeCanConnect.dispatch(
+            changeCanConnect({
+              canConnect: false,
+            })
+          );
           ws.connection.close();
+          setCanConnect(false);
+          log('warn', locale.inactivityDisconnect, {}, true, true);
+          rtc.closeAllConnections(true);
         }, BLUR_DISCONNECT_TIMEOUT);
         setBlurTimeout(_blurTimeout);
       }
@@ -417,7 +424,7 @@ export const useConnection = ({
     return () => {
       window.removeEventListener('blur', onBlurHandler);
     };
-  }, [ws.connection]);
+  }, [ws, locale.inactivityDisconnect, rtc]);
 
   /**
    * On focus listener
@@ -884,7 +891,7 @@ export const useConnection = ({
     const handleError = ({
       data: { message, type: _type, code },
     }: SendMessageArgs<MessageType.SET_ERROR>) => {
-      log(_type, message, { _type, code }, true);
+      log(_type, message, { _type, code }, _type !== 'log');
       setError(code);
       storeError.dispatch(
         changeError({

@@ -82,6 +82,7 @@ const lang: LocaleServer = {
       'An audio capture device (microphone) is required to get started. At startup, the audio stream is disabled by default.',
     setAsAdmin: 'Set as admin',
     deleteFromAdmins: 'Delete from admins',
+    inactivityDisconnect: 'You have been disconnected for inactivity',
   },
 };
 

@@ -102,7 +102,6 @@ function Users({
   const { dialogVolume, changeVolumeWrapper, clickToVolume, volumes, volumeUserId } = useVolume({
     roomId,
   });
-
   return (
     <div
       className={clsx(s.wrapper, open ? s.open : '')}
