@@ -206,7 +206,7 @@ export const useConnection = ({
         selfStream.getVideoTracks()[0]?.stop();
       }
       rtc.setLocalStream(null);
-      const oldStream = rtc.localStream;
+      const oldStream = selfStream;
       const stream = await rtc.getTracks({ locale });
       if (stream) {
         setSelfStream(stream);
