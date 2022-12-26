@@ -65,6 +65,7 @@
     "build:client-next": "cd packages/client && npm run build:next",
     "start:client": "cd packages/client && npm run start:next",
     "build": "npm run build:server && npm run build:client",
+    "build:react": "npm run build:server && npm run build:client-react",
     "build:next": "npm run build:server && npm run build:client-next",
     "copy-interfaces": "node scripts/create-interfaces-symlink.js",
     "copy": "npm run copy-interfaces",

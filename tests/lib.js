@@ -38,6 +38,7 @@ async function openRoom(url, room, uid, headless) {
   log('info', 'Open page:', _url, true);
   await page.goto(_url);
   await page.waitForSelector('video');
+  // await page.waitForTimeout(2000000);
   return page;
 }
 
@@ -58,7 +59,7 @@ const startServer = async () => {
   /**
    * @type {any}
    */
-  const {env} = process;
+  const { env } = process;
   let server = spawn('npm', ['run', 'migrate'], {
     env,
   });

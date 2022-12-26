@@ -131,7 +131,8 @@ class RTC
         opts,
         peers: IS_DEV ? this.getPeerConnectionKeys(roomId) : undefined,
       });
-      return;
+      this.closeVideoCall({ roomId, userId, target, connId, eventName: 'duplicate-peer' });
+      // return;
     }
     log('log', 'Creating peer connection', opts);
 
