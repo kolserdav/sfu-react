@@ -436,12 +436,10 @@ class RTC
     });
     const desc = new werift.RTCSessionDescription(sdp.sdp as string, 'offer');
     let error = false;
-    const senders = this.peerConnectionsServer[roomId][peerId]!.getSenders();
-    if (senders.length !== 0) {
-      log('warn', 'Set remote desc for answer, tracks exists', {});
-      senders.forEach((item) => {
-        this.peerConnectionsServer[roomId][peerId]!.removeTrack(item);
-      });
+    if (this.peerConnectionsServer[roomId][peerId]!.getSenders().length !== 0) {
+      log('warn', 'Skipping set remote desc for answer, tracks exists', {});
+      error = true;
+      return;
     }
     let sendersLength = 0;
     await this.peerConnectionsServer[roomId][peerId]!.setRemoteDescription(desc).catch((e) => {
