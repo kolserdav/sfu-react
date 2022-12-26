@@ -46,8 +46,6 @@ function App() {
                   ? (process.env.REACT_APP_STUN_SERVER_TEST as string)
                   : (process.env.REACT_APP_STUN_SERVER as string),
               ],
-              username: process.env.REACT_APP_TURN_SERVER_USER,
-              credential: process.env.REACT_APP_TURN_SERVER_PASSWORD,
             },
             {
               urls: [
