@@ -96,7 +96,7 @@ let timeupdate = {};
 /**
  *
  * @param {EvalPage} evalPage
- * @param {StartServer | 0} res
+ * @param {StartServer | 0 | undefined} res
  * @param {boolean} last
  */
 async function evaluateRoom(evalPage, res, last = false) {
@@ -189,7 +189,7 @@ async function evaluateRoom(evalPage, res, last = false) {
         } else {
           code = 1;
         }
-        if (res !== 0) {
+        if (res) {
           const { client, server } = res;
           server.kill();
           if (process.env.TEST_NEXT !== 'false' && client) {
@@ -223,7 +223,13 @@ async function reloadPage(page) {
 }
 
 (async () => {
-  const res = await startServer();
+  /**
+   * @type {0 | StartServer | undefined}
+   */
+  let res;
+  if (process.env.CI === 'true') {
+    res = await startServer();
+  }
   log('log', 'Start test ...', { USERS, ROOMS }, true);
   /**
    * @type {EvalPage[]}

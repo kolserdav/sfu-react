@@ -88,6 +88,7 @@
     "dev:next": "concurrently \"npm run dev:server\" \"npm run dev:client-next\"",
     "dev:dev-server": "concurrently \"npm run dev:server-server\" \"npm run dev:client\"",
     "test": "cross-env CI=true TEST_NEXT=true node tests/rooms.spec.js",
+    "test:remote": "cross-env CI=false TEST_NEXT=false node tests/rooms.spec.js",
     "test:chat": "node tests/chat.spec.js",
     "test:browser": "node tests/webrtc-browser.js"
   },
