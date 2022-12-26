@@ -165,6 +165,8 @@ class RTC
           : [
               {
                 urls: STUN_SERVER,
+                username: process.env.TURN_SERVER_USER,
+                credential: process.env.TURN_SERVER_PASSWORD,
               },
               {
                 urls: process.env.TURN_SERVER as string,
