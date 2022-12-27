@@ -80,6 +80,9 @@ class RTC
     const peerId = this.getPeerId(roomId, target, connId);
     if (this.peerConnections[peerId]) {
       log('warn', 'Duplicate peer connection', { peerId, eventName });
+      if (eventName === 'check') {
+        return 1;
+      }
       this.closeVideoCall({ target, userId, roomId, connId, eventName: 'duplicate-peer' });
     } else {
       log('info', 'Creating peer connection', { peerId });
