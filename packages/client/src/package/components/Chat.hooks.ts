@@ -435,15 +435,17 @@ export const useMesages = ({
    */
   useEffect(() => {
     ws.onOpen = () => {
-      ws.sendMessage({
-        id: roomId,
-        type: MessageType.GET_CHAT_UNIT,
-        connId: '',
-        data: {
-          userId,
-          locale: getCookie(CookieName.lang) || LocaleDefault,
-        },
-      });
+      setTimeout(() => {
+        ws.sendMessage({
+          id: roomId,
+          type: MessageType.GET_CHAT_UNIT,
+          connId: '',
+          data: {
+            userId,
+            locale: getCookie(CookieName.lang) || LocaleDefault,
+          },
+        });
+      }, 250);
     };
     const setChatMessagesHandler = ({
       data: { result, count: _count },
