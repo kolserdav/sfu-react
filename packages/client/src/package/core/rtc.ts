@@ -33,6 +33,8 @@ class RTC
 
   public localTrackSettings: MediaTrackSettings | null = null;
 
+  public checkAddeds: (string | number)[] = [];
+
   // eslint-disable-next-line class-methods-use-this
   public lostStreamHandler: (args: {
     target: number | string;
@@ -81,7 +83,11 @@ class RTC
     if (this.peerConnections[peerId]) {
       log('warn', 'Duplicate peer connection', { peerId, eventName });
       if (eventName === 'check') {
-        return 1;
+        if (!this.checkCheckAddeds(target)) {
+          this.setCheckAddeds(target);
+        } else {
+          return 1;
+        }
       }
       this.closeVideoCall({ target, userId, roomId, connId, eventName: 'duplicate-peer' });
     } else {
@@ -106,6 +112,27 @@ class RTC
 
   public getPeerKeys() {
     return Object.keys(this.peerConnections || {});
+  }
+
+  public setCheckAddeds(id: number | string) {
+    if (this.checkAddeds.indexOf(id) === -1) {
+      this.checkAddeds.push(id);
+    } else {
+      log('warn', 'Duplicate check addeds', { id, checkAddeds: this.checkAddeds });
+    }
+  }
+
+  public removeCheckAddeds(id: string | number) {
+    const index = this.checkAddeds.indexOf(id);
+    if (index !== -1) {
+      this.checkAddeds.splice(index, 1);
+    } else {
+      log('warn', 'Check addeds is missing', { id, checkAddeds: this.checkAddeds });
+    }
+  }
+
+  private checkCheckAddeds(id: string | number) {
+    return this.checkAddeds.indexOf(id) !== -1;
   }
 
   public createRTC: RTCInterface['createRTC'] = ({ connId, roomId, target, iceServers = [] }) => {

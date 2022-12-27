@@ -998,6 +998,7 @@ export const useConnection = ({
                   change: true,
                   isOwner: item.isOwner,
                 });
+                rtc.removeCheckAddeds(addedUserId);
               },
               iceServers,
               eventName: 'check',
