@@ -81,7 +81,11 @@ class RTC
   }) {
     const peerId = this.getPeerId(roomId, target, connId);
     if (this.peerConnections[peerId]) {
-      log('warn', 'Duplicate peer connection', { peerId, eventName });
+      log('warn', 'Duplicate peer connection', {
+        peerId,
+        eventName,
+        checkAddeds: this.checkAddeds,
+      });
       if (eventName === 'check') {
         if (!this.checkCheckAddeds(target)) {
           this.setCheckAddeds(target);
