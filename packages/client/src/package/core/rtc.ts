@@ -85,14 +85,8 @@ class RTC
         peerId,
         eventName,
         checkAddeds: this.checkAddeds,
+        peers: IS_DEV ? this.getPeerKeys() : undefined,
       });
-      if (eventName === 'check') {
-        if (!this.checkCheckAddeds(target)) {
-          this.setCheckAddeds(target);
-        } else {
-          return 1;
-        }
-      }
       this.closeVideoCall({ target, userId, roomId, connId, eventName: 'duplicate-peer' });
     } else {
       log('info', 'Creating peer connection', { peerId });
@@ -135,7 +129,7 @@ class RTC
     }
   }
 
-  private checkCheckAddeds(id: string | number) {
+  public checkCheckAddeds(id: string | number) {
     return this.checkAddeds.indexOf(id) !== -1;
   }
 

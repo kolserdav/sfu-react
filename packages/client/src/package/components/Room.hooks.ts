@@ -349,80 +349,6 @@ export const useConnection = ({
   );
 
   /**
-   * Start connection
-   */
-  useEffect(() => {
-    if (!selfStream || !roomId || !roomIsSaved) {
-      return;
-    }
-    const peerId = rtc.getPeerId(roomId, 0, connectionId);
-    const opts = {
-      selfStream,
-      addStream,
-      connectionId,
-      iceServers,
-      id,
-      isOwner,
-      roomId,
-      rtc,
-      name: ws.name,
-      userId: ws.userId,
-      roomIsSaved,
-      shareScreen,
-    };
-    if (rtc.peerConnections[peerId] !== undefined) {
-      log('warn', 'Start connection is exists', {
-        peerId,
-        stream: selfStream,
-        tracks: selfStream.getTracks(),
-        ...opts,
-      });
-      return;
-    }
-    log('info', 'Create start connection', opts);
-
-    rtc.createPeerConnection({
-      userId: ws.userId,
-      target: 0,
-      connId: connectionId,
-      roomId,
-      onTrack: ({ addedUserId }) => {
-        log('info', '-> Added local stream to room', { addedUserId, id });
-      },
-      iceServers,
-      eventName: 'first',
-    });
-    rtc.addTracks({ stream: selfStream, roomId, connId: connectionId, target: 0 }, (e) => {
-      if (!e) {
-        addStream({
-          target: ws.userId,
-          stream: selfStream,
-          connId: connectionId,
-          name: ws.name,
-          change: true,
-          isOwner,
-        });
-      } else {
-        log('warn', 'Stream not added', e);
-      }
-    });
-  }, [
-    selfStream,
-    addStream,
-    connectionId,
-    iceServers,
-    id,
-    isOwner,
-    roomId,
-    rtc,
-    ws.name,
-    ws.userId,
-    roomIsSaved,
-    shareScreen,
-    lostStreamHandler,
-  ]);
-
-  /**
    * On blur listener
    */
   useEffect(() => {
@@ -951,6 +877,35 @@ export const useConnection = ({
       setConnectionId(connId);
       const stream = await rtc.getTracks({ locale });
       setSelfStream(stream);
+      if (!stream) {
+        log('warn', 'Skip create start connection', { stream });
+        return;
+      }
+      rtc.createPeerConnection({
+        userId: ws.userId,
+        target: 0,
+        connId: connectionId,
+        roomId,
+        onTrack: ({ addedUserId }) => {
+          log('info', '-> Added local stream to room', { addedUserId, id });
+        },
+        iceServers,
+        eventName: 'first',
+      });
+      rtc.addTracks({ stream, roomId, connId: connectionId, target: 0 }, (e) => {
+        if (!e) {
+          addStream({
+            target: ws.userId,
+            stream,
+            connId: connectionId,
+            name: ws.name,
+            change: true,
+            isOwner,
+          });
+        } else {
+          log('warn', 'Stream not added', e);
+        }
+      });
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -989,12 +944,17 @@ export const useConnection = ({
           },
         })
       );
-      roomUsers.forEach(async (item) => {
+      roomUsers.every((item) => {
         if (item.id !== id) {
           const _isExists = _streams.filter((_item) => item.id === _item.target);
           if (!_isExists[0]) {
             if (!selfStream) {
-              return;
+              return true;
+            }
+            if (!rtc.checkCheckAddeds(item.id)) {
+              rtc.setCheckAddeds(item.id);
+            } else {
+              return true;
             }
             const skip = rtc.createPeerConnection({
               roomId,
@@ -1002,7 +962,7 @@ export const useConnection = ({
               userId: id,
               connId,
               onTrack: ({ addedUserId, stream: _stream }) => {
-                log('info', 'Added tracks of new user', { addedUserId, _stream });
+                log('warn', 'Added tracks of new user', { addedUserId, _stream });
                 addStream({
                   target: addedUserId,
                   stream: _stream,
@@ -1017,22 +977,24 @@ export const useConnection = ({
               eventName: 'check',
             });
             if (skip) {
-              return;
+              return true;
             }
             rtc.addTracks({ roomId, stream: selfStream, target: item.id, connId }, (e) => {
               if (e) {
                 log('warn', 'Failed add tracks', { roomId, userId: id, target: item, connId });
                 return;
               }
-              log('info', 'Change room guests connection', {
+              log('warn', 'Change room guests connection', {
                 roomId,
                 target: item,
                 userId: id,
                 connId,
               });
             });
+            return false;
           }
         }
+        return true;
       });
       // Remove disconnected
       streams.forEach((item) => {
@@ -1221,6 +1183,7 @@ export const useConnection = ({
     canConnect,
     isPublic,
     lostStreamHandler,
+    connectionId,
   ]);
 
   /**
