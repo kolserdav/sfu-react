@@ -96,16 +96,13 @@
   "dependencies": {
     "@prisma/client": "^4.6.1",
     "@reduxjs/toolkit": "^1.8.2",
-    "cancelable-promise": "^4.3.0",
     "clsx": "^1.1.1",
     "dotenv": "^16.0.1",
-    "fluent-ffmpeg": "^2.1.2",
     "puppeteer": "^15.3.2",
-    "puppeteer-screen-recorder": "^2.0.2",
     "react-cookie": "^4.1.1",
     "uuid": "^8.3.2",
     "webrtc-adapter": "^8.1.1",
-    "werift": "^0.17.0",
+    "werift": "^0.17.6",
     "ws": "^8.7.0"
   },
   "devDependencies": {
@@ -120,7 +117,6 @@
     "@types/react-dom": "18.0.6",
     "@types/uuid": "^8.3.4",
     "@types/webpack": "^5.28.0",
-    "@types/webrtc": "^0.0.32",
     "@types/ws": "^8.5.3",
     "@typescript-eslint/eslint-plugin": "^5.27.0",
     "@typescript-eslint/parser": "^5.27.0",
