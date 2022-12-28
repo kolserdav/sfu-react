@@ -87,7 +87,11 @@ class RTC
         checkAddeds: this.checkAddeds,
       });
       if (eventName === 'check') {
-        return 1;
+        if (!this.checkCheckAddeds(target)) {
+          this.setCheckAddeds(target);
+        } else {
+          return 1;
+        }
       }
       this.closeVideoCall({ target, userId, roomId, connId, eventName: 'duplicate-peer' });
     } else {
@@ -558,8 +562,8 @@ class RTC
     log('warn', 'Call is closed', { ...args, peers: IS_DEV ? this.getPeerKeys() : undefined });
     const { target } = args;
     if (target.toString() === '0') {
-      const { href } = window.location;
-      window.location.href = href;
+      // const { href } = window.location
+      // window.location.href = href;
     }
   };
 

@@ -66,8 +66,6 @@ import storeBanned from '../store/banned';
 import storeVolume from '../store/volume';
 import storeAdmin from '../store/admin';
 
-let _selfStream = false;
-
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
   id,
@@ -381,7 +379,7 @@ export const useConnection = ({
       });
       return;
     }
-    log('warn', 'Create start connection', opts);
+    log('info', 'Create start connection', opts);
 
     rtc.createPeerConnection({
       userId: ws.userId,
@@ -421,6 +419,7 @@ export const useConnection = ({
     ws.userId,
     roomIsSaved,
     shareScreen,
+    lostStreamHandler,
   ]);
 
   /**
@@ -479,19 +478,6 @@ export const useConnection = ({
       setShareScreen(false);
     };
   }, [selfStream, locale, rtc, ws, reloadHandler, id]);
-
-  /**
-   * Set self stream
-   */
-  useEffect(() => {
-    (async () => {
-      if (!selfStream && !_selfStream) {
-        _selfStream = true;
-        const stream = await rtc.getTracks({ locale });
-        setSelfStream(stream);
-      }
-    })();
-  }, [rtc, locale, selfStream]);
 
   /**
    * Save video settings
@@ -963,6 +949,8 @@ export const useConnection = ({
       setRoomIsSaved(true);
       setIsOwner(_isOwner);
       setConnectionId(connId);
+      const stream = await rtc.getTracks({ locale });
+      setSelfStream(stream);
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
