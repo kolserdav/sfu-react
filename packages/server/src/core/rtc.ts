@@ -133,7 +133,11 @@ class RTC
         peerId,
         peers: IS_DEV ? this.getPeerConnectionKeys(roomId) : undefined,
       });
-      this.closeVideoCall({ roomId, userId, target, connId, eventName: 'duplicate-peer' });
+      this.cleanDuplicateConnections({
+        roomId: roomId.toString(),
+        userId: userId.toString(),
+        target: target.toString(),
+      });
     }
     log('log', 'Creating peer connection', opts);
 
@@ -1165,10 +1169,33 @@ class RTC
     return Object.keys(this.peerConnectionsServer[roomId] || {});
   }
 
+  public cleanDuplicateConnections({
+    roomId,
+    userId,
+    target,
+  }: {
+    roomId: string;
+    userId: string;
+    target: string;
+  }) {
+    this.getPeerConnectionKeys(roomId).forEach((__item) => {
+      const peer = __item.split(this.delimiter);
+      if (peer[0] === userId && peer[1] === target) {
+        this.closeVideoCall({
+          roomId,
+          userId,
+          target,
+          connId: peer[2],
+          eventName: 'clean-duplicate',
+        });
+      }
+    });
+  }
+
   public cleanConnections(roomId: string, userId: string) {
     this.getPeerConnectionKeys(roomId).forEach((__item) => {
       const peer = __item.split(this.delimiter);
-      if (peer[0] === userId.toString()) {
+      if (peer[0] === userId) {
         this.closeVideoCall({
           roomId,
           userId,
@@ -1176,7 +1203,7 @@ class RTC
           connId: peer[2],
           eventName: 'clean-connection-1',
         });
-      } else if (peer[1] === userId.toString()) {
+      } else if (peer[1] === userId) {
         this.closeVideoCall({
           roomId,
           userId: peer[0],
