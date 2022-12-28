@@ -87,11 +87,7 @@ class RTC
         checkAddeds: this.checkAddeds,
       });
       if (eventName === 'check') {
-        if (!this.checkCheckAddeds(target)) {
-          this.setCheckAddeds(target);
-        } else {
-          return 1;
-        }
+        return 1;
       }
       this.closeVideoCall({ target, userId, roomId, connId, eventName: 'duplicate-peer' });
     } else {

@@ -66,6 +66,8 @@ import storeBanned from '../store/banned';
 import storeVolume from '../store/volume';
 import storeAdmin from '../store/admin';
 
+let _selfStream = false;
+
 // eslint-disable-next-line import/prefer-default-export
 export const useConnection = ({
   id,
@@ -356,10 +358,31 @@ export const useConnection = ({
       return;
     }
     const peerId = rtc.getPeerId(roomId, 0, connectionId);
+    const opts = {
+      selfStream,
+      addStream,
+      connectionId,
+      iceServers,
+      id,
+      isOwner,
+      roomId,
+      rtc,
+      name: ws.name,
+      userId: ws.userId,
+      roomIsSaved,
+      shareScreen,
+    };
     if (rtc.peerConnections[peerId] !== undefined) {
-      log('warn', 'Start connection is exists', { peerId });
+      log('warn', 'Start connection is exists', {
+        peerId,
+        stream: selfStream,
+        tracks: selfStream.getTracks(),
+        ...opts,
+      });
       return;
     }
+    log('warn', 'Create start connection', opts);
+
     rtc.createPeerConnection({
       userId: ws.userId,
       target: 0,
@@ -462,11 +485,13 @@ export const useConnection = ({
    */
   useEffect(() => {
     (async () => {
-      const stream = await rtc.getTracks({ locale });
-
-      setSelfStream(stream);
+      if (!selfStream && !_selfStream) {
+        _selfStream = true;
+        const stream = await rtc.getTracks({ locale });
+        setSelfStream(stream);
+      }
     })();
-  }, [rtc, locale]);
+  }, [rtc, locale, selfStream]);
 
   /**
    * Save video settings
@@ -955,7 +980,7 @@ export const useConnection = ({
       } = ws.getMessage(MessageType.SET_ROOM_GUESTS, rawMessage);
       rtc.muteds = (_muteds || []).concat(_adminMuteds || []);
       const _streams: Stream[] = storeStreams.getState().streams as Stream[];
-      log('info', 'Run change room gusets handler', {
+      log('info', 'Run change room guests handler', {
         roomUsers,
         id,
         st: _streams.map((i) => i.target),

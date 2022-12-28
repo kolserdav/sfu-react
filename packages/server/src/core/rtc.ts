@@ -129,9 +129,12 @@ class RTC
     if (this.peerConnectionsServer[roomId][peerId]) {
       log('warn', 'Duplicate peer connection', {
         opts,
+        roomId,
+        peerId,
         peers: IS_DEV ? this.getPeerConnectionKeys(roomId) : undefined,
       });
       return;
+      // this.closeVideoCall({ roomId, userId, target, connId, eventName: 'duplicate-peer' });
     }
     log('log', 'Creating peer connection', opts);
 
@@ -768,7 +771,11 @@ class RTC
       iS: this.peerConnectionsServer[roomId][peerId]?.iceConnectionState,
     };
     if (!tracks || tracks?.length === 0) {
-      log('warn', 'Skiping add track', { ...opts, tracks });
+      log('warn', 'Skiping add track', {
+        ...opts,
+        tracks,
+        allTracks: IS_DEV ? Object.keys(this.streams[roomId]) : undefined,
+      });
       if (cb) {
         cb(1);
       }
@@ -1160,8 +1167,7 @@ class RTC
   }
 
   public cleanConnections(roomId: string, userId: string) {
-    const peerKeys = this.getPeerConnectionKeys(roomId);
-    peerKeys.forEach((__item) => {
+    this.getPeerConnectionKeys(roomId).forEach((__item) => {
       const peer = __item.split(this.delimiter);
       if (peer[0] === userId.toString()) {
         this.closeVideoCall({
