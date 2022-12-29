@@ -923,11 +923,6 @@ export const useConnection = ({
       } = ws.getMessage(MessageType.SET_ROOM_GUESTS, rawMessage);
       rtc.muteds = (_muteds || []).concat(_adminMuteds || []);
       const _streams: Stream[] = storeStreams.getState().streams as Stream[];
-      log('info', 'Run change room guests handler', {
-        roomUsers,
-        id,
-        st: _streams.map((i) => i.target),
-      });
       rtc.roomLength = roomUsers?.length || 0;
       setLenght(ROOM_LENGTH_TEST || roomUsers.length);
       setAdminMuteds(_adminMuteds);
@@ -951,6 +946,14 @@ export const useConnection = ({
             if (!selfStream) {
               return true;
             }
+            const opts = {
+              roomUsers,
+              id,
+              st: _streams.map((i) => i.target),
+              checkAddeds: rtc.checkAddeds,
+              target: item.id,
+            };
+            log('info', 'Run change room guests handler', opts);
             if (!rtc.checkCheckAddeds(item.id)) {
               rtc.setCheckAddeds(item.id);
             } else {
@@ -962,7 +965,7 @@ export const useConnection = ({
               userId: id,
               connId,
               onTrack: ({ addedUserId, stream: _stream }) => {
-                log('warn', 'Added tracks of new user', { addedUserId, _stream });
+                log('info', 'Added tracks of new user', { addedUserId, _stream });
                 addStream({
                   target: addedUserId,
                   stream: _stream,
@@ -977,6 +980,7 @@ export const useConnection = ({
               eventName: 'check',
             });
             if (skip) {
+              log('warn', 'Skiping create peer connection while change room guests', opts);
               return true;
             }
             rtc.addTracks({ roomId, stream: selfStream, target: item.id, connId }, (e) => {
@@ -984,7 +988,7 @@ export const useConnection = ({
                 log('warn', 'Failed add tracks', { roomId, userId: id, target: item, connId });
                 return;
               }
-              log('warn', 'Change room guests connection', {
+              log('info', 'On add tracks of change room guests', {
                 roomId,
                 target: item,
                 userId: id,

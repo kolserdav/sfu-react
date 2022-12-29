@@ -478,12 +478,12 @@ class RTC
     const {
       id,
       connId,
-      data: { sdp, userId, target },
+      data: { sdp, userId: roomId, target },
     } = msg;
-    const peerId = this.getPeerId(userId, target, connId);
+    const peerId = this.getPeerId(roomId, target, connId);
     const opts = {
       id,
-      userId,
+      roomId,
       target,
       peerId,
       s: this.peerConnections[peerId]?.connectionState,

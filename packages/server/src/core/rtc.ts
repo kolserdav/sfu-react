@@ -126,19 +126,11 @@ class RTC
     if (!this.peerConnectionsServer[roomId]) {
       this.peerConnectionsServer[roomId] = {};
     }
-    if (this.peerConnectionsServer[roomId][peerId]) {
-      log('warn', 'Duplicate peer connection', {
-        opts,
-        roomId,
-        peerId,
-        peers: IS_DEV ? this.getPeerConnectionKeys(roomId) : undefined,
-      });
-      this.cleanDuplicateConnections({
-        roomId: roomId.toString(),
-        userId: userId.toString(),
-        target: target.toString(),
-      });
-    }
+    this.cleanDuplicateConnections({
+      roomId: roomId.toString(),
+      userId: userId.toString(),
+      target: target.toString(),
+    });
     log('log', 'Creating peer connection', opts);
 
     this.peerConnectionsServer[roomId][peerId] = new werift.RTCPeerConnection({
@@ -227,11 +219,7 @@ class RTC
             }
           });
         }
-        log(
-          'info',
-          '! WebRTC signaling state changed to:',
-          core.peerConnectionsServer[roomId][peerId]!.signalingState
-        );
+        log('info', '! WebRTC signaling state changed to:', { state, target, roomId, peerId });
         switch (core.peerConnectionsServer[roomId][peerId]!.signalingState) {
           case 'closed':
             core.onClosedCall({ roomId, userId, target, connId, command: 'signalingState' });
@@ -1181,6 +1169,11 @@ class RTC
     this.getPeerConnectionKeys(roomId).forEach((__item) => {
       const peer = __item.split(this.delimiter);
       if (peer[0] === userId && peer[1] === target) {
+        log('warn', 'Duplicate peer connection', {
+          roomId,
+          peerId: __item,
+          peers: IS_DEV ? this.getPeerConnectionKeys(roomId) : undefined,
+        });
         this.closeVideoCall({
           roomId,
           userId,
