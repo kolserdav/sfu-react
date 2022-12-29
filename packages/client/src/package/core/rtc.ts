@@ -418,6 +418,7 @@ class RTC
     }
     log('info', '> Adding tracks to local media stream', {
       streamId: stream.id,
+      peerId,
     });
     let error: 0 | 1 = 0;
     stream.getTracks().every((track) => {

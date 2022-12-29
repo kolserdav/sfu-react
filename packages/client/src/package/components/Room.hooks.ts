@@ -900,7 +900,7 @@ export const useConnection = ({
             connId: connectionId,
             name: ws.name,
             change: true,
-            isOwner,
+            isOwner: _isOwner,
           });
         } else {
           log('warn', 'Stream not added', e);

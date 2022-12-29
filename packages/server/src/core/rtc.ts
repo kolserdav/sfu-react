@@ -210,13 +210,7 @@ class RTC
         // Add tracks from remote offer
         if (state === 'have-remote-offer' && target.toString() !== '0') {
           addTracksServer({ roomId, userId, target, connId }, () => {
-            if (onRoomConnect) {
-              onRoomConnect({
-                roomId,
-                userId,
-                roomUsers: rooms[roomId],
-              });
-            }
+            //
           });
         }
         log('info', '! WebRTC signaling state changed to:', { state, target, roomId, peerId });
@@ -270,6 +264,13 @@ class RTC
         );
         const room = rooms[roomId];
         if (room && isNew && !isChanged) {
+          if (onRoomConnect) {
+            onRoomConnect({
+              roomId,
+              userId,
+              roomUsers: rooms[roomId],
+            });
+          }
           room.forEach((item) => {
             ws.sendMessage({
               type: MessageType.SET_CHANGE_UNIT,
