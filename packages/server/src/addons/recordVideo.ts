@@ -15,6 +15,7 @@ import fs from 'fs';
 import { ErrorCode, MessageType, SendMessageArgs } from '../types/interfaces';
 import DB from '../core/db';
 import { getLocale, log } from '../utils/lib';
+import * as ff from './lib/ffmpeg';
 import Settings from './settings';
 import RTC from '../core/rtc';
 

@@ -41,6 +41,7 @@
     "no-param-reassign": 1,
     "no-shadow": 0,
     "@typescript-eslint/no-shadow": 2,
-    "@typescript-eslint/no-unused-vars": 1
+    "@typescript-eslint/no-unused-vars": 1,
+    "class-methods-use-this": 1
   }
 }
