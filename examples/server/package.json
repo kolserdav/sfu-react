@@ -12,6 +12,6 @@
   "author": "kolserdav",
   "license": "MIT",
   "dependencies": {
-    "uyem": "^0.7.12"
+    "uyem": "^0.14.16"
   }
 }
