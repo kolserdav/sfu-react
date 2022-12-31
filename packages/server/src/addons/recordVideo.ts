@@ -15,9 +15,10 @@ import fs from 'fs';
 import { ErrorCode, MessageType, SendMessageArgs } from '../types/interfaces';
 import DB from '../core/db';
 import { getLocale, log } from '../utils/lib';
-import * as ff from './lib/ffmpeg';
+import * as ff from '../utils/ffmpeg';
 import Settings from './settings';
 import RTC from '../core/rtc';
+import { EXT_WEBM } from '../utils/constants';
 
 class RecordVideo extends DB {
   public settings: Settings;
@@ -147,10 +148,10 @@ class RecordVideo extends DB {
     roomId: string | number;
   }) {
     const fileName = pathStr.match(/\/\d+_0_[a-zA-Z0-9_\\-]+.webm/);
-    const cleanFileName = fileName ? fileName[0].replace(/\//, '').replace('.webm', '') : '';
+    const cleanFileName = fileName ? fileName[0].replace(/\//, '').replace(EXT_WEBM, '') : '';
     const fileNames = cleanFileName.split(this.rtc.delimiter);
     const ul = this.rtc.delimiter;
-    const newFileName = `${fileNames[0]}${ul}${time}${ul}${fileNames[2]}${ul}${fileNames[3]}${ul}${fileNames[4]}.webm`;
+    const newFileName = `${fileNames[0]}${ul}${time}${ul}${fileNames[2]}${ul}${fileNames[3]}${ul}${fileNames[4]}${EXT_WEBM}`;
     fs.renameSync(pathStr, path.resolve(this.dirPath[roomId], newFileName));
   }
 
@@ -230,7 +231,7 @@ class RecordVideo extends DB {
     const ul = this.rtc.delimiter;
     const _path = path.resolve(
       this.dirPath[roomId],
-      `${time}${ul}0${ul}${userId}${ul}${videoPlayed ? 1 : 0}${ul}${audioPlayed ? 1 : 0}.webm`
+      `${time}${ul}0${ul}${userId}${ul}${videoPlayed ? 1 : 0}${ul}${audioPlayed ? 1 : 0}${EXT_WEBM}`
     );
     const recorderId = this.getMediaRecorderId(userId, time);
     log('info', 'Start stream record', { recorderId, roomId, _path, time, eventName });

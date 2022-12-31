@@ -53,3 +53,4 @@ export const IS_DEV = process.env.NODE_ENV === 'development';
 export const IS_CI = process.env.CI === 'true';
 export const ICE_PORT_MIN = parseInt(process.env.ICE_PORT_MIN as string, 10);
 export const ICE_PORT_MAX = parseInt(process.env.ICE_PORT_MAX as string, 10);
+export const EXT_WEBM = '.webm';
