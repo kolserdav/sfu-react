@@ -99,7 +99,7 @@ export const cleanDbUrl = (db?: string) => {
 export const createRandHash = (length: number) => {
   const getRandRange = (min: number, max: number): number => {
     const rand = Math.random() * (max - min) + min;
-    if (rand >= 91 && rand <= 96) {
+    if (rand > 90 && rand < 97) {
       return getRandRange(min, max);
     }
     return rand;
