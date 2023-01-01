@@ -95,3 +95,23 @@ export const cleanDbUrl = (db?: string) => {
   password = `${password}@`;
   return dbUrl.replace(_password, password);
 };
+
+export const createRandHash = (length: number) => {
+  const getRandRange = (min: number, max: number): number => {
+    const rand = Math.random() * (max - min) + min;
+    if (rand >= 91 && rand <= 96) {
+      return getRandRange(min, max);
+    }
+    return rand;
+  };
+
+  const min = 65;
+  const max = 122;
+
+  let hash = '';
+  for (let i = 0; i < length; i++) {
+    const randCode = getRandRange(min, max);
+    hash += String.fromCharCode(randCode);
+  }
+  return hash;
+};

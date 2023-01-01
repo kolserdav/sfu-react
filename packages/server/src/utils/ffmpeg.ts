@@ -4,7 +4,7 @@ import { spawn } from 'child_process';
 import RTC from '../core/rtc';
 
 // eslint-disable-next-line import/first
-import { log } from './lib';
+import { createRandHash, log } from './lib';
 import WS from '../core/ws';
 import DB from '../core/db';
 import { EXT_WEBM } from './constants';
@@ -13,6 +13,7 @@ import { EXT_WEBM } from './constants';
 process.env.LOG_LEVEL = '0';
 
 interface Chunk {
+  index: number;
   id: string;
   start: number;
   end: number;
@@ -21,7 +22,7 @@ interface Chunk {
   absPath: string;
 }
 
-type ChunkPart = Chunk & { from: number; to: number };
+type ChunkPart = Chunk & { mapName: string };
 
 interface Episode {
   start: number;
@@ -39,6 +40,8 @@ class Ffmpeg {
   private readonly inputOption = '-i';
 
   private readonly filterComplexOption = '-filter_complex';
+
+  private readonly eol = ';';
 
   private readonly vstackInputs = 'vstack=inputs=';
 
@@ -60,12 +63,12 @@ class Ffmpeg {
   public async createVideo() {
     const inputArgs = this.createInputArguments();
     const filterComplexArgs = this.createFilterComplexArguments();
-    // console.log(inputArgs.concat(filterComplexArgs), this.chunks);
+    console.log(inputArgs.concat(filterComplexArgs));
     // await this.runFfmpegCommand(['--help']);
   }
 
-  private createVideoChunks({ dir }: { dir: string[] }) {
-    const chunks: Chunk[] = [];
+  private createVideoChunks({ dir }: { dir: string[] }): Chunk[] {
+    const chunks: Omit<Chunk, 'index'>[] = [];
     dir.forEach((item) => {
       const peer = item.replace(EXT_WEBM, '').split(this.rtc.delimiter);
       const start = parseInt(peer[0], 10);
@@ -82,17 +85,23 @@ class Ffmpeg {
         absPath: path.resolve(this.videoSrc, item),
       });
     });
-    return chunks.sort((a, b) => {
-      if (a.start < b.start) {
-        return -1;
-      }
-      if (a.start === b.start) {
-        if (a.end < b.end) {
+    return chunks
+      .sort((a, b) => {
+        if (a.start < b.start) {
           return -1;
         }
-      }
-      return 1;
-    });
+        if (a.start === b.start) {
+          if (a.end < b.end) {
+            return -1;
+          }
+        }
+        return 1;
+      })
+      .map((item, index) => {
+        const _item: Chunk = { ...item } as any;
+        _item.index = index;
+        return _item;
+      });
   }
 
   private createInputArguments() {
@@ -109,11 +118,41 @@ class Ffmpeg {
     const episodes = this.createEpisodes();
     episodes.forEach((item) => {
       console.log(item);
-    });
-    this.chunks.forEach((item) => {
-      //
+      const { videos, audios } = this.getSpecChunks(item.chunks);
+      item.chunks.forEach((_item) => {
+        if (_item.start !== item.start) {
+          args.push(
+            `[${_item.index}]${this.startDuration}${item.start - _item.start}[${_item.mapName}]${
+              this.eol
+            }`
+          );
+        }
+        if (_item.end !== item.end) {
+          args.push(`[${_item.index}]${this.stopDuration}${item.end}[${_item.mapName}]${this.eol}`);
+        }
+        if (videos.length === 2) {
+          //
+        }
+      });
     });
     return args;
+  }
+
+  private getSpecChunks(chunks: ChunkPart[]) {
+    const videos: ChunkPart[] = [];
+    const audios: ChunkPart[] = [];
+    chunks.forEach((item) => {
+      if (item.video) {
+        videos.push(item);
+      }
+      if (item.audio) {
+        audios.push(item);
+      }
+    });
+    return {
+      videos,
+      audios,
+    };
   }
 
   private createEpisodes() {
@@ -139,8 +178,7 @@ class Ffmpeg {
       if (!this.isEqual(chunks, oldChunks)) {
         const chunkPart: ChunkPart[] = oldChunks.map((item) => {
           const _item: ChunkPart = { ...item } as any;
-          _item.from = from || 0;
-          _item.to = index;
+          _item.mapName = createRandHash(8);
           return _item;
         });
 
@@ -153,7 +191,13 @@ class Ffmpeg {
       }
       oldChunks = chunks;
     });
-    return episodes;
+    return episodes.map((item, index) => {
+      const _item = { ...item };
+      if (!episodes[index + 1]) {
+        _item.end = time;
+      }
+      return _item;
+    });
   }
 
   private isEqual(a: any[], b: any[]) {
