@@ -42,6 +42,8 @@ class Ffmpeg {
 
   private readonly filterComplexOption = '-filter_complex';
 
+  private readonly mapOption = '-map';
+
   private readonly eol = ';';
 
   private readonly vstackInputs = 'vstack=inputs=';
@@ -64,8 +66,12 @@ class Ffmpeg {
   public async createVideo() {
     const inputArgs = this.createInputArguments();
     const filterComplexArgs = this.createFilterComplexArguments();
-    console.log(inputArgs.concat(filterComplexArgs));
-    // await this.runFfmpegCommand(['--help']);
+    const args = inputArgs.concat(filterComplexArgs);
+    args.push('-ac');
+    args.push('2');
+    args.push(`${this.videoSrc}${EXT_WEBM}`);
+    const r = await this.runFfmpegCommand(args);
+    console.log(r);
   }
 
   private createVideoChunks({ dir }: { dir: string[] }): Chunk[] {
@@ -115,7 +121,7 @@ class Ffmpeg {
   }
 
   private createFilterComplexArguments() {
-    const args = [this.filterComplexOption];
+    const args: string[] = [];
     const _episodes = this.createEpisodes();
     const episodes = _episodes.map((item) => {
       const episode: Episode<ChunkDurated[]> = { ...item } as any;
@@ -153,10 +159,30 @@ class Ffmpeg {
       episode.chunks = chunksDurated;
       return episode;
     });
+    const _args = [
+      this.filterComplexOption,
+      `"${args.join().replace(/,/g, '').replace(/;$/, '')}"`,
+    ];
+    return _args.concat(this.getMap(episodes));
+  }
+
+  private getMap(episodes: Episode<ChunkDurated[]>[]) {
+    const maps: string[] = [];
     episodes.forEach((item) => {
-      console.log(item);
+      const uMaps: string[] = [];
+      item.chunks.forEach((_item) => {
+        const map = _item.map === '' ? _item.mapName : _item.map;
+        if (uMaps.indexOf(map) === -1) {
+          uMaps.push(map);
+        }
+      });
+
+      uMaps.forEach((_item) => {
+        maps.push(this.mapOption);
+        maps.push(`"[${_item}]"`);
+      });
     });
-    return args;
+    return maps;
   }
 
   private getSpecChunks(chunks: ChunkDurated[]) {
@@ -269,7 +295,8 @@ class Ffmpeg {
   }
 
   private async runFfmpegCommand(args: string[]) {
-    const ffmpeg = spawn('ffmpeg', args);
+    console.log(args.join().replace(/,/g, ' '));
+    const ffmpeg = spawn('ffmpeg', args, { env: process.env });
     return new Promise((resolve) => {
       ffmpeg.stdout.on('data', (d) => {
         log('log', 'stdout', d.toString());

@@ -51,7 +51,7 @@ export const log = (type: keyof typeof LogLevel, text: string, _data?: any, cons
     );
     // eslint-disable-next-line no-console
     console[type](IS_DEV ? date : '', type, Reset, text, Bright, _data, Reset);
-  } else if (LogLevel[type] >= logLevel) {
+  } else if (LogLevel[type] >= logLevel || Number.isNaN(logLevel)) {
     // eslint-disable-next-line no-console
     console[type](
       IS_DEV ? date : '',
