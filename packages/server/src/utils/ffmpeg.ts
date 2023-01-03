@@ -52,6 +52,9 @@ class Ffmpeg {
 
   private readonly amergeInputs = 'amerge=inputs=';
 
+  private readonly concat = ({ n, v, a }: { n: number; v: number; a: number }) =>
+    `concat=n=${n}:v=${v}:a=${a}`;
+
   private readonly startDuration = ({ start, duration }: { start: number; duration: number }) =>
     `trim=start=${start}:duration=${duration},setpts=PTS-STARTPTS`;
 
