@@ -52,9 +52,8 @@ class Ffmpeg {
 
   private readonly amergeInputs = 'amerge=inputs=';
 
-  private readonly startDuration = 'tpad=start_mode=clone:start_duration=';
-
-  private readonly stopDuration = 'tpad=stop_mode=clone:stop_duration=';
+  private readonly startDuration = ({ start, duration }: { start: number; duration: number }) =>
+    `trim=start=${start}:duration=${duration},setpts=PTS-STARTPTS`;
 
   constructor({ rtc, videoSrc }: { rtc: RTC; videoSrc: string }) {
     this.rtc = rtc;
@@ -67,11 +66,8 @@ class Ffmpeg {
     const inputArgs = this.createInputArguments();
     const filterComplexArgs = this.createFilterComplexArguments();
     const args = inputArgs.concat(filterComplexArgs);
-    args.push('-ac');
-    args.push('2');
     args.push(`${this.videoSrc}${EXT_WEBM}`);
     const r = await this.runFfmpegCommand(args);
-    console.log(r);
   }
 
   private createVideoChunks({ dir }: { dir: string[] }): Chunk[] {
@@ -130,16 +126,14 @@ class Ffmpeg {
       const chunksDurated = item.chunks.map((_item) => {
         const itemCopy: ChunkDurated = { ..._item } as any;
         let durated = false;
-        if (_item.start !== item.start) {
+        if (_item.start !== item.start || _item.end !== item.end) {
+          const start = item.start - _item.start;
+          const duration = item.end - start;
           args.push(
-            `[${_item.index}]${this.startDuration}${item.start - _item.start}[${_item.mapName}]${
+            `[${_item.index}]${this.startDuration({ start, duration })}[${_item.mapName}]${
               this.eol
             }`
           );
-          durated = true;
-        }
-        if (_item.end !== item.end) {
-          args.push(`[${_item.index}]${this.stopDuration}${item.end}[${_item.mapName}]${this.eol}`);
           durated = true;
         }
         itemCopy.durated = durated;
@@ -159,10 +153,7 @@ class Ffmpeg {
       episode.chunks = chunksDurated;
       return episode;
     });
-    const _args = [
-      this.filterComplexOption,
-      `"${args.join().replace(/,/g, '').replace(/;$/, '')}"`,
-    ];
+    const _args = [this.filterComplexOption, `"${args.join('').replace(/;$/, '')}"`];
     return _args.concat(this.getMap(episodes));
   }
 
@@ -295,7 +286,7 @@ class Ffmpeg {
   }
 
   private async runFfmpegCommand(args: string[]) {
-    console.log(args.join().replace(/,/g, ' '));
+    console.log(args.join(' '));
     const ffmpeg = spawn('ffmpeg', args, { env: process.env });
     return new Promise((resolve) => {
       ffmpeg.stdout.on('data', (d) => {
