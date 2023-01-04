@@ -20,15 +20,14 @@ interface Chunk {
   video: boolean;
   audio: boolean;
   absPath: string;
+  map: string;
+  durated: boolean;
 }
 
-type ChunkPart = Chunk & { mapName: string };
-type ChunkDurated = ChunkPart & { durated: boolean; map: string };
-
-interface Episode<T> {
+interface Episode {
   start: number;
   end: number;
-  chunks: T;
+  chunks: Chunk[];
 }
 
 class Ffmpeg {
@@ -38,6 +37,10 @@ class Ffmpeg {
 
   private chunks: Chunk[];
 
+  private episodes: Episode[] = [];
+
+  private readonly mapLength = 6;
+
   private readonly inputOption = '-i';
 
   private readonly filterComplexOption = '-filter_complex';
@@ -46,15 +49,22 @@ class Ffmpeg {
 
   private readonly eol = ';';
 
+  private backgroundImagePath = '/home/kol/Projects/werift-sfu-react/tmp/1png.png';
+
   private readonly vstackInputs = 'vstack=inputs=';
 
   private readonly hstackInputs = 'hstack=inputs=';
 
   private readonly amergeInputs = 'amerge=inputs=';
 
+  // eslint-disable-next-line class-methods-use-this
+  private readonly overlay = ({ x, y }: { x: number; y: number }) => `overlay=${x}:${y}`;
+
+  // eslint-disable-next-line class-methods-use-this
   private readonly concat = ({ n, v, a }: { n: number; v: number; a: number }) =>
     `concat=n=${n}:v=${v}:a=${a}`;
 
+  // eslint-disable-next-line class-methods-use-this
   private readonly startDuration = ({ start, duration }: { start: number; duration: number }) =>
     `trim=start=${start}:duration=${duration},setpts=PTS-STARTPTS`;
 
@@ -70,7 +80,8 @@ class Ffmpeg {
     const filterComplexArgs = this.createFilterComplexArguments();
     const args = inputArgs.concat(filterComplexArgs);
     args.push(`${this.videoSrc}${EXT_WEBM}`);
-    const r = await this.runFfmpegCommand(args);
+    console.log(args);
+    //const r = await this.runFfmpegCommand(args);
   }
 
   private createVideoChunks({ dir }: { dir: string[] }): Chunk[] {
@@ -89,6 +100,8 @@ class Ffmpeg {
         video,
         audio,
         absPath: path.resolve(this.videoSrc, item),
+        durated: false,
+        map: createRandHash(this.mapLength),
       });
     });
     return chunks
@@ -105,13 +118,13 @@ class Ffmpeg {
       })
       .map((item, index) => {
         const _item: Chunk = { ...item } as any;
-        _item.index = index;
+        _item.index = index + 1;
         return _item;
       });
   }
 
   private createInputArguments() {
-    const args: string[] = [];
+    const args: string[] = [this.inputOption, this.backgroundImagePath];
     this.chunks.forEach((item) => {
       args.push(this.inputOption);
       args.push(item.absPath);
@@ -122,25 +135,23 @@ class Ffmpeg {
   private createFilterComplexArguments() {
     const args: string[] = [];
     const _episodes = this.createEpisodes();
-    const episodes = _episodes.map((item) => {
-      const episode: Episode<ChunkDurated[]> = { ...item } as any;
-      const map = createRandHash(6);
+    this.episodes = _episodes.map((item) => {
+      const episode: Episode = { ...item } as any;
+      const map = createRandHash(this.mapLength);
       const { videoCount } = this.getCountVideos(item.chunks);
       const chunksDurated = item.chunks.map((_item) => {
-        const itemCopy: ChunkDurated = { ..._item } as any;
+        const itemCopy: Chunk = { ..._item } as any;
         let durated = false;
         if (_item.start !== item.start || _item.end !== item.end) {
           const start = item.start - _item.start;
           const duration = item.end - start;
           args.push(
-            `[${_item.index}]${this.startDuration({ start, duration })}[${_item.mapName}]${
-              this.eol
-            }`
+            `[${_item.index}]${this.startDuration({ start, duration })}[${_item.map}]${this.eol}`
           );
           durated = true;
         }
         itemCopy.durated = durated;
-        itemCopy.map = _item.video && videoCount > 1 ? map : '';
+        itemCopy.map = _item.video && videoCount > 1 ? map : _item.map;
         return itemCopy;
       });
 
@@ -148,7 +159,7 @@ class Ffmpeg {
       if (videos.length === 2 || videos.length === 3) {
         let arg = '';
         videos.forEach((_item) => {
-          arg += _item.durated ? `[${_item.mapName}]` : `[${_item.index}:v]`;
+          arg = _item.durated ? `[${_item.map}]` : `[${_item.index}:v]`;
         });
         args.push(`${arg}${this.hstackInputs}${videos.length}[${map}]${this.eol}`);
       }
@@ -157,20 +168,33 @@ class Ffmpeg {
       return episode;
     });
     const _args = [this.filterComplexOption, `"${args.join('').replace(/;$/, '')}"`];
-    return _args.concat(this.getMap(episodes));
+    return _args.concat(this.getMap());
   }
 
-  private getMap(episodes: Episode<ChunkDurated[]>[]) {
-    const maps: string[] = [];
-    episodes.forEach((item) => {
-      const uMaps: string[] = [];
-      item.chunks.forEach((_item) => {
-        const map = _item.map === '' ? _item.mapName : _item.map;
-        if (uMaps.indexOf(map) === -1) {
-          uMaps.push(map);
-        }
-      });
+  private getUniqueMaps(episode: Episode) {
+    const uMaps: string[] = [];
+    episode.chunks.forEach((_item) => {
+      const { map } = _item;
+      if (uMaps.indexOf(map) === -1) {
+        uMaps.push(map);
+      }
+    });
+    return uMaps;
+  }
 
+  private createOverlays() {
+    this.episodes.forEach((item) => {
+      const uMaps = this.getUniqueMaps(item);
+      uMaps.forEach((_item) => {
+        //
+      });
+    });
+  }
+
+  private getMap() {
+    const maps: string[] = [];
+    this.episodes.forEach((item) => {
+      const uMaps = this.getUniqueMaps(item);
       uMaps.forEach((_item) => {
         maps.push(this.mapOption);
         maps.push(`"[${_item}]"`);
@@ -179,9 +203,9 @@ class Ffmpeg {
     return maps;
   }
 
-  private getSpecChunks(chunks: ChunkDurated[]) {
-    const videos: ChunkDurated[] = [];
-    const audios: ChunkDurated[] = [];
+  private getSpecChunks(chunks: Chunk[]) {
+    const videos: Chunk[] = [];
+    const audios: Chunk[] = [];
     chunks.forEach((item) => {
       if (item.video) {
         videos.push(item);
@@ -196,7 +220,7 @@ class Ffmpeg {
     };
   }
 
-  private getCountVideos(chunks: ChunkPart[]) {
+  private getCountVideos(chunks: Chunk[]) {
     let videoCount = 0;
     let audioCount = 0;
     chunks.forEach((item) => {
@@ -214,7 +238,7 @@ class Ffmpeg {
   }
 
   private createEpisodes() {
-    const episodes: Episode<ChunkPart[]>[] = [];
+    const episodes: Episode[] = [];
     const time = this.getVideoTime();
     let oldChunks: Chunk[] = [];
     let from: number | undefined;
@@ -234,9 +258,9 @@ class Ffmpeg {
       });
       oldChunks = oldChunks.length === 0 ? chunks : oldChunks;
       if (!this.isEqual(chunks, oldChunks)) {
-        const chunkPart: ChunkPart[] = oldChunks.map((item) => {
-          const _item: ChunkPart = { ...item } as any;
-          _item.mapName = createRandHash(8);
+        const chunkPart: Chunk[] = oldChunks.map((item) => {
+          const _item: Chunk = { ...item } as any;
+          _item.map = createRandHash(this.mapLength);
           return _item;
         });
 
