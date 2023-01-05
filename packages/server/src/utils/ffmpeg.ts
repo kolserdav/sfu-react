@@ -336,7 +336,7 @@ class Ffmpeg {
       log('info', 'Run command', command);
       const ffmpeg = exec(command, { env: process.env }, (error) => {
         if (error) {
-          log('error', 'Ffmpeg command error', error);
+          log('error', 'FFmpeg command error', error);
           resolve(error.code);
         }
       });
@@ -347,7 +347,7 @@ class Ffmpeg {
         log('info', 'stderr', d);
       });
       ffmpeg.on('exit', (code) => {
-        log('info', 'Run ffmpeg command exit with code', code);
+        log('info', 'FFmpeg command exit with code', code);
         resolve(code);
       });
     });
