@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { spawn } from 'child_process';
+import { exec } from 'child_process';
 import RTC from '../core/rtc';
 
 // eslint-disable-next-line import/first
@@ -11,6 +11,7 @@ import { EXT_WEBM } from './constants';
 
 // FIXME remove it
 process.env.LOG_LEVEL = '0';
+process.env.NODE_ENV = 'development';
 
 interface Chunk {
   index: number;
@@ -42,7 +43,7 @@ class Ffmpeg {
 
   private readonly mapLength = 6;
 
-  private readonly forceOption = '-f';
+  private readonly forceOption = '-y';
 
   private readonly inputOption = '-i';
 
@@ -82,8 +83,8 @@ class Ffmpeg {
     const filterComplexArgs = this.createFilterComplexArguments();
     const args = inputArgs.concat(filterComplexArgs);
     args.push(`${this.videoSrc}${EXT_WEBM}`);
-    console.log(args);
     const r = await this.runFfmpegCommand(args);
+    console.log(r);
   }
 
   private createVideoChunks({ dir }: { dir: string[] }): Chunk[] {
@@ -197,7 +198,7 @@ class Ffmpeg {
     args.push(
       `${arg}${this.concat({
         n: this.episodes.length,
-        v: this.episodes.length,
+        v: 1,
         a: 0,
       })}[${concatMap}]`
     );
@@ -330,17 +331,20 @@ class Ffmpeg {
   }
 
   private async runFfmpegCommand(args: string[]) {
-    console.log(args.join(' '));
-    const ffmpeg = spawn('ffmpeg', args, { env: process.env });
     return new Promise((resolve) => {
-      ffmpeg.stdout.on('data', (d) => {
-        log('log', 'stdout', d.toString());
+      const command = `ffmpeg ${args.join(' ')}`;
+      log('info', 'Run command', command);
+      const ffmpeg = exec(command, { env: process.env }, (error) => {
+        if (error) {
+          log('error', 'Ffmpeg command error', error);
+          resolve(error.code);
+        }
       });
-      ffmpeg.stderr.on('data', (d) => {
-        log('info', 'stderr', d.toString());
+      ffmpeg.stdout?.on('data', (d) => {
+        log('log', 'stdout', d);
       });
-      ffmpeg.stdout.on('end', () => {
-        log('log', 'Run ffmpeg command stdout end', { args });
+      ffmpeg.stderr?.on('data', (d) => {
+        log('info', 'stderr', d);
       });
       ffmpeg.on('exit', (code) => {
         log('info', 'Run ffmpeg command exit with code', code);
