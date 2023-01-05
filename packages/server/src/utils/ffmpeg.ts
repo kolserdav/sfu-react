@@ -27,6 +27,7 @@ interface Chunk {
 interface Episode {
   start: number;
   end: number;
+  map: string;
   chunks: Chunk[];
 }
 
@@ -40,6 +41,8 @@ class Ffmpeg {
   private episodes: Episode[] = [];
 
   private readonly mapLength = 6;
+
+  private readonly forceOption = '-f';
 
   private readonly inputOption = '-i';
 
@@ -57,8 +60,7 @@ class Ffmpeg {
 
   private readonly amergeInputs = 'amerge=inputs=';
 
-  // eslint-disable-next-line class-methods-use-this
-  private readonly overlay = ({ x, y }: { x: number; y: number }) => `overlay=${x}:${y}`;
+  private readonly overlay = 'overlay=(W-w)/2:(H-h)/2';
 
   // eslint-disable-next-line class-methods-use-this
   private readonly concat = ({ n, v, a }: { n: number; v: number; a: number }) =>
@@ -81,7 +83,7 @@ class Ffmpeg {
     const args = inputArgs.concat(filterComplexArgs);
     args.push(`${this.videoSrc}${EXT_WEBM}`);
     console.log(args);
-    //const r = await this.runFfmpegCommand(args);
+    const r = await this.runFfmpegCommand(args);
   }
 
   private createVideoChunks({ dir }: { dir: string[] }): Chunk[] {
@@ -124,7 +126,7 @@ class Ffmpeg {
   }
 
   private createInputArguments() {
-    const args: string[] = [this.inputOption, this.backgroundImagePath];
+    const args: string[] = [this.forceOption, this.inputOption, this.backgroundImagePath];
     this.chunks.forEach((item) => {
       args.push(this.inputOption);
       args.push(item.absPath);
@@ -135,39 +137,71 @@ class Ffmpeg {
   private createFilterComplexArguments() {
     const args: string[] = [];
     const _episodes = this.createEpisodes();
-    this.episodes = _episodes.map((item) => {
-      const episode: Episode = { ...item } as any;
-      const map = createRandHash(this.mapLength);
-      const { videoCount } = this.getCountVideos(item.chunks);
-      const chunksDurated = item.chunks.map((_item) => {
-        const itemCopy: Chunk = { ..._item } as any;
+    this.episodes = _episodes.map((episode) => {
+      const episodeCopy: Episode = { ...episode } as any;
+      // Set start and duration
+      let chunks = episode.chunks.map((chunk) => {
+        const chunkCopy: Chunk = { ...chunk } as any;
         let durated = false;
-        if (_item.start !== item.start || _item.end !== item.end) {
-          const start = item.start - _item.start;
-          const duration = item.end - start;
+        if (chunk.start !== episode.start || chunk.end !== episode.end) {
+          const start = episode.start - chunk.start;
+          const duration = episode.end - start;
           args.push(
-            `[${_item.index}]${this.startDuration({ start, duration })}[${_item.map}]${this.eol}`
+            `[${chunk.index}]${this.startDuration({ start, duration })}[${chunk.map}]${this.eol}`
           );
           durated = true;
         }
-        itemCopy.durated = durated;
-        itemCopy.map = _item.video && videoCount > 1 ? map : _item.map;
-        return itemCopy;
+        chunkCopy.durated = durated;
+        return chunkCopy;
       });
-
-      const { videos } = this.getSpecChunks(chunksDurated);
-      if (videos.length === 2 || videos.length === 3) {
+      // Set video stacks
+      const map = createRandHash(this.mapLength);
+      const { videoCount } = this.getCountVideos(episode.chunks);
+      if (videoCount === 2 || videoCount === 3) {
         let arg = '';
-        videos.forEach((_item) => {
-          arg = _item.durated ? `[${_item.map}]` : `[${_item.index}:v]`;
+        chunks = chunks.map((chunk) => {
+          if (chunk.video) {
+            const chunkCopy = { ...chunk };
+            arg += chunk.durated ? `[${chunk.map}]` : `[${chunk.index}:v]`;
+            chunkCopy.map = videoCount > 1 ? map : chunk.map;
+            return chunkCopy;
+          }
+          return chunk;
         });
-        args.push(`${arg}${this.hstackInputs}${videos.length}[${map}]${this.eol}`);
+        args.push(`${arg}${this.hstackInputs}${videoCount}[${map}]${this.eol}`);
       }
       // TODO videos.length === 4
-      episode.chunks = chunksDurated;
-      return episode;
+      episodeCopy.chunks = chunks;
+      return episodeCopy;
     });
-    const _args = [this.filterComplexOption, `"${args.join('').replace(/;$/, '')}"`];
+    // Set overlays
+    this.episodes = this.episodes.map((episode) => {
+      const episdeCopy = { ...episode };
+      const uMaps = this.getUniqueMaps(episode);
+      const map = createRandHash(this.mapLength);
+      uMaps.forEach((uMap) => {
+        args.push(`[0:v][${uMap}]${this.overlay}[${map}]${this.eol}`);
+      });
+      episdeCopy.map = map;
+      return episdeCopy;
+    });
+    // Set concat
+    const concatMap = createRandHash(this.mapLength);
+    let arg = '';
+    this.episodes = this.episodes.map((episode) => {
+      const episodeCopy = { ...episode };
+      arg += `[${episode.map}]`;
+      episodeCopy.map = concatMap;
+      return episodeCopy;
+    });
+    args.push(
+      `${arg}${this.concat({
+        n: this.episodes.length,
+        v: this.episodes.length,
+        a: 0,
+      })}[${concatMap}]`
+    );
+    const _args = [this.filterComplexOption, `"${args.join('')}"`];
     return _args.concat(this.getMap());
   }
 
@@ -182,18 +216,17 @@ class Ffmpeg {
     return uMaps;
   }
 
-  private createOverlays() {
-    this.episodes.forEach((item) => {
-      const uMaps = this.getUniqueMaps(item);
-      uMaps.forEach((_item) => {
-        //
-      });
-    });
-  }
-
   private getMap() {
     const maps: string[] = [];
     this.episodes.forEach((item) => {
+      if (item.map) {
+        const map = `"[${item.map}]"`;
+        if (maps.indexOf(map) === -1) {
+          maps.push(this.mapOption);
+          maps.push(map);
+        }
+        return;
+      }
       const uMaps = this.getUniqueMaps(item);
       uMaps.forEach((_item) => {
         maps.push(this.mapOption);
@@ -201,23 +234,6 @@ class Ffmpeg {
       });
     });
     return maps;
-  }
-
-  private getSpecChunks(chunks: Chunk[]) {
-    const videos: Chunk[] = [];
-    const audios: Chunk[] = [];
-    chunks.forEach((item) => {
-      if (item.video) {
-        videos.push(item);
-      }
-      if (item.audio) {
-        audios.push(item);
-      }
-    });
-    return {
-      videos,
-      audios,
-    };
   }
 
   private getCountVideos(chunks: Chunk[]) {
@@ -267,6 +283,7 @@ class Ffmpeg {
         episodes.push({
           start: from,
           end: index,
+          map: '',
           chunks: chunkPart,
         });
         from = index;
