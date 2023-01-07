@@ -1,6 +1,6 @@
 {
   "name": "uyem",
-  "version": "0.14.16",
+  "version": "0.14.17",
   "repository": "https://github.com/kolserdav/werift-sfu-react.git",
   "description": "WebRTC client-server SFU application",
   "keywords": [
