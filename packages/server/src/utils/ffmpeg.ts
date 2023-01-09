@@ -23,12 +23,14 @@ interface Chunk {
   audio: boolean;
   absPath: string;
   map: string;
+  mapA: string;
 }
 
 interface Episode {
   start: number;
   end: number;
   map: string;
+  mapA: string;
   chunks: Chunk[];
 }
 
@@ -62,7 +64,7 @@ class Ffmpeg {
   // eslint-disable-next-line class-methods-use-this
   private readonly hstack = ({ inputs }: { inputs: number }) => `hstack=inputs=${inputs}`;
 
-  private readonly amergeInputs = 'amerge=inputs=';
+  private readonly amerge = ({ count }: { count: number }) => `amerge=inputs=${count}`;
 
   private readonly overlay = 'overlay=(W-w)/2:(H-h)/2';
 
@@ -77,6 +79,10 @@ class Ffmpeg {
   // eslint-disable-next-line class-methods-use-this
   private readonly startDuration = ({ start, duration }: { start: number; duration: number }) =>
     `trim=start=${start}:duration=${duration},setpts=PTS-STARTPTS`;
+
+  // eslint-disable-next-line class-methods-use-this
+  private readonly startDurationA = ({ start, duration }: { start: number; duration: number }) =>
+    `atrim=start=${start}:duration=${duration},asetpts=PTS-STARTPTS`;
 
   constructor({ rtc, videoSrc }: { rtc: RTC; videoSrc: string }) {
     this.rtc = rtc;
@@ -123,6 +129,7 @@ class Ffmpeg {
         audio,
         absPath: path.resolve(this.videoSrc, item),
         map: '',
+        mapA: '',
       });
     });
     return chunks
@@ -159,9 +166,8 @@ class Ffmpeg {
   }
 
   private getArg({ chunk, dest }: { chunk: Chunk; dest: 'a' | 'v' }) {
-    return chunk.map !== ''
-      ? this.createMapArg(chunk.map)
-      : this.createMapArg(`${chunk.index}:${dest}`);
+    const map = dest === 'a' ? chunk.mapA : chunk.map;
+    return map !== '' ? this.createMapArg(map) : this.createMapArg(`${chunk.index}:${dest}`);
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -180,41 +186,75 @@ class Ffmpeg {
         if (chunk.start !== episode.start || chunk.end !== episode.end) {
           const start = episode.start - chunk.start;
           const duration = episode.end - start;
-          chunkCopy.map = createRandHash(this.mapLength);
-          args.push(
-            this.getFilterComplexArgument({
-              args: this.createMapArg(chunk.index),
-              value: this.startDuration({ start, duration }),
-              map: this.createMapArg(chunkCopy.map),
-            })
-          );
+          if (chunk.video) {
+            chunkCopy.map = createRandHash(this.mapLength);
+            args.push(
+              this.getFilterComplexArgument({
+                args: this.createMapArg(`${chunk.index}:v`),
+                value: this.startDuration({ start, duration }),
+                map: this.createMapArg(chunkCopy.map),
+              })
+            );
+          }
+          if (chunk.audio) {
+            chunkCopy.mapA = createRandHash(this.mapLength);
+            args.push(
+              this.getFilterComplexArgument({
+                args: this.createMapArg(`${chunk.index}:a`),
+                value: this.startDurationA({ start, duration }),
+                map: this.createMapArg(chunkCopy.mapA),
+              })
+            );
+          }
         } else {
           chunkCopy.map = '';
+          chunkCopy.mapA = '';
         }
         return chunkCopy;
       });
+      // Set audio channels
+      const mapA = createRandHash(this.mapLength);
+      let arg = '';
+      let audioCount = 0;
+      chunks = chunks.map((chunk) => {
+        if (chunk.audio) {
+          audioCount++;
+          const chunkCopy = { ...chunk };
+          arg += this.getArg({ chunk, dest: 'a' });
+          episodeCopy.mapA = mapA;
+          return chunkCopy;
+        }
+        return chunk;
+      });
+      args.push(
+        this.getFilterComplexArgument({
+          args: arg,
+          value: this.amerge({ count: audioCount }),
+          map: this.createMapArg(mapA),
+        })
+      );
       // Set video paddings
       chunks = chunks.map((chunk) => {
-        const chunkCopy = { ...chunk };
-        chunkCopy.map = createRandHash(this.mapLength);
         if (chunk.video) {
-          const arg = this.getArg({ chunk, dest: 'v' });
+          const chunkCopy = { ...chunk };
+          chunkCopy.map = createRandHash(this.mapLength);
           // TODO calc x and y
           args.push(
             this.getFilterComplexArgument({
-              args: arg,
+              args: this.getArg({ chunk, dest: 'v' }),
               value: this.pad({ x: 100, y: 50 }),
               map: this.createMapArg(chunkCopy.map),
             })
           );
+          return chunkCopy;
         }
-        return chunkCopy;
+        return chunk;
       });
       // Set video stacks
       const { videoCount } = this.getCountVideos(episode.chunks);
       const map = createRandHash(this.mapLength);
       if (videoCount === 2 || videoCount === 3) {
-        let arg = '';
+        arg = '';
         chunks = chunks.map((chunk) => {
           if (chunk.video) {
             const chunkCopy = { ...chunk };
@@ -255,10 +295,11 @@ class Ffmpeg {
     });
     // Set concat
     const concatMap = createRandHash(this.mapLength);
+    const concatMapA = createRandHash(this.mapLength);
     let arg = '';
     this.episodes = this.episodes.map((episode) => {
       const episodeCopy = { ...episode };
-      arg += this.createMapArg(episode.map);
+      arg += `${this.createMapArg(episode.map)}${this.createMapArg(episode.mapA)}`;
       episodeCopy.map = concatMap;
       return episodeCopy;
     });
@@ -268,12 +309,13 @@ class Ffmpeg {
         value: this.concat({
           n: this.episodes.length,
           v: 1,
-          a: 0,
+          a: 1,
         }),
-        map: this.createMapArg(concatMap),
+        map: `${this.createMapArg(concatMap)}${this.createMapArg(concatMapA)}`,
       })
     );
     const _args = [this.filterComplexOption, this.joinFilterComplexArgs(args)];
+    // TODO add mapA
     return _args.concat(this.getMap());
   }
 
@@ -356,6 +398,7 @@ class Ffmpeg {
           start: from,
           end: index,
           map: '',
+          mapA: '',
           chunks: chunkPart,
         });
         from = index;
