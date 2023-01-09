@@ -92,10 +92,11 @@
     "test:remote": "cross-env CI=false TEST_NEXT=false node tests/rooms.spec.js",
     "test:chat": "node tests/chat.spec.js",
     "test:browser": "node tests/webrtc-browser.js",
-    "ffmpeg:dev": "nodemon packages/server/dist/utils/ffmpeg.js"
+    "ffmpeg:dev": "nodemon packages/server/dist/utils/ffmpeg.js",
+    "db": "cd packages/server && npm run generate && npm run migrate"
   },
   "dependencies": {
-    "@prisma/client": "^4.6.1",
+    "@prisma/client": "^4.8.1",
     "@reduxjs/toolkit": "^1.8.2",
     "clsx": "^1.1.1",
     "dotenv": "^16.0.1",
@@ -136,7 +137,7 @@
     "nodemon": "^2.0.19",
     "postcss-loader": "^7.0.1",
     "prettier": "^2.6.2",
-    "prisma": "^4.6.1",
+    "prisma": "^4.8.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-scripts": "^5.0.1",
