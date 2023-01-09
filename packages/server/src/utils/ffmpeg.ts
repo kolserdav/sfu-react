@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
+import ffmpeg from 'ffmpeg-static';
 import RTC from '../core/rtc';
 
 // eslint-disable-next-line import/first
@@ -22,7 +23,6 @@ interface Chunk {
   audio: boolean;
   absPath: string;
   map: string;
-  durated: boolean;
 }
 
 interface Episode {
@@ -53,15 +53,22 @@ class Ffmpeg {
 
   private readonly eol = ';';
 
+  private readonly backgroundInput = '0:v';
+
   private backgroundImagePath = '/home/kol/Projects/werift-sfu-react/tmp/1png.png';
 
   private readonly vstackInputs = 'vstack=inputs=';
 
-  private readonly hstackInputs = 'hstack=inputs=';
+  // eslint-disable-next-line class-methods-use-this
+  private readonly hstack = ({ inputs }: { inputs: number }) => `hstack=inputs=${inputs}`;
 
   private readonly amergeInputs = 'amerge=inputs=';
 
   private readonly overlay = 'overlay=(W-w)/2:(H-h)/2';
+
+  // eslint-disable-next-line class-methods-use-this
+  private readonly pad = ({ x, y }: { x: number; y: number }) =>
+    `format=rgba,pad=width=iw+${x}:height=ih+${y}:x=iw/2:y=ih/2:color=#00000000`;
 
   // eslint-disable-next-line class-methods-use-this
   private readonly concat = ({ n, v, a }: { n: number; v: number; a: number }) =>
@@ -78,12 +85,24 @@ class Ffmpeg {
     this.chunks = this.createVideoChunks({ dir });
   }
 
+  private getFilterComplexArgument({
+    args,
+    value,
+    map,
+  }: {
+    args: string;
+    value: string;
+    map: string;
+  }) {
+    return `${args}${value}${map}${this.eol}`;
+  }
+
   public async createVideo() {
     const inputArgs = this.createInputArguments();
     const filterComplexArgs = this.createFilterComplexArguments();
     const args = inputArgs.concat(filterComplexArgs);
     args.push(`${this.videoSrc}${EXT_WEBM}`);
-    const r = await this.runFfmpegCommand(args);
+    const r = await this.runFFmpegCommand(args);
     console.log(r);
   }
 
@@ -103,8 +122,7 @@ class Ffmpeg {
         video,
         audio,
         absPath: path.resolve(this.videoSrc, item),
-        durated: false,
-        map: createRandHash(this.mapLength),
+        map: '',
       });
     });
     return chunks
@@ -135,6 +153,22 @@ class Ffmpeg {
     return args;
   }
 
+  // eslint-disable-next-line class-methods-use-this
+  private createMapArg(map: string | number) {
+    return `[${map}]`;
+  }
+
+  private getArg({ chunk, dest }: { chunk: Chunk; dest: 'a' | 'v' }) {
+    return chunk.map !== ''
+      ? this.createMapArg(chunk.map)
+      : this.createMapArg(`${chunk.index}:${dest}`);
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  private joinFilterComplexArgs(args: string[]) {
+    return `"${args.join('').replace(/;$/, '')}"`;
+  }
+
   private createFilterComplexArguments() {
     const args: string[] = [];
     const _episodes = this.createEpisodes();
@@ -143,45 +177,78 @@ class Ffmpeg {
       // Set start and duration
       let chunks = episode.chunks.map((chunk) => {
         const chunkCopy: Chunk = { ...chunk } as any;
-        let durated = false;
         if (chunk.start !== episode.start || chunk.end !== episode.end) {
           const start = episode.start - chunk.start;
           const duration = episode.end - start;
+          chunkCopy.map = createRandHash(this.mapLength);
           args.push(
-            `[${chunk.index}]${this.startDuration({ start, duration })}[${chunk.map}]${this.eol}`
+            this.getFilterComplexArgument({
+              args: this.createMapArg(chunk.index),
+              value: this.startDuration({ start, duration }),
+              map: this.createMapArg(chunkCopy.map),
+            })
           );
-          durated = true;
+        } else {
+          chunkCopy.map = '';
         }
-        chunkCopy.durated = durated;
+        return chunkCopy;
+      });
+      // Set video paddings
+      chunks = chunks.map((chunk) => {
+        const chunkCopy = { ...chunk };
+        chunkCopy.map = createRandHash(this.mapLength);
+        if (chunk.video) {
+          const arg = this.getArg({ chunk, dest: 'v' });
+          // TODO calc x and y
+          args.push(
+            this.getFilterComplexArgument({
+              args: arg,
+              value: this.pad({ x: 100, y: 50 }),
+              map: this.createMapArg(chunkCopy.map),
+            })
+          );
+        }
         return chunkCopy;
       });
       // Set video stacks
-      const map = createRandHash(this.mapLength);
       const { videoCount } = this.getCountVideos(episode.chunks);
+      const map = createRandHash(this.mapLength);
       if (videoCount === 2 || videoCount === 3) {
         let arg = '';
         chunks = chunks.map((chunk) => {
           if (chunk.video) {
             const chunkCopy = { ...chunk };
-            arg += chunk.durated ? `[${chunk.map}]` : `[${chunk.index}:v]`;
-            chunkCopy.map = videoCount > 1 ? map : chunk.map;
+            arg += this.getArg({ chunk, dest: 'v' });
+            chunkCopy.map = map;
             return chunkCopy;
           }
           return chunk;
         });
-        args.push(`${arg}${this.hstackInputs}${videoCount}[${map}]${this.eol}`);
+        args.push(
+          this.getFilterComplexArgument({
+            args: arg,
+            value: this.hstack({ inputs: videoCount }),
+            map: this.createMapArg(map),
+          })
+        );
       }
       // TODO videos.length === 4
       episodeCopy.chunks = chunks;
       return episodeCopy;
     });
-    // Set overlays
+    // Set overlay
     this.episodes = this.episodes.map((episode) => {
       const episdeCopy = { ...episode };
       const uMaps = this.getUniqueMaps(episode);
       const map = createRandHash(this.mapLength);
       uMaps.forEach((uMap) => {
-        args.push(`[0:v][${uMap}]${this.overlay}[${map}]${this.eol}`);
+        args.push(
+          this.getFilterComplexArgument({
+            args: `${this.createMapArg(this.backgroundInput)}${this.createMapArg(uMap)}`,
+            value: this.overlay,
+            map: this.createMapArg(map),
+          })
+        );
       });
       episdeCopy.map = map;
       return episdeCopy;
@@ -191,18 +258,22 @@ class Ffmpeg {
     let arg = '';
     this.episodes = this.episodes.map((episode) => {
       const episodeCopy = { ...episode };
-      arg += `[${episode.map}]`;
+      arg += this.createMapArg(episode.map);
       episodeCopy.map = concatMap;
       return episodeCopy;
     });
     args.push(
-      `${arg}${this.concat({
-        n: this.episodes.length,
-        v: 1,
-        a: 0,
-      })}[${concatMap}]`
+      this.getFilterComplexArgument({
+        args: arg,
+        value: this.concat({
+          n: this.episodes.length,
+          v: 1,
+          a: 0,
+        }),
+        map: this.createMapArg(concatMap),
+      })
     );
-    const _args = [this.filterComplexOption, `"${args.join('')}"`];
+    const _args = [this.filterComplexOption, this.joinFilterComplexArgs(args)];
     return _args.concat(this.getMap());
   }
 
@@ -231,7 +302,7 @@ class Ffmpeg {
       const uMaps = this.getUniqueMaps(item);
       uMaps.forEach((_item) => {
         maps.push(this.mapOption);
-        maps.push(`"[${_item}]"`);
+        maps.push(`"${this.createMapArg(_item)}"`);
       });
     });
     return maps;
@@ -330,23 +401,23 @@ class Ffmpeg {
     return max - min;
   }
 
-  private async runFfmpegCommand(args: string[]) {
+  private async runFFmpegCommand(args: string[]) {
     return new Promise((resolve) => {
-      const command = `ffmpeg ${args.join(' ')}`;
+      const command = `${ffmpeg} ${args.join(' ')}`;
       log('info', 'Run command', command);
-      const ffmpeg = exec(command, { env: process.env }, (error) => {
+      const fC = exec(command, { env: process.env }, (error) => {
         if (error) {
           log('error', 'FFmpeg command error', error);
           resolve(error.code);
         }
       });
-      ffmpeg.stdout?.on('data', (d) => {
+      fC.stdout?.on('data', (d) => {
         log('log', 'stdout', d);
       });
-      ffmpeg.stderr?.on('data', (d) => {
+      fC.stderr?.on('data', (d) => {
         log('info', 'stderr', d);
       });
-      ffmpeg.on('exit', (code) => {
+      fC.on('exit', (code) => {
         log('info', 'FFmpeg command exit with code', code);
         resolve(code);
       });

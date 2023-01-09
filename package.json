@@ -100,6 +100,7 @@
     "@reduxjs/toolkit": "^1.8.2",
     "clsx": "^1.1.1",
     "dotenv": "^16.0.1",
+    "ffmpeg-static": "^5.1.0",
     "puppeteer": "^15.3.2",
     "react-cookie": "^4.1.1",
     "uuid": "^8.3.2",
