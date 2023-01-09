@@ -31,13 +31,13 @@ npm i
 npm run env
 ```
 
+then set up `packages/server/.env` and `packages/client/.env` files
+
 - Run migrations to database:
 
 ```sh
 npm run db
 ```
-
-then set up `packages/server/.env` and `packages/client/.env` files
 
 ---
 
@@ -48,3 +48,47 @@ Start on development mode:
 ```sh
 npm run dev
 ```
+
+## Development for tests
+
+Config examples:
+
+- [Nginx client](./resources/nginx.client.conf)
+- [Nginx server](./resources/nginx.server.conf)
+- [Coturn config](./resources/coturn.conf)
+
+SSL certificate is required [./SSL.md](./SSL.md)
+
+---
+
+Build server:
+
+```sh
+npm run build:server
+```
+
+Build client:
+
+```sh
+npm run build:client-react
+```
+
+---
+
+`or` build server and client:
+
+```sh
+npm run build:react
+```
+
+---
+
+Start on production:
+
+```sh
+npm run start
+```
+
+### Tests
+
+See file [docs/TESTS.md](./TESTS.md)
