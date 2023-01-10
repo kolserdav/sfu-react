@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
-import { parse } from 'date-fns';
+import { intervalToDuration, differenceInSeconds } from 'date-fns';
 import ffmpeg from 'ffmpeg-static';
 import RTC from '../core/rtc';
 
@@ -39,6 +39,8 @@ interface Episode {
   audio: boolean;
   chunks: Chunk[];
 }
+
+type LoadingCallback = (time: number) => void;
 
 class FFmpeg {
   private rtc: RTC;
@@ -114,12 +116,12 @@ class FFmpeg {
     return `${args}${value}${map}${this.eol}`;
   }
 
-  public async createVideo() {
+  public async createVideo({ loading }: { loading: LoadingCallback }) {
     const inputArgs = this.createInputArguments();
     const filterComplexArgs = this.createFilterComplexArguments();
     const args = inputArgs.concat(filterComplexArgs);
     args.push(`${this.videoSrc}${EXT_WEBM}`);
-    const r = await this.runFFmpegCommand(args);
+    const r = await this.runFFmpegCommand(args, loading);
     if (isDev) {
       console.log(r);
     }
@@ -195,7 +197,7 @@ class FFmpeg {
     this.episodes = _episodes.map((episode) => {
       const episodeCopy: Episode = { ...episode } as any;
       // Set start and duration
-      let chunks = episode.chunks.map((chunk) => {
+      let chunks: Chunk[] = episode.chunks.map((chunk) => {
         const chunkCopy: Chunk = { ...chunk } as any;
         if (chunk.video && !chunkCopy.video) {
           chunkCopy.video = true;
@@ -485,14 +487,21 @@ class FFmpeg {
 
   private parseTime(data: string) {
     const time = data.match(/time=\d{2}:\d{2}:\d{2}/);
+    let result: number | null = null;
     if (time) {
       const _time = time[0].replace('time=', '');
-      console.log(_time);
-      console.log(parse(_time, 'hh:mm:ss', new Date()));
+      const t = _time.split(':');
+      const d = differenceInSeconds(
+        new Date(0, 0, 0, parseInt(t[0], 10), parseInt(t[1], 10), parseInt(t[2], 10)),
+        new Date(0, 0, 0, 0, 0, 0)
+      );
+
+      result = Math.ceil(d / (this.time / 100));
     }
+    return result;
   }
 
-  private async runFFmpegCommand(args: string[]) {
+  private async runFFmpegCommand(args: string[], loading: LoadingCallback) {
     return new Promise((resolve) => {
       const command = `${ffmpeg} ${args.join(' ')}`;
       log('info', 'Run command', command);
@@ -507,7 +516,10 @@ class FFmpeg {
       });
       fC.stderr?.on('data', (d) => {
         log('info', 'stderr', d);
-        this.parseTime(d);
+        const time = this.parseTime(d);
+        if (time) {
+          loading(time);
+        }
       });
       fC.on('exit', (code) => {
         log('info', 'FFmpeg command exit with code', code);
@@ -522,6 +534,10 @@ export default FFmpeg;
 if (isDev) {
   new FFmpeg({
     rtc: new RTC({ ws: new WS({ db: new DB() }) }),
-    videoSrc: '/home/kol/Projects/werift-sfu-react/packages/server/rec/1673324498132-1673327462937',
-  }).createVideo();
+    videoSrc: '/home/kol/Projects/werift-sfu-react/packages/server/rec/1673340519949-1673342192964',
+  }).createVideo({
+    loading: (time) => {
+      console.log(time);
+    },
+  });
 }

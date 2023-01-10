@@ -363,24 +363,6 @@ export function createServer(
             rtc.sendCloseMessages({ roomId: item, userId });
             rtc.cleanConnections(item, userId.toString());
             if (rtc.rooms[item].length === 0) {
-              /*
-              if (recordVideo.recordPages[item]) {
-                recordVideo.recordPages[item] = {
-                  id: item,
-                  connId,
-                  type: MessageType.SET_RECORDING,
-                  data: {
-                    command: 'stop',
-                    time: 0,
-                  },
-                };
-                setTimeout(() => {
-                  if (recordVideo.recordPages[item].data.command === 'stop') {
-                    delete recordVideo.recordPages[item];
-                  }
-                }, 5000);
-              }
-              */
               delete rtc.rooms[item];
               delete rtc.streams[item];
               delete rtc.banneds[item];
