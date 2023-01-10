@@ -8,11 +8,14 @@ import RTC from '../core/rtc';
 import { createRandHash, log } from './lib';
 import WS from '../core/ws';
 import DB from '../core/db';
-import { EXT_WEBM } from './constants';
+import { EXT_WEBM, RECORD_HEIGHT_DEFAULT, RECORD_WIDTH_DEFAULT } from './constants';
 
-// FIXME remove it
-process.env.LOG_LEVEL = '0';
-process.env.NODE_ENV = 'development';
+const isDev = process.env.FFMPEG_DEV === 'true';
+
+if (isDev) {
+  process.env.LOG_LEVEL = '0';
+  process.env.NODE_ENV = 'development';
+}
 
 interface Chunk {
   index: number;
@@ -31,10 +34,12 @@ interface Episode {
   end: number;
   map: string;
   mapA: string;
+  video: boolean;
+  audio: boolean;
   chunks: Chunk[];
 }
 
-class Ffmpeg {
+class FFmpeg {
   private rtc: RTC;
 
   private videoSrc: string;
@@ -56,6 +61,8 @@ class Ffmpeg {
   private readonly eol = ';';
 
   private readonly backgroundInput = '0:v';
+
+  private readonly firstVideoInput = '1:v';
 
   private backgroundImagePath = '/home/kol/Projects/werift-sfu-react/tmp/1png.png';
 
@@ -84,6 +91,9 @@ class Ffmpeg {
   private readonly startDurationA = ({ start, duration }: { start: number; duration: number }) =>
     `atrim=start=${start}:duration=${duration},asetpts=PTS-STARTPTS`;
 
+  // eslint-disable-next-line class-methods-use-this
+  private readonly scale = ({ w, h }: { w: number; h: number }) => `scale=w=${w}:h=${h}`;
+
   constructor({ rtc, videoSrc }: { rtc: RTC; videoSrc: string }) {
     this.rtc = rtc;
     this.videoSrc = videoSrc;
@@ -109,7 +119,10 @@ class Ffmpeg {
     const args = inputArgs.concat(filterComplexArgs);
     args.push(`${this.videoSrc}${EXT_WEBM}`);
     const r = await this.runFFmpegCommand(args);
-    console.log(r);
+    if (isDev) {
+      console.log(r);
+    }
+    return r;
   }
 
   private createVideoChunks({ dir }: { dir: string[] }): Chunk[] {
@@ -183,6 +196,12 @@ class Ffmpeg {
       // Set start and duration
       let chunks = episode.chunks.map((chunk) => {
         const chunkCopy: Chunk = { ...chunk } as any;
+        if (chunk.video && !chunkCopy.video) {
+          chunkCopy.video = true;
+        }
+        if (chunk.audio && !chunkCopy.audio) {
+          chunkCopy.audio = true;
+        }
         if (chunk.start !== episode.start || chunk.end !== episode.end) {
           const start = episode.start - chunk.start;
           const duration = episode.end - start;
@@ -281,18 +300,33 @@ class Ffmpeg {
       const episdeCopy = { ...episode };
       const uMaps = this.getUniqueMaps(episode);
       const map = createRandHash(this.mapLength);
+      const emptyMap = createRandHash(this.mapLength);
+      const isEmpty = uMaps.length === 1 && uMaps[0] === '';
+      if (isEmpty) {
+        args.push(
+          this.getFilterComplexArgument({
+            args: this.createMapArg(`${episode.chunks[0].index}:v`),
+            value: this.scale({ w: RECORD_WIDTH_DEFAULT, h: RECORD_HEIGHT_DEFAULT }),
+            map: this.createMapArg(emptyMap),
+          })
+        );
+      }
       uMaps.forEach((uMap) => {
         args.push(
           this.getFilterComplexArgument({
-            args: `${this.createMapArg(this.backgroundInput)}${this.createMapArg(uMap)}`,
+            args: `${this.createMapArg(this.backgroundInput)}${this.createMapArg(
+              isEmpty ? emptyMap : uMap
+            )}`,
             value: this.overlay,
             map: this.createMapArg(map),
           })
         );
       });
       episdeCopy.map = map;
+
       return episdeCopy;
     });
+
     // Set concat
     const concatMap = createRandHash(this.mapLength);
     const concatMapA = createRandHash(this.mapLength);
@@ -387,8 +421,9 @@ class Ffmpeg {
         }
         return true;
       });
-      oldChunks = oldChunks.length === 0 ? chunks : oldChunks;
-      if (!this.isEqual(chunks, oldChunks)) {
+      const isNew = oldChunks.length === 0;
+      oldChunks = isNew ? chunks : oldChunks;
+      if (!this.isEqual(chunks, oldChunks) || (oldChunks.length === 1 && isNew)) {
         const chunkPart: Chunk[] = oldChunks.map((item) => {
           const _item: Chunk = { ...item } as any;
           _item.map = createRandHash(this.mapLength);
@@ -398,6 +433,8 @@ class Ffmpeg {
         episodes.push({
           start: from,
           end: index,
+          video: false,
+          audio: false,
           map: '',
           mapA: '',
           chunks: chunkPart,
@@ -469,9 +506,11 @@ class Ffmpeg {
   }
 }
 
-export default Ffmpeg;
+export default FFmpeg;
 
-new Ffmpeg({
-  rtc: new RTC({ ws: new WS({ db: new DB() }) }),
-  videoSrc: '/home/kol/Projects/werift-sfu-react/packages/server/rec/1672300295858-1672296192017',
-}).createVideo();
+if (isDev) {
+  new FFmpeg({
+    rtc: new RTC({ ws: new WS({ db: new DB() }) }),
+    videoSrc: '/home/kol/Projects/werift-sfu-react/packages/server/rec/1673324498132-1673327462937',
+  }).createVideo();
+}

@@ -10,12 +10,12 @@
  ******************************************************************************************/
 import * as werift from 'werift';
 // import FFmpeg from 'fluent-ffmpeg';
-import path from 'path';
+import path, { resolve } from 'path';
 import fs from 'fs';
 import { ErrorCode, MessageType, SendMessageArgs } from '../types/interfaces';
 import DB from '../core/db';
 import { getLocale, log } from '../utils/lib';
-import * as ff from '../utils/ffmpeg';
+import FFmpeg from '../utils/ffmpeg';
 import Settings from './settings';
 import RTC from '../core/rtc';
 import { EXT_WEBM } from '../utils/constants';
@@ -155,19 +155,22 @@ class RecordVideo extends DB {
     fs.renameSync(pathStr, path.resolve(this.dirPath[roomId], newFileName));
   }
 
-  private stopStreamRecord({
-    roomId,
-    userId,
-    pathStr,
-    time,
-    eventName,
-  }: {
-    roomId: string | number;
-    userId: string | number;
-    pathStr: string;
-    time: number;
-    eventName: string;
-  }) {
+  private stopStreamRecord(
+    {
+      roomId,
+      userId,
+      pathStr,
+      time,
+      eventName,
+    }: {
+      roomId: string | number;
+      userId: string | number;
+      pathStr: string;
+      time: number;
+      eventName: string;
+    },
+    cb?: () => void
+  ) {
     const recorderId = this.getMediaRecorderId(userId, this.startTimes[roomId][userId]);
     log('info', 'Stop stream record', { recorderId, roomId, pathStr, time, eventName });
     this.mediaRecorders[roomId][recorderId].stop().then(() => {
@@ -179,6 +182,9 @@ class RecordVideo extends DB {
         });
         if (this.mediaRecorders[roomId]?.[recorderId]) {
           delete this.mediaRecorders[roomId][recorderId];
+          if (cb) {
+            cb();
+          }
         }
       }, 1000);
     });
@@ -255,6 +261,12 @@ class RecordVideo extends DB {
     this.mediaRecorders[roomId][recorderId].start();
   }
 
+  private async recordVideo({ roomId }: { roomId: string | number }) {
+    const ffmpeg = new FFmpeg({ rtc: this.rtc, videoSrc: this.dirPath[roomId] });
+    const res = await ffmpeg.createVideo();
+    console.log(res);
+  }
+
   public async handleVideoRecord(args: SendMessageArgs<MessageType.GET_RECORD>) {
     const {
       id: roomId,
@@ -283,7 +295,7 @@ class RecordVideo extends DB {
         }, 1000);
         this.dirPath[roomId] = path.resolve(
           __dirname,
-          `../../rec/${new Date().getTime()}-${roomId}`
+          `../../rec/${roomId}-${new Date().getTime()}`
         );
         fs.mkdirSync(this.dirPath[roomId]);
 
@@ -307,28 +319,39 @@ class RecordVideo extends DB {
           },
           roomId,
         });
-        this.getMediaRecorderKeys(roomId).forEach((item) => {
-          const peer = item.split(this.rtc.delimiter);
-          const userId = peer[0];
-          const recorder =
-            this.mediaRecorders[roomId][
-              this.getMediaRecorderId(userId, this.startTimes[roomId][userId])
-            ];
-          if (!recorder) {
-            log('warn', 'Recorder is missing', { item });
-            return;
-          }
-          this.stopStreamRecord({
-            roomId,
-            userId,
-            pathStr: recorder.path,
-            time: this.times[roomId],
-            eventName: 'on-stop',
-          });
-        });
+        await Promise.all(
+          this.getMediaRecorderKeys(roomId).map(
+            (item) =>
+              new Promise((_resolve) => {
+                const peer = item.split(this.rtc.delimiter);
+                const userId = peer[0];
+                const recorder =
+                  this.mediaRecorders[roomId][
+                    this.getMediaRecorderId(userId, this.startTimes[roomId][userId])
+                  ];
+                if (!recorder) {
+                  log('warn', 'Recorder is missing', { item });
+                  return;
+                }
+                this.stopStreamRecord(
+                  {
+                    roomId,
+                    userId,
+                    pathStr: recorder.path,
+                    time: this.times[roomId],
+                    eventName: 'on-stop',
+                  },
+                  () => {
+                    _resolve(null);
+                  }
+                );
+              })
+          )
+        );
         delete this.times[roomId];
         delete this.startTimes[roomId];
         delete this.mediaRecorders[roomId];
+        await this.recordVideo({ roomId });
         break;
       default:
     }

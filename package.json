@@ -92,7 +92,7 @@
     "test:remote": "cross-env CI=false TEST_NEXT=false node tests/rooms.spec.js",
     "test:chat": "node tests/chat.spec.js",
     "test:browser": "node tests/webrtc-browser.js",
-    "ffmpeg:dev": "nodemon packages/server/dist/utils/ffmpeg.js",
+    "ffmpeg:dev": "cross-env FFMPEG_DEV=true nodemon packages/server/dist/utils/ffmpeg.js",
     "db": "cd packages/server && npm run generate && npm run migrate"
   },
   "dependencies": {
