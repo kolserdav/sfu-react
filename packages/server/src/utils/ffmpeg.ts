@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
+import { parse } from 'date-fns';
 import ffmpeg from 'ffmpeg-static';
 import RTC from '../core/rtc';
 
@@ -44,6 +45,8 @@ class FFmpeg {
 
   private videoSrc: string;
 
+  private time = 0;
+
   private chunks: Chunk[];
 
   private episodes: Episode[] = [];
@@ -61,8 +64,6 @@ class FFmpeg {
   private readonly eol = ';';
 
   private readonly backgroundInput = '0:v';
-
-  private readonly firstVideoInput = '1:v';
 
   private backgroundImagePath = '/home/kol/Projects/werift-sfu-react/tmp/1png.png';
 
@@ -404,10 +405,10 @@ class FFmpeg {
 
   private createEpisodes() {
     const episodes: Episode[] = [];
-    const time = this.getVideoTime();
+    this.time = this.getVideoTime();
     let oldChunks: Chunk[] = [];
     let from: number | undefined;
-    new Array(time).fill('').forEach((_, index) => {
+    new Array(this.time).fill('').forEach((_, index) => {
       if (from === undefined) {
         from = index;
       }
@@ -446,7 +447,7 @@ class FFmpeg {
     return episodes.map((item, index) => {
       const _item = { ...item };
       if (!episodes[index + 1]) {
-        _item.end = time;
+        _item.end = this.time;
       }
       return _item;
     });
@@ -482,6 +483,15 @@ class FFmpeg {
     return max - min;
   }
 
+  private parseTime(data: string) {
+    const time = data.match(/time=\d{2}:\d{2}:\d{2}/);
+    if (time) {
+      const _time = time[0].replace('time=', '');
+      console.log(_time);
+      console.log(parse(_time, 'hh:mm:ss', new Date()));
+    }
+  }
+
   private async runFFmpegCommand(args: string[]) {
     return new Promise((resolve) => {
       const command = `${ffmpeg} ${args.join(' ')}`;
@@ -497,6 +507,7 @@ class FFmpeg {
       });
       fC.stderr?.on('data', (d) => {
         log('info', 'stderr', d);
+        this.parseTime(d);
       });
       fC.on('exit', (code) => {
         log('info', 'FFmpeg command exit with code', code);

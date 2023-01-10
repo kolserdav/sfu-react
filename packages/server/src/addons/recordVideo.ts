@@ -10,7 +10,7 @@
  ******************************************************************************************/
 import * as werift from 'werift';
 // import FFmpeg from 'fluent-ffmpeg';
-import path, { resolve } from 'path';
+import path from 'path';
 import fs from 'fs';
 import { ErrorCode, MessageType, SendMessageArgs } from '../types/interfaces';
 import DB from '../core/db';
@@ -322,7 +322,7 @@ class RecordVideo extends DB {
         await Promise.all(
           this.getMediaRecorderKeys(roomId).map(
             (item) =>
-              new Promise((_resolve) => {
+              new Promise((resolve) => {
                 const peer = item.split(this.rtc.delimiter);
                 const userId = peer[0];
                 const recorder =
@@ -342,7 +342,7 @@ class RecordVideo extends DB {
                     eventName: 'on-stop',
                   },
                   () => {
-                    _resolve(null);
+                    resolve(null);
                   }
                 );
               })
