@@ -217,9 +217,9 @@ class Ffmpeg {
       let arg = '';
       let audioCount = 0;
       chunks = chunks.map((chunk) => {
+        const chunkCopy = { ...chunk };
         if (chunk.audio) {
           audioCount++;
-          const chunkCopy = { ...chunk };
           arg += this.getArg({ chunk, dest: 'a' });
           episodeCopy.mapA = mapA;
           return chunkCopy;
@@ -301,6 +301,7 @@ class Ffmpeg {
       const episodeCopy = { ...episode };
       arg += `${this.createMapArg(episode.map)}${this.createMapArg(episode.mapA)}`;
       episodeCopy.map = concatMap;
+      episodeCopy.mapA = concatMapA;
       return episodeCopy;
     });
     args.push(
@@ -315,7 +316,6 @@ class Ffmpeg {
       })
     );
     const _args = [this.filterComplexOption, this.joinFilterComplexArgs(args)];
-    // TODO add mapA
     return _args.concat(this.getMap());
   }
 
@@ -334,18 +334,19 @@ class Ffmpeg {
     const maps: string[] = [];
     this.episodes.forEach((item) => {
       if (item.map) {
-        const map = `"[${item.map}]"`;
+        const map = `"${this.createMapArg(item.map)}"`;
         if (maps.indexOf(map) === -1) {
           maps.push(this.mapOption);
           maps.push(map);
         }
-        return;
       }
-      const uMaps = this.getUniqueMaps(item);
-      uMaps.forEach((_item) => {
-        maps.push(this.mapOption);
-        maps.push(`"${this.createMapArg(_item)}"`);
-      });
+      if (item.mapA) {
+        const mapA = `"${this.createMapArg(item.mapA)}"`;
+        if (maps.indexOf(mapA) === -1) {
+          maps.push(this.mapOption);
+          maps.push(mapA);
+        }
+      }
     });
     return maps;
   }
