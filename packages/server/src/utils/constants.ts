@@ -29,11 +29,13 @@ const {
     STUN_SERVER?: string;
     CERT_PEM?: string;
     KEY_PEM?: string;
+    RECORD_DIR_PATH?: string;
   };
 } = process as any;
 
 export const PORT = parseInt(env.PORT || DEFAULT_PORT, 10);
 export const DATABASE_URL = env.DATABASE_URL || '';
+export const RECORD_DIR_PATH = env.RECORD_DIR_PATH || '';
 export const CORS = env.CORS || '';
 export const APP_URL = env.APP_URL || '';
 export const STUN_SERVER = env.STUN_SERVER || 'stun:127.0.0.1:3478';

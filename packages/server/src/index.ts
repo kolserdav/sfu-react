@@ -27,6 +27,7 @@ const DEFAULT_PARAMS = {
   port: '3001',
   cors: '',
   db: 'mysql://user:password@127.0.0.1:3306/uyem_db',
+  cloud: '/tmp',
 };
 const ARGS = {
   help: 'This document',
@@ -36,6 +37,7 @@ const ARGS = {
   db: `Database url ${DEFAULT_PARAMS.db}`,
   version: 'Show installed version',
   migrate: 'Run only migrate script',
+  cloud: 'Video recording and image storage path',
 };
 const argv: Partial<typeof ARGS> & Record<string, string> = { ...DEFAULT_PARAMS };
 processArgs.forEach((item, index) => {
@@ -90,6 +92,7 @@ let cors = '';
 let code = 0;
 let logLevel: LogLevel;
 let db = '';
+let cloud = '';
 let skipMigrate = false;
 (async () => {
   for (let n = 0; args[n]; n++) {
@@ -116,6 +119,9 @@ let skipMigrate = false;
           code = 1;
           break;
         }
+        break;
+      case 'rdp':
+        cloud = argv.rdp || DEFAULT_PARAMS.cloud;
         break;
       case 'cors':
         log('info', 'Set up Simple-CORS defence:', argv.cors);
@@ -161,7 +167,7 @@ let skipMigrate = false;
     } else if (!skipMigrate) {
       // eslint-disable-next-line global-require
       import('./main').then(({ createServer }) => {
-        createServer({ port, cors, logLevel });
+        createServer({ port, cors, logLevel, cloudPath: cloud });
       });
     }
   }

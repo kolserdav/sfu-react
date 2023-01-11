@@ -37,7 +37,8 @@ class WS implements WSInterface {
    */
   private db: DB;
 
-  constructor(connectionArgs: ServerOptions & { db: DB }) {
+  constructor(connectionArgs: ServerOptions & { db: DB; cloudPath: string; cloudVideos: string }) {
+    const { cloudPath, cloudVideos } = connectionArgs;
     const _connectionArgs = { ...connectionArgs };
     this.db = connectionArgs.db;
     _connectionArgs.server = server;
@@ -46,9 +47,15 @@ class WS implements WSInterface {
     server.listen(connectionArgs.port);
     server.on('request', (request, response) => {
       const { url } = request;
-      const stream = fs.createReadStream(path.resolve(__dirname, `../../rec/${url}`));
-      response.writeHead(200, { 'Content-Type': 'video/mp4' });
-      stream.pipe(response);
+      const isVideos = new RegExp(`^/${cloudVideos}/`).test(url || '');
+      if (isVideos) {
+        const stream = fs.createReadStream(path.resolve(cloudPath, `./${url}`));
+        response.writeHead(200, { 'Content-Type': 'video/webm' });
+        stream.pipe(response);
+      } else {
+        response.writeHead(404);
+        response.end();
+      }
     });
   }
 

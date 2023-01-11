@@ -39,7 +39,7 @@ interface Episode {
 type LoadingCallback = (procent: number) => void;
 
 class FFmpeg {
-  private videoSrc: string;
+  private dirPath: string;
 
   private time = 0;
 
@@ -84,19 +84,18 @@ class FFmpeg {
     `concat=n=${n}:v=${v}:a=${a}`;
 
   // eslint-disable-next-line class-methods-use-this
-  private readonly startDuration = ({ start, duration }: { start: number; duration: number }) =>
+  private readonly trim = ({ start, duration }: { start: number; duration: number }) =>
     `trim=start=${start}:duration=${duration},setpts=PTS-STARTPTS`;
 
   // eslint-disable-next-line class-methods-use-this
-  private readonly startDurationA = ({ start, duration }: { start: number; duration: number }) =>
+  private readonly atrim = ({ start, duration }: { start: number; duration: number }) =>
     `atrim=start=${start}:duration=${duration},asetpts=PTS-STARTPTS`;
 
   // eslint-disable-next-line class-methods-use-this
   private readonly scale = ({ w, h }: { w: number; h: number }) => `scale=w=${w}:h=${h}`;
 
-  constructor({ videoSrc }: { videoSrc: string }) {
-    this.videoSrc = videoSrc;
-    const dir = fs.readdirSync(this.videoSrc);
+  constructor({ dirPath, dir }: { dirPath: string; dir: string[] }) {
+    this.dirPath = dirPath;
     this.chunks = this.createVideoChunks({ dir });
   }
 
@@ -116,11 +115,11 @@ class FFmpeg {
     const inputArgs = this.createInputArguments();
     const filterComplexArgs = this.createFilterComplexArguments();
     const args = inputArgs.concat(filterComplexArgs);
-    const src = `${this.videoSrc}${EXT_WEBM}`;
+    const src = `${this.dirPath}${EXT_WEBM}`;
     args.push(src);
     const errorCode = await this.runFFmpegCommand(args, loading);
-    const name = `${this.videoSrc.replace(
-      this.videoSrc.replace(/[a-z0-9A-Z-]+$/, ''),
+    const name = `${this.dirPath.replace(
+      this.dirPath.replace(/[a-z0-9A-Z-]+$/, ''),
       ''
     )}${EXT_WEBM}`;
     return {
@@ -145,7 +144,7 @@ class FFmpeg {
         end,
         video,
         audio,
-        absPath: path.resolve(this.videoSrc, item),
+        absPath: path.resolve(this.dirPath, item),
         map: '',
         mapA: '',
       });
@@ -211,14 +210,14 @@ class FFmpeg {
           chunkCopy.audio = true;
         }
         if (chunk.start !== episode.start || chunk.end !== episode.end) {
-          const start = episode.start - chunk.start;
+          const start = chunk.start - episode.start;
           const duration = episode.end - start;
           if (chunk.video) {
             chunkCopy.map = createRandHash(this.mapLength);
             args.push(
               this.getFilterComplexArgument({
                 args: this.createMapArg(`${chunk.index}:v`),
-                value: this.startDuration({ start, duration }),
+                value: this.trim({ start, duration }),
                 map: this.createMapArg(chunkCopy.map),
               })
             );
@@ -228,7 +227,7 @@ class FFmpeg {
             args.push(
               this.getFilterComplexArgument({
                 args: this.createMapArg(`${chunk.index}:a`),
-                value: this.startDurationA({ start, duration }),
+                value: this.atrim({ start, duration }),
                 map: this.createMapArg(chunkCopy.mapA),
               })
             );
@@ -441,7 +440,6 @@ class FFmpeg {
         const chunkPart: Chunk[] = oldChunks.map((item) => {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const _item: Chunk = { ...item } as any;
-          _item.map = createRandHash(this.mapLength);
           return _item;
         });
 
@@ -545,8 +543,11 @@ class FFmpeg {
 export default FFmpeg;
 
 if (isDev) {
+  const dirPath =
+    '/home/kol/Projects/werift-sfu-react/packages/server/rec/videos/1673340519949-1673420995383';
   new FFmpeg({
-    videoSrc: '/home/kol/Projects/werift-sfu-react/packages/server/rec/1673399272678-1673399279662',
+    dirPath,
+    dir: fs.readdirSync(dirPath),
   }).createVideo({
     loading: (time) => {
       // eslint-disable-next-line no-console

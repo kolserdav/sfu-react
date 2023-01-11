@@ -21,7 +21,13 @@ import RTC from '../core/rtc';
 import { EXT_WEBM } from '../utils/constants';
 
 class RecordVideo extends DB {
+  public cloudVideos: string;
+
   public settings: Settings;
+
+  public cloudPath: string;
+
+  public videosPath: string;
 
   private dirPath: Record<string, string> = {};
 
@@ -37,10 +43,26 @@ class RecordVideo extends DB {
 
   private rtc: RTC;
 
-  constructor({ settings: _settings, rtc: _rtc }: { settings: Settings; rtc: RTC }) {
+  constructor({
+    settings,
+    rtc,
+    cloudPath,
+    cloudVideos,
+  }: {
+    settings: Settings;
+    rtc: RTC;
+    cloudPath: string;
+    cloudVideos: string;
+  }) {
     super();
-    this.settings = _settings;
-    this.rtc = _rtc;
+    this.cloudPath = cloudPath;
+    this.settings = settings;
+    this.cloudVideos = cloudVideos;
+    this.videosPath = path.resolve(this.cloudPath, this.cloudVideos);
+    if (!fs.existsSync(this.videosPath)) {
+      fs.mkdirSync(this.videosPath);
+    }
+    this.rtc = rtc;
     this.setHandlers();
   }
 
@@ -269,7 +291,12 @@ class RecordVideo extends DB {
   }
 
   private async recordVideo({ roomId }: { roomId: string | number }) {
-    const ffmpeg = new FFmpeg({ videoSrc: this.dirPath[roomId] });
+    const dir = fs.readdirSync(this.dirPath[roomId]);
+    if (!dir.length) {
+      log('info', 'Stop record without files', { dir, dirPath: this.dirPath[roomId] });
+      return;
+    }
+    const ffmpeg = new FFmpeg({ dirPath: this.dirPath[roomId], dir });
     const { name, errorCode, time } = await ffmpeg.createVideo({
       loading: (procent) => {
         console.log(procent);
@@ -365,10 +392,8 @@ class RecordVideo extends DB {
             roomId,
           });
         }, 1000);
-        this.dirPath[roomId] = path.resolve(
-          __dirname,
-          `../../rec/${roomId}-${new Date().getTime()}`
-        );
+
+        this.dirPath[roomId] = path.resolve(this.videosPath, `./${roomId}-${new Date().getTime()}`);
         fs.mkdirSync(this.dirPath[roomId]);
 
         this.rtc.getKeysStreams(roomId).forEach((item) => {

@@ -20,7 +20,7 @@ import { ServerCallback } from './types';
 import RTC, { OnRoomConnect, OnRoomOpen } from './core/rtc';
 import { MessageType, LogLevel } from './types/interfaces';
 import { cleanDbUrl, getLocale, log, setLogLevel } from './utils/lib';
-import { PORT, CORS } from './utils/constants';
+import { PORT, CORS, RECORD_DIR_PATH } from './utils/constants';
 import DB from './core/db';
 import Chat from './addons/chat';
 import RecordVideo from './addons/recordVideo';
@@ -61,6 +61,7 @@ export function createServer(
     onRoomConnect,
     onRoomDisconnect,
     checkTokenCb,
+    cloudPath: _cloudPath,
     logLevel,
   }: {
     port?: number;
@@ -71,6 +72,7 @@ export function createServer(
     onRoomConnect?: OnRoomConnect;
     onRoomDisconnect?: OnRoomConnect;
     checkTokenCb?: Auth['checkTokenCb'];
+    cloudPath?: string;
     logLevel?: LogLevel;
   },
   cb?: ServerCallback
@@ -78,10 +80,22 @@ export function createServer(
   if (require.main !== module) {
     log('info', 'Using DATABASE_URL:', cleanDbUrl(), true);
   }
+  if (!_cloudPath) {
+    log('warn', 'Cloud dir path "--cloud" is not set, video recording is not available', {
+      _cloudPath,
+    });
+  }
   setLogLevel(logLevel);
-  const wss = new WS({ port, db });
+  const cloudPath = _cloudPath || RECORD_DIR_PATH;
+  const cloudVideos = 'videos';
+  const wss = new WS({ port, db, cloudPath, cloudVideos });
   const rtc: RTC | null = new RTC({ ws: wss });
-  const recordVideo = new RecordVideo({ settings, rtc });
+  const recordVideo = new RecordVideo({
+    settings,
+    rtc,
+    cloudPath,
+    cloudVideos,
+  });
   settings.checkTokenCb = checkTokenCb || settings.checkTokenCb;
   chat.checkTokenCb = checkTokenCb || chat.checkTokenCb;
   recordVideo.checkTokenCb = checkTokenCb || recordVideo.checkTokenCb;
@@ -400,5 +414,6 @@ if (require.main === module) {
   createServer({
     port: PORT,
     cors: CORS,
+    cloudPath: RECORD_DIR_PATH,
   });
 }
