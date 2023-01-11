@@ -131,6 +131,7 @@ export const useMessages = ({
   const [count, setCount] = useState<number>(0);
   const [videos, setVideos] = useState<VideoFull[]>([]);
   const [buttonDisabled, setButtonDisabled] = useState<boolean>(false);
+  const [loadProcent, setLoadProcent] = useState<number>(0);
 
   /**
    * Listen can connect
@@ -203,6 +204,7 @@ export const useMessages = ({
       }
       setTime(getTime(new Date().getTime() - _time * 1000));
       if (command === 'stop') {
+        setLoadProcent(0);
         setTimeout(() => {
           ws.sendMessage({
             id: roomId,
@@ -224,6 +226,12 @@ export const useMessages = ({
           // TODO check event
         }, 3000);
       }
+    };
+
+    const setCreateVideoHandler = ({
+      data: { procent },
+    }: SendMessageArgs<MessageType.SET_CREATE_VIDEO>) => {
+      setLoadProcent(procent);
     };
 
     const setSettingsUnitHandler = ({
@@ -266,6 +274,9 @@ export const useMessages = ({
         case MessageType.SET_VIDEO_FIND_MANY:
           setVideoFindManyHandler(rawMessage);
           break;
+        case MessageType.SET_CREATE_VIDEO:
+          setCreateVideoHandler(rawMessage);
+          break;
         case MessageType.SET_VIDEO_FIND_FIRST:
           setVideoFindFirstHandler(rawMessage);
           break;
@@ -300,5 +311,5 @@ export const useMessages = ({
     };
   }, [ws, userId, roomId, connId, skip, videos, buttonDisabled, started, token]);
 
-  return { videos, time, started, buttonDisabled, setButtonDisabled, ws };
+  return { videos, time, started, buttonDisabled, setButtonDisabled, ws, loadProcent };
 };

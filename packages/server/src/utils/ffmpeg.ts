@@ -211,7 +211,7 @@ class FFmpeg {
         }
         if (chunk.start !== episode.start || chunk.end !== episode.end) {
           const start = chunk.start - episode.start;
-          const duration = episode.end - start;
+          const duration = episode.end - episode.start;
           if (chunk.video) {
             chunkCopy.map = createRandHash(this.mapLength);
             args.push(
@@ -544,7 +544,7 @@ export default FFmpeg;
 
 if (isDev) {
   const dirPath =
-    '/home/kol/Projects/werift-sfu-react/packages/server/rec/videos/1673340519949-1673420995383';
+    '/home/kol/Projects/werift-sfu-react/packages/server/rec/videos/1673340519949-1673431208990';
   new FFmpeg({
     dirPath,
     dir: fs.readdirSync(dirPath),

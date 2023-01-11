@@ -290,7 +290,7 @@ class RecordVideo extends DB {
     this.mediaRecorders[roomId][recorderId].start();
   }
 
-  private async recordVideo({ roomId }: { roomId: string | number }) {
+  private async recordVideo({ roomId, id }: { roomId: string | number; id: number | string }) {
     const dir = fs.readdirSync(this.dirPath[roomId]);
     if (!dir.length) {
       log('info', 'Stop record without files', { dir, dirPath: this.dirPath[roomId] });
@@ -299,7 +299,33 @@ class RecordVideo extends DB {
     const ffmpeg = new FFmpeg({ dirPath: this.dirPath[roomId], dir });
     const { name, errorCode, time } = await ffmpeg.createVideo({
       loading: (procent) => {
-        console.log(procent);
+        this.settings.sendMessage({
+          msg: {
+            type: MessageType.SET_CREATE_VIDEO,
+            id,
+            connId: '',
+            data: {
+              procent,
+            },
+          },
+          roomId,
+        });
+        if (procent === 100) {
+          setTimeout(() => {
+            this.settings.sendMessage({
+              msg: {
+                type: MessageType.SET_RECORDING,
+                id,
+                connId: '',
+                data: {
+                  time: this.times[roomId],
+                  command: 'stop',
+                },
+              },
+              roomId,
+            });
+          }, 3000);
+        }
       },
     });
     if (errorCode === 0) {
@@ -321,18 +347,6 @@ class RecordVideo extends DB {
 
   private async stopRecord({ id, roomId }: { id: string | number; roomId: string | number }) {
     clearInterval(this.intervals[roomId]);
-    this.settings.sendMessage({
-      msg: {
-        type: MessageType.SET_RECORDING,
-        id,
-        connId: '',
-        data: {
-          time: this.times[roomId],
-          command: 'stop',
-        },
-      },
-      roomId,
-    });
     await Promise.all(
       this.getMediaRecorderKeys(roomId).map(
         (item) =>
@@ -363,7 +377,7 @@ class RecordVideo extends DB {
       )
     );
     this.cleanRoomRecord({ roomId });
-    await this.recordVideo({ roomId });
+    await this.recordVideo({ roomId, id });
   }
 
   public async handleVideoRecord(args: SendMessageArgs<MessageType.GET_RECORD>) {

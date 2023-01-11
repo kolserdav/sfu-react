@@ -147,6 +147,7 @@ export enum MessageType {
   GET_TO_ADMIN = 'GET_TO_ADMIN',
   SET_TO_ADMIN = 'SET_TO_ADMIN',
   GET_VIDEO_SETTINGS = 'GET_VIDEO_SETTINGS',
+  SET_CREATE_VIDEO = 'SET_CREATE_VIDEO',
 }
 
 export namespace Locale {
@@ -393,6 +394,9 @@ export namespace DataTypes {
       isOwner: boolean;
       asked: (string | number)[];
     };
+    export type SetCreateVideo = {
+      procent: number;
+    };
     export type SetVideoFindMany = {
       videos: GetManyResult<Video>;
     };
@@ -584,6 +588,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetLocale
     : T extends MessageType.SET_RECORDING
     ? DataTypes.MessageTypes.SetRecording
+    : T extends MessageType.SET_CREATE_VIDEO
+    ? DataTypes.MessageTypes.SetCreateVideo
     : T extends MessageType.SET_ERROR
     ? DataTypes.MessageTypes.SetError
     : never;

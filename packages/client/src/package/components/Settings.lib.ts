@@ -24,5 +24,5 @@ export const getVideoSrc = ({
   if (typeof window !== 'undefined') {
     protocol = window.location.protocol;
   }
-  return `${protocol}//${server}:${port}/${roomId}/${name}`;
+  return `${protocol}//${server}:${port}/videos/${name}`;
 };

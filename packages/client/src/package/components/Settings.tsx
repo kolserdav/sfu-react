@@ -53,14 +53,16 @@ function Settings({
     roomId,
   });
   const { deleteVideoWrapper } = useDeleteVideo();
-  const { videos, time, started, buttonDisabled, setButtonDisabled, ws } = useMessages({
-    roomId,
-    server,
-    port,
-    userId,
-    protocol: 'settings',
-    token,
-  });
+  const { videos, time, started, buttonDisabled, setButtonDisabled, ws, loadProcent } = useMessages(
+    {
+      roomId,
+      server,
+      port,
+      userId,
+      protocol: 'settings',
+      token,
+    }
+  );
   const { recordStartWrapper } = useVideoRecord({
     roomId,
     userId,
@@ -106,10 +108,11 @@ function Settings({
                 title={started ? locale.stopRecord : locale.startRecord}
                 className={started ? s.text__button : ''}
                 onClick={recordStartWrapper(started ? 'stop' : 'start')}
-                disabled={buttonDisabled}
+                disabled={buttonDisabled || loadProcent !== 0}
               >
                 <div className={s.record}>
-                  {started && <div className={s.time}>{time}</div>}
+                  {started && loadProcent === 0 && <div className={s.time}>{time}</div>}
+                  {started && loadProcent !== 0 && <div className={s.time}>{loadProcent}%</div>}
                   {started ? (
                     <StopIcon color={theme?.colors.red} />
                   ) : (
@@ -122,7 +125,6 @@ function Settings({
           <div className={s.videos}>
             {videos.map((item) => (
               <div className={s.video} key={item.id}>
-                <div className={s.name}>{item.name}</div>
                 <div className={s.actions}>
                   <IconButton onClick={playVideoWrapper(item.name)}>
                     <PlayIcon width={20} height={20} color={theme?.colors.blue} />
@@ -131,6 +133,7 @@ function Settings({
                     <DeleteIcon width={16} height={16} color={theme?.colors.red} />
                   </IconButton>
                 </div>
+                <div className={s.name}>{item.name}</div>
               </div>
             ))}
           </div>
