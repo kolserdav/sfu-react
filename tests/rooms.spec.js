@@ -1,6 +1,7 @@
 /* eslint-disable global-require */
 // @ts-check
 const path = require('path');
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const puppeteer = require('puppeteer');
 // @ts-ignore
 const { ChildProcessWithoutNullStreams } = require('child_process');
