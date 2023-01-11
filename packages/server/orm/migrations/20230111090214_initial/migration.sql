@@ -1,0 +1,113 @@
+-- CreateTable
+CREATE TABLE `Unit` (
+    `id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(50) NOT NULL DEFAULT 'No Name',
+    `online` BOOLEAN NOT NULL DEFAULT true,
+    `updated` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `created` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Admins` (
+    `id` VARCHAR(191) NOT NULL,
+    `roomId` VARCHAR(191) NOT NULL,
+    `unitId` VARCHAR(191) NOT NULL,
+    `updated` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `created` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Room` (
+    `id` VARCHAR(191) NOT NULL,
+    `authorId` VARCHAR(191) NULL,
+    `archive` BOOLEAN NOT NULL DEFAULT false,
+    `updated` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `created` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Guest` (
+    `id` VARCHAR(191) NOT NULL,
+    `unitId` VARCHAR(191) NOT NULL,
+    `roomId` VARCHAR(191) NOT NULL,
+    `updated` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `created` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    UNIQUE INDEX `Guest_unitId_roomId_key`(`unitId`, `roomId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Message` (
+    `id` VARCHAR(191) NOT NULL,
+    `text` MEDIUMTEXT NOT NULL,
+    `unitId` VARCHAR(191) NOT NULL,
+    `roomId` VARCHAR(191) NOT NULL,
+    `quoteId` VARCHAR(191) NULL,
+    `updated` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `created` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Quote` (
+    `id` VARCHAR(191) NOT NULL,
+    `messageId` VARCHAR(191) NOT NULL,
+    `quoteId` VARCHAR(191) NULL,
+    `created` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Video` (
+    `id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `time` INTEGER NOT NULL,
+    `roomId` VARCHAR(191) NOT NULL,
+    `updated` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `created` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    UNIQUE INDEX `Video_name_key`(`name`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- AddForeignKey
+ALTER TABLE `Admins` ADD CONSTRAINT `Admins_roomId_fkey` FOREIGN KEY (`roomId`) REFERENCES `Room`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Admins` ADD CONSTRAINT `Admins_unitId_fkey` FOREIGN KEY (`unitId`) REFERENCES `Unit`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Room` ADD CONSTRAINT `Room_authorId_fkey` FOREIGN KEY (`authorId`) REFERENCES `Unit`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Guest` ADD CONSTRAINT `Guest_unitId_fkey` FOREIGN KEY (`unitId`) REFERENCES `Unit`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Guest` ADD CONSTRAINT `Guest_roomId_fkey` FOREIGN KEY (`roomId`) REFERENCES `Room`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Message` ADD CONSTRAINT `Message_unitId_fkey` FOREIGN KEY (`unitId`) REFERENCES `Unit`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Message` ADD CONSTRAINT `Message_roomId_fkey` FOREIGN KEY (`roomId`) REFERENCES `Room`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Message` ADD CONSTRAINT `Message_quoteId_fkey` FOREIGN KEY (`quoteId`) REFERENCES `Quote`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Quote` ADD CONSTRAINT `Quote_messageId_fkey` FOREIGN KEY (`messageId`) REFERENCES `Message`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Quote` ADD CONSTRAINT `Quote_quoteId_fkey` FOREIGN KEY (`quoteId`) REFERENCES `Message`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Video` ADD CONSTRAINT `Video_roomId_fkey` FOREIGN KEY (`roomId`) REFERENCES `Room`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -70,8 +70,8 @@ export const useMesages = ({
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [count, setCount] = useState<number>(0);
   const [rows, setRows] = useState<number>(1);
-  const [editedMessage, setEditedMessage] = useState<number>(0);
-  const [quotedMessage, setQuotedMessage] = useState<number>(0);
+  const [editedMessage, setEditedMessage] = useState<string>('');
+  const [quotedMessage, setQuotedMessage] = useState<string>('');
   const [blocked, setBlocked] = useState<boolean>(false);
   const [messages, setMessages] = useState<
     SendMessageArgs<MessageType.SET_CHAT_MESSAGES>['data']['result']
@@ -97,8 +97,8 @@ export const useMesages = ({
 
   const onClickCloseEditMessage = useMemo(
     () => () => {
-      setEditedMessage(0);
-      setQuotedMessage(0);
+      setEditedMessage('');
+      setQuotedMessage('');
     },
     []
   );
@@ -139,7 +139,7 @@ export const useMesages = ({
     () => (context: DialogProps<DialogPropsDefaultContext>['context']) => () => {
       const { id, text } = context;
       setQuotedMessage(id);
-      setEditedMessage(0);
+      setEditedMessage('');
       let _rows = gettextAreaRows(text);
       _rows = _rows <= TEXT_AREA_MAX_ROWS ? _rows : TEXT_AREA_MAX_ROWS;
       setRows(_rows);
@@ -156,7 +156,7 @@ export const useMesages = ({
     () => (context: DialogProps<DialogPropsDefaultContext>['context']) => () => {
       const { text, id } = context;
       setEditedMessage(id);
-      setQuotedMessage(0);
+      setQuotedMessage('');
       setMessage(text);
       let _rows = gettextAreaRows(text);
       _rows = _rows <= TEXT_AREA_MAX_ROWS ? _rows : TEXT_AREA_MAX_ROWS;
@@ -235,7 +235,7 @@ export const useMesages = ({
               userId,
             },
           });
-          setEditedMessage(0);
+          setEditedMessage('');
         } else {
           ws.sendMessage({
             type: MessageType.GET_ROOM_MESSAGE,
@@ -519,7 +519,7 @@ export const useMesages = ({
     const setRoomMessage = ({ data }: SendMessageArgs<MessageType.SET_ROOM_MESSAGE>) => {
       if (messages) {
         if (quotedMessage) {
-          setQuotedMessage(0);
+          setQuotedMessage('');
           ws.sendMessage({
             type: MessageType.GET_CREATE_QUOTE,
             connId: '',
@@ -758,8 +758,7 @@ export const useScrollToQuote = ({
     mounted.current = true;
     const hashChangeHandler = async () => {
       const { hash } = window.location;
-      const messIdStr = hash.replace('#', '');
-      const messId = parseInt(messIdStr, 10);
+      const messId = hash.replace('#', '');
       const { current } = containerRef;
       if (current && !Number.isNaN(messId)) {
         let position = 0;
@@ -769,7 +768,7 @@ export const useScrollToQuote = ({
           for (let i = 0; children[i]; i++) {
             const child = children[i];
             const { id } = child;
-            if (id === messIdStr) {
+            if (id === messId) {
               const { top } = child.getBoundingClientRect();
               const indent = current.scrollTop + (top - FIRST_MESSAGE_INDENT);
               position = indent < 1 ? top : indent;

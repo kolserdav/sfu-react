@@ -74,7 +74,7 @@ export interface AlertProps {
 }
 
 export type DialogPropsDefaultContext = {
-  id: number;
+  id: string;
   unitId: string;
   text: string;
 };

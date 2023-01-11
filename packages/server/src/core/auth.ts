@@ -8,13 +8,22 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Nov 23 2022 15:23:26 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
+import { Prisma } from '@prisma/client';
 import { log } from '../utils/lib';
+
+interface CheckTokenArgs {
+  token: string;
+  // TODO need check model
+  // model: keyof typeof Prisma.ModelName;
+  // modelId: string;
+  // userId: string;
+}
 
 class Auth {
   tokenList: string[] = [];
 
   // eslint-disable-next-line no-unused-vars
-  checkTokenCb: (token: string) => Promise<boolean>;
+  checkTokenCb: (args: CheckTokenArgs) => Promise<boolean>;
 
   public setCheckTokenCb = (checkTokenCb: Auth['checkTokenCb']) => {
     this.checkTokenCb = checkTokenCb;
@@ -25,8 +34,8 @@ class Auth {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  protected async checkTockenDefault(token: string) {
-    log('warn', 'Check token callback not set, use default all yes', { token });
+  protected async checkTockenDefault(args: CheckTokenArgs) {
+    log('warn', 'Check token callback not set, use default all yes', args);
     return true;
   }
 }

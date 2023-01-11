@@ -8,7 +8,7 @@ generator client {
 }
 
 model Unit {
-  id      String    @id
+  id      String    @id @default(uuid())
   name    String    @default("No Name") @db.VarChar(50)
   online  Boolean   @default(true)
   updated DateTime  @default(now())
@@ -20,7 +20,7 @@ model Unit {
 }
 
 model Admins {
-  id      Int      @id @default(autoincrement())
+  id      String   @id @default(uuid())
   roomId  String
   unitId  String
   Room    Room     @relation(fields: [roomId], references: [id])
@@ -30,7 +30,7 @@ model Admins {
 }
 
 model Room {
-  id       String    @id
+  id       String    @id @default(uuid())
   authorId String?
   Unit     Unit?     @relation(fields: [authorId], references: [id])
   archive  Boolean   @default(false)
@@ -43,7 +43,7 @@ model Room {
 }
 
 model Guest {
-  id      Int      @id @default(autoincrement())
+  id      String   @id @default(uuid())
   unitId  String
   roomId  String
   Unit    Unit     @relation(fields: [unitId], references: [id])
@@ -55,11 +55,11 @@ model Guest {
 }
 
 model Message {
-  id           Int      @id @default(autoincrement())
+  id           String   @id @default(uuid())
   text         String   @db.MediumText
   unitId       String
   roomId       String
-  quoteId      Int?
+  quoteId      String?
   Unit         Unit     @relation(fields: [unitId], references: [id])
   Room         Room     @relation(fields: [roomId], references: [id])
   Quote        Quote?   @relation(fields: [quoteId], references: [id])
@@ -70,17 +70,17 @@ model Message {
 }
 
 model Quote {
-  id           Int       @id @default(autoincrement())
-  messageId    Int
+  id           String    @id @default(uuid())
+  messageId    String
   Message      Message?  @relation("Message", fields: [messageId], references: [id])
-  quoteId      Int?
+  quoteId      String?
   MessageQuote Message?  @relation("MessageQuote", fields: [quoteId], references: [id])
   Quote        Message[]
   created      DateTime  @default(now())
 }
 
 model Video {
-  id      Int      @id @default(autoincrement())
+  id      String   @id @default(uuid())
   name    String   @unique
   time    Int
   roomId  String

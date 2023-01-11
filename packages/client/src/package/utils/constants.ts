@@ -47,7 +47,7 @@ export const ALERT_DEFAULT: AlertProps = {
   type: 'log',
 };
 export const ALERT_TIMEOUT = 3000;
-export const CONTEXT_DEFAULT = { unitId: '0', id: 0, text: '', isOwner: false };
+export const CONTEXT_DEFAULT = { unitId: '0', id: '', text: '', isOwner: false };
 export const DIALOG_DEFAULT: DialogProps<DialogPropsDefaultContext & DialogPropsUsersContext> = {
   open: false,
   children: '',

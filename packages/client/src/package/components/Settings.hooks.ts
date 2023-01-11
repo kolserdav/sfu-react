@@ -100,7 +100,7 @@ export const usePlayVideo = ({
 };
 
 export const useDeleteVideo = () => {
-  const deleteVideoWrapper = (videoId: number) => () => {
+  const deleteVideoWrapper = (videoId: string) => () => {
     /** */
     console.log(videoId);
   };

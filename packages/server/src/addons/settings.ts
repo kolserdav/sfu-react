@@ -77,7 +77,7 @@ class Settings extends DB implements ConnectorInterface {
     connId,
   }: SendMessageArgs<MessageType.GET_VIDEO_FIND_MANY>) {
     const locale = getLocale(this.users[id][userId].locale).server;
-    const checkToken = token ? await this.checkTokenCb(token) : true;
+    const checkToken = token ? await this.checkTokenCb({ token }) : true;
     if (checkToken === false) {
       this.sendMessage({
         roomId: id,
@@ -114,7 +114,7 @@ class Settings extends DB implements ConnectorInterface {
     connId,
   }: SendMessageArgs<MessageType.GET_VIDEO_FIND_MANY>) {
     const locale = getLocale(this.users[id][userId].locale).server;
-    const checkToken = token ? await this.checkTokenCb(token) : true;
+    const checkToken = token ? await this.checkTokenCb({ token }) : true;
     if (checkToken === false) {
       this.sendMessage({
         roomId: id,
