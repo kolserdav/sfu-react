@@ -269,13 +269,21 @@ class RecordVideo extends DB {
   }
 
   private async recordVideo({ roomId }: { roomId: string | number }) {
-    const ffmpeg = new FFmpeg({ rtc: this.rtc, videoSrc: this.dirPath[roomId] });
-    const res = await ffmpeg.createVideo({
-      loading: (time) => {
-        console.log(time);
+    const ffmpeg = new FFmpeg({ videoSrc: this.dirPath[roomId] });
+    const { name, errorCode, time } = await ffmpeg.createVideo({
+      loading: (procent) => {
+        console.log(procent);
       },
     });
-    console.log(res);
+    if (errorCode === 0) {
+      this.videoCreate({
+        data: {
+          roomId: roomId.toString(),
+          name,
+          time,
+        },
+      });
+    }
   }
 
   private cleanRoomRecord({ roomId }: { roomId: string | number }) {

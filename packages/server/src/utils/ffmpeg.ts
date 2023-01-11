@@ -1,14 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
-import { intervalToDuration, differenceInSeconds } from 'date-fns';
+import { differenceInSeconds } from 'date-fns';
 import ffmpeg from 'ffmpeg-static';
-import RTC from '../core/rtc';
-
-// eslint-disable-next-line import/first
 import { createRandHash, log } from './lib';
-import WS from '../core/ws';
-import DB from '../core/db';
 import { EXT_WEBM, RECORD_HEIGHT_DEFAULT, RECORD_WIDTH_DEFAULT } from './constants';
 
 const isDev = process.env.FFMPEG_DEV === 'true';
@@ -40,11 +35,10 @@ interface Episode {
   chunks: Chunk[];
 }
 
-type LoadingCallback = (time: number) => void;
+// eslint-disable-next-line no-unused-vars
+type LoadingCallback = (procent: number) => void;
 
 class FFmpeg {
-  private rtc: RTC;
-
   private videoSrc: string;
 
   private time = 0;
@@ -54,6 +48,8 @@ class FFmpeg {
   private episodes: Episode[] = [];
 
   private readonly mapLength = 6;
+
+  private readonly delimiter = '_';
 
   private readonly forceOption = '-y';
 
@@ -74,6 +70,7 @@ class FFmpeg {
   // eslint-disable-next-line class-methods-use-this
   private readonly hstack = ({ inputs }: { inputs: number }) => `hstack=inputs=${inputs}`;
 
+  // eslint-disable-next-line class-methods-use-this
   private readonly amerge = ({ count }: { count: number }) => `amerge=inputs=${count}`;
 
   private readonly overlay = 'overlay=(W-w)/2:(H-h)/2';
@@ -97,8 +94,7 @@ class FFmpeg {
   // eslint-disable-next-line class-methods-use-this
   private readonly scale = ({ w, h }: { w: number; h: number }) => `scale=w=${w}:h=${h}`;
 
-  constructor({ rtc, videoSrc }: { rtc: RTC; videoSrc: string }) {
-    this.rtc = rtc;
+  constructor({ videoSrc }: { videoSrc: string }) {
     this.videoSrc = videoSrc;
     const dir = fs.readdirSync(this.videoSrc);
     this.chunks = this.createVideoChunks({ dir });
@@ -120,18 +116,24 @@ class FFmpeg {
     const inputArgs = this.createInputArguments();
     const filterComplexArgs = this.createFilterComplexArguments();
     const args = inputArgs.concat(filterComplexArgs);
-    args.push(`${this.videoSrc}${EXT_WEBM}`);
-    const r = await this.runFFmpegCommand(args, loading);
-    if (isDev) {
-      console.log(r);
-    }
-    return r;
+    const src = `${this.videoSrc}${EXT_WEBM}`;
+    args.push(src);
+    const errorCode = await this.runFFmpegCommand(args, loading);
+    const name = `${this.videoSrc.replace(
+      this.videoSrc.replace(/[a-z0-9A-Z-]+$/, ''),
+      ''
+    )}${EXT_WEBM}`;
+    return {
+      errorCode,
+      name,
+      time: this.time,
+    };
   }
 
   private createVideoChunks({ dir }: { dir: string[] }): Chunk[] {
     const chunks: Omit<Chunk, 'index'>[] = [];
     dir.forEach((item) => {
-      const peer = item.replace(EXT_WEBM, '').split(this.rtc.delimiter);
+      const peer = item.replace(EXT_WEBM, '').split(this.delimiter);
       const start = parseInt(peer[0], 10);
       const end = parseInt(peer[1], 10);
       const id = peer[2];
@@ -161,6 +163,7 @@ class FFmpeg {
         return 1;
       })
       .map((item, index) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const _item: Chunk = { ...item } as any;
         _item.index = index + 1;
         return _item;
@@ -195,9 +198,11 @@ class FFmpeg {
     const args: string[] = [];
     const _episodes = this.createEpisodes();
     this.episodes = _episodes.map((episode) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const episodeCopy: Episode = { ...episode } as any;
       // Set start and duration
       let chunks: Chunk[] = episode.chunks.map((chunk) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const chunkCopy: Chunk = { ...chunk } as any;
         if (chunk.video && !chunkCopy.video) {
           chunkCopy.video = true;
@@ -248,13 +253,15 @@ class FFmpeg {
         }
         return chunk;
       });
-      args.push(
-        this.getFilterComplexArgument({
-          args: arg,
-          value: this.amerge({ count: audioCount }),
-          map: this.createMapArg(mapA),
-        })
-      );
+      if (audioCount !== 0) {
+        args.push(
+          this.getFilterComplexArgument({
+            args: arg,
+            value: this.amerge({ count: audioCount }),
+            map: this.createMapArg(mapA),
+          })
+        );
+      }
       // Set video paddings
       chunks = chunks.map((chunk) => {
         if (chunk.video) {
@@ -336,7 +343,9 @@ class FFmpeg {
     let arg = '';
     this.episodes = this.episodes.map((episode) => {
       const episodeCopy = { ...episode };
-      arg += `${this.createMapArg(episode.map)}${this.createMapArg(episode.mapA)}`;
+      arg += `${this.createMapArg(episode.map)}${
+        episode.mapA ? this.createMapArg(episode.mapA) : ''
+      }`;
       episodeCopy.map = concatMap;
       episodeCopy.mapA = concatMapA;
       return episodeCopy;
@@ -356,6 +365,7 @@ class FFmpeg {
     return _args.concat(this.getMap());
   }
 
+  // eslint-disable-next-line class-methods-use-this
   private getUniqueMaps(episode: Episode) {
     const uMaps: string[] = [];
     episode.chunks.forEach((_item) => {
@@ -388,6 +398,7 @@ class FFmpeg {
     return maps;
   }
 
+  // eslint-disable-next-line class-methods-use-this
   private getCountVideos(chunks: Chunk[]) {
     let videoCount = 0;
     let audioCount = 0;
@@ -428,6 +439,7 @@ class FFmpeg {
       oldChunks = isNew ? chunks : oldChunks;
       if (!this.isEqual(chunks, oldChunks) || (oldChunks.length === 1 && isNew)) {
         const chunkPart: Chunk[] = oldChunks.map((item) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const _item: Chunk = { ...item } as any;
           _item.map = createRandHash(this.mapLength);
           return _item;
@@ -455,6 +467,7 @@ class FFmpeg {
     });
   }
 
+  // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-explicit-any
   private isEqual(a: any[], b: any[]) {
     let check = true;
     if (a.length !== b.length) {
@@ -533,10 +546,10 @@ export default FFmpeg;
 
 if (isDev) {
   new FFmpeg({
-    rtc: new RTC({ ws: new WS({ db: new DB() }) }),
-    videoSrc: '/home/kol/Projects/werift-sfu-react/packages/server/rec/1673340519949-1673342192964',
+    videoSrc: '/home/kol/Projects/werift-sfu-react/packages/server/rec/1673399272678-1673399279662',
   }).createVideo({
     loading: (time) => {
+      // eslint-disable-next-line no-console
       console.log(time);
     },
   });
