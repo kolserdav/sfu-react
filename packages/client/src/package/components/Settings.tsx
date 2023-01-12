@@ -31,6 +31,8 @@ import PlayIcon from '../Icons/Play';
 import Video from './Video';
 import DeleteIcon from '../Icons/Delete';
 import { useIsOwner } from '../utils/hooks';
+import Dialog from './ui/Dialog';
+import Button from './ui/Button';
 
 function Settings({
   theme,
@@ -52,7 +54,8 @@ function Settings({
     port,
     roomId,
   });
-  const { deleteVideoWrapper } = useDeleteVideo();
+  const { deleteVideoWrapper, dialogDelete, closeDeleteDialogHandler, openDeleteDialogWrapper } =
+    useDeleteVideo();
   const { videos, time, started, buttonDisabled, setButtonDisabled, ws, loadProcent } = useMessages(
     {
       roomId,
@@ -129,7 +132,7 @@ function Settings({
                   <IconButton onClick={playVideoWrapper(item.name)}>
                     <PlayIcon width={20} height={20} color={theme?.colors.blue} />
                   </IconButton>
-                  <IconButton onClick={deleteVideoWrapper(item.id)}>
+                  <IconButton onClick={openDeleteDialogWrapper({ id: item.id, name: item.name })}>
                     <DeleteIcon width={16} height={16} color={theme?.colors.red} />
                   </IconButton>
                 </div>
@@ -140,6 +143,20 @@ function Settings({
         </div>
       )}
       {playedVideo && <Video handleClose={handleCloseVideo} theme={theme} src={playedVideo} />}
+      <Dialog {...dialogDelete} theme={theme}>
+        <div className={s.delete__dialog}>
+          <h5 className={s.title}>{locale.needDeleteVideo}</h5>
+          <p className={s.desc}>{dialogDelete.context.name}</p>
+          <div className={s.actions}>
+            <Button onClick={closeDeleteDialogHandler} theme={theme}>
+              {locale.close}
+            </Button>
+            <Button onClick={deleteVideoWrapper(dialogDelete.context)} theme={theme}>
+              {locale.delete}
+            </Button>
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 }

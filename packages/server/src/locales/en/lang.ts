@@ -83,6 +83,8 @@ const lang: LocaleServer = {
     setAsAdmin: 'Set as admin',
     deleteFromAdmins: 'Delete from admins',
     inactivityDisconnect: 'You have been disconnected for inactivity',
+    needDeleteVideo: 'Do you want to delete this video?',
+    close: 'Close',
   },
 };
 

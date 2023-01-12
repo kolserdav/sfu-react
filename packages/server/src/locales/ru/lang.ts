@@ -83,6 +83,8 @@ const lang: LocaleServer = {
     setAsAdmin: 'Сделать админом',
     deleteFromAdmins: 'Удалить из админов',
     inactivityDisconnect: 'Вы были отключены за отсутствие активности',
+    needDeleteVideo: 'Вы хотите удалить данную видеозапись?',
+    close: 'Закрыть',
   },
 };
 

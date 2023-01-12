@@ -96,6 +96,11 @@ export interface DialogProps<T> {
   theme?: Theme;
 }
 
+export interface DialogDeleteContext {
+  id: string;
+  name: string;
+}
+
 export type ThemeType = 'light' | 'dark';
 
 export type ClickPosition = { clientX: number; clientY: number };

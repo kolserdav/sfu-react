@@ -235,6 +235,8 @@ export namespace Locale {
     setAsAdmin: string;
     deleteFromAdmins: string;
     inactivityDisconnect: string;
+    needDeleteVideo: string;
+    close: string;
   }
 }
 

@@ -9,15 +9,29 @@
  * Create Date: Wed Nov 23 2022 15:23:26 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import React, { useRef, useState, useEffect, useMemo } from 'react';
-import { VideoFull, VideoRecorderState } from '../types';
+import {
+  DialogDeleteContext,
+  DialogProps,
+  DialogPropsUsersContext,
+  VideoFull,
+  VideoRecorderState,
+} from '../types';
 import { SendMessageArgs, MessageType, LocaleDefault, LocaleValue } from '../types/interfaces';
-import { getTime, log } from '../utils/lib';
+import { getDialogPosition, getTime, isClickByDialog, log } from '../utils/lib';
 import storeLocale, { changeLocale } from '../store/locale';
 import { getCookie, CookieName, setCookie } from '../utils/cookies';
-import { RECORDED_VIDEO_TAKE_DEFAULT } from '../utils/constants';
+import {
+  CONTEXT_DEFAULT,
+  DIALOG_DEFAULT,
+  DIALOG_DELETE_DEFAULT,
+  DIALOG_DELETE_DEFAULT_CONTEXT,
+  DIALOG_DELETE_DIMENSION,
+  RECORDED_VIDEO_TAKE_DEFAULT,
+} from '../utils/constants';
 import { getVideoSrc } from './Settings.lib';
 import WS, { Protocol } from '../core/ws';
 import storeCanConnect from '../store/canConnect';
+import storeClickDocument from '../store/clickDocument';
 
 export const useLang = () => {
   const [lang, setLang] = useState<LocaleValue>(getCookie(CookieName.lang) || LocaleDefault);
@@ -89,6 +103,7 @@ export const usePlayVideo = ({
   roomId: string | number;
 }) => {
   const [playedVideo, setPlayedVideo] = useState<string>('');
+
   const playVideoWrapper = (videoName: string) => () => {
     setPlayedVideo(getVideoSrc({ port, server, name: videoName, roomId }));
   };
@@ -100,12 +115,54 @@ export const usePlayVideo = ({
 };
 
 export const useDeleteVideo = () => {
-  const deleteVideoWrapper = (videoId: string) => () => {
-    /** */
-    console.log(videoId);
-  };
+  const [dialogDelete, setDialogDelete] =
+    useState<Omit<DialogProps<DialogDeleteContext>, 'children'>>(DIALOG_DELETE_DEFAULT);
 
-  return { deleteVideoWrapper };
+  const openDeleteDialogWrapper =
+    ({ id, name }: DialogDeleteContext) =>
+    (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      const { clientX: _clientX, clientY: _clientY } = ev;
+      const { width, height } = DIALOG_DELETE_DIMENSION;
+      const { clientX, clientY } = getDialogPosition({ _clientX, _clientY, width, height });
+      setDialogDelete({
+        open: true,
+        context: {
+          id,
+          name,
+        },
+        clientX,
+        clientY,
+        width,
+        height,
+      });
+    };
+
+  const closeDeleteDialogHandler = useMemo(
+    () => () => {
+      setDialogDelete({
+        open: false,
+        clientY: dialogDelete.clientY,
+        clientX: dialogDelete.clientX,
+        width: 0,
+        height: 0,
+        context: DIALOG_DELETE_DEFAULT_CONTEXT,
+        secure: false,
+      });
+    },
+    [dialogDelete]
+  );
+
+  const deleteVideoWrapper = useMemo(
+    () =>
+      ({ id }: DialogDeleteContext) =>
+      (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        console.log(id);
+        closeDeleteDialogHandler();
+      },
+    [closeDeleteDialogHandler]
+  );
+
+  return { openDeleteDialogWrapper, dialogDelete, closeDeleteDialogHandler, deleteVideoWrapper };
 };
 
 export const useMessages = ({

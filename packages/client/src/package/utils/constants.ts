@@ -11,6 +11,7 @@
 import {
   AlertProps,
   ClickPosition,
+  DialogDeleteContext,
   DialogProps,
   DialogPropsDefaultContext,
   DialogPropsUsersContext,
@@ -58,6 +59,16 @@ export const DIALOG_DEFAULT: DialogProps<DialogPropsDefaultContext & DialogProps
   context: CONTEXT_DEFAULT,
   secure: false,
 };
+
+export const DIALOG_DELETE_DEFAULT_CONTEXT = {
+  id: '',
+  name: '',
+};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const _DIALOG_DELETE: DialogProps<DialogDeleteContext> = { ...DIALOG_DEFAULT } as any;
+_DIALOG_DELETE.context = DIALOG_DELETE_DEFAULT_CONTEXT;
+export const DIALOG_DELETE_DEFAULT = _DIALOG_DELETE;
+
 export const CLICK_POSITION_DEFAULT: ClickPosition = {
   clientX: 0,
   clientY: 0,
@@ -77,6 +88,10 @@ export const DIALOG_SETTINGS_DIMENSION = {
 export const DIALOG_USER_DIMENSION = {
   width: 120,
   height: 100,
+};
+export const DIALOG_DELETE_DIMENSION = {
+  width: 200,
+  height: 200,
 };
 export const SHORT_MESS_LENGTH = 30;
 export const FIRST_MESSAGE_INDENT = 20;

@@ -26,7 +26,7 @@ function Video({
   return (
     <div className={s.wrapper}>
       <IconButton onClick={handleClose} className={s.close__button}>
-        <CloseIcon color={theme?.colors.text} />
+        <CloseIcon color={theme?.colors.white} />
       </IconButton>
       <video autoPlay width={600} height={600 / 1.3} src={src} controls />
     </div>

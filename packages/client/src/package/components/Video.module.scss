@@ -1,8 +1,10 @@
 .wrapper {
-  position: absolute;
+  position: fixed;
+  z-index: 200;
   top: 50px;
   right: 0;
   margin-top: 2rem;
+  background-color: black;
 }
 
 .close__button {
