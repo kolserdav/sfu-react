@@ -93,8 +93,8 @@ class RTC
 
   public streams: Record<string, Record<string, werift.MediaStreamTrack[]>> = {};
 
-  constructor({ ws }: { ws: WS }) {
-    super();
+  constructor({ ws, prisma }: { ws: WS; prisma: DB['prisma'] }) {
+    super({ prisma });
     this.ws = ws;
     log('info', 'Ice port range env.(ICE_PORT_MIN, ICE_PORT_MAX) is', this.icePortRange, true);
   }

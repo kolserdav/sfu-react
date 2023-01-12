@@ -8,20 +8,37 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { DBInterface } from '../types/interfaces';
 import { log } from '../utils/lib';
 import Auth from './auth';
 
-const prisma = new PrismaClient();
-
 class DB extends Auth implements DBInterface {
+  prisma: PrismaClient<
+    Prisma.PrismaClientOptions,
+    never,
+    Prisma.RejectOnNotFound | Prisma.RejectPerOperation | undefined
+  >;
+
+  constructor({
+    prisma,
+  }: {
+    prisma: PrismaClient<
+      Prisma.PrismaClientOptions,
+      never,
+      Prisma.RejectOnNotFound | Prisma.RejectPerOperation | undefined
+    >;
+  }) {
+    super();
+    this.prisma = prisma;
+  }
+
   // eslint-disable-next-line class-methods-use-this
   public roomFindFirst: DBInterface['roomFindFirst'] = async (args) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
     try {
-      result = await prisma.room.findFirst(args);
+      result = await this.prisma.room.findFirst(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error room find first', { args, err });
@@ -34,7 +51,7 @@ class DB extends Auth implements DBInterface {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
     try {
-      result = await prisma.room.update(args);
+      result = await this.prisma.room.update(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error update room', { where: args.where, data: args.data, err });
@@ -47,7 +64,7 @@ class DB extends Auth implements DBInterface {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
     try {
-      result = await prisma.room.create(args);
+      result = await this.prisma.room.create(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error create room', { args, err });
@@ -60,7 +77,7 @@ class DB extends Auth implements DBInterface {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
     try {
-      result = await prisma.unit.create(args);
+      result = await this.prisma.unit.create(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error create unit', { args, err });
@@ -73,7 +90,7 @@ class DB extends Auth implements DBInterface {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
     try {
-      result = await prisma.unit.update(args);
+      result = await this.prisma.unit.update(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error update unit', { args, err });
@@ -86,7 +103,7 @@ class DB extends Auth implements DBInterface {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
     try {
-      result = await prisma.unit.findFirst(args);
+      result = await this.prisma.unit.findFirst(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error find first unit', { args, err });
@@ -99,7 +116,7 @@ class DB extends Auth implements DBInterface {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
     try {
-      result = await prisma.message.update(args);
+      result = await this.prisma.message.update(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error update message', { where: args.where, data: args.data, err });
@@ -112,7 +129,7 @@ class DB extends Auth implements DBInterface {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
     try {
-      result = await prisma.message.create(args);
+      result = await this.prisma.message.create(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error create message', { args, err });
@@ -125,7 +142,7 @@ class DB extends Auth implements DBInterface {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
     try {
-      result = await prisma.quote.create(args);
+      result = await this.prisma.quote.create(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error create quote', { args, err });
@@ -137,7 +154,7 @@ class DB extends Auth implements DBInterface {
   public messageDelete: DBInterface['messageDelete'] = async (args) => {
     let message;
     try {
-      message = await prisma.message.findFirst({
+      message = await this.prisma.message.findFirst({
         where: {
           id: args.where.id,
         },
@@ -155,7 +172,7 @@ class DB extends Auth implements DBInterface {
     }
     if (message.Quote) {
       try {
-        message = await prisma.message.update({
+        message = await this.prisma.message.update({
           where: {
             id: args.where.id,
           },
@@ -180,7 +197,7 @@ class DB extends Auth implements DBInterface {
     }
     if (message.MessageQuote?.length) {
       try {
-        message = await prisma.message.update({
+        message = await this.prisma.message.update({
           where: {
             id: args.where.id,
           },
@@ -207,7 +224,7 @@ class DB extends Auth implements DBInterface {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
     try {
-      result = await prisma.message.delete(args);
+      result = await this.prisma.message.delete(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error delete message', { args, err });
@@ -221,7 +238,7 @@ class DB extends Auth implements DBInterface {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let count = 0;
     try {
-      count = await prisma.message.count({
+      count = await this.prisma.message.count({
         where,
       });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -231,7 +248,7 @@ class DB extends Auth implements DBInterface {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let data: any = null;
     try {
-      data = await prisma.message.findMany(args);
+      data = await this.prisma.message.findMany(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'Error get messages', { err });
@@ -250,7 +267,7 @@ class DB extends Auth implements DBInterface {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
     try {
-      result = await prisma.video.findFirst(args);
+      result = await this.prisma.video.findFirst(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error video find first', { where: args.where, data: args, err });
@@ -263,7 +280,7 @@ class DB extends Auth implements DBInterface {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
     try {
-      result = await prisma.video.update(args);
+      result = await this.prisma.video.update(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error update video', { where: args.where, data: args.data, err });
@@ -276,7 +293,7 @@ class DB extends Auth implements DBInterface {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
     try {
-      result = await prisma.video.create(args);
+      result = await this.prisma.video.create(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error create video', { args, err });
@@ -289,7 +306,7 @@ class DB extends Auth implements DBInterface {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
     try {
-      result = await prisma.video.delete(args);
+      result = await this.prisma.video.delete(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error delete video', { args, err });
@@ -302,7 +319,7 @@ class DB extends Auth implements DBInterface {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
     try {
-      result = await prisma.admins.findFirst(args);
+      result = await this.prisma.admins.findFirst(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error admins find first', { args, err });
@@ -315,7 +332,7 @@ class DB extends Auth implements DBInterface {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
     try {
-      result = await prisma.admins.create(args);
+      result = await this.prisma.admins.create(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error admins create', { args, err });
@@ -328,7 +345,7 @@ class DB extends Auth implements DBInterface {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
     try {
-      result = await prisma.admins.update(args);
+      result = await this.prisma.admins.update(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error admins update', { args, err });
@@ -341,7 +358,7 @@ class DB extends Auth implements DBInterface {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
     try {
-      result = await prisma.admins.delete(args);
+      result = await this.prisma.admins.delete(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'DB Error admins delete', { args, err });
@@ -355,7 +372,7 @@ class DB extends Auth implements DBInterface {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let count = 0;
     try {
-      count = await prisma.video.count({
+      count = await this.prisma.video.count({
         where,
       });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -365,7 +382,7 @@ class DB extends Auth implements DBInterface {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let data: any = null;
     try {
-      data = await prisma.video.findMany(args);
+      data = await this.prisma.video.findMany(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       log('error', 'Error get video', { err });

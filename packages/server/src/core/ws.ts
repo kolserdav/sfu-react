@@ -12,9 +12,16 @@ import { WebSocketServer, Server, WebSocket, ServerOptions } from 'ws';
 import { createServer } from 'http';
 import path from 'path';
 import fs from 'fs';
-import { WSInterface, UserItem, LocaleValue, EXT_WEBM } from '../types/interfaces';
-import { log } from '../utils/lib';
+import {
+  WSInterface,
+  UserItem,
+  LocaleValue,
+  EXT_WEBM,
+  TOKEN_QUERY_NAME,
+} from '../types/interfaces';
+import { log, parseQueryString } from '../utils/lib';
 import DB from './db';
+import { AUTH_UNIT_ID_DEFAULT } from '../utils/constants';
 
 const server = createServer();
 
@@ -31,9 +38,15 @@ class WS extends DB implements WSInterface {
 
   public WebSocket = WebSocket;
 
-  constructor(connectionArgs: ServerOptions & { cloudPath: string; cloudVideos: string }) {
-    super();
-    const { cloudPath, cloudVideos } = connectionArgs;
+  constructor(
+    connectionArgs: ServerOptions & {
+      cloudPath: string;
+      cloudVideos: string;
+      prisma: DB['prisma'];
+    }
+  ) {
+    const { cloudPath, cloudVideos, prisma } = connectionArgs;
+    super({ prisma });
     const _connectionArgs = { ...connectionArgs };
     _connectionArgs.server = server;
     delete _connectionArgs.port;
@@ -46,8 +59,24 @@ class WS extends DB implements WSInterface {
         response.end();
         return;
       }
+
+      // Check token
       const queryString = _url.match(/\?.*$/);
-      const url = queryString ? _url.replace(queryString[0], '') : _url;
+      if (!queryString) {
+        response.writeHead(403);
+        response.end();
+        return;
+      }
+      const qS = queryString[0];
+      const url = _url.replace(qS, '');
+      const { [TOKEN_QUERY_NAME]: token } = parseQueryString(qS);
+      const { errorCode, unitId } = await this.checkTokenCb({ token });
+      if (errorCode !== 0 && unitId !== AUTH_UNIT_ID_DEFAULT) {
+        response.writeHead(403);
+        response.end();
+        return;
+      }
+
       const videoRegex = new RegExp(`^/${cloudVideos}/`);
       const isVideos = videoRegex.test(url || '');
       if (isVideos) {
@@ -56,12 +85,26 @@ class WS extends DB implements WSInterface {
           where: {
             id,
           },
+          include: {
+            Room: {
+              select: {
+                authorId: true,
+              },
+            },
+          },
         });
         if (!video) {
           response.writeHead(404);
           response.end();
           return;
         }
+        // Check author
+        if (unitId !== video.Room.authorId) {
+          response.writeHead(401);
+          response.end();
+          return;
+        }
+
         const videoPath = path.resolve(
           cloudPath,
           `./${cloudVideos}`,

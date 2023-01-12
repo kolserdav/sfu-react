@@ -47,13 +47,15 @@ class RecordVideo extends DB {
     rtc,
     cloudPath,
     cloudVideos,
+    prisma,
   }: {
     settings: Settings;
     rtc: RTC;
     cloudPath: string;
     cloudVideos: string;
+    prisma: DB['prisma'];
   }) {
-    super();
+    super({ prisma });
     this.cloudPath = cloudPath;
     this.settings = settings;
     this.cloudVideos = cloudVideos;

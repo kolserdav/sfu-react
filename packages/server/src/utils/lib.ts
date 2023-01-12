@@ -115,3 +115,18 @@ export const createRandHash = (length: number) => {
   }
   return hash;
 };
+
+export const parseQueryString = (query: string): Record<string, string> => {
+  const arr = query.replace(/\??/, '').split('&');
+  const res: Record<string, string> = {};
+  arr.forEach((item) => {
+    if (item === '') {
+      return;
+    }
+    const propReg = /^\w+=/;
+    const prop = item.match(propReg);
+    const propStr = prop ? prop[0].replace('=', '') : '';
+    res[propStr] = item.replace(propReg, '');
+  });
+  return res;
+};

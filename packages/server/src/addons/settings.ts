@@ -18,6 +18,10 @@ import { AUTH_UNIT_ID_DEFAULT } from '../utils/constants';
 class Settings extends DB implements ConnectorInterface {
   public users: ConnectorInterface['users'] = {};
 
+  constructor({ prisma }: { prisma: DB['prisma'] }) {
+    super({ prisma });
+  }
+
   public setUnit: ConnectorInterface['setUnit'] = ({ roomId, userId, ws, locale, connId }) => {
     if (!this.users[roomId]) {
       this.users[roomId] = {};

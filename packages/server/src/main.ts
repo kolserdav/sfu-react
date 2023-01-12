@@ -28,9 +28,10 @@ import Auth from './core/auth';
 import Settings from './addons/settings';
 
 export const prisma = new PrismaClient();
-const db = new DB();
-const chat = new Chat();
-const settings = new Settings();
+
+const db = new DB({ prisma });
+const chat = new Chat({ prisma });
+const settings = new Settings({ prisma });
 
 process.on('uncaughtException', (err: Error) => {
   log('error', 'uncaughtException', err);
@@ -88,17 +89,21 @@ export function createServer(
   setLogLevel(logLevel);
   const cloudPath = _cloudPath || RECORD_DIR_PATH;
   const cloudVideos = RECORD_VIDEO_NAME;
-  const wss = new WS({ port, cloudPath, cloudVideos });
-  const rtc: RTC | null = new RTC({ ws: wss });
+  const wss = new WS({ port, cloudPath, cloudVideos, prisma });
+  const rtc: RTC | null = new RTC({ ws: wss, prisma });
   const recordVideo = new RecordVideo({
     settings,
     rtc,
     cloudPath,
     cloudVideos,
+    prisma,
   });
+
   settings.checkTokenCb = checkTokenCb || settings.checkTokenCb;
   chat.checkTokenCb = checkTokenCb || chat.checkTokenCb;
   recordVideo.checkTokenCb = checkTokenCb || recordVideo.checkTokenCb;
+  wss.checkTokenCb = checkTokenCb || wss.checkTokenCb;
+
   const getConnectionId = (): string => {
     const connId = v4();
     if (wss.sockets[connId]) {

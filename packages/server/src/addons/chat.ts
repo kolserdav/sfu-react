@@ -19,6 +19,10 @@ class Chat extends DB implements ConnectorInterface {
 
   public blocked: Record<string, (string | number)[]> = {};
 
+  constructor({ prisma }: { prisma: DB['prisma'] }) {
+    super({ prisma });
+  }
+
   public setUnit: ConnectorInterface['setUnit'] = async ({
     roomId,
     userId,
