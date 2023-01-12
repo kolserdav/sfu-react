@@ -244,6 +244,9 @@ export function createServer(
         case MessageType.GET_RECORD:
           recordVideo.handleVideoRecord(rawMessage);
           break;
+        case MessageType.GET_VIDEO_DELETE:
+          settings.videoDeleteHandler(rawMessage);
+          break;
         case MessageType.GET_TO_UNBAN:
           rtc.handleGetToUnBan(rawMessage);
           break;

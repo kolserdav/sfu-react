@@ -9,34 +9,34 @@
  * Create Date: Wed Nov 23 2022 15:23:26 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { Prisma } from '@prisma/client';
+import { AUTH_UNIT_ID_DEFAULT } from '../utils/constants';
 import { log } from '../utils/lib';
 
 interface CheckTokenArgs {
   token: string;
-  // TODO need check model
-  // model: keyof typeof Prisma.ModelName;
-  // modelId: string;
-  // userId: string;
 }
 
 class Auth {
   tokenList: string[] = [];
 
   // eslint-disable-next-line no-unused-vars
-  checkTokenCb: (args: CheckTokenArgs) => Promise<boolean>;
+  checkTokenCb: (args: CheckTokenArgs) => Promise<{ errorCode: number; unitId: string }>;
 
   public setCheckTokenCb = (checkTokenCb: Auth['checkTokenCb']) => {
     this.checkTokenCb = checkTokenCb;
   };
 
   constructor() {
-    this.checkTokenCb = this.checkTockenDefault;
+    this.checkTokenCb = this.checkTokenDefault;
   }
 
   // eslint-disable-next-line class-methods-use-this
-  protected async checkTockenDefault(args: CheckTokenArgs) {
+  protected async checkTokenDefault(args: CheckTokenArgs) {
     log('warn', 'Check token callback not set, use default all yes', args);
-    return true;
+    return {
+      errorCode: 0,
+      unitId: AUTH_UNIT_ID_DEFAULT,
+    };
   }
 }
 

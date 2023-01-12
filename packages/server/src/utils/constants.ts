@@ -58,3 +58,4 @@ export const ICE_PORT_MAX = parseInt(process.env.ICE_PORT_MAX as string, 10);
 export const EXT_WEBM = '.webm';
 export const RECORD_WIDTH_DEFAULT = 640;
 export const RECORD_HEIGHT_DEFAULT = 480;
+export const AUTH_UNIT_ID_DEFAULT = 'default';

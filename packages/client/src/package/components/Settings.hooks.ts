@@ -9,20 +9,12 @@
  * Create Date: Wed Nov 23 2022 15:23:26 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import React, { useRef, useState, useEffect, useMemo } from 'react';
-import {
-  DialogDeleteContext,
-  DialogProps,
-  DialogPropsUsersContext,
-  VideoFull,
-  VideoRecorderState,
-} from '../types';
+import { DialogDeleteContext, DialogProps, VideoFull, VideoRecorderState } from '../types';
 import { SendMessageArgs, MessageType, LocaleDefault, LocaleValue } from '../types/interfaces';
-import { getDialogPosition, getTime, isClickByDialog, log } from '../utils/lib';
+import { getDialogPosition, getTime, log } from '../utils/lib';
 import storeLocale, { changeLocale } from '../store/locale';
 import { getCookie, CookieName, setCookie } from '../utils/cookies';
 import {
-  CONTEXT_DEFAULT,
-  DIALOG_DEFAULT,
   DIALOG_DELETE_DEFAULT,
   DIALOG_DELETE_DEFAULT_CONTEXT,
   DIALOG_DELETE_DIMENSION,
@@ -31,7 +23,6 @@ import {
 import { getVideoSrc } from './Settings.lib';
 import WS, { Protocol } from '../core/ws';
 import storeCanConnect from '../store/canConnect';
-import storeClickDocument from '../store/clickDocument';
 
 export const useLang = () => {
   const [lang, setLang] = useState<LocaleValue>(getCookie(CookieName.lang) || LocaleDefault);
@@ -114,7 +105,17 @@ export const usePlayVideo = ({
   return { playVideoWrapper, playedVideo, handleCloseVideo };
 };
 
-export const useDeleteVideo = () => {
+export const useDeleteVideo = ({
+  ws,
+  token,
+  roomId,
+  userId,
+}: {
+  ws: WS;
+  token: string;
+  roomId: string | number;
+  userId: string | number;
+}) => {
   const [dialogDelete, setDialogDelete] =
     useState<Omit<DialogProps<DialogDeleteContext>, 'children'>>(DIALOG_DELETE_DEFAULT);
 
@@ -156,10 +157,23 @@ export const useDeleteVideo = () => {
     () =>
       ({ id }: DialogDeleteContext) =>
       (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-        console.log(id);
+        ws.sendMessage({
+          type: MessageType.GET_VIDEO_DELETE,
+          id: roomId,
+          connId: '',
+          data: {
+            token,
+            userId,
+            args: {
+              where: {
+                id,
+              },
+            },
+          },
+        });
         closeDeleteDialogHandler();
       },
-    [closeDeleteDialogHandler]
+    [closeDeleteDialogHandler, roomId, token, ws, userId]
   );
 
   return { openDeleteDialogWrapper, dialogDelete, closeDeleteDialogHandler, deleteVideoWrapper };
@@ -317,6 +331,28 @@ export const useMessages = ({
       setSkip(skip + RECORDED_VIDEO_TAKE_DEFAULT);
     };
 
+    const setVideoDeleteHandler = ({ id }: SendMessageArgs<MessageType.SET_VIDEO_DELETE>) => {
+      ws.sendMessage({
+        type: MessageType.GET_VIDEO_FIND_MANY,
+        id: roomId,
+        connId: '',
+        data: {
+          args: {
+            where: {
+              roomId: roomId.toString(),
+            },
+            orderBy: {
+              created: 'desc',
+            },
+            skip,
+            take: RECORDED_VIDEO_TAKE_DEFAULT,
+          },
+          userId,
+          token,
+        },
+      });
+    };
+
     ws.onMessage = (ev) => {
       const { data } = ev;
       const rawMessage = ws.parseMessage(data);
@@ -339,6 +375,9 @@ export const useMessages = ({
           break;
         case MessageType.SET_RECORDING:
           handleRecordingTime(rawMessage);
+          break;
+        case MessageType.SET_VIDEO_DELETE:
+          setVideoDeleteHandler(rawMessage);
           break;
         case MessageType.SET_ERROR:
           setErrorHandler(rawMessage);

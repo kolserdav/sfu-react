@@ -54,8 +54,6 @@ function Settings({
     port,
     roomId,
   });
-  const { deleteVideoWrapper, dialogDelete, closeDeleteDialogHandler, openDeleteDialogWrapper } =
-    useDeleteVideo();
   const { videos, time, started, buttonDisabled, setButtonDisabled, ws, loadProcent } = useMessages(
     {
       roomId,
@@ -66,6 +64,8 @@ function Settings({
       token,
     }
   );
+  const { deleteVideoWrapper, dialogDelete, closeDeleteDialogHandler, openDeleteDialogWrapper } =
+    useDeleteVideo({ roomId, ws, token, userId });
   const { recordStartWrapper } = useVideoRecord({
     roomId,
     userId,

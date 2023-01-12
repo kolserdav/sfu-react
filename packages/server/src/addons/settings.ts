@@ -13,6 +13,7 @@ import { ConnectorInterface } from '../types';
 import { MessageType, SendMessageArgs, ErrorCode } from '../types/interfaces';
 import { log, getLocale } from '../utils/lib';
 import DB from '../core/db';
+import { AUTH_UNIT_ID_DEFAULT } from '../utils/constants';
 
 class Settings extends DB implements ConnectorInterface {
   public users: ConnectorInterface['users'] = {};
@@ -77,8 +78,9 @@ class Settings extends DB implements ConnectorInterface {
     connId,
   }: SendMessageArgs<MessageType.GET_VIDEO_FIND_MANY>) {
     const locale = getLocale(this.users[id][userId].locale).server;
-    const checkToken = token ? await this.checkTokenCb({ token }) : true;
-    if (checkToken === false) {
+    const { errorCode, unitId } = await this.checkTokenCb({ token });
+    const isDefault = unitId === AUTH_UNIT_ID_DEFAULT;
+    if (errorCode !== 0 && !isDefault) {
       this.sendMessage({
         roomId: id,
         msg: {
@@ -89,6 +91,22 @@ class Settings extends DB implements ConnectorInterface {
             type: 'warn',
             message: locale.forbidden,
             code: ErrorCode.forbidden,
+          },
+        },
+      });
+      return;
+    }
+    if (!isDefault && userId.toString() !== unitId) {
+      this.sendMessage({
+        roomId: id,
+        msg: {
+          type: MessageType.SET_ERROR,
+          connId,
+          id: userId,
+          data: {
+            type: 'warn',
+            message: locale.notAuthorised,
+            code: ErrorCode.notAuthorised,
           },
         },
       });
@@ -114,8 +132,9 @@ class Settings extends DB implements ConnectorInterface {
     connId,
   }: SendMessageArgs<MessageType.GET_VIDEO_FIND_MANY>) {
     const locale = getLocale(this.users[id][userId].locale).server;
-    const checkToken = token ? await this.checkTokenCb({ token }) : true;
-    if (checkToken === false) {
+    const { errorCode, unitId } = await this.checkTokenCb({ token });
+    const isDefault = unitId === AUTH_UNIT_ID_DEFAULT;
+    if (errorCode !== 0 && !isDefault) {
       this.sendMessage({
         roomId: id,
         msg: {
@@ -131,11 +150,81 @@ class Settings extends DB implements ConnectorInterface {
       });
       return;
     }
+    if (!isDefault && userId.toString() !== unitId) {
+      this.sendMessage({
+        roomId: id,
+        msg: {
+          type: MessageType.SET_ERROR,
+          connId,
+          id: userId,
+          data: {
+            type: 'warn',
+            message: locale.notAuthorised,
+            code: ErrorCode.notAuthorised,
+          },
+        },
+      });
+      return;
+    }
     const video = await this.videoFindFirst({ ...args });
     this.sendMessage({
       roomId: id,
       msg: {
         type: MessageType.SET_VIDEO_FIND_FIRST,
+        id: userId,
+        connId,
+        data: {
+          video,
+        },
+      },
+    });
+  }
+
+  public async videoDeleteHandler({
+    id,
+    data: { args, userId, token },
+    connId,
+  }: SendMessageArgs<MessageType.GET_VIDEO_DELETE>) {
+    const locale = getLocale(this.users[id][userId].locale).server;
+    const { errorCode, unitId } = await this.checkTokenCb({ token });
+    const isDefault = unitId === AUTH_UNIT_ID_DEFAULT;
+    if (errorCode !== 0 && !isDefault) {
+      this.sendMessage({
+        roomId: id,
+        msg: {
+          type: MessageType.SET_ERROR,
+          connId,
+          id: userId,
+          data: {
+            type: 'warn',
+            message: locale.forbidden,
+            code: ErrorCode.forbidden,
+          },
+        },
+      });
+      return;
+    }
+    if (!isDefault && userId.toString() !== unitId) {
+      this.sendMessage({
+        roomId: id,
+        msg: {
+          type: MessageType.SET_ERROR,
+          connId,
+          id: userId,
+          data: {
+            type: 'warn',
+            message: locale.notAuthorised,
+            code: ErrorCode.notAuthorised,
+          },
+        },
+      });
+      return;
+    }
+    const video = await this.videoDelete({ ...args });
+    this.sendMessage({
+      roomId: id,
+      msg: {
+        type: MessageType.SET_VIDEO_DELETE,
         id: userId,
         connId,
         data: {
