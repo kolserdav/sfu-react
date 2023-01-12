@@ -14,6 +14,8 @@ import CloseIcon from '../Icons/Close';
 import s from './Video.module.scss';
 import { Theme } from '../Theme';
 
+// FIXME calculate width
+
 function Video({
   src,
   theme,

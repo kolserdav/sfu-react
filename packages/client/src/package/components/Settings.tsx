@@ -53,6 +53,7 @@ function Settings({
     server,
     port,
     roomId,
+    token,
   });
   const { videos, time, started, buttonDisabled, setButtonDisabled, ws, loadProcent } = useMessages(
     {
@@ -129,7 +130,7 @@ function Settings({
             {videos.map((item) => (
               <div className={s.video} key={item.id}>
                 <div className={s.actions}>
-                  <IconButton onClick={playVideoWrapper(item.name)}>
+                  <IconButton onClick={playVideoWrapper({ id: item.id, name: item.name })}>
                     <PlayIcon width={20} height={20} color={theme?.colors.blue} />
                   </IconButton>
                   <IconButton onClick={openDeleteDialogWrapper({ id: item.id, name: item.name })}>

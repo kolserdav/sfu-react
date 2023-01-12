@@ -96,7 +96,7 @@ export interface DialogProps<T> {
   theme?: Theme;
 }
 
-export interface DialogDeleteContext {
+export interface DialogVideoContext {
   id: string;
   name: string;
 }

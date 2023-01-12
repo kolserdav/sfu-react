@@ -12,13 +12,13 @@ import { WebSocketServer, Server, WebSocket, ServerOptions } from 'ws';
 import { createServer } from 'http';
 import path from 'path';
 import fs from 'fs';
-import { WSInterface, UserItem, LocaleValue } from '../types/interfaces';
+import { WSInterface, UserItem, LocaleValue, EXT_WEBM } from '../types/interfaces';
 import { log } from '../utils/lib';
 import DB from './db';
 
 const server = createServer();
 
-class WS implements WSInterface {
+class WS extends DB implements WSInterface {
   public connection: Server<WebSocket>;
 
   public sockets: Record<string, WebSocket> = {};
@@ -31,25 +31,44 @@ class WS implements WSInterface {
 
   public WebSocket = WebSocket;
 
-  /**
-   * @deprecated
-   * move db
-   */
-  private db: DB;
-
-  constructor(connectionArgs: ServerOptions & { db: DB; cloudPath: string; cloudVideos: string }) {
+  constructor(connectionArgs: ServerOptions & { cloudPath: string; cloudVideos: string }) {
+    super();
     const { cloudPath, cloudVideos } = connectionArgs;
     const _connectionArgs = { ...connectionArgs };
-    this.db = connectionArgs.db;
     _connectionArgs.server = server;
     delete _connectionArgs.port;
     this.connection = this.createConnection(_connectionArgs);
     server.listen(connectionArgs.port);
-    server.on('request', (request, response) => {
-      const { url } = request;
-      const isVideos = new RegExp(`^/${cloudVideos}/`).test(url || '');
+    server.on('request', async (request, response) => {
+      const { url: _url } = request;
+      if (!_url) {
+        response.writeHead(400);
+        response.end();
+        return;
+      }
+      const queryString = _url.match(/\?.*$/);
+      const url = queryString ? _url.replace(queryString[0], '') : _url;
+      const videoRegex = new RegExp(`^/${cloudVideos}/`);
+      const isVideos = videoRegex.test(url || '');
       if (isVideos) {
-        const stream = fs.createReadStream(path.resolve(cloudPath, `./${url}`));
+        const id = url.replace(videoRegex, '').replace(new RegExp(`${EXT_WEBM}$`), '');
+        const video = await this.videoFindFirst({
+          where: {
+            id,
+          },
+        });
+        if (!video) {
+          response.writeHead(404);
+          response.end();
+          return;
+        }
+        const videoPath = path.resolve(
+          cloudPath,
+          `./${cloudVideos}`,
+          `./${video.roomId}`,
+          `./${video.name}`
+        );
+        const stream = fs.createReadStream(videoPath);
         response.writeHead(200, { 'Content-Type': 'video/webm' });
         stream.pipe(response);
       } else {
@@ -86,13 +105,13 @@ class WS implements WSInterface {
     this.sockets[this.getSocketId(_id.toString(), connId)] = ws;
     const id = _id.toString();
     if (!isRoom) {
-      const u = await this.db.unitFindFirst({
+      const u = await this.unitFindFirst({
         where: {
           id,
         },
       });
       if (u) {
-        await this.db.unitUpdate({
+        await this.unitUpdate({
           where: {
             id,
           },
@@ -102,7 +121,7 @@ class WS implements WSInterface {
           },
         });
       } else {
-        await this.db.unitCreate({
+        await this.unitCreate({
           data: {
             id,
             name: userName,

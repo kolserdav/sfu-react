@@ -9,8 +9,14 @@
  * Create Date: Wed Nov 23 2022 15:23:26 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import React, { useRef, useState, useEffect, useMemo } from 'react';
-import { DialogDeleteContext, DialogProps, VideoFull, VideoRecorderState } from '../types';
-import { SendMessageArgs, MessageType, LocaleDefault, LocaleValue } from '../types/interfaces';
+import { DialogProps, DialogVideoContext, VideoFull, VideoRecorderState } from '../types';
+import {
+  SendMessageArgs,
+  MessageType,
+  LocaleDefault,
+  LocaleValue,
+  EXT_WEBM,
+} from '../types/interfaces';
 import { getDialogPosition, getTime, log } from '../utils/lib';
 import storeLocale, { changeLocale } from '../store/locale';
 import { getCookie, CookieName, setCookie } from '../utils/cookies';
@@ -88,16 +94,20 @@ export const usePlayVideo = ({
   server,
   port,
   roomId,
+  token,
 }: {
   server: string;
   port: number;
   roomId: string | number;
+  token: string;
 }) => {
   const [playedVideo, setPlayedVideo] = useState<string>('');
 
-  const playVideoWrapper = (videoName: string) => () => {
-    setPlayedVideo(getVideoSrc({ port, server, name: videoName, roomId }));
-  };
+  const playVideoWrapper =
+    ({ id, name }: DialogVideoContext) =>
+    () => {
+      setPlayedVideo(getVideoSrc({ port, server, name: `${id}${EXT_WEBM}`, roomId, token }));
+    };
   const handleCloseVideo = () => {
     setPlayedVideo('');
   };
@@ -117,10 +127,10 @@ export const useDeleteVideo = ({
   userId: string | number;
 }) => {
   const [dialogDelete, setDialogDelete] =
-    useState<Omit<DialogProps<DialogDeleteContext>, 'children'>>(DIALOG_DELETE_DEFAULT);
+    useState<Omit<DialogProps<DialogVideoContext>, 'children'>>(DIALOG_DELETE_DEFAULT);
 
   const openDeleteDialogWrapper =
-    ({ id, name }: DialogDeleteContext) =>
+    ({ id, name }: DialogVideoContext) =>
     (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       const { clientX: _clientX, clientY: _clientY } = ev;
       const { width, height } = DIALOG_DELETE_DIMENSION;
@@ -155,7 +165,7 @@ export const useDeleteVideo = ({
 
   const deleteVideoWrapper = useMemo(
     () =>
-      ({ id }: DialogDeleteContext) =>
+      ({ id }: DialogVideoContext) =>
       (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         ws.sendMessage({
           type: MessageType.GET_VIDEO_DELETE,
@@ -237,6 +247,7 @@ export const useMessages = ({
     const setErrorHandler = ({
       data: { message: children, type },
     }: SendMessageArgs<MessageType.SET_ERROR>) => {
+      console.log(children);
       log(type, children, {}, true);
     };
 

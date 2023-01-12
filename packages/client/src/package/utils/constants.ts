@@ -11,7 +11,7 @@
 import {
   AlertProps,
   ClickPosition,
-  DialogDeleteContext,
+  DialogVideoContext,
   DialogProps,
   DialogPropsDefaultContext,
   DialogPropsUsersContext,
@@ -65,7 +65,7 @@ export const DIALOG_DELETE_DEFAULT_CONTEXT = {
   name: '',
 };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const _DIALOG_DELETE: DialogProps<DialogDeleteContext> = { ...DIALOG_DEFAULT } as any;
+const _DIALOG_DELETE: DialogProps<DialogVideoContext> = { ...DIALOG_DEFAULT } as any;
 _DIALOG_DELETE.context = DIALOG_DELETE_DEFAULT_CONTEXT;
 export const DIALOG_DELETE_DEFAULT = _DIALOG_DELETE;
 

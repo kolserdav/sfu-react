@@ -15,7 +15,9 @@
 import * as werift from 'werift';
 import { Message, Prisma, Room, Unit, Video, Quote, Admins } from '@prisma/client';
 
-export const RECORD_VIDEO_NAME = 'record';
+export const RECORD_VIDEO_NAME = 'videos';
+export const EXT_WEBM = '.webm';
+export const TOKEN_QUERY_NAME = 'token';
 export type LocaleValue = 'en' | 'ru';
 export interface UserItem {
   name: string;

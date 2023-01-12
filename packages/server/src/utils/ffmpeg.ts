@@ -4,7 +4,8 @@ import { exec } from 'child_process';
 import { differenceInSeconds } from 'date-fns';
 import ffmpeg from 'ffmpeg-static';
 import { createRandHash, log } from './lib';
-import { EXT_WEBM, RECORD_HEIGHT_DEFAULT, RECORD_WIDTH_DEFAULT } from './constants';
+import { RECORD_HEIGHT_DEFAULT, RECORD_WIDTH_DEFAULT } from './constants';
+import { EXT_WEBM } from '../types/interfaces';
 
 const isDev = process.env.FFMPEG_DEV === 'true';
 
@@ -46,6 +47,8 @@ class FFmpeg {
   private chunks: Chunk[];
 
   private episodes: Episode[] = [];
+
+  private roomId: string;
 
   private readonly mapLength = 6;
 
@@ -94,8 +97,9 @@ class FFmpeg {
   // eslint-disable-next-line class-methods-use-this
   private readonly scale = ({ w, h }: { w: number; h: number }) => `scale=w=${w}:h=${h}`;
 
-  constructor({ dirPath, dir }: { dirPath: string; dir: string[] }) {
+  constructor({ dirPath, dir, roomId }: { dirPath: string; dir: string[]; roomId: string }) {
     this.dirPath = dirPath;
+    this.roomId = roomId;
     this.chunks = this.createVideoChunks({ dir });
   }
 
@@ -115,13 +119,18 @@ class FFmpeg {
     const inputArgs = this.createInputArguments();
     const filterComplexArgs = this.createFilterComplexArguments();
     const args = inputArgs.concat(filterComplexArgs);
-    const src = `${this.dirPath}${EXT_WEBM}`;
+    const endRegexp = /[a-z0-9A-Z-_]+$/;
+    const videosDirPath = this.dirPath.replace(endRegexp, '');
+    const roomDir = path.resolve(videosDirPath, `./${this.roomId}`);
+    const name = `${this.dirPath
+      .replace(videosDirPath, '')
+      .replace(new RegExp(`^${this.roomId}${this.delimiter}`), '')}${EXT_WEBM}`;
+    if (!fs.existsSync(roomDir)) {
+      fs.mkdirSync(roomDir);
+    }
+    const src = path.resolve(roomDir, `./${name}`);
     args.push(src);
     const errorCode = await this.runFFmpegCommand(args, loading);
-    const name = `${this.dirPath.replace(
-      this.dirPath.replace(/[a-z0-9A-Z-]+$/, ''),
-      ''
-    )}${EXT_WEBM}`;
     return {
       errorCode,
       name,
@@ -196,7 +205,7 @@ class FFmpeg {
   private createFilterComplexArguments() {
     const args: string[] = [];
     const _episodes = this.createEpisodes();
-    this.episodes = _episodes.map((episode) => {
+    this.episodes = _episodes.map((episode, index) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const episodeCopy: Episode = { ...episode } as any;
       // Set start and duration
@@ -210,7 +219,7 @@ class FFmpeg {
           chunkCopy.audio = true;
         }
         if (chunk.start !== episode.start || chunk.end !== episode.end) {
-          const start = chunk.start - episode.start;
+          const start = index === 0 ? 0 : chunk.start - episode.start;
           const duration = episode.end - episode.start;
           if (chunk.video) {
             chunkCopy.map = createRandHash(this.mapLength);
@@ -543,11 +552,13 @@ class FFmpeg {
 export default FFmpeg;
 
 if (isDev) {
+  const roomId = '1673340519949';
   const dirPath =
-    '/home/kol/Projects/werift-sfu-react/packages/server/rec/videos/1673340519949-1673431208990';
+    '/home/kol/Projects/werift-sfu-react/packages/server/rec/videos/1673340519949_1673510543368';
   new FFmpeg({
     dirPath,
     dir: fs.readdirSync(dirPath),
+    roomId,
   }).createVideo({
     loading: (time) => {
       // eslint-disable-next-line no-console

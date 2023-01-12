@@ -12,13 +12,12 @@ import * as werift from 'werift';
 // import FFmpeg from 'fluent-ffmpeg';
 import path from 'path';
 import fs from 'fs';
-import { MessageType, SendMessageArgs } from '../types/interfaces';
+import { EXT_WEBM, MessageType, SendMessageArgs } from '../types/interfaces';
 import DB from '../core/db';
 import { log } from '../utils/lib';
 import FFmpeg from '../utils/ffmpeg';
 import Settings from './settings';
 import RTC from '../core/rtc';
-import { EXT_WEBM } from '../utils/constants';
 
 class RecordVideo extends DB {
   public cloudVideos: string;
@@ -294,9 +293,21 @@ class RecordVideo extends DB {
     const dir = fs.readdirSync(this.dirPath[roomId]);
     if (!dir.length) {
       log('info', 'Stop record without files', { dir, dirPath: this.dirPath[roomId] });
+      this.settings.sendMessage({
+        msg: {
+          type: MessageType.SET_RECORDING,
+          id,
+          connId: '',
+          data: {
+            time: this.times[roomId],
+            command: 'stop',
+          },
+        },
+        roomId,
+      });
       return;
     }
-    const ffmpeg = new FFmpeg({ dirPath: this.dirPath[roomId], dir });
+    const ffmpeg = new FFmpeg({ dirPath: this.dirPath[roomId], dir, roomId: roomId.toString() });
     const { name, errorCode, time } = await ffmpeg.createVideo({
       loading: (procent) => {
         this.settings.sendMessage({
@@ -407,7 +418,10 @@ class RecordVideo extends DB {
           });
         }, 1000);
 
-        this.dirPath[roomId] = path.resolve(this.videosPath, `./${roomId}-${new Date().getTime()}`);
+        this.dirPath[roomId] = path.resolve(
+          this.videosPath,
+          `./${roomId}${this.rtc.delimiter}${new Date().getTime()}`
+        );
         fs.mkdirSync(this.dirPath[roomId]);
 
         this.rtc.getKeysStreams(roomId).forEach((item) => {
