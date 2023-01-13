@@ -26,6 +26,7 @@ import {
   useVideoRecord,
   useLang,
   useMessages,
+  useUpdateVideo,
 } from './Settings.hooks';
 import PlayIcon from '../Icons/Play';
 import Video from './Video';
@@ -33,6 +34,9 @@ import DeleteIcon from '../Icons/Delete';
 import { useIsOwner } from '../utils/hooks';
 import Dialog from './ui/Dialog';
 import Button from './ui/Button';
+import EditIcon from '../Icons/Edit';
+import Input from './ui/Input';
+import { INPUT_CHANGE_NAME_ID, VIDEO_NAME_MAX_LENGHT } from '../utils/constants';
 
 function Settings({
   theme,
@@ -67,6 +71,15 @@ function Settings({
   );
   const { deleteVideoWrapper, dialogDelete, closeDeleteDialogHandler, openDeleteDialogWrapper } =
     useDeleteVideo({ roomId, ws, token, userId });
+  const {
+    updateVideoWrapper,
+    dialogUpdate,
+    closeUpdateDialogHandler,
+    videoName,
+    nameLenght,
+    openUpdateDialogWrapper,
+    onInputName,
+  } = useUpdateVideo({ roomId, ws, token, userId });
   const { recordStartWrapper } = useVideoRecord({
     roomId,
     userId,
@@ -135,10 +148,13 @@ function Settings({
               <div className={s.video} key={item.id}>
                 <div className={s.actions}>
                   <IconButton onClick={playVideoWrapper({ id: item.id, name: item.name })}>
-                    <PlayIcon width={20} height={20} color={theme?.colors.blue} />
+                    <PlayIcon width={20} height={20} color={theme?.colors.green} />
+                  </IconButton>
+                  <IconButton onClick={openUpdateDialogWrapper({ id: item.id, name: item.name })}>
+                    <EditIcon width={20} height={20} color={theme?.colors.blue} />
                   </IconButton>
                   <IconButton onClick={openDeleteDialogWrapper({ id: item.id, name: item.name })}>
-                    <DeleteIcon width={16} height={16} color={theme?.colors.red} />
+                    <DeleteIcon width={20} height={20} color={theme?.colors.red} />
                   </IconButton>
                 </div>
                 <div className={s.name}>{item.name}</div>
@@ -149,7 +165,7 @@ function Settings({
       )}
       {playedVideo && <Video handleClose={handleCloseVideo} theme={theme} src={playedVideo} />}
       <Dialog {...dialogDelete} theme={theme}>
-        <div className={s.delete__dialog}>
+        <div className={s.dialog}>
           <h5 className={s.title}>{locale.needDeleteVideo}</h5>
           <p className={s.desc}>{dialogDelete.context.name}</p>
           <div className={s.actions}>
@@ -158,6 +174,34 @@ function Settings({
             </Button>
             <Button onClick={deleteVideoWrapper(dialogDelete.context)} theme={theme}>
               {locale.delete}
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+      <Dialog {...dialogUpdate} theme={theme}>
+        <div className={s.dialog}>
+          <h5 className={s.title}>{locale.changeVideoName}</h5>
+          <div className={s.input}>
+            <Input
+              id={INPUT_CHANGE_NAME_ID}
+              value={videoName}
+              theme={theme}
+              onInput={onInputName}
+            />
+            <label
+              htmlFor={INPUT_CHANGE_NAME_ID}
+              className={s.label}
+              style={nameLenght === VIDEO_NAME_MAX_LENGHT ? { color: theme?.colors.yellow } : {}}
+            >
+              {nameLenght}/{VIDEO_NAME_MAX_LENGHT}
+            </label>
+          </div>
+          <div className={s.actions}>
+            <Button onClick={closeUpdateDialogHandler} theme={theme}>
+              {locale.close}
+            </Button>
+            <Button onClick={updateVideoWrapper(dialogDelete.context)} theme={theme}>
+              {locale.save}
             </Button>
           </div>
         </div>

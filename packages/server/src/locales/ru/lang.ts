@@ -88,6 +88,8 @@ const lang: LocaleServer = {
     inactivityDisconnect: 'Вы были отключены за отсутствие активности',
     needDeleteVideo: 'Вы хотите удалить данную видеозапись?',
     close: 'Закрыть',
+    changeVideoName: 'Изменить название видео',
+    save: 'Сохранить',
   },
 };
 

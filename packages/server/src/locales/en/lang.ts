@@ -88,6 +88,8 @@ const lang: LocaleServer = {
     inactivityDisconnect: 'You have been disconnected for inactivity',
     needDeleteVideo: 'Do you want to delete this video?',
     close: 'Close',
+    changeVideoName: 'Change video name',
+    save: 'Save',
   },
 };
 

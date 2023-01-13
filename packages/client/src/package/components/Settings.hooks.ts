@@ -24,9 +24,16 @@ import {
   DIALOG_DELETE_DEFAULT,
   DIALOG_DELETE_DEFAULT_CONTEXT,
   DIALOG_DELETE_DIMENSION,
+  DIALOG_UPDATE_DIMENSION,
   RECORDED_VIDEO_TAKE_DEFAULT,
+  VIDEO_NAME_MAX_LENGHT,
 } from '../utils/constants';
-import { getVideoSrc } from './Settings.lib';
+import {
+  deleteLastSymbol,
+  getFullVideoName,
+  getVideoNameWithoutExt,
+  getVideoSrc,
+} from './Settings.lib';
 import WS, { Protocol } from '../core/ws';
 import storeCanConnect from '../store/canConnect';
 
@@ -190,6 +197,106 @@ export const useDeleteVideo = ({
   );
 
   return { openDeleteDialogWrapper, dialogDelete, closeDeleteDialogHandler, deleteVideoWrapper };
+};
+
+export const useUpdateVideo = ({
+  ws,
+  token,
+  roomId,
+  userId,
+}: {
+  ws: WS;
+  token: string;
+  roomId: string | number;
+  userId: string | number;
+}) => {
+  const [dialogUpdate, setDialogUpdate] =
+    useState<Omit<DialogProps<DialogVideoContext>, 'children'>>(DIALOG_DELETE_DEFAULT);
+  const [videoName, setVideoName] = useState<string>('');
+  const [nameLenght, setNameLenght] = useState<number>(0);
+
+  const openUpdateDialogWrapper =
+    ({ id, name }: DialogVideoContext) =>
+    (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      const { clientX: _clientX, clientY: _clientY } = ev;
+      const { width, height } = DIALOG_UPDATE_DIMENSION;
+      const { clientX, clientY } = getDialogPosition({ _clientX, _clientY, width, height });
+      const shortName = getVideoNameWithoutExt(name);
+      setNameLenght(shortName.length);
+      setDialogUpdate({
+        open: true,
+        context: {
+          id,
+          name,
+        },
+        clientX,
+        clientY,
+        width,
+        height,
+      });
+      setVideoName(shortName);
+    };
+
+  const onInputName = (e: React.FormEvent<HTMLInputElement>) => {
+    const { target } = e;
+    const { value } = target as HTMLInputElement;
+    const _value = value.length <= VIDEO_NAME_MAX_LENGHT ? value : deleteLastSymbol(value);
+    setNameLenght(_value.length);
+    setVideoName(_value);
+  };
+
+  const closeUpdateDialogHandler = useMemo(
+    () => () => {
+      setDialogUpdate({
+        open: false,
+        clientY: dialogUpdate.clientY,
+        clientX: dialogUpdate.clientX,
+        width: 0,
+        height: 0,
+        context: DIALOG_DELETE_DEFAULT_CONTEXT,
+        secure: false,
+      });
+    },
+    [dialogUpdate]
+  );
+
+  const updateVideoWrapper = useMemo(
+    () =>
+      ({ id }: DialogVideoContext) =>
+      (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        const name = getFullVideoName(videoName);
+        setNameLenght(name.length);
+        ws.sendMessage({
+          type: MessageType.GET_VIDEO_UPDATE,
+          id: roomId,
+          connId: '',
+          data: {
+            token,
+            userId,
+            args: {
+              where: {
+                id,
+              },
+              data: {
+                name,
+              },
+            },
+          },
+        });
+        closeUpdateDialogHandler();
+      },
+    [closeUpdateDialogHandler, roomId, token, ws, userId, videoName]
+  );
+
+  return {
+    openUpdateDialogWrapper,
+    dialogUpdate,
+    closeUpdateDialogHandler,
+    videoName,
+    nameLenght,
+    updateVideoWrapper,
+    onInputName,
+  };
 };
 
 export const useMessages = ({

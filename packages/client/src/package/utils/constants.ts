@@ -93,6 +93,10 @@ export const DIALOG_DELETE_DIMENSION = {
   width: 200,
   height: 200,
 };
+export const DIALOG_UPDATE_DIMENSION = {
+  width: 250,
+  height: 200,
+};
 export const SHORT_MESS_LENGTH = 30;
 export const FIRST_MESSAGE_INDENT = 20;
 export const FOLOW_QUOTE_STYLE = 'border: 3px solid lightblue';
@@ -120,3 +124,5 @@ export const PLAY_VIDEO_TIMEOUT = 30000;
 export const BLUR_DISCONNECT_TIMEOUT = 3 * 60 * 1000;
 export const MOBILE_REGEXP = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i;
 export const FULL_HD_COEFF = 1.7777777777777777;
+export const VIDEO_NAME_MAX_LENGHT = 150;
+export const INPUT_CHANGE_NAME_ID = 'change-video-name';

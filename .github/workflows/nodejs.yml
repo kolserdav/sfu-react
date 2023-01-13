@@ -27,7 +27,6 @@ jobs:
           docker-compose -f docker-compose.ci.yml up -d
           npm run env
           npm i
-          which npm
       - name: build
         env:
           CI: false

@@ -156,6 +156,8 @@ export enum MessageType {
   SET_CREATE_VIDEO = 'SET_CREATE_VIDEO',
   GET_VIDEO_DELETE = 'GET_VIDEO_DELETE',
   SET_VIDEO_DELETE = 'SET_VIDEO_DELETE',
+  GET_VIDEO_UPDATE = 'GET_VIDEO_UPDATE',
+  SET_VIDEO_UPDATE = 'SET_VIDEO_UPDATE',
 }
 
 export namespace Locale {
@@ -248,6 +250,8 @@ export namespace Locale {
     inactivityDisconnect: string;
     needDeleteVideo: string;
     close: string;
+    changeVideoName: string;
+    save: string;
   }
 }
 
@@ -350,6 +354,11 @@ export namespace DataTypes {
       token: string;
       args: Prisma.VideoFindFirstArgs;
     };
+    export type GetVideoUpdate = {
+      userId: string | number;
+      token: string;
+      args: Prisma.VideoUpdateArgs;
+    };
     export type GetVideoDelete = {
       userId: string | number;
       token: string;
@@ -423,6 +432,9 @@ export namespace DataTypes {
       value: boolean;
     };
     export type SetVideoFindFirst = {
+      video: Video | null;
+    };
+    export type SetVideoUpdate = {
       video: Video | null;
     };
     export type SetVideoDelete = {
@@ -586,6 +598,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.GetVideoFindFirst
     : T extends MessageType.GET_VIDEO_DELETE
     ? DataTypes.MessageTypes.GetVideoDelete
+    : T extends MessageType.GET_VIDEO_UPDATE
+    ? DataTypes.MessageTypes.GetVideoUpdate
     : T extends MessageType.GET_VIDEO_SETTINGS
     ? DataTypes.MessageTypes.GetVideoSettings
     : T extends MessageType.SET_VIDEO_FIND_MANY
@@ -594,6 +608,8 @@ export namespace DataTypes {
     ? DataTypes.MessageTypes.SetVideoFindFirst
     : T extends MessageType.SET_VIDEO_DELETE
     ? DataTypes.MessageTypes.SetVideoDelete
+    : T extends MessageType.SET_VIDEO_UPDATE
+    ? DataTypes.MessageTypes.SetVideoUpdate
     : T extends MessageType.GET_DELETE_MESSAGE
     ? DataTypes.MessageTypes.GetDeleteMessage
     : T extends MessageType.SET_DELETE_MESSAGE
