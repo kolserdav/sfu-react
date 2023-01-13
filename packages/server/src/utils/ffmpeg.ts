@@ -3,16 +3,20 @@ import path from 'path';
 import { exec } from 'child_process';
 import { differenceInSeconds } from 'date-fns';
 import ffmpeg from 'ffmpeg-static';
-import { createRandHash, log } from './lib';
-import { RECORD_HEIGHT_DEFAULT, RECORD_WIDTH_DEFAULT } from './constants';
-import { EXT_WEBM } from '../types/interfaces';
 
 const isDev = process.env.FFMPEG_DEV === 'true';
 
 if (isDev) {
-  process.env.LOG_LEVEL = '0';
+  process.env.LOG_LEVEL = '2';
   process.env.NODE_ENV = 'development';
 }
+
+// eslint-disable-next-line import/first
+import { createRandHash, log } from './lib';
+// eslint-disable-next-line import/first
+import { RECORD_HEIGHT_DEFAULT, RECORD_WIDTH_DEFAULT } from './constants';
+// eslint-disable-next-line import/first
+import { EXT_WEBM } from '../types/interfaces';
 
 interface Chunk {
   index: number;
@@ -68,7 +72,8 @@ class FFmpeg {
 
   private backgroundImagePath = '/home/kol/Projects/werift-sfu-react/tmp/1png.png';
 
-  private readonly vstackInputs = 'vstack=inputs=';
+  // eslint-disable-next-line class-methods-use-this
+  private readonly vstack = ({ inputs }: { inputs: number }) => `vstack=inputs=${inputs}`;
 
   // eslint-disable-next-line class-methods-use-this
   private readonly hstack = ({ inputs }: { inputs: number }) => `hstack=inputs=${inputs}`;
@@ -205,6 +210,7 @@ class FFmpeg {
   private createFilterComplexArguments() {
     const args: string[] = [];
     const _episodes = this.createEpisodes();
+    let withAudio = false;
     this.episodes = _episodes.map((episode, index) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const episodeCopy: Episode = { ...episode } as any;
@@ -214,9 +220,15 @@ class FFmpeg {
         const chunkCopy: Chunk = { ...chunk } as any;
         if (chunk.video && !chunkCopy.video) {
           chunkCopy.video = true;
+          if (!episode.video) {
+            episodeCopy.video = true;
+          }
         }
         if (chunk.audio && !chunkCopy.audio) {
           chunkCopy.audio = true;
+          if (!episode.audio) {
+            episodeCopy.audio = true;
+          }
         }
         if (chunk.start !== episode.start || chunk.end !== episode.end) {
           const start = index === 0 ? 0 : chunk.start - episode.start;
@@ -255,6 +267,7 @@ class FFmpeg {
         const chunkCopy = { ...chunk };
         if (chunk.audio) {
           audioCount++;
+          withAudio = true;
           arg += this.getArg({ chunk, dest: 'a' });
           episodeCopy.mapA = mapA;
           return chunkCopy;
@@ -289,7 +302,7 @@ class FFmpeg {
       });
       // Set video stacks
       const { videoCount } = this.getCountVideos(episode.chunks);
-      const map = createRandHash(this.mapLength);
+      let map = createRandHash(this.mapLength);
       if (videoCount === 2 || videoCount === 3) {
         arg = '';
         chunks = chunks.map((chunk) => {
@@ -308,8 +321,70 @@ class FFmpeg {
             map: this.createMapArg(map),
           })
         );
+      } else if (videoCount === 4) {
+        arg = '';
+        let i = 0;
+        chunks = chunks.map((chunk) => {
+          if (chunk.video) {
+            i++;
+            if (i <= 2) {
+              const chunkCopy = { ...chunk };
+              arg += this.getArg({ chunk, dest: 'v' });
+              chunkCopy.map = map;
+              return chunkCopy;
+            }
+          }
+          return chunk;
+        });
+        args.push(
+          this.getFilterComplexArgument({
+            args: arg,
+            value: this.hstack({ inputs: 2 }),
+            map: this.createMapArg(map),
+          })
+        );
+        map = createRandHash(this.mapLength);
+        arg = '';
+        i = 0;
+        chunks = chunks.map((chunk) => {
+          if (chunk.video) {
+            i++;
+            if (i > 2) {
+              const chunkCopy = { ...chunk };
+              arg += this.getArg({ chunk, dest: 'v' });
+              chunkCopy.map = map;
+              return chunkCopy;
+            }
+          }
+          return chunk;
+        });
+        args.push(
+          this.getFilterComplexArgument({
+            args: arg,
+            value: this.hstack({ inputs: 2 }),
+            map: this.createMapArg(map),
+          })
+        );
+        map = createRandHash(this.mapLength);
+        episodeCopy.chunks = chunks;
+        const uMaps = this.getUniqueMaps(episodeCopy);
+        arg = '';
+        uMaps.forEach((uMap) => {
+          arg += this.createMapArg(uMap);
+        });
+        chunks = chunks.map((chunk) => {
+          const chunkCopy = { ...chunk };
+          chunkCopy.map = map;
+          return chunkCopy;
+        });
+        args.push(
+          this.getFilterComplexArgument({
+            args: arg,
+            value: this.vstack({ inputs: 2 }),
+            map: this.createMapArg(map),
+          })
+        );
       }
-      // TODO videos.length === 4
       episodeCopy.chunks = chunks;
       return episodeCopy;
     });
@@ -364,13 +439,13 @@ class FFmpeg {
         value: this.concat({
           n: this.episodes.length,
           v: 1,
-          a: 1,
+          a: withAudio ? 1 : 0,
         }),
-        map: `${this.createMapArg(concatMap)}${this.createMapArg(concatMapA)}`,
+        map: `${this.createMapArg(concatMap)}${withAudio ? this.createMapArg(concatMapA) : ''}`,
       })
     );
     const _args = [this.filterComplexOption, this.joinFilterComplexArgs(args)];
-    return _args.concat(this.getMap());
+    return _args.concat(this.getMap(withAudio));
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -385,7 +460,7 @@ class FFmpeg {
     return uMaps;
   }
 
-  private getMap() {
+  private getMap(withAudio: boolean) {
     const maps: string[] = [];
     this.episodes.forEach((item) => {
       if (item.map) {
@@ -395,7 +470,7 @@ class FFmpeg {
           maps.push(map);
         }
       }
-      if (item.mapA) {
+      if (item.mapA && withAudio) {
         const mapA = `"${this.createMapArg(item.mapA)}"`;
         if (maps.indexOf(mapA) === -1) {
           maps.push(this.mapOption);
@@ -444,9 +519,9 @@ class FFmpeg {
         return true;
       });
       const isNew = oldChunks.length === 0;
-      oldChunks = isNew ? chunks : oldChunks;
+      oldChunks = isNew && chunks.length === 1 ? chunks : oldChunks;
       if (!this.isEqual(chunks, oldChunks) || (oldChunks.length === 1 && isNew)) {
-        const chunkPart: Chunk[] = oldChunks.map((item) => {
+        const chunkPart: Chunk[] = chunks.map((item) => {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const _item: Chunk = { ...item } as any;
           return _item;
@@ -554,7 +629,7 @@ export default FFmpeg;
 if (isDev) {
   const roomId = '1673340519949';
   const dirPath =
-    '/home/kol/Projects/werift-sfu-react/packages/server/rec/videos/1673340519949_1673570633599';
+    '/home/kol/Projects/werift-sfu-react/packages/server/rec/videos/1673340519949_1673576851430';
   new FFmpeg({
     dirPath,
     dir: fs.readdirSync(dirPath),
