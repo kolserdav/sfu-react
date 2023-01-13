@@ -455,7 +455,33 @@ export const useMessages = ({
     };
 
     const setVideoDeleteHandler = ({ id }: SendMessageArgs<MessageType.SET_VIDEO_DELETE>) => {
-      const _skip = 0;
+      let _skip = skip - RECORDED_VIDEO_TAKE_DEFAULT - 1;
+      _skip = _skip < 0 ? 0 : _skip;
+      ws.sendMessage({
+        type: MessageType.GET_VIDEO_FIND_MANY,
+        id: roomId,
+        connId: '',
+        data: {
+          args: {
+            where: {
+              roomId: roomId.toString(),
+            },
+            orderBy: {
+              created: 'desc',
+            },
+            skip: _skip,
+            take: RECORDED_VIDEO_TAKE_DEFAULT,
+          },
+          userId,
+          token,
+        },
+      });
+      setSkip(_skip);
+    };
+
+    const setVideoUpdateHandler = ({ id }: SendMessageArgs<MessageType.SET_VIDEO_UPDATE>) => {
+      let _skip = skip - RECORDED_VIDEO_TAKE_DEFAULT;
+      _skip = _skip < 0 ? 0 : _skip;
       ws.sendMessage({
         type: MessageType.GET_VIDEO_FIND_MANY,
         id: roomId,
@@ -503,6 +529,9 @@ export const useMessages = ({
           break;
         case MessageType.SET_VIDEO_DELETE:
           setVideoDeleteHandler(rawMessage);
+          break;
+        case MessageType.SET_VIDEO_UPDATE:
+          setVideoUpdateHandler(rawMessage);
           break;
         case MessageType.SET_ERROR:
           setErrorHandler(rawMessage);

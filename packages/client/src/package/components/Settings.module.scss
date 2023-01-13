@@ -97,6 +97,7 @@ $padding-settings: 2.5rem;
     justify-content: center;
     height: 100%;
     word-break: break-all;
+    margin-right: $padding-settings;
   }
 
   .actions {
@@ -140,6 +141,7 @@ $padding-settings: 2.5rem;
   .desc {
     position: relative;
     word-break: break-all;
+    overflow-y: auto;
   }
 
   .actions {

@@ -200,7 +200,7 @@ function Settings({
             <Button onClick={closeUpdateDialogHandler} theme={theme}>
               {locale.close}
             </Button>
-            <Button onClick={updateVideoWrapper(dialogDelete.context)} theme={theme}>
+            <Button onClick={updateVideoWrapper(dialogUpdate.context)} theme={theme}>
               {locale.save}
             </Button>
           </div>

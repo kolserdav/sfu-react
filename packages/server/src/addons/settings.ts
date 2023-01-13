@@ -260,6 +260,7 @@ class Settings extends DB implements ConnectorInterface {
     const locale = this.getLocale({ roomId: id, userId });
     const { errorCode, unitId } = await this.checkTokenCb({ token });
     const isDefault = checkDefaultAuth({ unitId });
+    // TODO refactor checks to one auth method
     if (errorCode !== 0 && !isDefault) {
       this.sendMessage({
         roomId: id,
@@ -416,6 +417,192 @@ class Settings extends DB implements ConnectorInterface {
       roomId: id,
       msg: {
         type: MessageType.SET_VIDEO_DELETE,
+        id: userId,
+        connId,
+        data: {
+          video,
+        },
+      },
+    });
+  }
+
+  public async videoUpdateHandler({
+    id,
+    data: { args, userId, token },
+    connId,
+  }: SendMessageArgs<MessageType.GET_VIDEO_UPDATE>) {
+    const locale = this.getLocale({ roomId: id, userId });
+    const { errorCode, unitId } = await this.checkTokenCb({ token });
+    const isDefault = checkDefaultAuth({ unitId });
+    // TODO refactor checks to one auth method
+    if (errorCode !== 0 && !isDefault) {
+      this.sendMessage({
+        roomId: id,
+        msg: {
+          type: MessageType.SET_ERROR,
+          connId,
+          id: userId,
+          data: {
+            type: 'warn',
+            message: locale.forbidden,
+            code: ErrorCode.forbidden,
+          },
+        },
+      });
+      return;
+    }
+    if (!isDefault && userId.toString() !== unitId) {
+      this.sendMessage({
+        roomId: id,
+        msg: {
+          type: MessageType.SET_ERROR,
+          connId,
+          id: userId,
+          data: {
+            type: 'warn',
+            message: locale.notAuthorised,
+            code: ErrorCode.notAuthorised,
+          },
+        },
+      });
+      return;
+    }
+    if (!args.where.id) {
+      this.sendMessage({
+        roomId: id,
+        msg: {
+          type: MessageType.SET_ERROR,
+          connId,
+          id: userId,
+          data: {
+            type: 'warn',
+            message: locale.badRequest,
+            code: ErrorCode.badRequest,
+          },
+        },
+      });
+      return;
+    }
+    const _video = await this.videoFindFirst({
+      where: {
+        id: args.where.id,
+      },
+      include: {
+        Room: {
+          select: {
+            id: true,
+            authorId: true,
+          },
+        },
+      },
+    });
+    if (_video === undefined) {
+      this.sendMessage({
+        roomId: id,
+        msg: {
+          type: MessageType.SET_ERROR,
+          connId,
+          id: userId,
+          data: {
+            type: 'error',
+            message: locale.serverError,
+            code: ErrorCode.serverError,
+          },
+        },
+      });
+      return;
+    }
+    if (_video === null) {
+      this.sendMessage({
+        roomId: id,
+        msg: {
+          type: MessageType.SET_ERROR,
+          connId,
+          id: userId,
+          data: {
+            type: 'warn',
+            message: locale.notFound,
+            code: ErrorCode.notFound,
+          },
+        },
+      });
+      return;
+    }
+    if (userId.toString() !== _video.Room.authorId || id.toString() !== _video.Room.id) {
+      this.sendMessage({
+        roomId: id,
+        msg: {
+          type: MessageType.SET_ERROR,
+          connId,
+          id: userId,
+          data: {
+            type: 'warn',
+            message: locale.notAuthorised,
+            code: ErrorCode.notAuthorised,
+          },
+        },
+      });
+      return;
+    }
+    const oldVideoPath = getVideoPath({ cloudPath: this.cloudPath, roomId: id, name: _video.name });
+    if (!fs.existsSync(oldVideoPath)) {
+      this.sendMessage({
+        roomId: id,
+        msg: {
+          type: MessageType.SET_ERROR,
+          connId,
+          id: userId,
+          data: {
+            type: 'warn',
+            message: locale.notFound,
+            code: ErrorCode.notFound,
+          },
+        },
+      });
+      return;
+    }
+
+    const video = await this.videoUpdate({ ...args });
+    if (video === undefined) {
+      this.sendMessage({
+        roomId: id,
+        msg: {
+          type: MessageType.SET_ERROR,
+          connId,
+          id: userId,
+          data: {
+            type: 'error',
+            message: locale.serverError,
+            code: ErrorCode.serverError,
+          },
+        },
+      });
+      return;
+    }
+    if (video === null) {
+      this.sendMessage({
+        roomId: id,
+        msg: {
+          type: MessageType.SET_ERROR,
+          connId,
+          id: userId,
+          data: {
+            type: 'warn',
+            message: locale.notFound,
+            code: ErrorCode.notFound,
+          },
+        },
+      });
+      return;
+    }
+
+    const videoPath = getVideoPath({ cloudPath: this.cloudPath, roomId: id, name: video.name });
+    fs.renameSync(oldVideoPath, videoPath);
+
+    this.sendMessage({
+      roomId: id,
+      msg: {
+        type: MessageType.SET_VIDEO_UPDATE,
         id: userId,
         connId,
         data: {

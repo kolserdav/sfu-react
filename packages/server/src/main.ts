@@ -278,6 +278,9 @@ export function createServer(
         case MessageType.GET_VIDEO_FIND_FIRST:
           settings.videoFindFirstHandler(rawMessage);
           break;
+        case MessageType.GET_VIDEO_UPDATE:
+          settings.videoUpdateHandler(rawMessage);
+          break;
         default:
           wss.sendMessage(rawMessage);
       }
