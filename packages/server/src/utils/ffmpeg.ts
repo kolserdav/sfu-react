@@ -218,13 +218,13 @@ class FFmpeg {
       let chunks: Chunk[] = episode.chunks.map((chunk) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const chunkCopy: Chunk = { ...chunk } as any;
-        if (chunk.video && !chunkCopy.video) {
+        if (chunk.video) {
           chunkCopy.video = true;
           if (!episode.video) {
             episodeCopy.video = true;
           }
         }
-        if (chunk.audio && !chunkCopy.audio) {
+        if (chunk.audio) {
           chunkCopy.audio = true;
           withAudio = true;
           if (!episode.audio) {
@@ -521,9 +521,8 @@ class FFmpeg {
       });
       const isNew = oldChunks.length === 0;
       oldChunks = isNew && chunks.length === 1 ? chunks : oldChunks;
-      // FIXME needed a better algorithm
-      if (!this.isEqual(chunks, oldChunks) || (oldChunks.length === 1 && isNew)) {
-        const chunkPart: Chunk[] = chunks.map((item) => {
+      if ((!this.isEqual(chunks, oldChunks) && !isNew) || (oldChunks.length === 1 && isNew)) {
+        const chunkPart: Chunk[] = oldChunks.map((item) => {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const _item: Chunk = { ...item } as any;
           return _item;
@@ -599,13 +598,13 @@ class FFmpeg {
   }
 
   private async runFFmpegCommand(args: string[], loading: LoadingCallback) {
-    return new Promise((resolve) => {
+    return new Promise<number>((resolve) => {
       const command = `${ffmpeg} ${args.join(' ')}`;
       log('info', 'Run command', command);
       const fC = exec(command, { env: process.env }, (error) => {
         if (error) {
           log('error', 'FFmpeg command error', error);
-          resolve(error.code);
+          resolve(error.code || 0);
         }
       });
       fC.stdout?.on('data', (d) => {
@@ -620,7 +619,7 @@ class FFmpeg {
       });
       fC.on('exit', (code) => {
         log('info', 'FFmpeg command exit with code', code);
-        resolve(code);
+        resolve(code || 0);
       });
     });
   }

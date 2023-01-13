@@ -93,6 +93,7 @@ export function createServer(
   const recordVideo = new RecordVideo({
     settings,
     rtc,
+    ws: wss,
     cloudPath,
     prisma,
   });

@@ -12,12 +12,13 @@ import * as werift from 'werift';
 // import FFmpeg from 'fluent-ffmpeg';
 import path from 'path';
 import fs from 'fs';
-import { EXT_WEBM, MessageType, SendMessageArgs } from '../types/interfaces';
+import { ErrorCode, EXT_WEBM, MessageType, SendMessageArgs } from '../types/interfaces';
 import DB from '../core/db';
-import { getVideosDirPath, log } from '../utils/lib';
+import { getLocale, getVideosDirPath, log } from '../utils/lib';
 import FFmpeg from '../utils/ffmpeg';
 import Settings from './settings';
 import RTC from '../core/rtc';
+import WS from '../core/ws';
 
 class RecordVideo extends DB {
   public settings: Settings;
@@ -40,14 +41,18 @@ class RecordVideo extends DB {
 
   private rtc: RTC;
 
+  private ws: WS;
+
   constructor({
     settings,
     rtc,
+    ws,
     cloudPath,
     prisma,
   }: {
     settings: Settings;
     rtc: RTC;
+    ws: WS;
     cloudPath: string;
     prisma: DB['prisma'];
   }) {
@@ -59,6 +64,7 @@ class RecordVideo extends DB {
       fs.mkdirSync(this.videosPath);
     }
     this.rtc = rtc;
+    this.ws = ws;
     this.setHandlers();
   }
 
@@ -287,6 +293,8 @@ class RecordVideo extends DB {
   }
 
   private async recordVideo({ roomId, id }: { roomId: string | number; id: number | string }) {
+    const locale = getLocale(this.ws.users[id].locale).server;
+
     const dir = fs.readdirSync(this.dirPath[roomId]);
     if (!dir.length) {
       log('info', 'Stop record without files', { dir, dirPath: this.dirPath[roomId] });
@@ -305,48 +313,67 @@ class RecordVideo extends DB {
       return;
     }
     const ffmpeg = new FFmpeg({ dirPath: this.dirPath[roomId], dir, roomId: roomId.toString() });
-    const { name, errorCode, time } = await ffmpeg.createVideo({
-      loading: (procent) => {
-        this.settings.sendMessage({
-          msg: {
-            type: MessageType.SET_CREATE_VIDEO,
-            id,
-            connId: '',
-            data: {
-              procent,
-            },
-          },
-          roomId,
-        });
-        if (procent === 100) {
-          setTimeout(() => {
+    const { name, errorCode, time } = await new Promise<
+      Awaited<ReturnType<typeof ffmpeg.createVideo>>
+    >((resolve) => {
+      ffmpeg
+        .createVideo({
+          loading: (procent) => {
             this.settings.sendMessage({
               msg: {
-                type: MessageType.SET_RECORDING,
+                type: MessageType.SET_CREATE_VIDEO,
                 id,
                 connId: '',
                 data: {
-                  time: this.times[roomId],
-                  command: 'stop',
+                  procent,
                 },
               },
               roomId,
             });
-          }, 3000);
-        }
-      },
+          },
+        })
+        .then((res) => {
+          resolve(res);
+        });
     });
+
     if (errorCode === 0) {
-      fs.rmSync(this.dirPath[roomId], { recursive: true });
+      fs.rmdirSync(this.dirPath[roomId], { recursive: true });
       delete this.dirPath[roomId];
-      this.videoCreate({
+      await this.videoCreate({
         data: {
           roomId: roomId.toString(),
           name,
           time,
         },
       });
+    } else {
+      this.settings.sendMessage({
+        msg: {
+          type: MessageType.SET_ERROR,
+          id,
+          connId: '',
+          data: {
+            type: 'error',
+            message: locale.serverError,
+            code: ErrorCode.serverError,
+          },
+        },
+        roomId,
+      });
     }
+    this.settings.sendMessage({
+      msg: {
+        type: MessageType.SET_RECORDING,
+        id,
+        connId: '',
+        data: {
+          time: this.times[roomId],
+          command: 'stop',
+        },
+      },
+      roomId,
+    });
   }
 
   private cleanRoomRecord({ roomId }: { roomId: string | number }) {

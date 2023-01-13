@@ -399,7 +399,7 @@ class Settings extends DB implements ConnectorInterface {
     const roomDirPath = getRoomDirPath({ videosDirPath, roomId: id });
     const dir = readdirSync(roomDirPath);
     if (dir.length === 0) {
-      fs.rmSync(roomDirPath);
+      fs.rmdirSync(roomDirPath);
     }
 
     this.sendMessage({
