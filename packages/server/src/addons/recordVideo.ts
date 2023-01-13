@@ -342,6 +342,8 @@ class RecordVideo extends DB {
       },
     });
     if (errorCode === 0) {
+      fs.rmSync(this.dirPath[roomId], { recursive: true });
+      delete this.dirPath[roomId];
       this.videoCreate({
         data: {
           roomId: roomId.toString(),

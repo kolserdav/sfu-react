@@ -24,6 +24,9 @@ const lang: LocaleServer = {
     connected: 'Connected',
     ownerCanNotBeDeleted: 'Owner can not be deleted form admins',
     ownerCanNotBeBanned: 'Owner can not be banned',
+    badRequest: 'Bad request',
+    notFound: 'Not found',
+    serverError: 'Server error',
   },
   client: {
     shareScreen: 'Share screen',

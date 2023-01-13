@@ -238,7 +238,7 @@ class DB extends Auth implements DBInterface {
       log('error', 'Error get count of messages', { err });
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let data: any = null;
+    let data;
     try {
       data = await this.prisma.message.findMany(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -372,7 +372,7 @@ class DB extends Auth implements DBInterface {
       log('error', 'Error get count of videos', { err });
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let data: any = null;
+    let data;
     try {
       data = await this.prisma.video.findMany(args);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

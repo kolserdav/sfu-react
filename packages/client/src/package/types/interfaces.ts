@@ -70,6 +70,9 @@ export enum ErrorCode {
   errorToBan = 'errorToBan',
   errorToMute = 'errorToMute',
   errorToOffCamera = 'errorToOffCamera',
+  badRequest = 'badRequest',
+  notFound = 'notFound',
+  serverError = 'serverError',
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -182,6 +185,9 @@ export namespace Locale {
     connected: string;
     ownerCanNotBeDeleted: string;
     ownerCanNotBeBanned: string;
+    badRequest: string;
+    notFound: string;
+    serverError: string;
   }
 
   export interface Client {

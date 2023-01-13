@@ -24,6 +24,9 @@ const lang: LocaleServer = {
     connected: 'Подключился',
     ownerCanNotBeDeleted: 'Создатель комнаты не может быть удален из адсминистраторов',
     ownerCanNotBeBanned: 'Нельзя забанить создателя комнаты',
+    badRequest: 'Неверный запрос',
+    notFound: 'Не найдено',
+    serverError: 'Ошибка сервера',
   },
   client: {
     shareScreen: 'Демонстрация экрана',

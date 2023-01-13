@@ -337,7 +337,25 @@ class Chat extends DB implements ConnectorInterface {
     connId,
     data: { args, userId },
   }: SendMessageArgs<MessageType.GET_CHAT_MESSAGES>) {
+    const lang = this.users[id][userId].locale;
+    const locale = getLocale(lang).server;
     const data = await this.messageFindMany(args);
+    if (data === undefined) {
+      this.sendMessage({
+        roomId: id,
+        msg: {
+          type: MessageType.SET_ERROR,
+          connId,
+          id: userId,
+          data: {
+            type: 'error',
+            message: locale.serverError,
+            code: ErrorCode.serverError,
+          },
+        },
+      });
+      return;
+    }
     this.sendMessage({
       roomId: id,
       msg: {

@@ -515,8 +515,8 @@ class FFmpeg {
         new Date(0, 0, 0, parseInt(t[0], 10), parseInt(t[1], 10), parseInt(t[2], 10)),
         new Date(0, 0, 0, 0, 0, 0)
       );
-
-      result = Math.ceil(d / ((this.time - 1) / 100));
+      const procents = Math.ceil(d / ((this.time - 1) / 100));
+      result = procents < 100 ? procents : 100;
     }
     return result;
   }

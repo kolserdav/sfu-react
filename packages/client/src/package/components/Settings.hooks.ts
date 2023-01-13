@@ -247,7 +247,6 @@ export const useMessages = ({
     const setErrorHandler = ({
       data: { message: children, type },
     }: SendMessageArgs<MessageType.SET_ERROR>) => {
-      console.log(children);
       log(type, children, {}, true);
     };
 
@@ -258,7 +257,7 @@ export const useMessages = ({
       id: _id,
     }: SendMessageArgs<MessageType.SET_VIDEO_FIND_MANY>) => {
       setCount(_count);
-      setVideos(result.concat(videos));
+      setVideos(result);
     };
 
     const setVideoFindFirstHandler = ({
