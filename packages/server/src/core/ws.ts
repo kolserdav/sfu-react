@@ -10,7 +10,6 @@
  ******************************************************************************************/
 import { WebSocketServer, Server, WebSocket, ServerOptions } from 'ws';
 import { createServer } from 'http';
-import path from 'path';
 import fs from 'fs';
 import {
   WSInterface,
@@ -18,8 +17,9 @@ import {
   LocaleValue,
   EXT_WEBM,
   TOKEN_QUERY_NAME,
+  RECORD_VIDEO_NAME,
 } from '../types/interfaces';
-import { log, parseQueryString } from '../utils/lib';
+import { getVideoPath, log, parseQueryString } from '../utils/lib';
 import DB from './db';
 import { AUTH_UNIT_ID_DEFAULT } from '../utils/constants';
 
@@ -41,11 +41,10 @@ class WS extends DB implements WSInterface {
   constructor(
     connectionArgs: ServerOptions & {
       cloudPath: string;
-      cloudVideos: string;
       prisma: DB['prisma'];
     }
   ) {
-    const { cloudPath, cloudVideos, prisma } = connectionArgs;
+    const { cloudPath, prisma } = connectionArgs;
     super({ prisma });
     const _connectionArgs = { ...connectionArgs };
     _connectionArgs.server = server;
@@ -78,7 +77,7 @@ class WS extends DB implements WSInterface {
         return;
       }
 
-      const videoRegex = new RegExp(`^/${cloudVideos}/`);
+      const videoRegex = new RegExp(`^/${RECORD_VIDEO_NAME}/`);
       const isVideos = videoRegex.test(url || '');
       if (isVideos) {
         const id = url.replace(videoRegex, '').replace(new RegExp(`${EXT_WEBM}$`), '');
@@ -106,12 +105,7 @@ class WS extends DB implements WSInterface {
           return;
         }
 
-        const videoPath = path.resolve(
-          cloudPath,
-          `./${cloudVideos}`,
-          `./${video.roomId}`,
-          `./${video.name}`
-        );
+        const videoPath = getVideoPath({ cloudPath, roomId: video.roomId, name: video.name });
         const stream = fs.createReadStream(videoPath);
         response.writeHead(200, { 'Content-Type': 'video/webm' });
         stream.pipe(response);

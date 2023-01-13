@@ -18,7 +18,7 @@ import { PrismaClient } from '@prisma/client';
 import WS from './core/ws';
 import { ServerCallback } from './types';
 import RTC, { OnRoomConnect, OnRoomOpen } from './core/rtc';
-import { MessageType, LogLevel, RECORD_VIDEO_NAME } from './types/interfaces';
+import { MessageType, LogLevel } from './types/interfaces';
 import { cleanDbUrl, getLocale, log, setLogLevel } from './utils/lib';
 import { PORT, CORS, RECORD_DIR_PATH } from './utils/constants';
 import DB from './core/db';
@@ -31,7 +31,6 @@ export const prisma = new PrismaClient();
 
 const db = new DB({ prisma });
 const chat = new Chat({ prisma });
-const settings = new Settings({ prisma });
 
 process.on('uncaughtException', (err: Error) => {
   log('error', 'uncaughtException', err);
@@ -88,14 +87,13 @@ export function createServer(
   }
   setLogLevel(logLevel);
   const cloudPath = _cloudPath || RECORD_DIR_PATH;
-  const cloudVideos = RECORD_VIDEO_NAME;
-  const wss = new WS({ port, cloudPath, cloudVideos, prisma });
+  const wss = new WS({ port, cloudPath, prisma });
   const rtc: RTC | null = new RTC({ ws: wss, prisma });
+  const settings = new Settings({ cloudPath, prisma });
   const recordVideo = new RecordVideo({
     settings,
     rtc,
     cloudPath,
-    cloudVideos,
     prisma,
   });
 

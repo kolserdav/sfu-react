@@ -9,17 +9,21 @@
  * Create Date: Wed Nov 23 2022 15:23:26 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 // eslint-disable-next-line max-classes-per-file
+import fs, { readdirSync } from 'fs';
 import { ConnectorInterface } from '../types';
 import { MessageType, SendMessageArgs, ErrorCode } from '../types/interfaces';
-import { log, getLocale } from '../utils/lib';
+import { log, getLocale, getVideoPath, getVideosDirPath, getRoomDirPath } from '../utils/lib';
 import DB from '../core/db';
 import { AUTH_UNIT_ID_DEFAULT } from '../utils/constants';
 
 class Settings extends DB implements ConnectorInterface {
   public users: ConnectorInterface['users'] = {};
 
-  constructor({ prisma }: { prisma: DB['prisma'] }) {
+  private cloudPath: string;
+
+  constructor({ cloudPath, prisma }: { cloudPath: string; prisma: DB['prisma'] }) {
     super({ prisma });
+    this.cloudPath = cloudPath;
   }
 
   public setUnit: ConnectorInterface['setUnit'] = ({ roomId, userId, ws, locale, connId }) => {
@@ -301,6 +305,7 @@ class Settings extends DB implements ConnectorInterface {
       include: {
         Room: {
           select: {
+            id: true,
             authorId: true,
           },
         },
@@ -338,7 +343,7 @@ class Settings extends DB implements ConnectorInterface {
       });
       return;
     }
-    if (userId.toString() !== _video.Room.authorId) {
+    if (userId.toString() !== _video.Room.authorId || id.toString() !== _video.Room.id) {
       this.sendMessage({
         roomId: id,
         msg: {
@@ -371,6 +376,32 @@ class Settings extends DB implements ConnectorInterface {
       });
       return;
     }
+    if (video === null) {
+      this.sendMessage({
+        roomId: id,
+        msg: {
+          type: MessageType.SET_ERROR,
+          connId,
+          id: userId,
+          data: {
+            type: 'warn',
+            message: locale.notFound,
+            code: ErrorCode.notFound,
+          },
+        },
+      });
+      return;
+    }
+
+    const videoPath = getVideoPath({ cloudPath: this.cloudPath, roomId: id, name: video.name });
+    fs.rmSync(videoPath);
+    const videosDirPath = getVideosDirPath({ cloudPath: this.cloudPath });
+    const roomDirPath = getRoomDirPath({ videosDirPath, roomId: id });
+    const dir = readdirSync(roomDirPath);
+    if (dir.length === 0) {
+      fs.rmSync(roomDirPath);
+    }
+
     this.sendMessage({
       roomId: id,
       msg: {

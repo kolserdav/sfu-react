@@ -14,14 +14,12 @@ import path from 'path';
 import fs from 'fs';
 import { EXT_WEBM, MessageType, SendMessageArgs } from '../types/interfaces';
 import DB from '../core/db';
-import { log } from '../utils/lib';
+import { getVideosDirPath, log } from '../utils/lib';
 import FFmpeg from '../utils/ffmpeg';
 import Settings from './settings';
 import RTC from '../core/rtc';
 
 class RecordVideo extends DB {
-  public cloudVideos: string;
-
   public settings: Settings;
 
   public cloudPath: string;
@@ -46,20 +44,17 @@ class RecordVideo extends DB {
     settings,
     rtc,
     cloudPath,
-    cloudVideos,
     prisma,
   }: {
     settings: Settings;
     rtc: RTC;
     cloudPath: string;
-    cloudVideos: string;
     prisma: DB['prisma'];
   }) {
     super({ prisma });
     this.cloudPath = cloudPath;
     this.settings = settings;
-    this.cloudVideos = cloudVideos;
-    this.videosPath = path.resolve(this.cloudPath, this.cloudVideos);
+    this.videosPath = getVideosDirPath({ cloudPath });
     if (!fs.existsSync(this.videosPath)) {
       fs.mkdirSync(this.videosPath);
     }

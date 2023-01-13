@@ -10,8 +10,9 @@
  ******************************************************************************************/
 import werift from 'werift';
 import { format } from 'date-fns';
+import path from 'path';
 import { IS_DEV, LOG_LEVEL } from './constants';
-import { LocaleServer, LocaleDefault, LocaleValue } from '../types/interfaces';
+import { LocaleServer, LocaleDefault, LocaleValue, RECORD_VIDEO_NAME } from '../types/interfaces';
 import en from '../locales/en/lang';
 import ru from '../locales/ru/lang';
 
@@ -130,3 +131,24 @@ export const parseQueryString = (query: string): Record<string, string> => {
   });
   return res;
 };
+
+export const getVideoPath = ({
+  cloudPath,
+  roomId,
+  name,
+}: {
+  cloudPath: string;
+  roomId: string | number;
+  name: string;
+}) => path.resolve(cloudPath, `./${RECORD_VIDEO_NAME}`, `./${roomId}`, `./${name}`);
+
+export const getVideosDirPath = ({ cloudPath }: { cloudPath: string }) =>
+  path.resolve(cloudPath, `./${RECORD_VIDEO_NAME}`);
+
+export const getRoomDirPath = ({
+  videosDirPath,
+  roomId,
+}: {
+  videosDirPath: string;
+  roomId: string | number;
+}) => path.resolve(videosDirPath, `./${roomId}`);
