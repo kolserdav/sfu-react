@@ -86,9 +86,12 @@ function Settings({
       <div className={s.item} style={{ boxShadow: `1px 3px 1px ${theme?.colors.active}` }}>
         <h5 className={s.item__title}>{locale.generalSettings}</h5>
 
-        <Select theme={theme} onChange={changeLang} value={lang} title={locale.changeLang}>
-          {LocaleSelector}
-        </Select>
+        <div className={s.item__row}>
+          <h6 className={s.item__title}>{locale.changeLang}</h6>
+          <Select theme={theme} onChange={changeLang} value={lang} title={locale.changeLang}>
+            {LocaleSelector}
+          </Select>
+        </div>
 
         <div className={s.item__row}>
           <h6 className={s.item__title}>{locale.darkTheme}</h6>

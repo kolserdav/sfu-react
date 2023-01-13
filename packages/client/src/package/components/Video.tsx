@@ -13,8 +13,7 @@ import IconButton from './ui/IconButton';
 import CloseIcon from '../Icons/Close';
 import s from './Video.module.scss';
 import { Theme } from '../Theme';
-
-// FIXME calculate width
+import { FULL_HD_COEFF, MOBILE_WIDTH } from '../utils/constants';
 
 function Video({
   src,
@@ -25,12 +24,19 @@ function Video({
   theme: Theme | undefined;
   handleClose: () => void;
 }) {
+  const width =
+    typeof window === 'undefined'
+      ? MOBILE_WIDTH
+      : MOBILE_WIDTH > window.innerWidth
+      ? window.innerWidth
+      : MOBILE_WIDTH;
+
   return (
     <div className={s.wrapper}>
       <IconButton onClick={handleClose} className={s.close__button}>
         <CloseIcon color={theme?.colors.white} />
       </IconButton>
-      <video autoPlay width={600} height={600 / 1.3} src={src} controls />
+      <video autoPlay width={width} height={width / FULL_HD_COEFF} src={src} controls />
     </div>
   );
 }

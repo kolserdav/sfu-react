@@ -119,3 +119,4 @@ export const MAX_VIDEO_STREAMS = 4;
 export const PLAY_VIDEO_TIMEOUT = 30000;
 export const BLUR_DISCONNECT_TIMEOUT = 3 * 60 * 1000;
 export const MOBILE_REGEXP = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i;
+export const FULL_HD_COEFF = 1.7777777777777777;

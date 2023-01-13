@@ -298,6 +298,7 @@ class RecordVideo extends DB {
     const dir = fs.readdirSync(this.dirPath[roomId]);
     if (!dir.length) {
       log('info', 'Stop record without files', { dir, dirPath: this.dirPath[roomId] });
+      fs.rmSync(this.dirPath[roomId], { recursive: true, force: true });
       this.settings.sendMessage({
         msg: {
           type: MessageType.SET_RECORDING,
@@ -310,6 +311,7 @@ class RecordVideo extends DB {
         },
         roomId,
       });
+      delete this.dirPath[roomId];
       return;
     }
     const ffmpeg = new FFmpeg({ dirPath: this.dirPath[roomId], dir, roomId: roomId.toString() });
@@ -338,7 +340,7 @@ class RecordVideo extends DB {
     });
 
     if (errorCode === 0) {
-      fs.rmdirSync(this.dirPath[roomId], { recursive: true });
+      fs.rmSync(this.dirPath[roomId], { recursive: true, force: true });
       delete this.dirPath[roomId];
       await this.videoCreate({
         data: {

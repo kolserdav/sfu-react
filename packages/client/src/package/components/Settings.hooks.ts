@@ -311,8 +311,7 @@ export const useMessages = ({
               },
             },
           });
-          // TODO check event
-        }, 3000);
+        }, 0);
       }
     };
 

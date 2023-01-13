@@ -2,6 +2,7 @@
 
 $border-width: 2px;
 $settings-item-padding: 1rem;
+$padding-settings: 2.5rem;
 
 .wrapper {
   position: relative;
@@ -27,15 +28,14 @@ $settings-item-padding: 1rem;
       z-index: 105;
       height: 100vh;
       transition: all 0.3s ease-out;
-      padding: 0 3rem;
-      width: calc(100% - 2rem);
+      padding: 0 $padding-settings;
     }
   }
 
   .item {
     position: relative;
-    width: 100%;
-    height: calc(100% - 4px);
+    width: 100vw;
+    height: 100vh;
     display: flex;
     padding: $settings-item-padding;
     flex-direction: column;
@@ -70,8 +70,8 @@ $settings-item-padding: 1rem;
     .item__row {
       display: flex;
       flex-direction: row;
-      width: 100%;
-      justify-content: space-around;
+      width: calc(100% - #{$padding-settings});
+      justify-content: space-between;
       align-items: center;
       /* stylelint-disable-next-line declaration-block-no-redundant-longhand-properties */
       flex-wrap: nowrap;
@@ -101,8 +101,11 @@ $settings-item-padding: 1rem;
   }
 
   .actions {
+    position: relative;
+    width: 100%;
     display: flex;
     flex-direction: row;
+    justify-content: space-around;
   }
 }
 
