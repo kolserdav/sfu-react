@@ -33,6 +33,7 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
     blocked,
     message,
     messages,
+    chatUnit,
     changeText,
     sendMessage,
     rows,
@@ -148,12 +149,12 @@ function Chat({ server, port, roomId, userId, locale, theme }: ChatProps) {
             ref={inputRef}
             onInput={changeText}
             value={message}
-            disabled={roomIsInactive || blocked}
+            disabled={roomIsInactive || blocked || !chatUnit}
             placeholder={blocked ? locale.chatBlocked : ''}
           />
           <IconButton
             id="send-message"
-            disabled={roomIsInactive || blocked}
+            disabled={roomIsInactive || blocked || !chatUnit}
             className={s.send__icon}
             title={locale.send}
             onClick={sendMessage}

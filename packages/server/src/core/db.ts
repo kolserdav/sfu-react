@@ -20,15 +20,7 @@ class DB extends Auth implements DBInterface {
     Prisma.RejectOnNotFound | Prisma.RejectPerOperation | undefined
   >;
 
-  constructor({
-    prisma,
-  }: {
-    prisma: PrismaClient<
-      Prisma.PrismaClientOptions,
-      never,
-      Prisma.RejectOnNotFound | Prisma.RejectPerOperation | undefined
-    >;
-  }) {
+  constructor({ prisma }: { prisma: DB['prisma'] }) {
     super();
     this.prisma = prisma;
   }

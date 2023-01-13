@@ -12,7 +12,7 @@ import { ConnectorInterface } from '../types';
 import { ErrorCode, MessageType, SendMessageArgs } from '../types/interfaces';
 import { getLocale, log } from '../utils/lib';
 import DB from '../core/db';
-import { IS_DEV } from '../utils/constants';
+import { AUTH_UNIT_ID_DEFAULT, IS_DEV } from '../utils/constants';
 
 class Chat extends DB implements ConnectorInterface {
   public users: ConnectorInterface['users'] = {};
@@ -30,6 +30,9 @@ class Chat extends DB implements ConnectorInterface {
     locale,
     connId,
   }) => {
+    if (userId === AUTH_UNIT_ID_DEFAULT) {
+      return;
+    }
     if (!this.users[roomId]) {
       this.users[roomId] = {};
     }
@@ -116,6 +119,10 @@ class Chat extends DB implements ConnectorInterface {
     connId,
     data: { userId, message },
   }: SendMessageArgs<MessageType.GET_ROOM_MESSAGE>) {
+    if (!this.users[id][userId]) {
+      log('warn', 'Send chat message without user', { userId, id, message });
+      return;
+    }
     const locale = getLocale(this.users[id][userId].locale).server;
     const res = await this.messageCreate({
       data: {

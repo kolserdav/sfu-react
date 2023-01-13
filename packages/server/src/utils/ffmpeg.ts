@@ -465,12 +465,12 @@ class FFmpeg {
       }
       oldChunks = chunks;
     });
-    return episodes.map((item, index) => {
-      const _item = { ...item };
+    return episodes.map((episode, index) => {
+      const _episode: Episode = { ...episode };
       if (!episodes[index + 1]) {
-        _item.end = this.time;
+        _episode.end = this.time;
       }
-      return _item;
+      return _episode;
     });
   }
 
@@ -516,7 +516,7 @@ class FFmpeg {
         new Date(0, 0, 0, 0, 0, 0)
       );
 
-      result = Math.ceil(d / (this.time / 100));
+      result = Math.ceil(d / ((this.time - 1) / 100));
     }
     return result;
   }
@@ -554,7 +554,7 @@ export default FFmpeg;
 if (isDev) {
   const roomId = '1673340519949';
   const dirPath =
-    '/home/kol/Projects/werift-sfu-react/packages/server/rec/videos/1673340519949_1673510543368';
+    '/home/kol/Projects/werift-sfu-react/packages/server/rec/videos/1673340519949_1673570633599';
   new FFmpeg({
     dirPath,
     dir: fs.readdirSync(dirPath),

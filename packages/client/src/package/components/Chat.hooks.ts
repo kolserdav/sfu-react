@@ -678,6 +678,7 @@ export const useMesages = ({
     changeText,
     blocked,
     sendMessage,
+    chatUnit,
     messages,
     message,
     rows,

@@ -23,6 +23,7 @@ class Settings extends DB implements ConnectorInterface {
   }
 
   public setUnit: ConnectorInterface['setUnit'] = ({ roomId, userId, ws, locale, connId }) => {
+    const lang = getLocale(locale).server;
     if (!this.users[roomId]) {
       this.users[roomId] = {};
     }
@@ -34,6 +35,27 @@ class Settings extends DB implements ConnectorInterface {
       ws,
       connId,
     };
+    if (userId === AUTH_UNIT_ID_DEFAULT) {
+      this.sendMessage(
+        {
+          roomId,
+          msg: {
+            id: userId,
+            connId,
+            type: MessageType.SET_ERROR,
+            data: {
+              type: 'warn',
+              message: lang.notAuthorised,
+              code: ErrorCode.notAuthorised,
+            },
+          },
+        },
+        () => {
+          delete this.users[roomId][userId];
+        }
+      );
+      return;
+    }
     this.sendMessage({
       roomId,
       msg: {

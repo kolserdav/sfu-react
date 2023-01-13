@@ -71,7 +71,8 @@ class WS extends DB implements WSInterface {
       const url = _url.replace(qS, '');
       const { [TOKEN_QUERY_NAME]: token } = parseQueryString(qS);
       const { errorCode, unitId } = await this.checkTokenCb({ token });
-      if (errorCode !== 0 && unitId !== AUTH_UNIT_ID_DEFAULT) {
+      const isDefaultAuth = unitId === AUTH_UNIT_ID_DEFAULT;
+      if (errorCode !== 0 && !isDefaultAuth) {
         response.writeHead(403);
         response.end();
         return;
@@ -99,7 +100,7 @@ class WS extends DB implements WSInterface {
           return;
         }
         // Check author
-        if (unitId !== video.Room.authorId) {
+        if (unitId !== video.Room.authorId && !isDefaultAuth) {
           response.writeHead(401);
           response.end();
           return;
@@ -136,6 +137,9 @@ class WS extends DB implements WSInterface {
     locale: LocaleValue;
     userName: string;
   }) {
+    if (_id === AUTH_UNIT_ID_DEFAULT) {
+      return;
+    }
     const oldSock = Object.keys(this.sockets).find((item) => {
       const sock = item.split(this.delimiter);
       return sock[0] === _id.toString();

@@ -29,6 +29,7 @@ import {
   ICE_PORT_MAX,
   IS_DEV,
   IS_CI,
+  AUTH_UNIT_ID_DEFAULT,
 } from '../utils/constants';
 import WS from './ws';
 import DB from './db';
@@ -992,6 +993,9 @@ class RTC
       id,
       connId,
     } = message;
+    if (uid === AUTH_UNIT_ID_DEFAULT) {
+      return;
+    }
     if (!this.rooms[id]) {
       this.rooms[id] = [];
       this.askeds[id] = [];
