@@ -403,6 +403,7 @@ export namespace DataTypes {
     export type GetRecord = {
       command: keyof typeof RecordCommand;
       userId: string | number;
+      token: string;
     };
     export type GetDeleteMessage = {
       args: Prisma.MessageDeleteArgs;

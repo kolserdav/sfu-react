@@ -19,9 +19,8 @@ import {
   TOKEN_QUERY_NAME,
   RECORD_VIDEO_NAME,
 } from '../types/interfaces';
-import { getVideoPath, log, parseQueryString } from '../utils/lib';
+import { checkDefaultAuth, getLocale, getVideoPath, log, parseQueryString } from '../utils/lib';
 import DB from './db';
-import { AUTH_UNIT_ID_DEFAULT } from '../utils/constants';
 
 const server = createServer();
 
@@ -70,7 +69,7 @@ class WS extends DB implements WSInterface {
       const url = _url.replace(qS, '');
       const { [TOKEN_QUERY_NAME]: token } = parseQueryString(qS);
       const { errorCode, unitId } = await this.checkTokenCb({ token });
-      const isDefaultAuth = unitId === AUTH_UNIT_ID_DEFAULT;
+      const isDefaultAuth = checkDefaultAuth({ unitId });
       if (errorCode !== 0 && !isDefaultAuth) {
         response.writeHead(403);
         response.end();
@@ -131,7 +130,7 @@ class WS extends DB implements WSInterface {
     locale: LocaleValue;
     userName: string;
   }) {
-    if (_id === AUTH_UNIT_ID_DEFAULT) {
+    if (checkDefaultAuth({ unitId: _id.toString() })) {
       return;
     }
     const oldSock = Object.keys(this.sockets).find((item) => {
@@ -211,6 +210,10 @@ class WS extends DB implements WSInterface {
     const res: any = data;
     return res;
   };
+
+  public getLocale({ userId }: { userId: string | number }) {
+    return getLocale(this.users[userId].locale).server;
+  }
 
   public sendMessage: WSInterface['sendMessage'] = (args, second, cb) =>
     new Promise((resolve) => {

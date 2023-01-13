@@ -12,9 +12,15 @@
 import fs, { readdirSync } from 'fs';
 import { ConnectorInterface } from '../types';
 import { MessageType, SendMessageArgs, ErrorCode } from '../types/interfaces';
-import { log, getLocale, getVideoPath, getVideosDirPath, getRoomDirPath } from '../utils/lib';
+import {
+  log,
+  getLocale,
+  getVideoPath,
+  getVideosDirPath,
+  getRoomDirPath,
+  checkDefaultAuth,
+} from '../utils/lib';
 import DB from '../core/db';
-import { AUTH_UNIT_ID_DEFAULT } from '../utils/constants';
 
 class Settings extends DB implements ConnectorInterface {
   public users: ConnectorInterface['users'] = {};
@@ -39,7 +45,7 @@ class Settings extends DB implements ConnectorInterface {
       ws,
       connId,
     };
-    if (userId === AUTH_UNIT_ID_DEFAULT) {
+    if (checkDefaultAuth({ unitId: userId.toString() })) {
       this.sendMessage(
         {
           roomId,
@@ -102,14 +108,18 @@ class Settings extends DB implements ConnectorInterface {
     delete this.users[roomId][userId];
   };
 
+  private getLocale({ userId, roomId }: { userId: string | number; roomId: string | number }) {
+    return getLocale(this.users[roomId][userId].locale).server;
+  }
+
   public async videoFindManyHandler({
     id,
     data: { args, userId, token },
     connId,
   }: SendMessageArgs<MessageType.GET_VIDEO_FIND_MANY>) {
-    const locale = getLocale(this.users[id][userId].locale).server;
+    const locale = this.getLocale({ roomId: id, userId });
     const { errorCode, unitId } = await this.checkTokenCb({ token });
-    const isDefault = unitId === AUTH_UNIT_ID_DEFAULT;
+    const isDefault = checkDefaultAuth({ unitId });
     if (errorCode !== 0 && !isDefault) {
       this.sendMessage({
         roomId: id,
@@ -177,9 +187,9 @@ class Settings extends DB implements ConnectorInterface {
     data: { args, userId, token },
     connId,
   }: SendMessageArgs<MessageType.GET_VIDEO_FIND_MANY>) {
-    const locale = getLocale(this.users[id][userId].locale).server;
+    const locale = this.getLocale({ roomId: id, userId });
     const { errorCode, unitId } = await this.checkTokenCb({ token });
-    const isDefault = unitId === AUTH_UNIT_ID_DEFAULT;
+    const isDefault = checkDefaultAuth({ unitId });
     if (errorCode !== 0 && !isDefault) {
       this.sendMessage({
         roomId: id,
@@ -247,9 +257,9 @@ class Settings extends DB implements ConnectorInterface {
     data: { args, userId, token },
     connId,
   }: SendMessageArgs<MessageType.GET_VIDEO_DELETE>) {
-    const locale = getLocale(this.users[id][userId].locale).server;
+    const locale = this.getLocale({ roomId: id, userId });
     const { errorCode, unitId } = await this.checkTokenCb({ token });
-    const isDefault = unitId === AUTH_UNIT_ID_DEFAULT;
+    const isDefault = checkDefaultAuth({ unitId });
     if (errorCode !== 0 && !isDefault) {
       this.sendMessage({
         roomId: id,

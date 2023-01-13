@@ -11,7 +11,7 @@
 import werift from 'werift';
 import { format } from 'date-fns';
 import path from 'path';
-import { IS_DEV, LOG_LEVEL } from './constants';
+import { AUTH_UNIT_ID_DEFAULT, IS_DEV, LOG_LEVEL } from './constants';
 import { LocaleServer, LocaleDefault, LocaleValue, RECORD_VIDEO_NAME } from '../types/interfaces';
 import en from '../locales/en/lang';
 import ru from '../locales/ru/lang';
@@ -152,3 +152,5 @@ export const getRoomDirPath = ({
   videosDirPath: string;
   roomId: string | number;
 }) => path.resolve(videosDirPath, `./${roomId}`);
+
+export const checkDefaultAuth = ({ unitId }: { unitId: string }) => unitId === AUTH_UNIT_ID_DEFAULT;

@@ -114,6 +114,10 @@ class Chat extends DB implements ConnectorInterface {
     });
   };
 
+  private getLocale({ userId, roomId }: { userId: string | number; roomId: string | number }) {
+    return getLocale(this.users[roomId][userId].locale).server;
+  }
+
   public async handleRoomMessage({
     id,
     connId,
@@ -123,7 +127,7 @@ class Chat extends DB implements ConnectorInterface {
       log('warn', 'Send chat message without user', { userId, id, message });
       return;
     }
-    const locale = getLocale(this.users[id][userId].locale).server;
+    const locale = this.getLocale({ roomId: id, userId });
     const res = await this.messageCreate({
       data: {
         unitId: userId.toString(),
@@ -300,8 +304,7 @@ class Chat extends DB implements ConnectorInterface {
     data: { args, userId },
   }: SendMessageArgs<MessageType.GET_DELETE_MESSAGE>) {
     const res = await this.messageDelete(args);
-    const lang = this.users[id][userId].locale;
-    const locale = getLocale(lang).server;
+    const locale = this.getLocale({ roomId: id, userId });
     if (res === null) {
       this.sendMessage({
         roomId: id,
@@ -337,8 +340,7 @@ class Chat extends DB implements ConnectorInterface {
     connId,
     data: { args, userId },
   }: SendMessageArgs<MessageType.GET_CHAT_MESSAGES>) {
-    const lang = this.users[id][userId].locale;
-    const locale = getLocale(lang).server;
+    const locale = this.getLocale({ roomId: id, userId });
     const data = await this.messageFindMany(args);
     if (data === undefined) {
       this.sendMessage({

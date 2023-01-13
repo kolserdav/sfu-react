@@ -21,7 +21,7 @@ import {
   RoomList,
   Command,
 } from '../types/interfaces';
-import { checkSignallingState, getLocale, log } from '../utils/lib';
+import { checkDefaultAuth, checkSignallingState, log } from '../utils/lib';
 import {
   STUN_SERVER,
   SENT_RTCP_INTERVAL,
@@ -29,7 +29,6 @@ import {
   ICE_PORT_MAX,
   IS_DEV,
   IS_CI,
-  AUTH_UNIT_ID_DEFAULT,
 } from '../utils/constants';
 import WS from './ws';
 import DB from './db';
@@ -567,7 +566,7 @@ class RTC
   }: SendMessageArgs<MessageType.GET_TO_ADMIN>) {
     const roomId = id.toString();
     const unitId = target.toString();
-    const locale = getLocale(this.ws.users[userId].locale).server;
+    const locale = this.ws.getLocale({ userId });
     let admins = await this.adminsFindFirst({
       where: {
         AND: [
@@ -863,7 +862,7 @@ class RTC
         id: roomId.toString(),
       },
     });
-    const locale = getLocale(this.ws.users[userId].locale).server;
+    const locale = this.ws.getLocale({ userId });
     let isOwner = room?.authorId === userId.toString();
     if (!room) {
       const authorId = userId.toString();
@@ -993,7 +992,7 @@ class RTC
       id,
       connId,
     } = message;
-    if (uid === AUTH_UNIT_ID_DEFAULT) {
+    if (checkDefaultAuth({ unitId: uid.toString() })) {
       return;
     }
     if (!this.rooms[id]) {
@@ -1012,7 +1011,7 @@ class RTC
       }
       return true;
     });
-    const locale = getLocale(this.ws.users[uid].locale).server;
+    const locale = this.ws.getLocale({ userId: uid });
     if (index !== -1) {
       this.ws.sendMessage({
         type: MessageType.SET_ERROR,
@@ -1346,7 +1345,7 @@ class RTC
     id: roomId,
     data: { target, userId },
   }: SendMessageArgs<MessageType.GET_TO_BAN>) {
-    const locale = getLocale(this.ws.users[target].locale).server;
+    const locale = this.ws.getLocale({ userId: target });
     const id = roomId.toString();
     const room = await this.roomFindFirst({
       where: {

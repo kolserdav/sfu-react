@@ -72,6 +72,7 @@ function Settings({
     userId,
     buttonDisabled,
     setButtonDisabled,
+    token,
     ws,
   });
 

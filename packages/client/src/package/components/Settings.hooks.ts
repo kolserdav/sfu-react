@@ -51,12 +51,14 @@ export const useVideoRecord = ({
   ws,
   buttonDisabled,
   setButtonDisabled,
+  token,
 }: {
   roomId: string | number;
   userId: string | number;
   ws: WS;
   buttonDisabled: boolean;
   setButtonDisabled: React.Dispatch<React.SetStateAction<boolean>>;
+  token: string;
 }) => {
   const recordStartWrapper =
     (command: SendMessageArgs<MessageType.GET_RECORD>['data']['command']) => () => {
@@ -71,6 +73,7 @@ export const useVideoRecord = ({
         data: {
           command,
           userId,
+          token,
         },
       });
     };
@@ -265,8 +268,12 @@ export const useMessages = ({
       id: _id,
     }: SendMessageArgs<MessageType.SET_VIDEO_FIND_FIRST>) => {
       if (video) {
-        const _video = [video];
-        setVideos(_video.concat(videos));
+        const _videos = videos.map((item) => item);
+        // FIXME if needed sort of videos
+        if (videos[0]?.id !== video.id) {
+          _videos.push(video);
+          setVideos(_videos);
+        }
       }
     };
 
@@ -342,6 +349,7 @@ export const useMessages = ({
     };
 
     const setVideoDeleteHandler = ({ id }: SendMessageArgs<MessageType.SET_VIDEO_DELETE>) => {
+      const _skip = 0;
       ws.sendMessage({
         type: MessageType.GET_VIDEO_FIND_MANY,
         id: roomId,
@@ -354,13 +362,14 @@ export const useMessages = ({
             orderBy: {
               created: 'desc',
             },
-            skip,
+            skip: _skip,
             take: RECORDED_VIDEO_TAKE_DEFAULT,
           },
           userId,
           token,
         },
       });
+      setSkip(_skip);
     };
 
     ws.onMessage = (ev) => {

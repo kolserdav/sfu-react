@@ -14,7 +14,7 @@ import path from 'path';
 import fs from 'fs';
 import { ErrorCode, EXT_WEBM, MessageType, SendMessageArgs } from '../types/interfaces';
 import DB from '../core/db';
-import { getLocale, getVideosDirPath, log } from '../utils/lib';
+import { checkDefaultAuth, getVideosDirPath, log } from '../utils/lib';
 import FFmpeg from '../utils/ffmpeg';
 import Settings from './settings';
 import RTC from '../core/rtc';
@@ -293,7 +293,7 @@ class RecordVideo extends DB {
   }
 
   private async recordVideo({ roomId, id }: { roomId: string | number; id: number | string }) {
-    const locale = getLocale(this.ws.users[id].locale).server;
+    const locale = this.ws.getLocale({ userId: id });
 
     const dir = fs.readdirSync(this.dirPath[roomId]);
     if (!dir.length) {
@@ -420,8 +420,118 @@ class RecordVideo extends DB {
   public async handleVideoRecord(args: SendMessageArgs<MessageType.GET_RECORD>) {
     const {
       id: roomId,
-      data: { command, userId: id },
+      data: { command, userId: id, token },
     } = args;
+
+    const sendStopRecord = () => {
+      this.settings.sendMessage({
+        msg: {
+          type: MessageType.SET_RECORDING,
+          id,
+          connId: '',
+          data: {
+            time: 0,
+            command: 'stop',
+          },
+        },
+        roomId,
+      });
+    };
+
+    const locale = this.ws.getLocale({ userId: id });
+    const { errorCode, unitId } = await this.checkTokenCb({ token });
+    const isDefault = checkDefaultAuth({ unitId });
+    if (errorCode !== 0 && !isDefault) {
+      this.settings.sendMessage({
+        msg: {
+          type: MessageType.SET_ERROR,
+          id,
+          connId: '',
+          data: {
+            type: 'warn',
+            message: locale.forbidden,
+            code: ErrorCode.forbidden,
+          },
+        },
+        roomId,
+      });
+      sendStopRecord();
+      return;
+    }
+    if (unitId !== id.toString() && !isDefault) {
+      this.settings.sendMessage({
+        msg: {
+          type: MessageType.SET_ERROR,
+          id,
+          connId: '',
+          data: {
+            type: 'warn',
+            message: locale.notAuthorised,
+            code: ErrorCode.notAuthorised,
+          },
+        },
+        roomId,
+      });
+      sendStopRecord();
+      return;
+    }
+    const room = await this.roomFindFirst({
+      where: {
+        id: roomId.toString(),
+      },
+    });
+    if (room === undefined) {
+      this.settings.sendMessage({
+        msg: {
+          type: MessageType.SET_ERROR,
+          id,
+          connId: '',
+          data: {
+            type: 'error',
+            message: locale.serverError,
+            code: ErrorCode.serverError,
+          },
+        },
+        roomId,
+      });
+      sendStopRecord();
+      return;
+    }
+    if (room === null) {
+      this.settings.sendMessage({
+        msg: {
+          type: MessageType.SET_ERROR,
+          id,
+          connId: '',
+          data: {
+            type: 'error',
+            message: locale.notFound,
+            code: ErrorCode.notFound,
+          },
+        },
+        roomId,
+      });
+      sendStopRecord();
+      return;
+    }
+    if (unitId !== room.authorId && !isDefault) {
+      this.settings.sendMessage({
+        msg: {
+          type: MessageType.SET_ERROR,
+          id,
+          connId: '',
+          data: {
+            type: 'warn',
+            message: locale.notAuthorised,
+            code: ErrorCode.notAuthorised,
+          },
+        },
+        roomId,
+      });
+      sendStopRecord();
+      return;
+    }
+
     if (!this.mediaRecorders[roomId]) {
       this.mediaRecorders[roomId] = {};
     }
