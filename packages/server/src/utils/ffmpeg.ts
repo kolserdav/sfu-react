@@ -97,11 +97,11 @@ class FFmpeg {
 
   // eslint-disable-next-line class-methods-use-this
   private readonly trim = ({ start, duration }: { start: number; duration: number }) =>
-    `trim=start=${start}:duration=${duration},setpts=PTS-STARTPTS`;
+    `trim=start_frame=${start}:duration=${duration},setpts=PTS-STARTPTS`;
 
   // eslint-disable-next-line class-methods-use-this
   private readonly atrim = ({ start, duration }: { start: number; duration: number }) =>
-    `atrim=start=${start}:duration=${duration},asetpts=PTS-STARTPTS`;
+    `atrim=start_frame=${start}:duration=${duration},asetpts=PTS-STARTPTS`;
 
   // eslint-disable-next-line class-methods-use-this
   private readonly scale = ({ w, h }: { w: number; h: number }) => `scale=w=${w}:h=${h}`;
@@ -253,7 +253,7 @@ class FFmpeg {
           }
         }
         if (chunk.start !== episode.start || chunk.end !== episode.end) {
-          const start = index === 0 ? 0 : chunk.start - episode.start;
+          const start = index === 0 ? 0 : Math.abs(chunk.start - episode.start);
           const duration = episode.end - episode.start;
           if (chunk.video) {
             chunkCopy.map = createRandHash(this.mapLength);
