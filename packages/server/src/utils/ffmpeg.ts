@@ -7,7 +7,7 @@ import ffmpeg from 'ffmpeg-static';
 const isDev = process.env.FFMPEG_DEV === 'true';
 
 if (isDev) {
-  process.env.LOG_LEVEL = '2';
+  process.env.LOG_LEVEL = '0';
   process.env.NODE_ENV = 'development';
 }
 
@@ -97,11 +97,11 @@ class FFmpeg {
 
   // eslint-disable-next-line class-methods-use-this
   private readonly trim = ({ start, duration }: { start: number; duration: number }) =>
-    `trim=start_frame=${start}:duration=${duration},setpts=PTS-STARTPTS`;
+    `trim=start=${start}:duration=${duration},setpts=PTS-STARTPTS`;
 
   // eslint-disable-next-line class-methods-use-this
   private readonly atrim = ({ start, duration }: { start: number; duration: number }) =>
-    `atrim=start_frame=${start}:duration=${duration},asetpts=PTS-STARTPTS`;
+    `atrim=start=${start}:duration=${duration},asetpts=PTS-STARTPTS`;
 
   // eslint-disable-next-line class-methods-use-this
   private readonly scale = ({ w, h }: { w: number; h: number }) => `scale=w=${w}:h=${h}`;
@@ -142,15 +142,12 @@ class FFmpeg {
     const inputArgs = this.createInputArguments();
     const filterComplexArgs = this.createFilterComplexArguments();
     const args = inputArgs.concat(filterComplexArgs);
-    const endRegexp = /[a-z0-9A-Z-_]+$/;
-    const videosDirPath = this.dirPath.replace(endRegexp, '');
+    const videosDirPath = this.getVideosDirPath();
     const roomDir = getRoomDirPath({ videosDirPath, roomId: this.roomId });
-    const name = `${this.dirPath
-      .replace(videosDirPath, '')
-      .replace(new RegExp(`^${this.roomId}${this.delimiter}`), '')}${EXT_WEBM}`;
     if (!fs.existsSync(roomDir)) {
       fs.mkdirSync(roomDir);
     }
+    const name = this.getVideoName({ videosDirPath });
     const src = path.resolve(roomDir, `./${name}`);
     args.push(src);
     const errorCode = await this.runFFmpegCommand(args, loading);
@@ -160,6 +157,13 @@ class FFmpeg {
       time: this.time,
     };
   }
+
+  private getVideoName = ({ videosDirPath }: { videosDirPath: string }) =>
+    `${this.dirPath
+      .replace(videosDirPath, '')
+      .replace(new RegExp(`^${this.roomId}${this.delimiter}`), '')}${EXT_WEBM}`;
+
+  private getVideosDirPath = () => this.dirPath.replace(/[a-z0-9A-Z-_]+$/, '');
 
   private createVideoChunks({ dir }: { dir: string[] }): Chunk[] {
     const chunks: Omit<Chunk, 'index'>[] = [];
