@@ -20,7 +20,7 @@ import { ServerCallback } from './types';
 import RTC, { OnRoomConnect, OnRoomOpen } from './core/rtc';
 import { MessageType, LogLevel } from './types/interfaces';
 import { cleanDbUrl, getLocale, log, setLogLevel } from './utils/lib';
-import { PORT, CORS, RECORD_DIR_PATH } from './utils/constants';
+import { PORT, CORS, CLOUD_DIR_PATH } from './utils/constants';
 import DB from './core/db';
 import Chat from './addons/chat';
 import RecordVideo from './addons/recordVideo';
@@ -86,7 +86,7 @@ export function createServer(
     });
   }
   setLogLevel(logLevel);
-  const cloudPath = _cloudPath || RECORD_DIR_PATH;
+  const cloudPath = _cloudPath || CLOUD_DIR_PATH;
   const wss = new WS({ port, cloudPath, prisma });
   const rtc: RTC | null = new RTC({ ws: wss, prisma });
   const settings = new Settings({ cloudPath, prisma });
@@ -424,6 +424,6 @@ if (require.main === module) {
   createServer({
     port: PORT,
     cors: CORS,
-    cloudPath: RECORD_DIR_PATH,
+    cloudPath: CLOUD_DIR_PATH,
   });
 }

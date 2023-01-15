@@ -14,7 +14,7 @@ import path from 'path';
 import fs from 'fs';
 import { ErrorCode, EXT_WEBM, MessageType, SendMessageArgs } from '../types/interfaces';
 import DB from '../core/db';
-import { checkDefaultAuth, getVideosDirPath, log } from '../utils/lib';
+import { checkDefaultAuth, getBackgroundsDirPath, getVideosDirPath, log } from '../utils/lib';
 import FFmpeg from '../utils/ffmpeg';
 import Settings from './settings';
 import RTC from '../core/rtc';
@@ -314,7 +314,14 @@ class RecordVideo extends DB {
       delete this.dirPath[roomId];
       return;
     }
-    const ffmpeg = new FFmpeg({ dirPath: this.dirPath[roomId], dir, roomId: roomId.toString() });
+    const backgroundImagesPath = getBackgroundsDirPath({ cloudPath: this.cloudPath });
+    // TODO
+    const ffmpeg = new FFmpeg({
+      dirPath: this.dirPath[roomId],
+      dir,
+      roomId: roomId.toString(),
+      backgroundImagePath: null,
+    });
     const { name, errorCode, time } = await new Promise<
       Awaited<ReturnType<typeof ffmpeg.createVideo>>
     >((resolve) => {

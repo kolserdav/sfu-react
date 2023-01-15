@@ -54,6 +54,10 @@ class FFmpeg {
 
   private roomId: string;
 
+  private readonly videoWidth = 1920;
+
+  private readonly videoHeight = 1080;
+
   private readonly mapLength = 6;
 
   private readonly delimiter = '_';
@@ -70,7 +74,7 @@ class FFmpeg {
 
   private readonly backgroundInput = '0:v';
 
-  private backgroundImagePath = '/home/kol/Projects/werift-sfu-react/tmp/1png.png';
+  private backgroundImagePath: string | null;
 
   // eslint-disable-next-line class-methods-use-this
   private readonly vstack = ({ inputs }: { inputs: number }) => `vstack=inputs=${inputs}`;
@@ -102,8 +106,22 @@ class FFmpeg {
   // eslint-disable-next-line class-methods-use-this
   private readonly scale = ({ w, h }: { w: number; h: number }) => `scale=w=${w}:h=${h}`;
 
-  constructor({ dirPath, dir, roomId }: { dirPath: string; dir: string[]; roomId: string }) {
+  // eslint-disable-next-line class-methods-use-this
+  private readonly color = ({ w, h }: { w: number; h: number }) => `color=c=black:s=${w}x${h}`;
+
+  constructor({
+    dirPath,
+    dir,
+    roomId,
+    backgroundImagePath,
+  }: {
+    dirPath: string;
+    dir: string[];
+    roomId: string;
+    backgroundImagePath: string | null;
+  }) {
     this.dirPath = dirPath;
+    this.backgroundImagePath = backgroundImagePath;
     this.roomId = roomId;
     this.chunks = this.createVideoChunks({ dir });
   }
@@ -178,13 +196,16 @@ class FFmpeg {
       .map((item, index) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const _item: Chunk = { ...item } as any;
-        _item.index = index + 1;
+        _item.index = index + (this.backgroundImagePath !== null ? 1 : 0);
         return _item;
       });
   }
 
   private createInputArguments() {
-    const args: string[] = [this.forceOption, this.inputOption, this.backgroundImagePath];
+    let args: string[] = [this.forceOption];
+    if (this.backgroundImagePath) {
+      args = args.concat([this.inputOption, this.backgroundImagePath]);
+    }
     this.chunks.forEach((item) => {
       args.push(this.inputOption);
       args.push(item.absPath);
@@ -404,12 +425,31 @@ class FFmpeg {
           })
         );
       }
+      const trimMap = createRandHash(this.mapLength);
+      if (!this.backgroundImagePath) {
+        const colorMap = createRandHash(this.mapLength);
+        args.push(
+          this.getFilterComplexArgument({
+            args: '',
+            value: this.color({ w: this.videoWidth, h: this.videoHeight }),
+            map: this.createMapArg(colorMap),
+          })
+        );
+        const duration = episode.end - episode.start;
+        args.push(
+          this.getFilterComplexArgument({
+            args: this.createMapArg(colorMap),
+            value: this.trim({ start: episode.start, duration }),
+            map: this.createMapArg(trimMap),
+          })
+        );
+      }
       uMaps.forEach((uMap) => {
         args.push(
           this.getFilterComplexArgument({
-            args: `${this.createMapArg(this.backgroundInput)}${this.createMapArg(
-              isEmpty ? emptyMap : uMap
-            )}`,
+            args: `${this.createMapArg(
+              this.backgroundImagePath ? this.backgroundInput : trimMap
+            )}${this.createMapArg(isEmpty ? emptyMap : uMap)}`,
             value: this.overlay,
             map: this.createMapArg(map),
           })
@@ -505,7 +545,8 @@ class FFmpeg {
     const time = this.getVideoTime(true);
     let oldChunks: Chunk[] = [];
     let from: number | undefined;
-    new Array(time).fill('').forEach((_, index) => {
+    const array = new Array(time);
+    array.fill('').forEach((_, index) => {
       if (from === undefined) {
         from = index;
       }
@@ -520,14 +561,7 @@ class FFmpeg {
         return true;
       });
       const isNew = oldChunks.length === 0;
-      oldChunks = isNew && chunks.length === 1 ? chunks : oldChunks;
-      if ((!this.isEqual(chunks, oldChunks) && !isNew) || (oldChunks.length === 1 && isNew)) {
-        const chunkPart: Chunk[] = oldChunks.map((item) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const _item: Chunk = { ...item } as any;
-          return _item;
-        });
-
+      if (!this.isEqual(chunks, oldChunks) && !isNew) {
         episodes.push({
           start: from,
           end: index,
@@ -535,9 +569,20 @@ class FFmpeg {
           audio: false,
           map: '',
           mapA: '',
-          chunks: chunkPart,
+          chunks: oldChunks,
         });
         from = index;
+      }
+      if (index === array.length - 1) {
+        episodes.push({
+          start: from,
+          end: index,
+          video: false,
+          audio: false,
+          map: '',
+          mapA: '',
+          chunks,
+        });
       }
       oldChunks = chunks;
     });
@@ -630,11 +675,13 @@ export default FFmpeg;
 if (isDev) {
   const roomId = '1673340519949';
   const dirPath =
-    '/home/kol/Projects/werift-sfu-react/packages/server/rec/videos/1673340519949_1673582198286';
+    '/home/kol/Projects/werift-sfu-react/packages/server/rec/videos/1673340519949_1673760929297';
   new FFmpeg({
     dirPath,
     dir: fs.readdirSync(dirPath),
     roomId,
+    //backgroundImagePath: null,
+    backgroundImagePath: '/home/kol/Projects/werift-sfu-react/tmp/1png.png',
   }).createVideo({
     loading: (time) => {
       // eslint-disable-next-line no-console

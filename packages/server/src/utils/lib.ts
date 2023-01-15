@@ -12,7 +12,13 @@ import werift from 'werift';
 import { format } from 'date-fns';
 import path from 'path';
 import { AUTH_UNIT_ID_DEFAULT, IS_DEV, LOG_LEVEL } from './constants';
-import { LocaleServer, LocaleDefault, LocaleValue, RECORD_VIDEO_NAME } from '../types/interfaces';
+import {
+  LocaleServer,
+  LocaleDefault,
+  LocaleValue,
+  RECORD_VIDEOS_PATH,
+  VIDEO_BACKGROUNDS_PATH,
+} from '../types/interfaces';
 import en from '../locales/en/lang';
 import ru from '../locales/ru/lang';
 
@@ -140,10 +146,13 @@ export const getVideoPath = ({
   cloudPath: string;
   roomId: string | number;
   name: string;
-}) => path.resolve(cloudPath, `./${RECORD_VIDEO_NAME}`, `./${roomId}`, `./${name}`);
+}) => path.resolve(cloudPath, `./${RECORD_VIDEOS_PATH}`, `./${roomId}`, `./${name}`);
 
 export const getVideosDirPath = ({ cloudPath }: { cloudPath: string }) =>
-  path.resolve(cloudPath, `./${RECORD_VIDEO_NAME}`);
+  path.resolve(cloudPath, `./${RECORD_VIDEOS_PATH}`);
+
+export const getBackgroundsDirPath = ({ cloudPath }: { cloudPath: string }) =>
+  path.resolve(cloudPath, `./${VIDEO_BACKGROUNDS_PATH}`);
 
 export const getRoomDirPath = ({
   videosDirPath,

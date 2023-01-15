@@ -17,7 +17,7 @@ import {
   LocaleValue,
   EXT_WEBM,
   TOKEN_QUERY_NAME,
-  RECORD_VIDEO_NAME,
+  RECORD_VIDEOS_PATH,
 } from '../types/interfaces';
 import { checkDefaultAuth, getLocale, getVideoPath, log, parseQueryString } from '../utils/lib';
 import DB from './db';
@@ -76,7 +76,7 @@ class WS extends DB implements WSInterface {
         return;
       }
 
-      const videoRegex = new RegExp(`^/${RECORD_VIDEO_NAME}/`);
+      const videoRegex = new RegExp(`^/${RECORD_VIDEOS_PATH}/`);
       const isVideos = videoRegex.test(url || '');
       if (isVideos) {
         const id = url.replace(videoRegex, '').replace(new RegExp(`${EXT_WEBM}$`), '');

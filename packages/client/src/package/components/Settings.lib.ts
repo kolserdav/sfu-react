@@ -9,7 +9,7 @@
  * Create Date: Wed Nov 23 2022 15:23:26 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 
-import { EXT_WEBM, RECORD_VIDEO_NAME, TOKEN_QUERY_NAME } from '../types/interfaces';
+import { EXT_WEBM, RECORD_VIDEOS_PATH, TOKEN_QUERY_NAME } from '../types/interfaces';
 
 export const getVideoSrc = ({
   port,
@@ -28,7 +28,7 @@ export const getVideoSrc = ({
   if (typeof window !== 'undefined') {
     protocol = window.location.protocol;
   }
-  return `${protocol}//${server}:${port}/${RECORD_VIDEO_NAME}/${name}?${TOKEN_QUERY_NAME}=${token}`;
+  return `${protocol}//${server}:${port}/${RECORD_VIDEOS_PATH}/${name}?${TOKEN_QUERY_NAME}=${token}`;
 };
 
 export const getVideoNameWithoutExt = (name: string) =>
