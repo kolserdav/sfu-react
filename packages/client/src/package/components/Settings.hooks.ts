@@ -71,7 +71,7 @@ export const useVideoRecord = ({
     (command: SendMessageArgs<MessageType.GET_RECORD>['data']['command']) => () => {
       if (command !== _command) {
         _command = command;
-        setButtonDisabled(_command === 'start');
+        setButtonDisabled(true);
       }
       ws.sendMessage({
         type: MessageType.GET_RECORD,

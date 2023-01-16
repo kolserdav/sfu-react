@@ -7,7 +7,7 @@ import ffmpeg from 'ffmpeg-static';
 const isDev = process.env.FFMPEG_DEV === 'true';
 
 if (isDev) {
-  process.env.LOG_LEVEL = '0';
+  process.env.LOG_LEVEL = '1';
   process.env.NODE_ENV = 'development';
 }
 
@@ -58,9 +58,9 @@ class FFmpeg {
 
   private readonly border = 5;
 
-  private readonly videoWidth = 1024;
+  private readonly videoWidth = 1920;
 
-  private readonly videoHeight = 768;
+  private readonly videoHeight = 1080;
 
   private readonly mapLength = 6;
 
@@ -108,7 +108,8 @@ class FFmpeg {
     `atrim=start=${start}:duration=${duration},asetpts=PTS-STARTPTS`;
 
   // eslint-disable-next-line class-methods-use-this
-  private readonly scale = ({ w, h }: { w: number; h: number }) => `scale=w=${w}:h=${h}`;
+  private readonly scale = ({ w, h }: { w: number; h: number }) =>
+    `scale=w=${w}:h=${h}:force_original_aspect_ratio=decrease`;
 
   // eslint-disable-next-line class-methods-use-this
   private readonly color = ({ w, h }: { w: number; h: number }) => `color=c=black:s=${w}x${h}`;
@@ -321,37 +322,40 @@ class FFmpeg {
         if (chunk.video) {
           const coeff = chunk.width / chunk.height;
           const chunkCopy = { ...chunk };
-          chunkCopy.map = createRandHash(this.mapLength);
-          args.push(
-            this.getFilterComplexArgument({
-              args: this.getArg({ chunk, dest: 'v' }),
-              value: this.pad({ x, y }),
-              map: this.createMapArg(chunkCopy.map),
-            })
-          );
           // Scale if not included in size
-          const map = createRandHash(this.mapLength);
+          let map = createRandHash(this.mapLength);
           if (shiftX && !shiftY) {
             const newWidth = chunk.width - shiftX;
+            console.log({ newWidth });
             args.push(
               this.getFilterComplexArgument({
                 args: this.getArg({ chunk: chunkCopy, dest: 'v' }),
-                value: this.scale({ w: chunk.width - shiftX, h: newWidth / coeff }),
+                value: this.scale({ w: newWidth, h: -1 }),
                 map: this.createMapArg(map),
               })
             );
             chunkCopy.map = map;
           } else if (shiftY) {
             const newHeight = chunk.height - shiftY;
+            console.log({ newHeight });
             args.push(
               this.getFilterComplexArgument({
                 args: this.getArg({ chunk: chunkCopy, dest: 'v' }),
-                value: this.scale({ w: newHeight * coeff, h: newHeight }),
+                value: this.scale({ w: -1, h: newHeight }),
                 map: this.createMapArg(map),
               })
             );
             chunkCopy.map = map;
           }
+          map = createRandHash(this.mapLength);
+          args.push(
+            this.getFilterComplexArgument({
+              args: this.getArg({ chunk: chunkCopy, dest: 'v' }),
+              value: this.pad({ x, y: y * 2 }),
+              map: this.createMapArg(map),
+            })
+          );
+          chunkCopy.map = map;
           return chunkCopy;
         }
         return chunk;
@@ -535,49 +539,63 @@ class FFmpeg {
   }
 
   private getVideoShifts({ videoCount, chunks }: { videoCount: number; chunks: Chunk[] }) {
-    const coeffX = videoCount === 2 || videoCount === 4 ? 2 : videoCount === 1 ? 1 : 3;
-    const coeffY = videoCount === 2 || videoCount === 3 ? 1 : videoCount === 1 ? 1 : 2;
-    const { allHeight, allWidth } = this.getAllDimensions({ chunks, coeffX, coeffY });
+    const countX = videoCount === 2 || videoCount === 4 ? 2 : videoCount === 1 ? 1 : 3;
+    const countY = videoCount === 2 || videoCount === 3 ? 1 : videoCount === 1 ? 1 : 2;
+    const { allHeight, allWidth } = this.getAllDimensions({ chunks, countX, countY });
     const coeff = allWidth / allHeight;
     const width = this.videoWidth - allWidth;
     let shiftX = 0;
     let shiftY = 0;
     const diffX = Math.abs(width);
     if (width < 0) {
-      shiftX = diffX / coeffX + this.border * coeffX;
+      shiftX = diffX / countX + this.border * countX;
     }
-    const height = this.videoHeight - (allHeight - (shiftX / coeff) * coeffY);
+    const height = this.videoHeight - (allHeight - (shiftX / coeff) * countY);
     const diffY = Math.abs(height);
     if (height < 0) {
-      shiftY = diffY / coeffY + this.border * coeffY;
+      shiftY = diffY / countY + this.border * countY;
     }
-    const x = width >= 0 ? (diffX + shiftX) / coeffX / 2 : this.border * coeffX;
-    const y = height >= 0 ? (diffY + shiftY) / coeffY / 2 : this.border * coeffY;
+    const x = width >= 0 ? (diffX + shiftX) / countX / 2 : this.border * countX;
+    const y = height >= 0 ? (diffY + shiftY) / countY / 2 : this.border * countY;
+    console.log({
+      x,
+      y,
+      shiftX,
+      shiftY,
+      allHeight,
+      allWidth,
+      countX,
+      countY,
+      diffX,
+      diffY,
+      width,
+      height,
+    });
     return { x, y, shiftX, shiftY };
   }
 
   // eslint-disable-next-line class-methods-use-this
   private getAllDimensions({
     chunks,
-    coeffX,
-    coeffY,
+    countX,
+    countY,
   }: {
     chunks: Chunk[];
-    coeffX: number;
-    coeffY: number;
+    countX: number;
+    countY: number;
   }) {
     let allWidth = 0;
     let allHeight = 0;
-    let _coeffX = 0;
-    let _coeffY = 0;
+    let _countX = 0;
+    let _countY = 0;
     chunks.forEach((chunk) => {
       if (chunk.video) {
-        if (_coeffX < coeffX) {
-          _coeffX++;
+        if (_countX < countX) {
+          _countX++;
           allWidth += chunk.width;
         }
-        if (_coeffY < coeffY) {
-          _coeffY++;
+        if (_countY < countY) {
+          _countY++;
           allHeight += chunk.height;
         }
       }
@@ -760,7 +778,7 @@ export default FFmpeg;
 if (isDev) {
   const roomId = '1673340519949';
   const dirPath =
-    '/home/kol/Projects/werift-sfu-react/packages/server/rec/videos/1673340519949_1673860741713';
+    '/home/kol/Projects/werift-sfu-react/packages/server/rec/videos/1673340519949_1673870737148';
   new FFmpeg({
     dirPath,
     dir: fs.readdirSync(dirPath),
