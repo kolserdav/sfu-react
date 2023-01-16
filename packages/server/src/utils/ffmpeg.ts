@@ -23,6 +23,8 @@ interface Chunk {
   id: string;
   start: number;
   end: number;
+  width: number;
+  height: number;
   video: boolean;
   audio: boolean;
   absPath: string;
@@ -54,9 +56,11 @@ class FFmpeg {
 
   private roomId: string;
 
-  private readonly videoWidth = 1920;
+  private readonly border = 5;
 
-  private readonly videoHeight = 1080;
+  private readonly videoWidth = 1024;
+
+  private readonly videoHeight = 768;
 
   private readonly mapLength = 6;
 
@@ -180,6 +184,8 @@ class FFmpeg {
         end,
         video,
         audio,
+        width: parseInt(peer[5], 10),
+        height: parseInt(peer[6], 10),
         absPath: path.resolve(this.dirPath, item),
         map: '',
         mapA: '',
@@ -309,24 +315,48 @@ class FFmpeg {
         );
       }
       // Set video paddings
+      const { videoCount } = this.getCountVideos(episode.chunks);
+      const { x, y, shiftX, shiftY } = this.getVideoShifts({ videoCount, chunks });
       chunks = chunks.map((chunk) => {
         if (chunk.video) {
+          const coeff = chunk.width / chunk.height;
           const chunkCopy = { ...chunk };
           chunkCopy.map = createRandHash(this.mapLength);
-          // TODO calc x and y
           args.push(
             this.getFilterComplexArgument({
               args: this.getArg({ chunk, dest: 'v' }),
-              value: this.pad({ x: 100, y: 50 }),
+              value: this.pad({ x, y }),
               map: this.createMapArg(chunkCopy.map),
             })
           );
+          // Scale if not included in size
+          const map = createRandHash(this.mapLength);
+          if (shiftX && !shiftY) {
+            const newWidth = chunk.width - shiftX;
+            args.push(
+              this.getFilterComplexArgument({
+                args: this.getArg({ chunk: chunkCopy, dest: 'v' }),
+                value: this.scale({ w: chunk.width - shiftX, h: newWidth / coeff }),
+                map: this.createMapArg(map),
+              })
+            );
+            chunkCopy.map = map;
+          } else if (shiftY) {
+            const newHeight = chunk.height - shiftY;
+            args.push(
+              this.getFilterComplexArgument({
+                args: this.getArg({ chunk: chunkCopy, dest: 'v' }),
+                value: this.scale({ w: newHeight * coeff, h: newHeight }),
+                map: this.createMapArg(map),
+              })
+            );
+            chunkCopy.map = map;
+          }
           return chunkCopy;
         }
         return chunk;
       });
       // Set video stacks
-      const { videoCount } = this.getCountVideos(episode.chunks);
       let map = createRandHash(this.mapLength);
       if (videoCount === 2 || videoCount === 3) {
         arg = '';
@@ -504,6 +534,57 @@ class FFmpeg {
     return uMaps;
   }
 
+  private getVideoShifts({ videoCount, chunks }: { videoCount: number; chunks: Chunk[] }) {
+    const coeffX = videoCount === 2 || videoCount === 4 ? 2 : videoCount === 1 ? 1 : 3;
+    const coeffY = videoCount === 2 || videoCount === 3 ? 1 : videoCount === 1 ? 1 : 2;
+    const { allHeight, allWidth } = this.getAllDimensions({ chunks, coeffX, coeffY });
+    const coeff = allWidth / allHeight;
+    const width = this.videoWidth - allWidth;
+    let shiftX = 0;
+    let shiftY = 0;
+    const diffX = Math.abs(width);
+    if (width < 0) {
+      shiftX = diffX / coeffX + this.border * coeffX;
+    }
+    const height = this.videoHeight - (allHeight - (shiftX / coeff) * coeffY);
+    const diffY = Math.abs(height);
+    if (height < 0) {
+      shiftY = diffY / coeffY + this.border * coeffY;
+    }
+    const x = width >= 0 ? (diffX + shiftX) / coeffX / 2 : this.border * coeffX;
+    const y = height >= 0 ? (diffY + shiftY) / coeffY / 2 : this.border * coeffY;
+    return { x, y, shiftX, shiftY };
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  private getAllDimensions({
+    chunks,
+    coeffX,
+    coeffY,
+  }: {
+    chunks: Chunk[];
+    coeffX: number;
+    coeffY: number;
+  }) {
+    let allWidth = 0;
+    let allHeight = 0;
+    let _coeffX = 0;
+    let _coeffY = 0;
+    chunks.forEach((chunk) => {
+      if (chunk.video) {
+        if (_coeffX < coeffX) {
+          _coeffX++;
+          allWidth += chunk.width;
+        }
+        if (_coeffY < coeffY) {
+          _coeffY++;
+          allHeight += chunk.height;
+        }
+      }
+    });
+    return { allWidth, allHeight };
+  }
+
   private getMap(withAudio: boolean) {
     const maps: string[] = [];
     this.episodes.forEach((item) => {
@@ -679,13 +760,13 @@ export default FFmpeg;
 if (isDev) {
   const roomId = '1673340519949';
   const dirPath =
-    '/home/kol/Projects/werift-sfu-react/packages/server/rec/videos/1673340519949_1673760929297';
+    '/home/kol/Projects/werift-sfu-react/packages/server/rec/videos/1673340519949_1673860741713';
   new FFmpeg({
     dirPath,
     dir: fs.readdirSync(dirPath),
     roomId,
-    //backgroundImagePath: null,
-    backgroundImagePath: '/home/kol/Projects/werift-sfu-react/tmp/1png.png',
+    backgroundImagePath: null,
+    //backgroundImagePath: '/home/kol/Projects/werift-sfu-react/tmp/1png.png',
   }).createVideo({
     loading: (time) => {
       // eslint-disable-next-line no-console

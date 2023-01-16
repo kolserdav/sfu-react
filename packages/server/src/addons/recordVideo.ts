@@ -182,7 +182,7 @@ class RecordVideo extends DB {
     const cleanFileName = fileName ? fileName[0].replace(/\//, '').replace(EXT_WEBM, '') : '';
     const fileNames = cleanFileName.split(this.rtc.delimiter);
     const ul = this.rtc.delimiter;
-    const newFileName = `${fileNames[0]}${ul}${time}${ul}${fileNames[2]}${ul}${fileNames[3]}${ul}${fileNames[4]}${EXT_WEBM}`;
+    const newFileName = `${fileNames[0]}${ul}${time}${ul}${fileNames[2]}${ul}${fileNames[3]}${ul}${fileNames[4]}${ul}${fileNames[5]}${ul}${fileNames[6]}${EXT_WEBM}`;
     fs.renameSync(pathStr, path.resolve(this.dirPath[roomId], newFileName));
   }
 
@@ -268,7 +268,9 @@ class RecordVideo extends DB {
     const ul = this.rtc.delimiter;
     const _path = path.resolve(
       this.dirPath[roomId],
-      `${time}${ul}0${ul}${userId}${ul}${videoPlayed ? 1 : 0}${ul}${audioPlayed ? 1 : 0}${EXT_WEBM}`
+      `${time}${ul}0${ul}${userId}${ul}${videoPlayed ? 1 : 0}${ul}${
+        audioPlayed ? 1 : 0
+      }${ul}${width}${ul}${height}${EXT_WEBM}`
     );
     const recorderId = this.getMediaRecorderId(userId, time);
     log('info', 'Start stream record', { recorderId, roomId, _path, time, eventName });
