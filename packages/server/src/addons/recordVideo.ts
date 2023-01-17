@@ -12,6 +12,7 @@ import * as werift from 'werift';
 // import FFmpeg from 'fluent-ffmpeg';
 import path from 'path';
 import fs from 'fs';
+import { differenceInMilliseconds } from 'date-fns';
 import { ErrorCode, EXT_WEBM, MessageType, SendMessageArgs } from '../types/interfaces';
 import DB from '../core/db';
 import { checkDefaultAuth, getBackgroundsDirPath, getVideosDirPath, log } from '../utils/lib';
@@ -37,7 +38,9 @@ class RecordVideo extends DB {
 
   public videoSettings: Record<string, Record<string, { width: number; height: number }>> = {};
 
-  public times: Record<string, number> = {};
+  public seconds: Record<string, number> = {};
+
+  private times: Record<string, Date> = {};
 
   private rtc: RTC;
 
@@ -68,9 +71,28 @@ class RecordVideo extends DB {
     this.setHandlers();
   }
 
+  private getCurrentTime({ roomId }: { roomId: string | number }) {
+    const d = new Date(this.times[roomId]);
+    const date = new Date();
+    const diffs = differenceInMilliseconds(
+      date,
+      new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        d.getHours(),
+        d.getMinutes(),
+        d.getSeconds(),
+        d.getMilliseconds()
+      )
+    );
+    const _diffs = (diffs / 1000).toFixed(1);
+    return parseFloat(_diffs);
+  }
+
   private setHandlers() {
     this.rtc.onChangeVideoTrack = ({ roomId, target }) => {
-      if (!this.times[roomId]) {
+      if (!this.seconds[roomId]) {
         return;
       }
 
@@ -79,13 +101,13 @@ class RecordVideo extends DB {
         this.startTimes[roomId]?.[target] || 0
       );
       const recorder = this.mediaRecorders[roomId][mediaRecorderId];
-      const time = parseInt(`${this.times[roomId]}`, 10);
+
       if (recorder) {
         this.stopStreamRecord({
           roomId,
           userId: target,
           pathStr: recorder.path,
-          time,
+          time: this.getCurrentTime({ roomId }),
           eventName: 'on-change-video-track',
         });
       } else {
@@ -96,21 +118,30 @@ class RecordVideo extends DB {
           recs: this.getMediaRecorderKeys(roomId),
         });
       }
-      this.startStreamRecord({ roomId, userId: target, time, eventName: 'on-change-video-track' });
+      this.startStreamRecord({
+        roomId,
+        userId: target,
+        time: this.getCurrentTime({ roomId }),
+        eventName: 'on-change-video-track',
+      });
     };
 
     this.rtc.onChangeMute = this.rtc.onChangeVideoTrack;
 
     this.rtc.onRoomConnect = ({ roomId, userId }) => {
-      if (!this.times[roomId]) {
+      if (!this.seconds[roomId]) {
         return;
       }
-      const time = parseInt(`${this.times[roomId]}`, 10);
-      this.startStreamRecord({ roomId, userId, time, eventName: 'on-room-connect' });
+      this.startStreamRecord({
+        roomId,
+        userId,
+        time: this.getCurrentTime({ roomId }),
+        eventName: 'on-room-connect',
+      });
     };
 
     this.rtc.onRoomDisconnect = async ({ roomId, userId, roomUsers }) => {
-      if (!this.times[roomId]) {
+      if (!this.seconds[roomId]) {
         return;
       }
       const mediaRecorderId = this.getMediaRecorderId(
@@ -121,13 +152,12 @@ class RecordVideo extends DB {
       if (!recorder) {
         return;
       }
-      const time = parseInt(`${this.times[roomId]}`, 10);
       this.stopStreamRecord(
         {
           roomId,
           userId,
           pathStr: recorder.path,
-          time,
+          time: this.getCurrentTime({ roomId }),
           eventName: 'on-room-disconnect',
         },
         async () => {
@@ -178,12 +208,41 @@ class RecordVideo extends DB {
     time: number;
     roomId: string | number;
   }) {
-    const fileName = pathStr.match(/\/\d+_0_[a-zA-Z0-9_\\-]+.webm/);
+    const fileName = pathStr.match(/\/\d+\.?\d*_0_[a-zA-Z0-9_\\-]+.webm/);
     const cleanFileName = fileName ? fileName[0].replace(/\//, '').replace(EXT_WEBM, '') : '';
     const fileNames = cleanFileName.split(this.rtc.delimiter);
-    const ul = this.rtc.delimiter;
-    const newFileName = `${fileNames[0]}${ul}${time}${ul}${fileNames[2]}${ul}${fileNames[3]}${ul}${fileNames[4]}${ul}${fileNames[5]}${ul}${fileNames[6]}${EXT_WEBM}`;
+
+    const newFileName = this.getChunkName({
+      startTime: fileNames[0],
+      endTime: time,
+      userId: fileNames[2],
+      video: fileNames[3],
+      audio: fileNames[4],
+      width: fileNames[5],
+      height: fileNames[6],
+    });
     fs.renameSync(pathStr, path.resolve(this.dirPath[roomId], newFileName));
+  }
+
+  private getChunkName({
+    startTime,
+    endTime,
+    userId,
+    video,
+    audio,
+    width,
+    height,
+  }: {
+    startTime: string | number;
+    endTime: string | number;
+    userId: string | number;
+    video: string | number;
+    audio: string | number;
+    width: string | number;
+    height: string | number;
+  }) {
+    const ul = this.rtc.delimiter;
+    return `${startTime}${ul}${endTime}${ul}${userId}${ul}${video}${ul}${audio}${ul}${width}${ul}${height}${EXT_WEBM}`;
   }
 
   private stopStreamRecord(
@@ -265,12 +324,17 @@ class RecordVideo extends DB {
     const connId = this.getConnId({ roomId, userId });
     const peerId = this.rtc.getPeerId(userId, 0, connId);
     const { width, height } = this.videoSettings[roomId][userId];
-    const ul = this.rtc.delimiter;
     const _path = path.resolve(
       this.dirPath[roomId],
-      `${time}${ul}0${ul}${userId}${ul}${videoPlayed ? 1 : 0}${ul}${
-        audioPlayed ? 1 : 0
-      }${ul}${width}${ul}${height}${EXT_WEBM}`
+      `./${this.getChunkName({
+        startTime: time,
+        endTime: 0,
+        userId,
+        video: videoPlayed ? 1 : 0,
+        audio: audioPlayed ? 1 : 0,
+        width,
+        height,
+      })}`
     );
     const recorderId = this.getMediaRecorderId(userId, time);
     log('info', 'Start stream record', { recorderId, roomId, _path, time, eventName });
@@ -307,7 +371,7 @@ class RecordVideo extends DB {
           id,
           connId: '',
           data: {
-            time: this.times[roomId],
+            time: this.seconds[roomId],
             command: 'stop',
           },
         },
@@ -379,7 +443,7 @@ class RecordVideo extends DB {
         id,
         connId: '',
         data: {
-          time: this.times[roomId],
+          time: this.seconds[roomId],
           command: 'stop',
         },
       },
@@ -388,6 +452,7 @@ class RecordVideo extends DB {
   }
 
   private cleanRoomRecord({ roomId }: { roomId: string | number }) {
+    delete this.seconds[roomId];
     delete this.times[roomId];
     delete this.startTimes[roomId];
     delete this.mediaRecorders[roomId];
@@ -414,7 +479,7 @@ class RecordVideo extends DB {
                 roomId,
                 userId,
                 pathStr: recorder.path,
-                time: this.times[roomId],
+                time: this.getCurrentTime({ roomId }),
                 eventName: 'on-stop',
               },
               () => {
@@ -425,7 +490,7 @@ class RecordVideo extends DB {
       )
     );
     this.cleanRoomRecord({ roomId });
-    await this.recordVideo({ roomId, id });
+    // await this.recordVideo({ roomId, id });
   }
 
   public async handleVideoRecord(args: SendMessageArgs<MessageType.GET_RECORD>) {
@@ -548,16 +613,17 @@ class RecordVideo extends DB {
     }
     switch (command) {
       case 'start':
-        this.times[roomId] = 0;
+        this.seconds[roomId] = 0;
+        this.times[roomId] = new Date();
         this.intervals[roomId] = setInterval(() => {
-          this.times[roomId]++;
+          this.seconds[roomId]++;
           this.settings.sendMessage({
             msg: {
               type: MessageType.SET_RECORDING,
               id,
               connId: '',
               data: {
-                time: this.times[roomId],
+                time: this.seconds[roomId],
                 command,
               },
             },
@@ -567,7 +633,7 @@ class RecordVideo extends DB {
 
         this.dirPath[roomId] = path.resolve(
           this.videosPath,
-          `./${roomId}${this.rtc.delimiter}${new Date().getTime()}`
+          `./${roomId}${this.rtc.delimiter}${this.times[roomId].getTime()}`
         );
         fs.mkdirSync(this.dirPath[roomId]);
 

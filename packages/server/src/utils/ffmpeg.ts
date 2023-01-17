@@ -175,8 +175,8 @@ class FFmpeg {
     const chunks: Omit<Chunk, 'index'>[] = [];
     dir.forEach((item) => {
       const peer = item.replace(EXT_WEBM, '').split(this.delimiter);
-      const start = parseInt(peer[0], 10);
-      const end = parseInt(peer[1], 10);
+      const start = parseFloat(peer[0]);
+      const end = parseFloat(peer[1]);
       const id = peer[2];
       const video = peer[3] === '1';
       const audio = peer[4] === '1';
@@ -245,6 +245,7 @@ class FFmpeg {
     const _episodes = this.createEpisodes();
     let withAudio = false;
     this.episodes = _episodes.map((episode, index) => {
+      console.log(episode);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const episodeCopy: Episode = { ...episode } as any;
       // Set start and duration
@@ -321,13 +322,11 @@ class FFmpeg {
       const { x, y, shiftX, shiftY } = this.getVideoShifts({ videoCount, chunks });
       chunks = chunks.map((chunk) => {
         if (chunk.video) {
-          const coeff = chunk.width / chunk.height;
           const chunkCopy = { ...chunk };
           // Scale if not included in size
           let map = createRandHash(this.mapLength);
           if (shiftX > shiftY) {
             const newWidth = chunk.width - shiftX;
-            console.log({ newWidth });
             args.push(
               this.getFilterComplexArgument({
                 args: this.getArg({ chunk: chunkCopy, dest: 'v' }),
@@ -338,7 +337,6 @@ class FFmpeg {
             chunkCopy.map = map;
           } else if (shiftY) {
             const newHeight = chunk.height - shiftY;
-            console.log({ newHeight });
             args.push(
               this.getFilterComplexArgument({
                 args: this.getArg({ chunk: chunkCopy, dest: 'v' }),
@@ -648,21 +646,19 @@ class FFmpeg {
   private createEpisodes() {
     const episodes: Episode[] = [];
     this.time = this.getVideoTime();
-    const time = this.getVideoTime(true);
+    const time = this.getVideoTime(true) * 10;
     let oldChunks: Chunk[] = [];
     let from: number | undefined;
     const array = new Array(time);
-    array.fill('').forEach((_, index) => {
+    array.fill('').forEach((_, i) => {
+      const t = i / 10;
       if (from === undefined) {
-        from = index;
+        from = t;
       }
       const chunks: Chunk[] = [];
-      this.chunks.every((item) => {
-        if (item.start > index || item.end < index) {
-          return false;
-        }
-        if (item.start <= index && item.end > index) {
-          chunks.push(item);
+      this.chunks.forEach((chunk) => {
+        if (chunk.start <= t && chunk.end > t) {
+          chunks.push(chunk);
         }
         return true;
       });
@@ -670,19 +666,19 @@ class FFmpeg {
       if (!this.isEqual(chunks, oldChunks) && !isNew) {
         episodes.push({
           start: from,
-          end: index,
+          end: t,
           video: false,
           audio: false,
           map: '',
           mapA: '',
           chunks: oldChunks,
         });
-        from = index;
+        from = t;
       }
-      if (index === array.length - 1) {
+      if (i === array.length - 1) {
         episodes.push({
           start: from,
-          end: index,
+          end: t,
           video: false,
           audio: false,
           map: '',
@@ -781,7 +777,7 @@ export default FFmpeg;
 if (isDev) {
   const roomId = '1673340519949';
   const dirPath =
-    '/home/kol/Projects/werift-sfu-react/packages/server/rec/videos/1673340519949_1673870737148';
+    '/home/kol/Projects/werift-sfu-react/packages/server/rec/videos/1673340519949_1673950253377';
   new FFmpeg({
     dirPath,
     dir: fs.readdirSync(dirPath),
