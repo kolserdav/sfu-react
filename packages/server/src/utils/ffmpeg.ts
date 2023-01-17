@@ -58,9 +58,9 @@ class FFmpeg {
 
   private readonly border = 5;
 
-  private readonly videoWidth = 1920;
+  private readonly videoWidth = 1280;
 
-  private readonly videoHeight = 1080;
+  private readonly videoHeight = 720;
 
   private readonly mapLength = 6;
 
@@ -155,6 +155,7 @@ class FFmpeg {
     const name = this.getVideoName({ videosDirPath });
     const src = path.resolve(roomDir, `./${name}`);
     args.push(src);
+    // process.exit(0);
     const errorCode = await this.runFFmpegCommand(args, loading);
     return {
       errorCode,
@@ -324,7 +325,7 @@ class FFmpeg {
           const chunkCopy = { ...chunk };
           // Scale if not included in size
           let map = createRandHash(this.mapLength);
-          if (shiftX && !shiftY) {
+          if (shiftX > shiftY) {
             const newWidth = chunk.width - shiftX;
             console.log({ newWidth });
             args.push(
@@ -351,7 +352,7 @@ class FFmpeg {
           args.push(
             this.getFilterComplexArgument({
               args: this.getArg({ chunk: chunkCopy, dest: 'v' }),
-              value: this.pad({ x, y: y * 2 }),
+              value: this.pad({ x, y }),
               map: this.createMapArg(map),
             })
           );
@@ -542,7 +543,6 @@ class FFmpeg {
     const countX = videoCount === 2 || videoCount === 4 ? 2 : videoCount === 1 ? 1 : 3;
     const countY = videoCount === 2 || videoCount === 3 ? 1 : videoCount === 1 ? 1 : 2;
     const { allHeight, allWidth } = this.getAllDimensions({ chunks, countX, countY });
-    const coeff = allWidth / allHeight;
     const width = this.videoWidth - allWidth;
     let shiftX = 0;
     let shiftY = 0;
@@ -550,13 +550,15 @@ class FFmpeg {
     if (width < 0) {
       shiftX = diffX / countX + this.border * countX;
     }
-    const height = this.videoHeight - (allHeight - (shiftX / coeff) * countY);
+    const height = this.videoHeight - allHeight;
     const diffY = Math.abs(height);
     if (height < 0) {
       shiftY = diffY / countY + this.border * countY;
     }
-    const x = width >= 0 ? (diffX + shiftX) / countX / 2 : this.border * countX;
-    const y = height >= 0 ? (diffY + shiftY) / countY / 2 : this.border * countY;
+    const x = width >= 0 ? diffX / countX / 2 : this.border;
+    const y = height >= 0 ? diffY / countY / 2 : this.border;
+    /*
+    TODO check x and y
     console.log({
       x,
       y,
@@ -571,6 +573,7 @@ class FFmpeg {
       width,
       height,
     });
+    */
     return { x, y, shiftX, shiftY };
   }
 
