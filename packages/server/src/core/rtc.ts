@@ -157,21 +157,6 @@ class RTC
       },
       bundlePolicy: 'disable',
       iceTransportPolicy: 'all',
-      /*
-      iceServers:
-        IS_DEV || IS_CI
-          ? []
-          : [
-              {
-                urls: STUN_SERVER,
-              },
-              {
-                urls: process.env.TURN_SERVER as string,
-                username: process.env.TURN_SERVER_USER,
-                credential: process.env.TURN_SERVER_PASSWORD,
-              },
-            ],
-            */
       icePortRange: this.icePortRange,
     });
   };
