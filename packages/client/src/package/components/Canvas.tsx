@@ -2,7 +2,7 @@ import React, { useMemo, useRef } from 'react';
 import CloseIcon from '../Icons/Close';
 import { Theme } from '../Theme';
 import Request from '../utils/request';
-import { useLoadVideos } from './Canvas.hooks';
+import { useLoadVideos, useStrokeCanvas } from './Canvas.hooks';
 import s from './Canvas.module.scss';
 import IconButton from './ui/IconButton';
 
@@ -23,7 +23,9 @@ function Canvas({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  useLoadVideos({ dirName: src, server, port, token });
+  const { episodes } = useLoadVideos({ dirName: src, server, port, token });
+
+  useStrokeCanvas({ canvasRef });
   return (
     <div className={s.wrapper} style={{ backgroundColor: theme?.colors.black }}>
       <IconButton onClick={handleClose} className={s.close__button}>

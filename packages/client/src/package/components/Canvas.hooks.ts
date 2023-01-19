@@ -1,6 +1,7 @@
 import path from 'path-browserify';
 import { useEffect, useMemo, useState } from 'react';
 import { createEpisodes, createVideoChunks, Episode } from '../types/interfaces';
+import { log } from '../utils/lib';
 import Request from '../utils/request';
 
 // eslint-disable-next-line import/prefer-default-export
@@ -44,6 +45,29 @@ export const useLoadVideos = ({
     });
     const _episodes = createEpisodes({ chunks });
     setEpisodes(_episodes);
-    console.log(_episodes);
   }, [dir, request, dirName]);
+
+  return { episodes };
+};
+
+export const useStrokeCanvas = ({
+  canvasRef,
+}: {
+  canvasRef: React.RefObject<HTMLCanvasElement>;
+}) => {
+  useEffect(() => {
+    const { current } = canvasRef;
+    if (current) {
+      const ctx = current.getContext('2d');
+      if (ctx) {
+        ctx.moveTo(0, 0);
+        ctx.lineTo(300, 200);
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, 300, 200);
+        ctx.stroke();
+      } else {
+        log('error', 'Canvas context is missing', { ctx });
+      }
+    }
+  }, [canvasRef]);
 };

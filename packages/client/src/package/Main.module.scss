@@ -5,13 +5,13 @@
 }
 
 .button {
+  position: fixed;
   z-index: 100;
   cursor: pointer;
   border-radius: 25%;
   width: $button-width;
   height: $button-width;
   font-size: x-small;
-  position: fixed;
   left: calc((#{$button-width} / 2 * -1) + #{$wrapper-width});
   bottom: calc(#{$button-width} / 2);
   margin: auto;
