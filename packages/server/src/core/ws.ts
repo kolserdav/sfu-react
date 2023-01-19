@@ -10,17 +10,18 @@
  ******************************************************************************************/
 import { WebSocketServer, Server, WebSocket, ServerOptions } from 'ws';
 import { createServer } from 'http';
-import fs from 'fs';
 import {
   WSInterface,
   UserItem,
   LocaleValue,
-  EXT_WEBM,
   TOKEN_QUERY_NAME,
   RECORD_VIDEOS_PATH,
+  TEMPORARY_PATH,
 } from '../types/interfaces';
-import { checkDefaultAuth, getLocale, getVideoPath, log, parseQueryString } from '../utils/lib';
+import { checkDefaultAuth, getLocale, log, parseQueryString } from '../utils/lib';
 import DB from './db';
+import Http from './http';
+import { TMP_REGEX, VIDEO_REGEX } from '../utils/constants';
 
 const server = createServer();
 
@@ -35,6 +36,8 @@ class WS extends DB implements WSInterface {
 
   public rooms: Record<number | string, string> = {};
 
+  private http: Http;
+
   public WebSocket = WebSocket;
 
   constructor(
@@ -45,24 +48,25 @@ class WS extends DB implements WSInterface {
   ) {
     const { cloudPath, prisma } = connectionArgs;
     super({ prisma });
+    this.http = new Http({ prisma, cloudPath });
     const _connectionArgs = { ...connectionArgs };
     _connectionArgs.server = server;
     delete _connectionArgs.port;
     this.connection = this.createConnection(_connectionArgs);
     server.listen(connectionArgs.port);
-    server.on('request', async (request, response) => {
-      const { url: _url } = request;
+    server.on('request', async (req, res) => {
+      const { url: _url } = req;
       if (!_url) {
-        response.writeHead(400);
-        response.end();
+        res.writeHead(400);
+        res.end();
         return;
       }
 
       // Check token
       const queryString = _url.match(/\?.*$/);
       if (!queryString) {
-        response.writeHead(403);
-        response.end();
+        res.writeHead(403);
+        res.end();
         return;
       }
       const qS = queryString[0];
@@ -71,46 +75,32 @@ class WS extends DB implements WSInterface {
       const { errorCode, unitId } = await this.checkTokenCb({ token });
       const isDefaultAuth = checkDefaultAuth({ unitId });
       if (errorCode !== 0 && !isDefaultAuth) {
-        response.writeHead(403);
-        response.end();
+        res.writeHead(403);
+        res.end();
         return;
       }
 
-      const videoRegex = new RegExp(`^/${RECORD_VIDEOS_PATH}/`);
-      const isVideos = videoRegex.test(url || '');
+      const isVideos = VIDEO_REGEX.test(url || '');
+      const isTmp = TMP_REGEX.test(url || '');
       if (isVideos) {
-        const id = url.replace(videoRegex, '').replace(new RegExp(`${EXT_WEBM}$`), '');
-        const video = await this.videoFindFirst({
-          where: {
-            id,
-          },
-          include: {
-            Room: {
-              select: {
-                authorId: true,
-              },
-            },
-          },
+        await this.http.getVideoHandler({
+          isDefaultAuth,
+          res,
+          req,
+          unitId,
+          url,
         });
-        if (!video) {
-          response.writeHead(404);
-          response.end();
-          return;
-        }
-        // Check author
-        if (unitId !== video.Room.authorId && !isDefaultAuth) {
-          response.writeHead(401);
-          response.end();
-          return;
-        }
-
-        const videoPath = getVideoPath({ cloudPath, roomId: video.roomId, name: video.name });
-        const stream = fs.createReadStream(videoPath);
-        response.writeHead(200, { 'Content-Type': 'video/webm' });
-        stream.pipe(response);
+      } else if (isTmp) {
+        await this.http.getTmpHandler({
+          isDefaultAuth,
+          res,
+          req,
+          unitId,
+          url,
+        });
       } else {
-        response.writeHead(404);
-        response.end();
+        res.writeHead(404);
+        res.end();
       }
     });
   }

@@ -8,7 +8,12 @@
  * Copyright: kolserdav, All rights reserved (c)
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
-import { MessageType, SendMessageArgs } from '../types/interfaces';
+import {
+  MessageType,
+  RECORD_VIDEOS_PATH,
+  SendMessageArgs,
+  TEMPORARY_PATH,
+} from '../types/interfaces';
 
 export const LOG_LEVEL = parseInt(process.env.LOG_LEVEL as string, 10);
 export const DEFAULT_PORT = '3001';
@@ -58,3 +63,5 @@ export const ICE_PORT_MAX = parseInt(process.env.ICE_PORT_MAX as string, 10);
 export const RECORD_WIDTH_DEFAULT = 640;
 export const RECORD_HEIGHT_DEFAULT = 480;
 export const AUTH_UNIT_ID_DEFAULT = 'default';
+export const VIDEO_REGEX = new RegExp(`^/${RECORD_VIDEOS_PATH}/`);
+export const TMP_REGEX = new RegExp(`^/${TEMPORARY_PATH}/`);

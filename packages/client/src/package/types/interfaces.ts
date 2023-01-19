@@ -15,6 +15,8 @@
 import * as werift from 'werift';
 import { Message, Prisma, Room, Unit, Video, Quote, Admins } from '@prisma/client';
 
+export const DELIMITER = '_';
+export const TEMPORARY_PATH = 'tmp';
 export const RECORD_VIDEOS_PATH = 'videos';
 export const VIDEO_BACKGROUNDS_PATH = 'backgrounds';
 export const EXT_WEBM = '.webm';
