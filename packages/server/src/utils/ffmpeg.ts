@@ -16,7 +16,7 @@ import { createRandHash, getRoomDirPath, log } from './lib';
 // eslint-disable-next-line import/first
 import { RECORD_HEIGHT_DEFAULT, RECORD_WIDTH_DEFAULT } from './constants';
 // eslint-disable-next-line import/first
-import { Chunk, createVideoChunks, Episode, EXT_WEBM } from '../types/interfaces';
+import { Chunk, createEpisodes, createVideoChunks, Episode, EXT_WEBM } from '../types/interfaces';
 
 // eslint-disable-next-line no-unused-vars
 type LoadingCallback = (procent: number) => void;
@@ -176,7 +176,7 @@ class FFmpeg {
 
   private createFilterComplexArguments() {
     const args: string[] = [];
-    const _episodes = this.createEpisodes();
+    const _episodes = createEpisodes({ chunks: this.chunks });
     let withAudio = false;
     this.episodes = _episodes.map((episode, index) => {
       console.log(episode);
@@ -575,91 +575,6 @@ class FFmpeg {
       videoCount,
       audioCount,
     };
-  }
-
-  private createEpisodes() {
-    const episodes: Episode[] = [];
-    this.time = this.getVideoTime();
-    const time = this.getVideoTime(true) * 10;
-    let oldChunks: Chunk[] = [];
-    let from: number | undefined;
-    const array = new Array(time);
-    array.fill('').forEach((_, i) => {
-      const t = i / 10;
-      if (from === undefined) {
-        from = t;
-      }
-      const chunks: Chunk[] = [];
-      this.chunks.forEach((chunk) => {
-        if (chunk.start <= t && chunk.end > t) {
-          chunks.push(chunk);
-        }
-        return true;
-      });
-      const isNew = oldChunks.length === 0;
-      if (!this.isEqual(chunks, oldChunks) && !isNew) {
-        episodes.push({
-          start: from,
-          end: t,
-          video: false,
-          audio: false,
-          map: '',
-          mapA: '',
-          chunks: oldChunks,
-        });
-        from = t;
-      }
-      if (i === array.length - 1) {
-        episodes.push({
-          start: from,
-          end: t,
-          video: false,
-          audio: false,
-          map: '',
-          mapA: '',
-          chunks,
-        });
-      }
-      oldChunks = chunks;
-    });
-    return episodes.map((episode, index) => {
-      const _episode: Episode = { ...episode };
-      if (!episodes[index + 1]) {
-        _episode.end = this.time;
-      }
-      return _episode;
-    });
-  }
-
-  // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-explicit-any
-  private isEqual(a: any[], b: any[]) {
-    let check = true;
-    if (a.length !== b.length) {
-      return false;
-    }
-    a.every((item, index) => {
-      const aKeys = Object.keys(item);
-      aKeys.every((_item) => {
-        if (item[_item] !== b[index]?.[_item]) {
-          check = false;
-          return false;
-        }
-        return true;
-      });
-      return check;
-    });
-    return check;
-  }
-
-  private getVideoTime(all = false) {
-    const min = all ? 0 : this.chunks[0]?.start || 0;
-    let max = 0;
-    this.chunks.forEach((item) => {
-      if (item.end > max) {
-        max = item.end;
-      }
-    });
-    return max - min;
   }
 
   private parseTime(data: string) {

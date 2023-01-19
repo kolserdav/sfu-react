@@ -414,5 +414,9 @@ if (require.main === module) {
     port: PORT,
     cors: CORS,
     cloudPath: CLOUD_DIR_PATH,
+    checkTokenCb: async () => ({
+      errorCode: 0,
+      unitId: '1',
+    }),
   });
 }

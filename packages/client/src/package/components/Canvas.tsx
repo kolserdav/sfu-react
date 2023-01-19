@@ -23,7 +23,7 @@ function Canvas({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  useLoadVideos({ src, server, port, token });
+  useLoadVideos({ dirName: src, server, port, token });
   return (
     <div className={s.wrapper} style={{ backgroundColor: theme?.colors.black }}>
       <IconButton onClick={handleClose} className={s.close__button}>

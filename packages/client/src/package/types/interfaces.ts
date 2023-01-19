@@ -889,11 +889,13 @@ export interface Episode {
 export const createVideoChunks = ({
   dir,
   dirPath,
+  isBrowser,
   indexShift,
 }: {
   dir: string[];
   dirPath: string;
   indexShift?: boolean;
+  isBrowser?: boolean;
 }): Chunk[] => {
   const chunks: Omit<Chunk, 'index'>[] = [];
   dir.forEach((item) => {
@@ -911,7 +913,7 @@ export const createVideoChunks = ({
       audio,
       width: parseInt(peer[5], 10),
       height: parseInt(peer[6], 10),
-      fullPath: path.resolve(dirPath, item),
+      fullPath: isBrowser ? path.join(dirPath, item) : path.resolve(dirPath, item),
       map: '',
       mapA: '',
     });
@@ -934,4 +936,88 @@ export const createVideoChunks = ({
       _item.index = index + (indexShift ? 1 : 0);
       return _item;
     });
+};
+
+const isEqual = (a: any[], b: any[]) => {
+  let check = true;
+  if (a.length !== b.length) {
+    return false;
+  }
+  a.every((item, index) => {
+    const aKeys = Object.keys(item);
+    aKeys.every((_item) => {
+      if (item[_item] !== b[index]?.[_item]) {
+        check = false;
+        return false;
+      }
+      return true;
+    });
+    return check;
+  });
+  return check;
+};
+
+const getVideoTime = (chunks: Chunk[], all = false) => {
+  const min = all ? 0 : chunks[0]?.start || 0;
+  let max = 0;
+  chunks.forEach((item) => {
+    if (item.end > max) {
+      max = item.end;
+    }
+  });
+  return max - min;
+};
+
+export const createEpisodes = ({ chunks }: { chunks: Chunk[] }) => {
+  const episodes: Episode[] = [];
+  const endTime = getVideoTime(chunks);
+  const time = getVideoTime(chunks, true) * 10;
+  let oldChunks: Chunk[] = [];
+  let from: number | undefined;
+  const array = new Array(time);
+  array.fill('').forEach((_, i) => {
+    const t = i / 10;
+    if (from === undefined) {
+      from = t;
+    }
+    const _chunks: Chunk[] = [];
+    chunks.forEach((chunk) => {
+      if (chunk.start <= t && chunk.end > t) {
+        _chunks.push(chunk);
+      }
+      return true;
+    });
+    const isNew = oldChunks.length === 0;
+    if (!isEqual(_chunks, oldChunks) && !isNew) {
+      episodes.push({
+        start: from,
+        end: t,
+        video: false,
+        audio: false,
+        map: '',
+        mapA: '',
+        chunks: oldChunks,
+      });
+      from = t;
+    }
+    if (i === array.length - 1) {
+      episodes.push({
+        start: from,
+        end: t,
+        video: false,
+        audio: false,
+        map: '',
+        mapA: '',
+        chunks: _chunks,
+      });
+    }
+    oldChunks = _chunks;
+  });
+  return episodes.map((episode, index) => {
+    const _episode: Episode = { ...episode };
+    if (!episodes[index + 1]) {
+      _episode.end = endTime;
+    }
+    return _episode;
+  });
 };

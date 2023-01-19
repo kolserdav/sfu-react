@@ -15,7 +15,7 @@ class Request {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  private async send({
+  private async send<T>({
     responseType,
     token,
     url,
@@ -23,12 +23,12 @@ class Request {
     url: string;
     token?: string;
     responseType?: XMLHttpRequest['responseType'];
-  }) {
+  }): Promise<1 | T> {
     return new Promise((resolve) => {
       const req = new XMLHttpRequest();
       req.responseType = 'json' || responseType;
       req.onload = () => {
-        resolve(req.response);
+        resolve(req.response as T);
       };
       req.onabort = () => {
         log('error', 'Request abort', { url });
@@ -38,17 +38,23 @@ class Request {
         log('error', 'Request error', e);
         resolve(1);
       };
-      req.open(
-        'GET',
-        `${this.protocol}${this.server}:${this.port}${url}?${TOKEN_QUERY_NAME}=${token}`
-      );
+      req.open('GET', `${this.getOrigin()}${url}?${TOKEN_QUERY_NAME}=${token}`);
       req.send();
     });
   }
 
+  public getOrigin() {
+    return `${this.protocol}${this.server}:${this.port}`;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  public getTmpPath({ dirName }: { dirName: string }) {
+    return `/${TEMPORARY_PATH}/${dirName}`;
+  }
+
   public async getTmpDir({ dirName, token }: { dirName: string; token: string }) {
-    return this.send({
-      url: `/${TEMPORARY_PATH}/${dirName}`,
+    return this.send<string[]>({
+      url: this.getTmpPath({ dirName }),
       token,
     });
   }
