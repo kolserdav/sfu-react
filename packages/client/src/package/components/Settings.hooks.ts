@@ -563,3 +563,19 @@ export const useMessages = ({
 
   return { videos, time, started, buttonDisabled, setButtonDisabled, ws, loadProcent };
 };
+
+export const useTmpVideos = () => {
+  const [tmps, setTmps] = useState<string[]>(['1673340519949_1673950253377']);
+  const [playedTmp, setPlayedTmp] = useState<string>('');
+
+  const playTmpWrapper =
+    ({ item }: { item: string }) =>
+    () => {
+      setPlayedTmp(item);
+    };
+  const handleCloseTmp = () => {
+    setPlayedTmp('');
+  };
+
+  return { tmps, playedTmp, playTmpWrapper, handleCloseTmp };
+};

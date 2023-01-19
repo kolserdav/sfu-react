@@ -2,7 +2,7 @@ import fs from 'fs';
 import { ServerResponse, IncomingMessage } from 'http';
 import path from 'path';
 import { DELIMITER, EXT_WEBM } from '../types/interfaces';
-import { TMP_REGEX, VIDEO_REGEX } from '../utils/constants';
+import { TMP_REGEX, VIDEO_REGEX, WEBM_REGEX } from '../utils/constants';
 import { getVideoPath, log } from '../utils/lib';
 import DB from './db';
 
@@ -78,31 +78,38 @@ class Http extends DB {
       return;
     }
 
-    const dir = await new Promise<1 | string[]>((resolve) => {
-      fs.readdir(path.resolve(this.cloudPath, `./${url}`), (err, data) => {
-        if (err) {
-          log('error', 'Error read tmp dir', {
-            err,
-            url,
-            headers: req.headers,
-            unitId,
-            isDefaultAuth,
-          });
-          resolve(1);
-        }
-        resolve(data);
+    const isWebm = WEBM_REGEX.test(url);
+    if (isWebm) {
+      const stream = fs.createReadStream(path.resolve(this.cloudPath, `./${url}`));
+      res.writeHead(200, { 'Content-Type': 'video/webm' });
+      stream.pipe(res);
+    } else {
+      const dir = await new Promise<1 | string[]>((resolve) => {
+        fs.readdir(path.resolve(this.cloudPath, `./${url}`), (err, data) => {
+          if (err) {
+            log('error', 'Error read tmp dir', {
+              err,
+              url,
+              headers: req.headers,
+              unitId,
+              isDefaultAuth,
+            });
+            resolve(1);
+          }
+          resolve(data);
+        });
       });
-    });
 
-    if (dir === 1) {
-      res.writeHead(410);
+      if (dir === 1) {
+        res.writeHead(410);
+        res.end();
+        return;
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.write(JSON.stringify(dir));
       res.end();
-      return;
     }
-
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.write(JSON.stringify(dir));
-    res.end();
   }
 }
 

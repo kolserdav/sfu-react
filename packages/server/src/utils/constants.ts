@@ -9,6 +9,7 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import {
+  EXT_WEBM,
   MessageType,
   RECORD_VIDEOS_PATH,
   SendMessageArgs,
@@ -65,3 +66,4 @@ export const RECORD_HEIGHT_DEFAULT = 480;
 export const AUTH_UNIT_ID_DEFAULT = 'default';
 export const VIDEO_REGEX = new RegExp(`^/${RECORD_VIDEOS_PATH}/`);
 export const TMP_REGEX = new RegExp(`^/${TEMPORARY_PATH}/`);
+export const WEBM_REGEX = new RegExp(`${EXT_WEBM}$`);

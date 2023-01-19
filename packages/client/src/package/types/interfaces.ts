@@ -13,14 +13,8 @@
 /* eslint-disable max-classes-per-file */
 /* eslint-disable no-unused-vars */
 import * as werift from 'werift';
+import path from 'path-browserify';
 import { Message, Prisma, Room, Unit, Video, Quote, Admins } from '@prisma/client';
-
-export const DELIMITER = '_';
-export const TEMPORARY_PATH = 'tmp';
-export const RECORD_VIDEOS_PATH = 'videos';
-export const VIDEO_BACKGROUNDS_PATH = 'backgrounds';
-export const EXT_WEBM = '.webm';
-export const TOKEN_QUERY_NAME = 'token';
 
 export type LocaleValue = 'en' | 'ru';
 export interface UserItem {
@@ -860,3 +854,84 @@ export type WSInterface = Signaling.WSInterface;
 export type RTCInterface = Connection.RTCInterface;
 export type DBInterface = Data.DBInterface;
 export type AddTracksProps = Connection.AddTracksProps;
+
+export const DELIMITER = '_';
+export const TEMPORARY_PATH = 'tmp';
+export const RECORD_VIDEOS_PATH = 'videos';
+export const VIDEO_BACKGROUNDS_PATH = 'backgrounds';
+export const EXT_WEBM = '.webm';
+export const TOKEN_QUERY_NAME = 'token';
+
+export interface Chunk {
+  index: number;
+  id: string;
+  start: number;
+  end: number;
+  width: number;
+  height: number;
+  video: boolean;
+  audio: boolean;
+  fullPath: string;
+  map: string;
+  mapA: string;
+}
+
+export interface Episode {
+  start: number;
+  end: number;
+  map: string;
+  mapA: string;
+  video: boolean;
+  audio: boolean;
+  chunks: Chunk[];
+}
+
+export const createVideoChunks = ({
+  dir,
+  dirPath,
+  indexShift,
+}: {
+  dir: string[];
+  dirPath: string;
+  indexShift?: boolean;
+}): Chunk[] => {
+  const chunks: Omit<Chunk, 'index'>[] = [];
+  dir.forEach((item) => {
+    const peer = item.replace(EXT_WEBM, '').split(DELIMITER);
+    const start = parseFloat(peer[0]);
+    const end = parseFloat(peer[1]);
+    const id = peer[2];
+    const video = peer[3] === '1';
+    const audio = peer[4] === '1';
+    chunks.push({
+      id,
+      start,
+      end,
+      video,
+      audio,
+      width: parseInt(peer[5], 10),
+      height: parseInt(peer[6], 10),
+      fullPath: path.resolve(dirPath, item),
+      map: '',
+      mapA: '',
+    });
+  });
+  return chunks
+    .sort((a, b) => {
+      if (a.start < b.start) {
+        return -1;
+      }
+      if (a.start === b.start) {
+        if (a.end < b.end) {
+          return -1;
+        }
+      }
+      return 1;
+    })
+    .map((item, index) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const _item: Chunk = { ...item } as any;
+      _item.index = index + (indexShift ? 1 : 0);
+      return _item;
+    });
+};

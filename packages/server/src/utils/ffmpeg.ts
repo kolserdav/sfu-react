@@ -16,31 +16,7 @@ import { createRandHash, getRoomDirPath, log } from './lib';
 // eslint-disable-next-line import/first
 import { RECORD_HEIGHT_DEFAULT, RECORD_WIDTH_DEFAULT } from './constants';
 // eslint-disable-next-line import/first
-import { EXT_WEBM } from '../types/interfaces';
-
-interface Chunk {
-  index: number;
-  id: string;
-  start: number;
-  end: number;
-  width: number;
-  height: number;
-  video: boolean;
-  audio: boolean;
-  absPath: string;
-  map: string;
-  mapA: string;
-}
-
-interface Episode {
-  start: number;
-  end: number;
-  map: string;
-  mapA: string;
-  video: boolean;
-  audio: boolean;
-  chunks: Chunk[];
-}
+import { Chunk, createVideoChunks, Episode, EXT_WEBM } from '../types/interfaces';
 
 // eslint-disable-next-line no-unused-vars
 type LoadingCallback = (procent: number) => void;
@@ -128,7 +104,7 @@ class FFmpeg {
     this.dirPath = dirPath;
     this.backgroundImagePath = backgroundImagePath;
     this.roomId = roomId;
-    this.chunks = this.createVideoChunks({ dir });
+    this.chunks = createVideoChunks({ dir, dirPath, indexShift: backgroundImagePath !== null });
   }
 
   private getFilterComplexArgument({
@@ -171,48 +147,6 @@ class FFmpeg {
 
   private getVideosDirPath = () => this.dirPath.replace(/[a-z0-9A-Z-_]+$/, '');
 
-  private createVideoChunks({ dir }: { dir: string[] }): Chunk[] {
-    const chunks: Omit<Chunk, 'index'>[] = [];
-    dir.forEach((item) => {
-      const peer = item.replace(EXT_WEBM, '').split(this.delimiter);
-      const start = parseFloat(peer[0]);
-      const end = parseFloat(peer[1]);
-      const id = peer[2];
-      const video = peer[3] === '1';
-      const audio = peer[4] === '1';
-      chunks.push({
-        id,
-        start,
-        end,
-        video,
-        audio,
-        width: parseInt(peer[5], 10),
-        height: parseInt(peer[6], 10),
-        absPath: path.resolve(this.dirPath, item),
-        map: '',
-        mapA: '',
-      });
-    });
-    return chunks
-      .sort((a, b) => {
-        if (a.start < b.start) {
-          return -1;
-        }
-        if (a.start === b.start) {
-          if (a.end < b.end) {
-            return -1;
-          }
-        }
-        return 1;
-      })
-      .map((item, index) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const _item: Chunk = { ...item } as any;
-        _item.index = index + (this.backgroundImagePath !== null ? 1 : 0);
-        return _item;
-      });
-  }
-
   private createInputArguments() {
     let args: string[] = [this.forceOption];
     if (this.backgroundImagePath) {
@@ -220,7 +154,7 @@ class FFmpeg {
     }
     this.chunks.forEach((item) => {
       args.push(this.inputOption);
-      args.push(item.absPath);
+      args.push(item.fullPath);
     });
     return args;
   }

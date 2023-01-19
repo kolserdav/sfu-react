@@ -10,14 +10,7 @@
  ******************************************************************************************/
 import { WebSocketServer, Server, WebSocket, ServerOptions } from 'ws';
 import { createServer } from 'http';
-import {
-  WSInterface,
-  UserItem,
-  LocaleValue,
-  TOKEN_QUERY_NAME,
-  RECORD_VIDEOS_PATH,
-  TEMPORARY_PATH,
-} from '../types/interfaces';
+import { WSInterface, UserItem, LocaleValue, TOKEN_QUERY_NAME } from '../types/interfaces';
 import { checkDefaultAuth, getLocale, log, parseQueryString } from '../utils/lib';
 import DB from './db';
 import Http from './http';
@@ -55,6 +48,23 @@ class WS extends DB implements WSInterface {
     this.connection = this.createConnection(_connectionArgs);
     server.listen(connectionArgs.port);
     server.on('request', async (req, res) => {
+      // CORS
+      const headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'OPTIONS, POST, GET',
+        'Access-Control-Max-Age': 2592000,
+      };
+      if (req.method === 'OPTIONS') {
+        res.writeHead(204, headers);
+        res.end();
+        return;
+      }
+      if (['GET', 'POST'].indexOf(req.method || 'GET') > -1) {
+        Object.keys(headers).forEach((key) => {
+          res.setHeader(key, headers[key as keyof typeof headers]);
+        });
+      }
+
       const { url: _url } = req;
       if (!_url) {
         res.writeHead(400);
@@ -65,7 +75,7 @@ class WS extends DB implements WSInterface {
       // Check token
       const queryString = _url.match(/\?.*$/);
       if (!queryString) {
-        res.writeHead(403);
+        res.writeHead(422);
         res.end();
         return;
       }
@@ -99,7 +109,7 @@ class WS extends DB implements WSInterface {
           url,
         });
       } else {
-        res.writeHead(404);
+        res.writeHead(501);
         res.end();
       }
     });

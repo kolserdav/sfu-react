@@ -27,6 +27,7 @@ import {
   useLang,
   useMessages,
   useUpdateVideo,
+  useTmpVideos,
 } from './Settings.hooks';
 import PlayIcon from '../Icons/Play';
 import Video from './Video';
@@ -37,6 +38,7 @@ import Button from './ui/Button';
 import EditIcon from '../Icons/Edit';
 import Input from './ui/Input';
 import { INPUT_CHANGE_NAME_ID, VIDEO_NAME_MAX_LENGHT } from '../utils/constants';
+import Canvas from './Canvas';
 
 function Settings({
   theme,
@@ -90,6 +92,8 @@ function Settings({
   });
 
   const { isOwner } = useIsOwner({ userId });
+
+  const { tmps, playTmpWrapper, playedTmp, handleCloseTmp } = useTmpVideos();
 
   return (
     <div
@@ -161,9 +165,45 @@ function Settings({
               </div>
             ))}
           </div>
+          <div className={s.videos}>
+            {tmps.map((item) => (
+              <div className={s.video} key={item}>
+                <div className={s.actions}>
+                  <IconButton onClick={playTmpWrapper({ item })}>
+                    <PlayIcon width={20} height={20} color={theme?.colors.green} />
+                  </IconButton>
+                  <IconButton
+                    onClick={() => {
+                      /** */
+                    }}
+                  >
+                    <EditIcon width={20} height={20} color={theme?.colors.blue} />
+                  </IconButton>
+                  <IconButton
+                    onClick={(e) => {
+                      /** */
+                    }}
+                  >
+                    <DeleteIcon width={20} height={20} color={theme?.colors.red} />
+                  </IconButton>
+                </div>
+                <div className={s.name}>{item}</div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
       {playedVideo && <Video handleClose={handleCloseVideo} theme={theme} src={playedVideo} />}
+      {playedTmp && (
+        <Canvas
+          server={server}
+          port={port}
+          handleClose={handleCloseTmp}
+          token={token}
+          theme={theme}
+          src={playedTmp}
+        />
+      )}
       <Dialog {...dialogDelete} theme={theme}>
         <div className={s.dialog}>
           <h5 className={s.title}>{locale.needDeleteVideo}</h5>
