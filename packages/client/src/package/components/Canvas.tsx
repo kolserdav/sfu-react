@@ -24,7 +24,7 @@ function Canvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const controlsRef = useRef<HTMLDivElement>(null);
 
-  const { episodes, videoTime, width, height } = useLoadVideos({
+  const { episodes, videoTime, width, height, dir, request } = useLoadVideos({
     dirName: src,
     server,
     port,
@@ -36,7 +36,15 @@ function Canvas({
     videoTime,
   });
 
-  useStrokeCanvas({ canvasRef });
+  const { videos } = useStrokeCanvas({
+    canvasRef,
+    dir,
+    request,
+    dirName: src,
+    token,
+    width,
+    height,
+  });
   return (
     <div className={s.wrapper} style={{ backgroundColor: theme?.colors.black }}>
       <IconButton onClick={handleClose} className={s.close__button}>
@@ -54,6 +62,13 @@ function Canvas({
           onPlayClick={onPlayClickHandler}
           onChangeTime={onChangeTimeHandler}
         />
+      </div>
+      <div className={s.hidden__videos}>
+        {videos.map((item) => (
+          <video ref={item.ref} key={item.id} width={0} height={0}>
+            <source type="video/webm" src={item.src} />
+          </video>
+        ))}
       </div>
     </div>
   );

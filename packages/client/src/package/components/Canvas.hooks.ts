@@ -1,8 +1,13 @@
 import path from 'path-browserify';
-import { useEffect, useMemo, useState } from 'react';
-import { container } from 'webpack';
+import { createRef, useEffect, useMemo, useState } from 'react';
 import storeWindowResize from '../store/windowResize';
-import { createEpisodes, createVideoChunks, Episode, getVideoTime } from '../types/interfaces';
+import {
+  createEpisodes,
+  createVideoChunks,
+  Episode,
+  getVideoTime,
+  TOKEN_QUERY_NAME,
+} from '../types/interfaces';
 import { FULL_HD_COEFF } from '../utils/constants';
 import { log } from '../utils/lib';
 import Request from '../utils/request';
@@ -94,7 +99,7 @@ export const useLoadVideos = ({
     setEpisodes(_episodes);
   }, [dir, request, dirName]);
 
-  return { episodes, videoTime, width, height };
+  return { episodes, videoTime, width, height, dir, request };
 };
 
 export const usePlay = ({ episodes, videoTime }: { episodes: Episode[]; videoTime: number }) => {
@@ -119,9 +124,12 @@ export const usePlay = ({ episodes, videoTime }: { episodes: Episode[]; videoTim
       const {
         target: { value },
       } = e;
+      if (replay) {
+        setReplay(false);
+      }
       setTime(parseFloat(value));
     },
-    []
+    [replay]
   );
 
   /**
@@ -142,10 +150,11 @@ export const usePlay = ({ episodes, videoTime }: { episodes: Episode[]; videoTim
       interval = setInterval(() => {
         let _time = time;
         _time = (_time * 10 + 1) / 10;
-        if (_time >= maxTime) {
+        if (_time > maxTime) {
           clearInterval(interval);
           setReplay(true);
           setPlayed(false);
+          return;
         }
         setTime(_time);
       }, 100);
@@ -158,24 +167,96 @@ export const usePlay = ({ episodes, videoTime }: { episodes: Episode[]; videoTim
   return { played, time, maxTime, onPlayClickHandler, onChangeTimeHandler, replay };
 };
 
+interface VideoTmp {
+  id: number;
+  ref: React.RefObject<HTMLVideoElement>;
+  src: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
 export const useStrokeCanvas = ({
   canvasRef,
+  dir,
+  request,
+  dirName,
+  token,
+  width,
+  height,
 }: {
   canvasRef: React.RefObject<HTMLCanvasElement>;
+  dir: string[];
+  request: Request;
+  dirName: string;
+  token: string;
+  width: number;
+  height: number;
 }) => {
+  const [videos, setVideos] = useState<VideoTmp[]>([]);
+
+  /**
+   * Set video src
+   */
   useEffect(() => {
-    const { current } = canvasRef;
-    if (current) {
-      const ctx = current.getContext('2d');
-      if (ctx) {
-        ctx.moveTo(0, 0);
-        ctx.lineTo(300, 200);
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, 300, 200);
-        ctx.stroke();
+    const _videos: VideoTmp[] = [];
+    // TODO calculate x y w h
+    console.log(width, height);
+    dir.forEach((item, id) => {
+      _videos.push({
+        src: `${request.getOrigin()}${request.getTmpPath({
+          dirName,
+        })}/${item}?${TOKEN_QUERY_NAME}=${token}`,
+        id,
+        ref: createRef(),
+        x: 1,
+        y: 0,
+        w: 120,
+        h: 90,
+      });
+    });
+    setVideos(_videos);
+  }, [dir, dirName, request, token, width, height]);
+
+  /**
+   * Set on load metadata
+   */
+  useEffect(() => {
+    const intervals: NodeJS.Timeout[] = [];
+    videos.forEach((item) => {
+      const { current } = item.ref;
+      const { current: canvas } = canvasRef;
+      if (current && canvas) {
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          current.onloadedmetadata = () => {
+            current.play();
+          };
+          current.onplay = () => {
+            intervals.push(
+              setInterval(() => {
+                if (!current.paused && !current.ended) {
+                  requestAnimationFrame(() => {
+                    ctx.drawImage(current, item.x, item.y, item.w, item.h);
+                  });
+                }
+              }, 1000 / 30)
+            );
+          };
+        } else {
+          log('error', 'Canvas context is missing', { ctx });
+        }
       } else {
-        log('error', 'Canvas context is missing', { ctx });
+        log('error', 'Current video is missing', { item });
       }
-    }
-  }, [canvasRef]);
+    });
+    return () => {
+      intervals.forEach((interval) => {
+        clearInterval(interval);
+      });
+    };
+  }, [videos, canvasRef]);
+
+  return { videos };
 };
