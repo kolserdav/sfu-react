@@ -10,6 +10,14 @@
   justify-content: center;
 }
 
+.container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
 .close__button {
   z-index: 102;
   position: absolute;

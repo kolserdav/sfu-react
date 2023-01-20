@@ -957,7 +957,7 @@ const isEqual = (a: any[], b: any[]) => {
   return check;
 };
 
-const getVideoTime = (chunks: Chunk[], all = false) => {
+export const getVideoTime = (chunks: Chunk[], all = false) => {
   const min = all ? 0 : chunks[0]?.start || 0;
   let max = 0;
   chunks.forEach((item) => {
@@ -1000,7 +1000,7 @@ export const createEpisodes = ({ chunks }: { chunks: Chunk[] }) => {
       });
       from = t;
     }
-    if (i === array.length - 1) {
+    if (i === array.length - 1 && _chunks.length !== 0) {
       episodes.push({
         start: from,
         end: t,

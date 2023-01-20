@@ -126,3 +126,4 @@ export const MOBILE_REGEXP = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i;
 export const FULL_HD_COEFF = 1.7777777777777777;
 export const VIDEO_NAME_MAX_LENGHT = 150;
 export const INPUT_CHANGE_NAME_ID = 'change-video-name';
+export const DEFAULT_TIME = '00:00:00';

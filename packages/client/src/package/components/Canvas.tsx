@@ -1,10 +1,10 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useRef } from 'react';
 import CloseIcon from '../Icons/Close';
 import { Theme } from '../Theme';
-import Request from '../utils/request';
-import { useLoadVideos, useStrokeCanvas } from './Canvas.hooks';
+import { useLoadVideos, usePlay, useStrokeCanvas } from './Canvas.hooks';
 import s from './Canvas.module.scss';
 import IconButton from './ui/IconButton';
+import VideoControls from './ui/VideoControls';
 
 function Canvas({
   src,
@@ -22,8 +22,19 @@ function Canvas({
   theme?: Theme;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const controlsRef = useRef<HTMLDivElement>(null);
 
-  const { episodes } = useLoadVideos({ dirName: src, server, port, token });
+  const { episodes, videoTime, width, height } = useLoadVideos({
+    dirName: src,
+    server,
+    port,
+    token,
+    controlsRef,
+  });
+  const { maxTime, played, time, onPlayClickHandler, onChangeTimeHandler, replay } = usePlay({
+    episodes,
+    videoTime,
+  });
 
   useStrokeCanvas({ canvasRef });
   return (
@@ -31,7 +42,19 @@ function Canvas({
       <IconButton onClick={handleClose} className={s.close__button}>
         <CloseIcon color={theme?.colors.white} />
       </IconButton>
-      <canvas ref={canvasRef} width={300} height={200} />
+      <div className={s.container}>
+        <canvas ref={canvasRef} width={width} height={height} />
+        <VideoControls
+          ref={controlsRef}
+          max={maxTime}
+          value={time}
+          theme={theme}
+          played={played}
+          replay={replay}
+          onPlayClick={onPlayClickHandler}
+          onChangeTime={onChangeTimeHandler}
+        />
+      </div>
     </div>
   );
 }

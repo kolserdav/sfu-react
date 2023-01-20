@@ -1,0 +1,34 @@
+@import '../../Main';
+
+.wrapper {
+  position: relative;
+  width: calc(100% - #{$crown-padding} * 2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $crown-padding;
+
+  input {
+    cursor: pointer;
+    width: 100%;
+  }
+
+  .input__group {
+    position: relative;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+
+    .time {
+      margin-left: $crown-padding;
+      opacity: 0.8;
+      font-size: small;
+    }
+  }
+}
+
+.play__button {
+  margin-left: calc(#{$crown-padding} * -1);
+}

@@ -23,6 +23,7 @@ import storeClickDocument, { changeClickDocument } from './store/clickDocument';
 import WS from './core/ws';
 import { log } from './utils/lib';
 import storeLogLevel, { changeLogLevel } from './store/logLevel';
+import storeWindowResize, { changeWindowResize } from './store/windowResize';
 
 // eslint-disable-next-line import/prefer-default-export
 export const useListeners = ({
@@ -51,6 +52,9 @@ export const useListeners = ({
     setHallOpen(!hallOpen);
   };
 
+  /**
+   * Handle messages
+   */
   useEffect(() => {
     ws.onOpen = () => {
       ws.sendMessage({
@@ -192,6 +196,28 @@ export const useListeners = ({
       );
     }
   }, [logLevel]);
+
+  /**
+   * Window resize listener
+   */
+  useEffect(() => {
+    const resizeHandler = () => {
+      const { windowResize } = storeWindowResize.getState();
+      storeWindowResize.dispatch(
+        changeWindowResize({
+          windowResize: windowResize + 1,
+        })
+      );
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', resizeHandler);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('resize', resizeHandler);
+      }
+    };
+  }, []);
 
   return { locale, openMenu, theme, alert, hallOpen };
 };

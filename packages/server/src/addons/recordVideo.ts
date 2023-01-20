@@ -358,7 +358,8 @@ class RecordVideo extends DB {
     this.mediaRecorders[roomId][recorderId].start();
   }
 
-  private async recordVideo({ roomId, id }: { roomId: string | number; id: number | string }) {
+  // TODO impl
+  public async recordVideo({ roomId, id }: { roomId: string | number; id: number | string }) {
     const locale = this.ws.getLocale({ userId: id });
 
     const dir = fs.readdirSync(this.dirPath[roomId]);
