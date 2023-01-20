@@ -16,7 +16,15 @@ import { createRandHash, getRoomDirPath, log } from './lib';
 // eslint-disable-next-line import/first
 import { RECORD_HEIGHT_DEFAULT, RECORD_WIDTH_DEFAULT } from './constants';
 // eslint-disable-next-line import/first
-import { Chunk, createEpisodes, createVideoChunks, Episode, EXT_WEBM } from '../types/interfaces';
+import {
+  Chunk,
+  createEpisodes,
+  createVideoChunks,
+  Episode,
+  EXT_WEBM,
+  getCountVideos,
+  getVideoShifts,
+} from '../types/interfaces';
 
 // eslint-disable-next-line no-unused-vars
 type LoadingCallback = (procent: number) => void;
@@ -252,8 +260,14 @@ class FFmpeg {
         );
       }
       // Set video paddings
-      const { videoCount } = this.getCountVideos(episode.chunks);
-      const { x, y, shiftX, shiftY } = this.getVideoShifts({ videoCount, chunks });
+      const { videoCount } = getCountVideos(episode.chunks);
+      const { x, y, shiftX, shiftY } = getVideoShifts({
+        videoCount,
+        chunks,
+        videoHeight: this.videoHeight,
+        videoWidth: this.videoWidth,
+        border: this.border,
+      });
       chunks = chunks.map((chunk) => {
         if (chunk.video) {
           const chunkCopy = { ...chunk };
@@ -471,73 +485,6 @@ class FFmpeg {
     return uMaps;
   }
 
-  private getVideoShifts({ videoCount, chunks }: { videoCount: number; chunks: Chunk[] }) {
-    const countX = videoCount === 2 || videoCount === 4 ? 2 : videoCount === 1 ? 1 : 3;
-    const countY = videoCount === 2 || videoCount === 3 ? 1 : videoCount === 1 ? 1 : 2;
-    const { allHeight, allWidth } = this.getAllDimensions({ chunks, countX, countY });
-    const width = this.videoWidth - allWidth;
-    let shiftX = 0;
-    let shiftY = 0;
-    const diffX = Math.abs(width);
-    if (width < 0) {
-      shiftX = diffX / countX + this.border * countX;
-    }
-    const height = this.videoHeight - allHeight;
-    const diffY = Math.abs(height);
-    if (height < 0) {
-      shiftY = diffY / countY + this.border * countY;
-    }
-    const x = width >= 0 ? diffX / countX / 2 : this.border;
-    const y = height >= 0 ? diffY / countY / 2 : this.border;
-    /*
-    TODO check x and y
-    console.log({
-      x,
-      y,
-      shiftX,
-      shiftY,
-      allHeight,
-      allWidth,
-      countX,
-      countY,
-      diffX,
-      diffY,
-      width,
-      height,
-    });
-    */
-    return { x, y, shiftX, shiftY };
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  private getAllDimensions({
-    chunks,
-    countX,
-    countY,
-  }: {
-    chunks: Chunk[];
-    countX: number;
-    countY: number;
-  }) {
-    let allWidth = 0;
-    let allHeight = 0;
-    let _countX = 0;
-    let _countY = 0;
-    chunks.forEach((chunk) => {
-      if (chunk.video) {
-        if (_countX < countX) {
-          _countX++;
-          allWidth += chunk.width;
-        }
-        if (_countY < countY) {
-          _countY++;
-          allHeight += chunk.height;
-        }
-      }
-    });
-    return { allWidth, allHeight };
-  }
-
   private getMap(withAudio: boolean) {
     const maps: string[] = [];
     this.episodes.forEach((item) => {
@@ -557,24 +504,6 @@ class FFmpeg {
       }
     });
     return maps;
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  private getCountVideos(chunks: Chunk[]) {
-    let videoCount = 0;
-    let audioCount = 0;
-    chunks.forEach((item) => {
-      if (item.video) {
-        videoCount++;
-      }
-      if (item.audio) {
-        audioCount++;
-      }
-    });
-    return {
-      videoCount,
-      audioCount,
-    };
   }
 
   private parseTime(data: string) {

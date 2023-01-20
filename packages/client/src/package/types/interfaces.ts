@@ -1021,3 +1021,81 @@ export const createEpisodes = ({ chunks }: { chunks: Chunk[] }) => {
     return _episode;
   });
 };
+
+const getAllDimensions = ({
+  chunks,
+  countX,
+  countY,
+}: {
+  chunks: Chunk[];
+  countX: number;
+  countY: number;
+}) => {
+  let allWidth = 0;
+  let allHeight = 0;
+  let _countX = 0;
+  let _countY = 0;
+  chunks.forEach((chunk) => {
+    if (chunk.video) {
+      if (_countX < countX) {
+        _countX++;
+        allWidth += chunk.width;
+      }
+      if (_countY < countY) {
+        _countY++;
+        allHeight += chunk.height;
+      }
+    }
+  });
+  return { allWidth, allHeight };
+};
+
+export const getVideoShifts = ({
+  videoCount,
+  chunks,
+  videoHeight,
+  videoWidth,
+  border,
+}: {
+  videoCount: number;
+  chunks: Chunk[];
+  videoWidth: number;
+  videoHeight: number;
+  border: number;
+}) => {
+  const countX = videoCount === 2 || videoCount === 4 ? 2 : videoCount === 1 ? 1 : 3;
+  const countY = videoCount === 2 || videoCount === 3 ? 1 : videoCount === 1 ? 1 : 2;
+  const { allHeight, allWidth } = getAllDimensions({ chunks, countX, countY });
+  const width = videoWidth - allWidth;
+  let shiftX = 0;
+  let shiftY = 0;
+  const diffX = Math.abs(width);
+  if (width < 0) {
+    shiftX = diffX / countX + border * countX;
+  }
+  const height = videoHeight - allHeight;
+  const diffY = Math.abs(height);
+  if (height < 0) {
+    shiftY = diffY / countY + border * countY;
+  }
+  const x = width >= 0 ? diffX / countX / 2 : border;
+  const y = height >= 0 ? diffY / countY / 2 : border;
+  return { x, y, shiftX, shiftY };
+};
+
+export const getCountVideos = (chunks: Chunk[]) => {
+  let videoCount = 0;
+  let audioCount = 0;
+  chunks.forEach((item) => {
+    if (item.video) {
+      videoCount++;
+    }
+    if (item.audio) {
+      audioCount++;
+    }
+  });
+  return {
+    videoCount,
+    audioCount,
+  };
+};

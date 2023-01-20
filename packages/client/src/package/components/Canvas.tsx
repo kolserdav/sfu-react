@@ -24,22 +24,32 @@ function Canvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const controlsRef = useRef<HTMLDivElement>(null);
 
-  const { episodes, videoTime, width, height, dir, request } = useLoadVideos({
+  const { episodes, videoTime, width, height, request, dir } = useLoadVideos({
     dirName: src,
     server,
     port,
     token,
     controlsRef,
   });
-  const { maxTime, played, time, onPlayClickHandler, onChangeTimeHandler, replay } = usePlay({
+
+  const {
+    maxTime,
+    played,
+    time,
+    onPlayClickHandler,
+    onChangeTimeHandler,
+    replay,
+    episodes: _episodes,
+  } = usePlay({
     episodes,
     videoTime,
   });
 
   const { videos } = useStrokeCanvas({
     canvasRef,
-    dir,
+    episodes: _episodes,
     request,
+    dir,
     dirName: src,
     token,
     width,

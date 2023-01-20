@@ -5,6 +5,8 @@ import {
   createEpisodes,
   createVideoChunks,
   Episode,
+  getCountVideos,
+  getVideoShifts,
   getVideoTime,
   TOKEN_QUERY_NAME,
 } from '../types/interfaces';
@@ -102,11 +104,18 @@ export const useLoadVideos = ({
   return { episodes, videoTime, width, height, dir, request };
 };
 
-export const usePlay = ({ episodes, videoTime }: { episodes: Episode[]; videoTime: number }) => {
+export const usePlay = ({
+  episodes: _episodes,
+  videoTime,
+}: {
+  episodes: Episode[];
+  videoTime: number;
+}) => {
   const [played, setPlayed] = useState<boolean>(false);
   const [replay, setReplay] = useState<boolean>(false);
   const [time, setTime] = useState<number>(0);
   const [maxTime, setMaxTime] = useState<number>(0);
+  const [episodes, setEpisodes] = useState<Episode[]>([]);
 
   const onPlayClickHandler = useMemo(
     () => (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -164,7 +173,7 @@ export const usePlay = ({ episodes, videoTime }: { episodes: Episode[]; videoTim
     };
   }, [played, time, maxTime]);
 
-  return { played, time, maxTime, onPlayClickHandler, onChangeTimeHandler, replay };
+  return { played, time, maxTime, onPlayClickHandler, onChangeTimeHandler, replay, episodes };
 };
 
 interface VideoTmp {
@@ -179,22 +188,35 @@ interface VideoTmp {
 
 export const useStrokeCanvas = ({
   canvasRef,
-  dir,
+  episodes,
   request,
   dirName,
+  dir,
   token,
   width,
   height,
 }: {
   canvasRef: React.RefObject<HTMLCanvasElement>;
-  dir: string[];
+  episodes: Episode[];
   request: Request;
+  dir: string[];
   dirName: string;
   token: string;
   width: number;
   height: number;
 }) => {
   const [videos, setVideos] = useState<VideoTmp[]>([]);
+
+  const inputs = useMemo(
+    () =>
+      dir.map(
+        (item) =>
+          `${request.getOrigin()}${request.getTmpPath({
+            dirName,
+          })}/${item}?${TOKEN_QUERY_NAME}=${token}`
+      ),
+    [dir, dirName, request, token]
+  );
 
   /**
    * Set video src
@@ -203,21 +225,37 @@ export const useStrokeCanvas = ({
     const _videos: VideoTmp[] = [];
     // TODO calculate x y w h
     console.log(width, height);
-    dir.forEach((item, id) => {
+    episodes.forEach((item, id) => {
+      const { videoCount } = getCountVideos(item.chunks);
+      const { shiftX, shiftY } = getVideoShifts({
+        videoCount,
+        videoHeight: height,
+        videoWidth: width,
+        chunks: item.chunks,
+        border: 5,
+      });
+      // TODO
+      const chunks = item.chunks.map((chunk) => {
+        const chunkCopy = { ...chunk };
+        if (shiftX > shiftY) {
+          chunkCopy.width = chunk.width - shiftX;
+        } else if (shiftY) {
+          chunkCopy.height = chunk.width - shiftY;
+        }
+        return chunkCopy;
+      });
       _videos.push({
-        src: `${request.getOrigin()}${request.getTmpPath({
-          dirName,
-        })}/${item}?${TOKEN_QUERY_NAME}=${token}`,
+        src: '',
         id,
         ref: createRef(),
         x: 1,
         y: 0,
-        w: 120,
-        h: 90,
+        w: 640,
+        h: 480,
       });
     });
     setVideos(_videos);
-  }, [dir, dirName, request, token, width, height]);
+  }, [episodes, dirName, request, token, width, height]);
 
   /**
    * Set on load metadata
