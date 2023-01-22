@@ -1,5 +1,5 @@
 {
-  "eslint.validate": ["javascript", "tepescript"],
+  "eslint.validate": ["javascript", "typescript"],
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "eslint.format.enable": true,
   "editor.codeActionsOnSave": {
