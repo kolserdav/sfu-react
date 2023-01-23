@@ -11,7 +11,7 @@ class Request {
   constructor({ port, server }: { port: number; server: string }) {
     this.port = port;
     this.server = server;
-    this.protocol = `${typeof window !== 'undefined' ? window.location.protocol : 'http'}//`;
+    this.protocol = `${typeof window !== 'undefined' ? window.location.protocol : 'http:'}//`;
   }
 
   // eslint-disable-next-line class-methods-use-this
