@@ -132,7 +132,11 @@ export const parseQueryString = (query: string): Record<string, string> => {
     }
     const propReg = /^\w+=/;
     const prop = item.match(propReg);
-    const propStr = prop ? prop[0].replace('=', '') : '';
+    const _prop = prop ? prop[0] : null;
+    if (!_prop) {
+      return;
+    }
+    const propStr = _prop.replace('=', '');
     res[propStr] = item.replace(propReg, '');
   });
   return res;
