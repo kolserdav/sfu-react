@@ -1,6 +1,6 @@
 {
   "name": "uyem",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "repository": "https://github.com/kolserdav/werift-sfu-react.git",
   "description": "WebRTC client-server SFU application",
   "keywords": [
@@ -76,9 +76,7 @@
     "dev:client-next": "cd packages/client && npm run dev:next",
     "dev:test-client": "cd packages/client && npm run dev:test",
     "dev:test": "concurrently \"npm run dev:server\" \"npm run dev:test-client\"",
-    "env:server": "cp packages/server/.env.example packages/server/.env",
-    "env:client": "cp packages/client/.env.example packages/client/.env",
-    "env": "npm run env:server && npm run env:client",
+    "env": "node scripts/copy-env.js",
     "postinstall": "npm run copy",
     "migrate": "cd packages/server && npm run migrate",
     "start:server": "cd packages/server && npm run start",

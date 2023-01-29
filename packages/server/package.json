@@ -16,6 +16,7 @@
     "dev:start": "cross-env NODE_ENV=development nodemon dist/main.js",
     "start": "cross-env NODE_ENV=production node dist/main.js",
     "clean": "rimraf dist",
+    "postinstall": "cd ../.. && npm run copy",
     "dev": "concurrently \"npm run watch\" \"npm run dev:start\"",
     "dev:server": "concurrently \"npm run watch\" \"nodemon dist/server.js\"",
     "lint": "eslint ./src --fix -c .eslintrc",

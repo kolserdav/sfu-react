@@ -120,8 +120,8 @@ let skipMigrate = false;
           break;
         }
         break;
-      case 'rdp':
-        cloud = argv.rdp || DEFAULT_PARAMS.cloud;
+      case 'cloud':
+        cloud = argv.cloud || DEFAULT_PARAMS.cloud;
         break;
       case 'cors':
         log('info', 'Set up Simple-CORS defence:', argv.cors);

@@ -1,8 +1,8 @@
 # uyem
 
-Selective Forwarding Unit (SFU) is a WebRTC web application library, the server part of which is written in Node, and the client part is a ReactJS/Next.js shared component.  
+Selective Forwarding Unit (SFU) is a WebRTC web application library, the server part of which is written in Node, and the client part is a ReactJS/Next.js shared component.
 
-![https://kolserdav-portfolio.s3.eu-central-1.amazonaws.com/uyem2.gif](https://kolserdav-portfolio.s3.eu-central-1.amazonaws.com/uyem2.gif)  
+![https://kolserdav-portfolio.s3.eu-central-1.amazonaws.com/uyem2.gif](https://kolserdav-portfolio.s3.eu-central-1.amazonaws.com/uyem2.gif)
 
 ## Homepage (demo)
 
@@ -85,18 +85,18 @@ See [docs/COTURN.md](docs/COTURN.md) for more details.
 
 ---
 
-## Run server
+## Server preparation
 
-- Add property `server` to the `scripts` block of `package.json`:
+- Add property `migrate` to the `scripts` block of `package.json`:
 
 ```json
-"server": "uyem --port 3001 --db mysql://user:password@127.0.0.1:3306/db_name",
+"migrate": "uyem --db mysql://arch:1234@127.0.0.1:3306/uyem_db --migrate"
 ```
 
-- Run server:
+- Migrate server:
 
 ```sh
-npm run server
+Conducting migrations
 ```
 
 ## Usage on client
@@ -111,6 +111,14 @@ import 'uyem/packages/client/dist/styles.css';
 
 ```javascript
 import Uyem from 'uyem';
+```
+
+## Usage on sever
+
+```javascript
+const { createServer } = require('uyem/server');
+
+createServer({ port: 3233 });
 ```
 
 ## Client examples
