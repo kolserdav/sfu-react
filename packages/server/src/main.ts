@@ -20,7 +20,7 @@ import { ServerCallback } from './types';
 import RTC, { OnRoomConnect, OnRoomOpen } from './core/rtc';
 import { MessageType, LogLevel } from './types/interfaces';
 import { cleanDbUrl, getLocale, log, setLogLevel } from './utils/lib';
-import { PORT, CORS, CLOUD_DIR_PATH } from './utils/constants';
+import { PORT, CORS, CLOUD_DIR_PATH, DATABASE_URL } from './utils/constants';
 import DB from './core/db';
 import Chat from './addons/chat';
 import RecordVideo from './addons/recordVideo';
@@ -29,7 +29,7 @@ import Settings from './addons/settings';
 
 export const prisma = new PrismaClient();
 
-const db = new DB({ prisma });
+const database = new DB({ prisma });
 const chat = new Chat({ prisma });
 
 process.on('uncaughtException', (err: Error) => {
@@ -45,6 +45,7 @@ export function createServer(
   {
     port = PORT,
     cors = CORS,
+    db = DATABASE_URL,
     onRoomOpen,
     onRoomClose,
     onRoomConnect,
@@ -56,6 +57,7 @@ export function createServer(
     port?: number;
     cors?: string;
     onRoomOpen?: OnRoomOpen;
+    db?: string;
     // eslint-disable-next-line no-unused-vars
     onRoomClose?: (args: { roomId: string | number; roomLength: number; port: number }) => void;
     onRoomConnect?: OnRoomConnect;
@@ -67,12 +69,19 @@ export function createServer(
   cb?: ServerCallback
 ) {
   if (require.main !== module) {
-    log('info', 'Using DATABASE_URL:', cleanDbUrl(), true);
+    if (!db && !DATABASE_URL) {
+      log('error', 'DATABASE_URL: not provided', { db, DATABASE_URL }, true);
+      return;
+    }
+    log('info', 'Using DATABASE_URL:', cleanDbUrl(db), true);
   }
+  process.env.DATABASE_URL = db || DATABASE_URL;
   if (!_cloudPath) {
+    /*
     log('warn', 'Cloud dir path "--cloud" is not set, video recording is not available', {
       _cloudPath,
     });
+    */
   }
   setLogLevel(logLevel);
   const cloudPath = _cloudPath || CLOUD_DIR_PATH;
@@ -337,7 +346,7 @@ export function createServer(
           log('warn', 'No socket delete', { s: Object.keys(wss.sockets) });
         }
 
-        db.changeUserOnline({ userId, online: false });
+        database.changeUserOnline({ userId, online: false });
         log('info', 'User disconnected', userId);
 
         const roomKeys = Object.keys(rtc.rooms);
@@ -383,7 +392,7 @@ export function createServer(
               delete rtc.muteForAll[item];
               delete rtc.offVideo[item];
               delete rtc.peerConnectionsServer[item];
-              db.changeRoomArchive({ roomId: item.toString(), archive: true });
+              database.changeRoomArchive({ roomId: item.toString(), archive: true });
               delete rtc.muteds[item];
               delete rtc.adminMuteds[item];
               delete chat.users[item];
@@ -392,7 +401,7 @@ export function createServer(
                 onRoomClose({ roomId: item, roomLength: rtc.getRoomLenght(), port });
               }
             }
-            db.deleteGuest({ userId, roomId: item });
+            database.deleteGuest({ userId, roomId: item });
             delete wss.users[userId];
             return false;
           }

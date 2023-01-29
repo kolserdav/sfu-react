@@ -145,7 +145,6 @@ let skipMigrate = false;
         } else if (!skipMigrate) {
           log('info', 'Using database url:', cleanDbUrl(db), true);
         }
-        process.env.DATABASE_URL = db;
         break;
       case 'migrate':
         log('info', 'Start migrate only script...', '', true);
@@ -177,7 +176,7 @@ let skipMigrate = false;
     } else if (!skipMigrate) {
       // eslint-disable-next-line global-require
       import('./main').then(({ createServer }) => {
-        createServer({ port, cors, logLevel, cloudPath: cloud });
+        createServer({ port, cors, logLevel, cloudPath: cloud, db });
       });
     }
   }

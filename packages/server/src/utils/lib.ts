@@ -11,7 +11,7 @@
 import werift from 'werift';
 import { format } from 'date-fns';
 import path from 'path';
-import { AUTH_UNIT_ID_DEFAULT, IS_DEV, LOG_LEVEL } from './constants';
+import { AUTH_UNIT_ID_DEFAULT, DATABASE_URL, IS_DEV, LOG_LEVEL } from './constants';
 import {
   LocaleServer,
   LocaleDefault,
@@ -92,7 +92,7 @@ export const checkTockenDefault = async (token: string) => {
 };
 
 export const cleanDbUrl = (db?: string) => {
-  const dbUrl = db || (process.env.DATABASE_URL as string);
+  const dbUrl = db || DATABASE_URL;
   let password: RegExpMatchArray | string | null = dbUrl.match(/:(?!\/).+@/);
   const _password = password ? password[0] : '';
   password = ':';
