@@ -10,7 +10,7 @@
  * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 /* eslint-disable no-case-declarations */
-import { spawn } from 'child_process';
+import { exec } from 'child_process';
 import path from 'path';
 import { cleanDbUrl, log } from './utils/lib';
 import { LogLevel } from './types/interfaces';
@@ -50,18 +50,28 @@ const args = Object.keys(argv);
 
 const migrate = async (): Promise<number | null> => {
   log('info', 'Running "npm run migrate" command...', '', true);
-  const res = spawn('npm', ['run', 'migrate'], {
-    env: process.env,
-    cwd: path.resolve(__dirname, '../../..'),
-  });
-  res.stdout.on('data', (d) => {
-    // eslint-disable-next-line no-console
-    console.log(d.toString());
-  });
-  res.stderr.on('data', (d) => {
-    log('error', d.toString(), '', true);
-  });
   return new Promise((resolve) => {
+    const res = exec(
+      'npm run migrate',
+      {
+        env: process.env,
+        cwd: path.resolve(__dirname, '../../..'),
+      },
+      (error) => {
+        if (error) {
+          log('error', 'Failed "npm run migrate" command', error);
+          resolve(error.code || 0);
+        }
+      }
+    );
+    res.stdout?.on('data', (d) => {
+      // eslint-disable-next-line no-console
+      console.log(d.toString());
+    });
+    res.stderr?.on('data', (d) => {
+      log('error', d.toString(), '', true);
+    });
+
     res.on('exit', (e) => {
       resolve(e);
     });

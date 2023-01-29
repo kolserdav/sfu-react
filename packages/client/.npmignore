@@ -1,1 +1,6 @@
-
+src
+pages
+public
+styles
+webpack.config.js
+webpack.web.config.js
