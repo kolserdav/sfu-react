@@ -14,4 +14,11 @@ const onRoomDisconnect = (args) => {
   console.log('disconnect', args);
 };
 
-createServer({ port: 3001, onRoomOpen, onRoomClose, onRoomConnect, onRoomDisconnect });
+createServer({
+  port: 3001,
+  onRoomOpen,
+  onRoomClose,
+  onRoomConnect,
+  onRoomDisconnect,
+  db: 'mysql://root:root@127.0.0.1:3306/uyem_db',
+});

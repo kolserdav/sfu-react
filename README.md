@@ -90,7 +90,7 @@ See [docs/COTURN.md](docs/COTURN.md) for more details.
 - Add property `migrate` to the `scripts` block of `package.json`:
 
 ```json
-"migrate": "uyem --db mysql://arch:1234@127.0.0.1:3306/uyem_db --migrate"
+"migrate": "uyem --db mysql://root:root@127.0.0.1:3306/uyem_db --migrate"
 ```
 
 - Conducting migrations:
