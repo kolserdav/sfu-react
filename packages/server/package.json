@@ -1,6 +1,6 @@
 {
   "name": "server",
-  "version": "1.0.9",
+  "version": "1.0.1",
   "main": "dist/main.js",
   "license": "MIT",
   "prisma": {
