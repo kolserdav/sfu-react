@@ -93,10 +93,10 @@ See [docs/COTURN.md](docs/COTURN.md) for more details.
 "migrate": "uyem --db mysql://arch:1234@127.0.0.1:3306/uyem_db --migrate"
 ```
 
-- Migrate server:
+- Conducting migrations:
 
 ```sh
-Conducting migrations
+npm run migrate
 ```
 
 ## Usage on client
