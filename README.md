@@ -118,7 +118,7 @@ import Uyem from 'uyem';
 ```javascript
 const { createServer } = require('uyem/server');
 
-createServer({ port: 3233 });
+createServer({ port: 3233, db: 'mysql://root:root@127.0.0.1:3306/uyem_db' });
 ```
 
 ## Client examples
