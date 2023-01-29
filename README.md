@@ -64,7 +64,7 @@ Sample setup SSL certificates from Let's Encrypt for client and for server toget
 
 ---
 
-- To remote access between units using valid `iceServers` is required:
+- To remote access between units using valid `iceServers` on client is required:
 
 ---
 

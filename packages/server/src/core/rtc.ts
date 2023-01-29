@@ -22,14 +22,7 @@ import {
   Command,
 } from '../types/interfaces';
 import { checkDefaultAuth, checkSignallingState, log } from '../utils/lib';
-import {
-  STUN_SERVER,
-  SENT_RTCP_INTERVAL,
-  ICE_PORT_MIN,
-  ICE_PORT_MAX,
-  IS_DEV,
-  IS_CI,
-} from '../utils/constants';
+import { SENT_RTCP_INTERVAL, ICE_PORT_MIN, ICE_PORT_MAX, IS_DEV } from '../utils/constants';
 import WS from './ws';
 import DB from './db';
 
