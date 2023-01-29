@@ -138,7 +138,6 @@ let skipMigrate = false;
         cors = argv.cors || DEFAULT_PARAMS.cors;
         break;
       case 'db':
-        log('info', 'Set up database url:', argv.db);
         db = argv.db || DEFAULT_PARAMS.db;
         if (db === DEFAULT_PARAMS.db && !skipMigrate) {
           log('warn', 'Parameter "db" not specified, using default:', DEFAULT_PARAMS.db, true);
