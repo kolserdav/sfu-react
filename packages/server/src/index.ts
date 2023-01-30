@@ -18,6 +18,7 @@ import { LogLevel } from './types/interfaces';
 //@ts-ignore
 // eslint-disable-next-line import/no-relative-packages
 import { name, version } from '../../../package';
+import { DATABASE_URL } from './utils/constants';
 
 log('info', `${name}@${version} started`, '...', true);
 process.chdir(path.resolve(__dirname, '../../..'));
@@ -139,6 +140,7 @@ let skipMigrate = false;
         break;
       case 'db':
         db = argv.db || DEFAULT_PARAMS.db;
+        process.env.DATABASE_URL = db || DATABASE_URL;
         if (db === DEFAULT_PARAMS.db && !skipMigrate) {
           log('warn', 'Parameter "db" not specified, using default:', DEFAULT_PARAMS.db, true);
         } else if (!skipMigrate) {

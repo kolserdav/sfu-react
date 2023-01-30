@@ -11,6 +11,6 @@
   "author": "kolserdav",
   "license": "MIT",
   "dependencies": {
-    "uyem": "^1.0.8"
+    "uyem": "^1.1.0"
   }
 }
