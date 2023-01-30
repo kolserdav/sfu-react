@@ -1,6 +1,6 @@
 {
   "name": "uyem",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "repository": "https://github.com/kolserdav/werift-sfu-react.git",
   "description": "WebRTC client-server SFU application",
   "keywords": [
@@ -100,6 +100,7 @@
     "dotenv": "^16.0.3",
     "ffmpeg-static": "^5.1.0",
     "path-browserify": "^1.0.1",
+    "prisma": "^4.8.1",
     "react-cookie": "^4.1.1",
     "uuid": "^8.3.2",
     "webrtc-adapter": "^8.2.0",
@@ -135,7 +136,6 @@
     "nodemon": "^2.0.19",
     "postcss-loader": "^7.0.2",
     "prettier": "^2.6.2",
-    "prisma": "^4.8.1",
     "puppeteer": "^19.5.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
