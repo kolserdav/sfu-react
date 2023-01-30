@@ -2,11 +2,9 @@
 
 Selective Forwarding Unit (SFU) is a WebRTC web application library, the server part of which is written in Node, and the client part is a ReactJS/Next.js shared component.
 
+# Please do not use this project in production. During development and testing, it was confirmed that Javascript is not well suited for handling online video streams. In order not to drag out the obvious end, the decision was made to archive the project.
+
 ![https://kolserdav-portfolio.s3.eu-central-1.amazonaws.com/uyem2.gif](https://kolserdav-portfolio.s3.eu-central-1.amazonaws.com/uyem2.gif)
-
-## Homepage (demo)
-
-https://uyem.ru/en
 
 ## Know-how
 

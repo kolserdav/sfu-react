@@ -221,7 +221,9 @@ class RecordVideo extends DB {
       width: fileNames[5],
       height: fileNames[6],
     });
-    fs.renameSync(pathStr, path.resolve(this.dirPath[roomId], newFileName));
+    setTimeout(() => {
+      fs.renameSync(pathStr, path.resolve(this.dirPath[roomId], newFileName));
+    }, 3000);
   }
 
   private getChunkName({
@@ -339,14 +341,15 @@ class RecordVideo extends DB {
     const recorderId = this.getMediaRecorderId(userId, time);
     log('info', 'Start stream record', { recorderId, roomId, _path, time, eventName });
     this.mediaRecorders[roomId][recorderId] = new werift.MediaRecorder(
-      [],
       _path,
+      2,
       videoPlayed
         ? {
             width,
             height,
+            tracks: [],
           }
-        : { width: 1, height: 1 }
+        : { width: 1, height: 1, tracks: [] }
     );
     this.rtc.streams[roomId][peerId].forEach((item) => {
       this.mediaRecorders[roomId][recorderId].addTrack(item);
