@@ -66,11 +66,10 @@ const migrate = async (): Promise<number | null> => {
       }
     );
     res.stdout?.on('data', (d) => {
-      // eslint-disable-next-line no-console
-      console.log(d.toString());
+      log('info', d.toString(), '', true);
     });
     res.stderr?.on('data', (d) => {
-      log('error', d.toString(), '', true);
+      log('warn', d.toString(), '', true);
     });
 
     res.on('exit', (e) => {
