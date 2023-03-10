@@ -1,0 +1,13 @@
+[package]
+name = "server-rs"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+env_logger = "0.10.0"
+log = { version = "0.4.17", features = [ "max_level_debug", "release_max_level_warn" ] }
+serde = "1.0.154"
+serde_json = "1.0.94"
+ws = { version = "0.9.2", features = [ "native-tls" ] }

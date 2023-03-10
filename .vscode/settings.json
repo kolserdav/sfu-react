@@ -1,10 +1,15 @@
 {
   "eslint.validate": ["javascript", "typescript"],
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "eslint.format.enable": true,
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true,
-    "source.fixAll.stylelint": true
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true,
+      "source.fixAll.stylelint": true
+    }
+  },
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer"
   },
   "editor.formatOnSave": true,
   "stylelint.enable": true,
