@@ -1,4 +1,4 @@
-use self::messages::{Any, FromValue, GetLocale, GetUserId};
+use self::messages::{Any, FromValue, GetLocale, GetUserId, SetUserId};
 
 pub use super::locales::{get_locale, Client, LocaleValue};
 use uuid::Uuid;
@@ -8,6 +8,7 @@ use serde::Serialize;
 use serde_json::{to_string, Result as SerdeResult};
 use std::{
     collections::HashMap,
+    fmt::Debug,
     str::FromStr,
     sync::{Arc, Mutex},
 };
@@ -32,7 +33,7 @@ impl WS {
             let this = this.clone();
             move |msg: Message| {
                 let mut this = this.lock().unwrap();
-                this.handle_ws(msg, out, conn_id)
+                this.handle_ws(msg, out.to_owned(), conn_id)
             }
         });
         if let Err(e) = res {
@@ -82,35 +83,48 @@ impl WS {
 
     fn get_user_id(&mut self, msg: Message, out: Sender, conn_id: Uuid) {
         let msg = self.parse_message::<GetUserId>(msg).unwrap();
+        let conn_id_str = conn_id.to_string();
+
         self.sockets.insert(conn_id.to_string(), out);
-        // out.send(to_string(&mess).unwrap()).unwrap();
+
+        self.send_message(MessageArgs::<SetUserId> {
+            id: msg.id,
+            connId: conn_id_str,
+            r#type: MessageType::SET_USER_ID,
+            data: SetUserId {
+                name: msg.data.userName,
+            },
+        })
+        .unwrap();
     }
 
-    fn send_message<T>(&mut self, conn_id: String, msg: MessageArgs<T>) -> Result<(), ()>
+    fn send_message<T>(&mut self, msg: MessageArgs<T>) -> Result<(), ()>
     where
-        T: Serialize,
+        T: Serialize + Debug,
     {
-        let out = self.sockets.get(&conn_id);
+        let out = self.sockets.get(&msg.connId);
         if let None = out {
             return Err(());
         }
         let out = out.unwrap();
-        out.send(to_string(&msg).unwrap());
+        debug!("Send message: {:?}", &msg);
+        out.send(to_string(&msg).unwrap()).unwrap();
         Ok(())
     }
 
     fn parse_message<T>(&mut self, msg: Message) -> SerdeResult<MessageArgs<T>>
     where
-        T: FromValue,
+        T: FromValue + Debug,
     {
         let msg_str = msg.as_text().unwrap();
         let json: serde_json::Value = serde_json::from_str(msg_str).map_err(|err| {
             error!("Failed parse JSON: {:?}", err);
             err
         })?;
+        debug!("Parse message: {}", json);
         Ok(MessageArgs {
-            id: json["id"].to_string(),
-            connId: json["connId"].to_string(),
+            id: json["id"].to_string().replace("\"", ""),
+            connId: json["connId"].to_string().replace("\"", ""),
             r#type: MessageType::from_str(json["type"].as_str().unwrap()).unwrap(),
             data: T::from(&json["data"]),
         })

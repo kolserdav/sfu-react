@@ -1,5 +1,6 @@
 use super::{Client, LocaleValue};
 use log::warn;
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::str::FromStr;
@@ -15,7 +16,6 @@ pub struct MessageArgs<T> {
 #[allow(non_camel_case_types)]
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub enum MessageType {
-    ANY,
     SET_LOCALE,
     GET_LOCALE,
     GET_USER_ID,
@@ -162,6 +162,7 @@ pub trait FromValue {
     fn from(value: &Value) -> Self;
 }
 
+#[derive(Debug)]
 pub struct GetLocale {
     pub locale: LocaleValue,
 }
@@ -180,36 +181,45 @@ pub struct SetLocale {
 }
 
 #[allow(non_snake_case)]
+#[derive(Debug)]
 pub struct GetSettingsUnit {
-    userId: String,
-    locale: LocaleValue,
+    pub userId: String,
+    pub locale: LocaleValue,
 }
 
 pub type SetSettingsUnit = ();
 
 #[allow(non_snake_case)]
+#[derive(Debug)]
 pub struct GetChatUnit {
-    userId: String,
-    locale: LocaleValue,
+    pub userId: String,
+    pub locale: LocaleValue,
 }
 
 pub type SetChatUnit = ();
 
 #[allow(non_snake_case)]
+#[derive(Debug)]
 pub struct GetUserId {
-    isRoom: bool,
-    userName: String,
-    locale: LocaleValue,
+    pub isRoom: Option<bool>,
+    pub userName: String,
+    pub locale: LocaleValue,
 }
 
 impl FromValue for GetUserId {
     fn from(value: &Value) -> Self {
         Self {
-            isRoom: value["isRoom"].as_bool().unwrap(),
-            userName: value["userName"].to_string(),
+            isRoom: value["isRoom"].as_bool(),
+            userName: value["userName"].as_str().unwrap().to_string(),
             locale: LocaleValue::from_str(value["locale"].as_str().unwrap()).unwrap(),
         }
     }
+}
+
+#[derive(Serialize, Debug)]
+#[allow(non_snake_case)]
+pub struct SetUserId {
+    pub name: String,
 }
 
 pub type Any = ();
@@ -218,9 +228,4 @@ impl FromValue for Any {
     fn from(value: &Value) -> Self {
         ()
     }
-}
-
-#[allow(non_snake_case)]
-pub struct SetUserId {
-    name: String,
 }
