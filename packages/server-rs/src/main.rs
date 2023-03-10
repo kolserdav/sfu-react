@@ -1,15 +1,14 @@
 #[macro_use]
 extern crate log;
 mod _ws;
-use _ws::{Static, WS};
+use _ws::WS;
 use std::collections::HashMap;
-pub mod locales;
+mod locales;
 
 fn main() {
     env_logger::builder().format_timestamp(None).init();
-    let glob = Static {
-        sockets: HashMap::new(),
-    };
-    let ws = WS::new(&glob);
+
+    let mut ws = WS::new();
+
     ws.listen_ws("127.0.0.1:3001");
 }
