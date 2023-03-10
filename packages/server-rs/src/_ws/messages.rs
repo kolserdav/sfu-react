@@ -1,10 +1,11 @@
-use super::LocaleClient;
+use super::{Client, LocaleValue};
 use log::warn;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::str::FromStr;
 
 #[allow(non_snake_case)]
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct MessageArgs<T> {
     pub id: String,
     pub connId: String,
@@ -12,8 +13,9 @@ pub struct MessageArgs<T> {
     pub data: T,
 }
 #[allow(non_camel_case_types)]
-#[derive(Serialize, Deserialize, PartialEq)]
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub enum MessageType {
+    ANY,
     SET_LOCALE,
     GET_LOCALE,
     GET_USER_ID,
@@ -156,7 +158,69 @@ impl FromStr for MessageType {
     }
 }
 
+pub trait FromValue {
+    fn from(value: &Value) -> Self;
+}
+
+pub struct GetLocale {
+    pub locale: LocaleValue,
+}
+
+impl FromValue for GetLocale {
+    fn from(value: &Value) -> Self {
+        Self {
+            locale: LocaleValue::from_str(value["locale"].as_str().unwrap()).unwrap(),
+        }
+    }
+}
+
 #[derive(Serialize)]
-pub struct LocaleMsg {
-    pub locale: LocaleClient<'static>,
+pub struct SetLocale {
+    pub locale: Client<'static>,
+}
+
+#[allow(non_snake_case)]
+pub struct GetSettingsUnit {
+    userId: String,
+    locale: LocaleValue,
+}
+
+pub type SetSettingsUnit = ();
+
+#[allow(non_snake_case)]
+pub struct GetChatUnit {
+    userId: String,
+    locale: LocaleValue,
+}
+
+pub type SetChatUnit = ();
+
+#[allow(non_snake_case)]
+pub struct GetUserId {
+    isRoom: bool,
+    userName: String,
+    locale: LocaleValue,
+}
+
+impl FromValue for GetUserId {
+    fn from(value: &Value) -> Self {
+        Self {
+            isRoom: value["isRoom"].as_bool().unwrap(),
+            userName: value["userName"].to_string(),
+            locale: LocaleValue::from_str(value["locale"].as_str().unwrap()).unwrap(),
+        }
+    }
+}
+
+pub type Any = ();
+
+impl FromValue for Any {
+    fn from(value: &Value) -> Self {
+        ()
+    }
+}
+
+#[allow(non_snake_case)]
+pub struct SetUserId {
+    name: String,
 }
