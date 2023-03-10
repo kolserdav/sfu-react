@@ -3,6 +3,7 @@ extern crate log;
 mod _ws;
 use _ws::{Static, WS};
 use std::collections::HashMap;
+pub mod locales;
 
 fn main() {
     env_logger::builder().format_timestamp(None).init();
