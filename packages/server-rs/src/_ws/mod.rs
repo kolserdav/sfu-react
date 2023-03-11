@@ -15,11 +15,17 @@ use std::{
 };
 use ws::{listen, CloseCode, Handler, Message, Result as WSResult, Sender};
 
-struct Server {
-    out: Sender,
+#[derive(Debug)]
+pub struct Socket {
+    pub conn_id: String,
+    pub out: Sender,
 }
 
-impl Handler for Server {
+impl<'a> Handler for Socket {
+    fn on_open(&mut self, shake: ws::Handshake) -> WSResult<()> {
+        Ok(())
+    }
+
     fn on_message(&mut self, msg: Message) -> WSResult<()> {
         println!("Server got message '{}'. ", msg);
         self.out.send(msg)
@@ -27,24 +33,27 @@ impl Handler for Server {
 
     fn on_close(&mut self, code: CloseCode, reason: &str) {
         println!("WebSocket closing for ({:?}) {}", code, reason);
-        println!("Shutting down server after first connection closes.");
-        self.out.shutdown().unwrap();
+        println!(
+            "Shutting down server after first connection closes.: {:?}",
+            self
+        );
     }
 }
 
+#[derive(Debug)]
 pub struct WS {
-    pub sockets: HashMap<String, Sender>,
+    pub sockets: Vec<Sender>,
 }
 
-impl WS {
+impl<'a> WS {
     pub fn new() -> Self {
         Self {
-            sockets: HashMap::new(),
+            sockets: Vec::new(),
         }
     }
 
     pub fn listen_ws(
-        &mut self,
+        &'a mut self,
         addr: &str,
         cb: fn(ws: Arc<Mutex<&mut WS>>, msg: Message, out: Sender, conn_id: Uuid) -> ws::Result<()>,
     ) {
@@ -53,14 +62,18 @@ impl WS {
 
         let res = listen(addr, |out| {
             let conn_id = Uuid::new_v4();
-            let this = this.clone();
-            move |msg: Message| cb(this.to_owned(), msg, out.to_owned(), conn_id)
+            Socket {
+                out,
+                conn_id: conn_id.to_string(),
+            }
         });
+        /*
         if let Err(e) = res {
             error!("Error in ws {}", e);
             let mut self_t = self_t.lock().unwrap();
             self_t.listen_ws(addr, cb);
         }
+        */
     }
 
     pub fn get_locale(&mut self, msg: Message, out: Sender, conn_id: Uuid) {
@@ -81,7 +94,7 @@ impl WS {
         let msg = self.parse_message::<GetUserId>(msg).unwrap();
         let conn_id_str = conn_id.to_string();
 
-        self.sockets.insert(conn_id.to_string(), out);
+        // self.sockets.insert(conn_id.to_string(), out);
 
         self.send_message(MessageArgs::<SetUserId> {
             id: msg.id,
@@ -98,13 +111,13 @@ impl WS {
     where
         T: Serialize + Debug,
     {
-        let out = self.sockets.get(&msg.connId);
-        if let None = out {
-            return Err(());
-        }
-        let out = out.unwrap();
+        //let out = self.sockets.get(&msg.connId);
+        //if let None = out {
+        //    return Err(());
+        //  }
+        //let out = out.unwrap();
         debug!("Send message: {:?}", &msg);
-        out.send(to_string(&msg).unwrap()).unwrap();
+        // out.send(to_string(&msg).unwrap()).unwrap();
         Ok(())
     }
 
