@@ -1,6 +1,7 @@
 use self::messages::{Any, FromValue, GetLocale, GetUserId, SetUserId};
 pub use super::locales::{get_locale, Client, LocaleValue};
 use std::{
+    io::{ErrorKind, Read},
     net::{TcpListener, TcpStream},
     ops::Deref,
     thread::spawn,
@@ -8,7 +9,7 @@ use std::{
 use tungstenite::{
     accept_hdr,
     handshake::server::{Request, Response},
-    Message, WebSocket,
+    Error, Message, WebSocket,
 };
 use uuid::Uuid;
 pub mod messages;
@@ -58,13 +59,18 @@ impl WS {
 
         for stream in server.incoming() {
             let this = this.clone();
+
             spawn(move || {
+                let mut protocol = "main".to_string();
                 let callback = |req: &Request, mut response: Response| {
                     debug!("Received a new ws handshake");
                     debug!("The request's path is: {}", req.uri().path());
                     debug!("The request's headers are:");
                     for (ref header, _value) in req.headers() {
                         debug!("* {}: {:?}", header, _value);
+                        if *header == "sec-websocket-protocol" {
+                            protocol = _value.to_str().unwrap().to_string();
+                        }
                     }
 
                     let headers = response.headers_mut();
@@ -72,20 +78,43 @@ impl WS {
 
                     Ok(response)
                 };
+
                 let websocket = accept_hdr(stream.unwrap(), callback).unwrap();
                 let ws = Arc::new(Mutex::new(websocket));
                 let websocket = ws.clone();
+                let conn_id = Uuid::new_v4();
+                info!("New Connection: {:?}, Protocol: {}", conn_id, protocol);
                 loop {
                     let ws = ws.clone();
                     let mut websocket = websocket.lock().unwrap();
-                    let msg = websocket.read_message().unwrap();
+                    let msg = websocket.read_message();
+                    if let Err(err) = msg {
+                        match err {
+                            Error::ConnectionClosed => {}
+                            _ => {
+                                error!("Error read message: {:?}", err);
+                            }
+                        }
+                        return;
+                    }
+                    let msg = msg.unwrap();
                     std::mem::drop(websocket);
 
                     if msg.is_binary() || msg.is_text() {
-                        let conn_id = Uuid::new_v4();
                         let mut this = this.lock().unwrap();
 
                         this.handle_ws(msg, conn_id, ws).unwrap();
+                    } else if msg.is_close() {
+                        let mut this = this.lock().unwrap();
+                        info!(
+                            "Closed: {}, Protocol: {}, Sockets: {:?}",
+                            conn_id,
+                            protocol,
+                            this.sockets.len()
+                        );
+                        if protocol == "main" {
+                            this.delete_socket_by_id(conn_id.to_string());
+                        }
                     } else {
                         warn!("Unsupported message mime: {:?}", msg);
                     }
@@ -143,9 +172,7 @@ impl WS {
             },
             r#type: MessageType::SET_LOCALE,
         };
-        info!("Get lale: {:?}", ws);
         let mut ws = ws.lock().unwrap();
-        info!("Get lcoale:");
         ws.write_message(Message::Text(to_string(&mess).unwrap()))
             .unwrap();
     }
@@ -230,5 +257,21 @@ impl WS {
         }
 
         self.sockets.push(Socket { conn_id, ws });
+    }
+
+    fn delete_socket_by_id(&mut self, conn_id: String) {
+        let socket = self.get_socket_by_id(&conn_id);
+        if let None = socket {
+            warn!("Deleted socket is missing: {:?}", conn_id);
+            return;
+        }
+
+        let index = self
+            .sockets
+            .iter()
+            .position(|x| *x.conn_id == conn_id)
+            .unwrap();
+
+        self.sockets.remove(index);
     }
 }
