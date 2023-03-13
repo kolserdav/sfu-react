@@ -168,6 +168,12 @@ impl FromStr for MessageType {
     }
 }
 
+#[derive(Serialize, Debug)]
+pub struct RoomList {
+    pub room_id: String,
+    pub users: Vec<String>,
+}
+
 pub trait FromValue {
     fn from(value: &Value) -> Self;
 }
@@ -235,7 +241,32 @@ pub struct SetUserId {
 pub type Any = ();
 
 impl FromValue for Any {
-    fn from(value: &Value) -> Self {
+    fn from(_: &Value) -> Self {
         ()
     }
+}
+
+#[derive(Debug)]
+#[allow(non_snake_case)]
+pub struct GetRoom {
+    pub userId: String,
+    pub mimeType: String,
+    pub isPublic: bool,
+}
+
+impl FromValue for GetRoom {
+    fn from(value: &Value) -> Self {
+        Self {
+            isPublic: value["isPublic"].as_bool().unwrap(),
+            mimeType: value["mimeType"].as_str().unwrap().to_string(),
+            userId: value["userId"].as_str().unwrap().to_string(),
+        }
+    }
+}
+
+#[derive(Serialize, Debug)]
+#[allow(non_snake_case)]
+pub struct SetRoom {
+    pub isOwner: bool,
+    pub asked: RoomList,
 }

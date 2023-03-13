@@ -1,3 +1,5 @@
+use crate::rtc::RTC;
+
 use self::messages::{Any, FromValue, GetLocale, GetUserId, SetUserId};
 pub use super::locales::{get_locale, Client, LocaleValue};
 use std::{
@@ -29,7 +31,7 @@ pub struct Socket {
     pub ws: Arc<Mutex<WebSocket<TcpStream>>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct User {
     pub id: String,
     pub conn_id: String,
@@ -38,13 +40,15 @@ pub struct User {
 #[derive(Debug)]
 
 pub struct WS {
+    pub rtc: RTC,
     pub sockets: Vec<Socket>,
     pub users: Vec<User>,
 }
 
 impl WS {
-    pub fn new() -> Self {
+    pub fn new(rtc: RTC) -> Self {
         Self {
+            rtc,
             sockets: Vec::new(),
             users: Vec::new(),
         }
@@ -96,7 +100,7 @@ impl WS {
                 let ws = Arc::new(Mutex::new(websocket));
                 let websocket = ws.clone();
                 let conn_id = Uuid::new_v4();
-                info!("New Connection: {:?}, Protocol: {}", conn_id, protocol);
+                debug!("New Connection: {:?}, Protocol: {}", conn_id, protocol);
                 loop {
                     let ws = ws.clone();
                     let mut websocket = websocket.lock().unwrap();
@@ -124,7 +128,8 @@ impl WS {
                             this.sockets.len()
                         );
                         if protocol == "room" {
-                            this.delete_socket_by_id(conn_id.to_string());
+                            this.delete_socket(conn_id.to_string());
+                            this.delete_user(conn_id.to_string());
                         }
                     } else {
                         warn!("Unsupported message mime: {:?}", msg);
@@ -136,11 +141,10 @@ impl WS {
 
     pub fn get_locale(
         &mut self,
-        msg: Message,
+        msg: MessageArgs<GetLocale>,
         conn_id: Uuid,
         ws: Arc<Mutex<WebSocket<TcpStream>>>,
     ) {
-        let msg = self.parse_message::<GetLocale>(msg).unwrap();
         let locale = get_locale(msg.data.locale);
 
         let mess = MessageArgs {
@@ -158,14 +162,13 @@ impl WS {
 
     pub fn get_user_id(
         &mut self,
-        msg: Message,
+        msg: MessageArgs<GetUserId>,
         conn_id: Uuid,
         ws: Arc<Mutex<WebSocket<TcpStream>>>,
     ) {
-        let msg = self.parse_message::<GetUserId>(msg).unwrap();
         let conn_id_str = conn_id.to_string();
 
-        self.set_socket_by_id(conn_id.to_string(), ws);
+        self.set_socket(msg.id.clone(), conn_id.to_string(), ws);
 
         self.send_message(MessageArgs::<SetUserId> {
             id: msg.id,
@@ -182,8 +185,14 @@ impl WS {
     where
         T: Serialize + Debug,
     {
-        let conn_id = msg.connId.clone();
-        let socket = self.get_socket_by_id(&conn_id);
+        let conn_id = self.get_conn_id(&msg.id);
+        if let None = conn_id {
+            warn!("Conn id is missing in send_message: {}", msg);
+            return Err(());
+        }
+        let conn_id = conn_id.unwrap();
+
+        let socket = self.get_socket(&conn_id);
         if let None = socket {
             return Err(());
         }
@@ -214,10 +223,18 @@ impl WS {
         })
     }
 
-    pub fn get_socket_by_id(
-        &mut self,
-        conn_id: &String,
-    ) -> Option<Arc<Mutex<WebSocket<TcpStream>>>> {
+    pub fn get_conn_id(&mut self, id: &String) -> Option<String> {
+        let mut res: Option<String> = None;
+        for user in &mut self.users {
+            if user.id == id.deref() {
+                res = Some(user.clone().conn_id);
+                break;
+            }
+        }
+        res
+    }
+
+    pub fn get_socket(&mut self, conn_id: &String) -> Option<Arc<Mutex<WebSocket<TcpStream>>>> {
         let mut res: Option<Arc<Mutex<WebSocket<TcpStream>>>> = None;
         for sock in &mut self.sockets {
             if sock.conn_id == conn_id.deref() {
@@ -228,30 +245,41 @@ impl WS {
         res
     }
 
-    fn set_socket_by_id(&mut self, conn_id: String, ws: Arc<Mutex<WebSocket<TcpStream>>>) {
-        let socket = self.get_socket_by_id(&conn_id);
+    fn set_socket(&mut self, id: String, conn_id: String, ws: Arc<Mutex<WebSocket<TcpStream>>>) {
+        let socket = self.get_socket(&conn_id);
         if let Some(v) = socket {
             warn!("Socket exists: {:?}", v);
             return;
         }
-        info!("Set socket: {}", conn_id);
+
+        let user = User {
+            id,
+            conn_id: conn_id.clone(),
+        };
+        info!("Set WS user: {:?}", &user);
+        self.users.push(user);
         self.sockets.push(Socket { conn_id, ws });
     }
 
-    fn delete_socket_by_id(&mut self, conn_id: String) {
-        let socket = self.get_socket_by_id(&conn_id);
-        if let None = socket {
+    fn delete_socket(&mut self, conn_id: String) {
+        let index = self.sockets.iter().position(|x| *x.conn_id == conn_id);
+        if let None = index {
             warn!("Deleted socket is missing: {:?}", conn_id);
             return;
         }
-
-        let index = self
-            .sockets
-            .iter()
-            .position(|x| *x.conn_id == conn_id)
-            .unwrap();
-
+        let index = index.unwrap();
         self.sockets.remove(index);
         info!("Socket deleted: {:?}", conn_id);
+    }
+
+    fn delete_user(&mut self, conn_id: String) {
+        let index = self.users.iter().position(|x| *x.conn_id == conn_id);
+        if let None = index {
+            warn!("Deleted user is missing: {:?}", conn_id);
+            return;
+        }
+        let index = index.unwrap();
+        self.users.remove(index);
+        info!("User deleted: {:?}", conn_id);
     }
 }
