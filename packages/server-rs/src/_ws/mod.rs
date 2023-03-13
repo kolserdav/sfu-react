@@ -27,18 +27,18 @@ mod collections;
 use collections::Sockets;
 
 #[derive(Debug)]
-pub struct Socket<'a> {
+pub struct Socket {
     pub conn_id: String,
-    pub ws: &'a mut WebSocket<TcpStream>,
+    pub ws: Arc<Mutex<WebSocket<TcpStream>>>,
 }
 
 #[derive(Debug)]
 
-pub struct WS<'a> {
-    pub sockets: Vec<Socket<'a>>,
+pub struct WS {
+    pub sockets: Vec<Socket>,
 }
 
-impl<'a> WS<'static> {
+impl WS {
     pub fn new() -> Self {
         Self {
             sockets: Vec::new(),
@@ -72,21 +72,34 @@ impl<'a> WS<'static> {
 
                     Ok(response)
                 };
-                let mut websocket = accept_hdr(stream.unwrap(), callback).unwrap();
+                let websocket = accept_hdr(stream.unwrap(), callback).unwrap();
+                let ws = Arc::new(Mutex::new(websocket));
+                let websocket = ws.clone();
                 loop {
+                    let ws = ws.clone();
+                    let mut websocket = websocket.lock().unwrap();
                     let msg = websocket.read_message().unwrap();
-                    debug!("Get message: {}", &msg);
+                    std::mem::drop(websocket);
+
                     if msg.is_binary() || msg.is_text() {
                         let conn_id = Uuid::new_v4();
                         let mut this = this.lock().unwrap();
-                        this.handle_ws(msg, conn_id).unwrap();
+
+                        this.handle_ws(msg, conn_id, ws).unwrap();
+                    } else {
+                        warn!("Unsupported message mime: {:?}", msg);
                     }
                 }
             });
         }
     }
 
-    fn handle_ws(&mut self, msg: Message, conn_id: Uuid) -> Result<(), ()> {
+    fn handle_ws(
+        &mut self,
+        msg: Message,
+        conn_id: Uuid,
+        ws: Arc<Mutex<WebSocket<TcpStream>>>,
+    ) -> Result<(), ()> {
         let msg_c = msg.clone();
         let json = self.parse_message::<Any>(msg);
         if let Err(e) = json {
@@ -96,12 +109,14 @@ impl<'a> WS<'static> {
         let json = json.unwrap();
         let type_mess = &json.r#type;
 
+        debug!("Get message: {}", json);
+
         match type_mess {
             MessageType::GET_LOCALE => {
-                self.get_locale(msg_c, conn_id);
+                self.get_locale(msg_c, conn_id, ws);
             }
             MessageType::GET_USER_ID => {
-                self.get_user_id(msg_c, conn_id);
+                self.get_user_id(msg_c, conn_id, ws);
             }
             _ => {
                 warn!("Default case of message: {:?}", json);
@@ -111,9 +126,15 @@ impl<'a> WS<'static> {
         Ok(())
     }
 
-    pub fn get_locale(&mut self, msg: Message, conn_id: Uuid) {
+    pub fn get_locale(
+        &mut self,
+        msg: Message,
+        conn_id: Uuid,
+        ws: Arc<Mutex<WebSocket<TcpStream>>>,
+    ) {
         let msg = self.parse_message::<GetLocale>(msg).unwrap();
         let locale = get_locale(msg.data.locale);
+
         let mess = MessageArgs {
             connId: conn_id.to_string(),
             id: msg.id,
@@ -122,22 +143,23 @@ impl<'a> WS<'static> {
             },
             r#type: MessageType::SET_LOCALE,
         };
-        let socket = self.get_socket_by_id(conn_id.to_string());
-        if let None = socket {
-            warn!("Socket not found: {}: {:?}", conn_id, self.sockets);
-            return;
-        };
-        let socket = socket.unwrap();
-        socket
-            .write_message(Message::Text(to_string(&mess).unwrap()))
+        info!("Get lale: {:?}", ws);
+        let mut ws = ws.lock().unwrap();
+        info!("Get lcoale:");
+        ws.write_message(Message::Text(to_string(&mess).unwrap()))
             .unwrap();
     }
 
-    pub fn get_user_id(&mut self, msg: Message, conn_id: Uuid) {
+    pub fn get_user_id(
+        &mut self,
+        msg: Message,
+        conn_id: Uuid,
+        ws: Arc<Mutex<WebSocket<TcpStream>>>,
+    ) {
         let msg = self.parse_message::<GetUserId>(msg).unwrap();
         let conn_id_str = conn_id.to_string();
 
-        // self.sockets.insert(conn_id.to_string(), out);
+        self.set_socket_by_id(conn_id.to_string(), ws);
 
         self.send_message(MessageArgs::<SetUserId> {
             id: msg.id,
@@ -155,11 +177,12 @@ impl<'a> WS<'static> {
         T: Serialize + Debug,
     {
         let conn_id = msg.connId.clone();
-        let socket = self.get_socket_by_id(conn_id);
+        let socket = self.get_socket_by_id(&conn_id);
         if let None = socket {
             return Err(());
         }
         let socket = socket.unwrap();
+        let mut socket = socket.lock().unwrap();
         debug!("Send message: {:?}", &msg);
         socket
             .write_message(Message::Text(to_string(&msg).unwrap()))
@@ -185,19 +208,22 @@ impl<'a> WS<'static> {
         })
     }
 
-    pub fn get_socket_by_id(&mut self, conn_id: String) -> Option<&mut WebSocket<TcpStream>> {
-        let mut res: Option<&mut WebSocket<TcpStream>> = None;
+    pub fn get_socket_by_id(
+        &mut self,
+        conn_id: &String,
+    ) -> Option<Arc<Mutex<WebSocket<TcpStream>>>> {
+        let mut res: Option<Arc<Mutex<WebSocket<TcpStream>>>> = None;
         for sock in &mut self.sockets {
             if sock.conn_id == conn_id.deref() {
-                res = Some(sock.ws);
+                res = Some(sock.ws.clone());
                 break;
             }
         }
         res
     }
 
-    fn set_socket_by_id(&mut self, conn_id: String, ws: &mut WebSocket<TcpStream>) {
-        let socket = self.get_socket_by_id(conn_id);
+    fn set_socket_by_id(&mut self, conn_id: String, ws: Arc<Mutex<WebSocket<TcpStream>>>) {
+        let socket = self.get_socket_by_id(&conn_id);
         if let Some(v) = socket {
             warn!("Socket exists: {:?}", v);
             return;
