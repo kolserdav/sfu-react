@@ -3,18 +3,28 @@ use log::warn;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::str::FromStr;
+use std::{fmt::Display, str::FromStr};
 
 #[allow(non_snake_case)]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MessageArgs<T> {
     pub id: String,
     pub connId: String,
     pub r#type: MessageType,
     pub data: T,
 }
+
+impl<T> Display for MessageArgs<T>
+where
+    T: std::fmt::Debug,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 #[allow(non_camel_case_types)]
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum MessageType {
     SET_LOCALE,
     GET_LOCALE,
