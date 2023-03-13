@@ -1,7 +1,6 @@
 use self::messages::{Any, FromValue, GetLocale, GetUserId, SetUserId};
 pub use super::locales::{get_locale, Client, LocaleValue};
 use std::{
-    io::{ErrorKind, Read},
     net::{TcpListener, TcpStream},
     ops::Deref,
     thread::spawn,
@@ -19,13 +18,10 @@ use messages::{MessageArgs, MessageType, SetLocale};
 use serde::Serialize;
 use serde_json::{to_string, Result as SerdeResult};
 use std::{
-    collections::HashMap,
     fmt::Debug,
     str::FromStr,
     sync::{Arc, Mutex},
 };
-mod collections;
-use collections::Sockets;
 
 #[derive(Debug)]
 pub struct Socket {
@@ -34,19 +30,36 @@ pub struct Socket {
 }
 
 #[derive(Debug)]
+pub struct User {
+    pub id: String,
+    pub conn_id: String,
+}
+
+#[derive(Debug)]
 
 pub struct WS {
     pub sockets: Vec<Socket>,
+    pub users: Vec<User>,
 }
 
 impl WS {
     pub fn new() -> Self {
         Self {
             sockets: Vec::new(),
+            users: Vec::new(),
         }
     }
 
-    pub fn listen_ws(self, addr: &str) {
+    pub fn listen_ws(
+        self,
+        addr: &str,
+        cb: fn(
+            ws: Arc<Mutex<WS>>,
+            msg: Message,
+            conn_id: Uuid,
+            ws: Arc<Mutex<WebSocket<TcpStream>>>,
+        ) -> Result<(), ()>,
+    ) {
         let server = TcpListener::bind(addr);
         if let Err(e) = server {
             error!("Failed start WS server: {:?}", e);
@@ -101,9 +114,7 @@ impl WS {
                     std::mem::drop(websocket);
 
                     if msg.is_binary() || msg.is_text() {
-                        let mut this = this.lock().unwrap();
-
-                        this.handle_ws(msg, conn_id, ws).unwrap();
+                        cb(this.to_owned(), msg, conn_id, ws).unwrap();
                     } else if msg.is_close() {
                         let mut this = this.lock().unwrap();
                         info!(
@@ -112,7 +123,7 @@ impl WS {
                             protocol,
                             this.sockets.len()
                         );
-                        if protocol == "main" {
+                        if protocol == "room" {
                             this.delete_socket_by_id(conn_id.to_string());
                         }
                     } else {
@@ -121,38 +132,6 @@ impl WS {
                 }
             });
         }
-    }
-
-    fn handle_ws(
-        &mut self,
-        msg: Message,
-        conn_id: Uuid,
-        ws: Arc<Mutex<WebSocket<TcpStream>>>,
-    ) -> Result<(), ()> {
-        let msg_c = msg.clone();
-        let json = self.parse_message::<Any>(msg);
-        if let Err(e) = json {
-            error!("Error handle WS: {:?}", e);
-            return Ok(());
-        }
-        let json = json.unwrap();
-        let type_mess = &json.r#type;
-
-        debug!("Get message: {}", json);
-
-        match type_mess {
-            MessageType::GET_LOCALE => {
-                self.get_locale(msg_c, conn_id, ws);
-            }
-            MessageType::GET_USER_ID => {
-                self.get_user_id(msg_c, conn_id, ws);
-            }
-            _ => {
-                warn!("Default case of message: {:?}", json);
-            }
-        };
-
-        Ok(())
     }
 
     pub fn get_locale(
@@ -255,7 +234,7 @@ impl WS {
             warn!("Socket exists: {:?}", v);
             return;
         }
-
+        info!("Set socket: {}", conn_id);
         self.sockets.push(Socket { conn_id, ws });
     }
 
@@ -273,5 +252,6 @@ impl WS {
             .unwrap();
 
         self.sockets.remove(index);
+        info!("Socket deleted: {:?}", conn_id);
     }
 }
