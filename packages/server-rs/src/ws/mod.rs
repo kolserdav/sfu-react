@@ -126,7 +126,16 @@ impl WS {
                         );
                         if protocol == "room" {
                             this.delete_socket(conn_id.to_string());
-                            this.delete_user(conn_id.to_string());
+
+                            let user_id = this.get_user_id_by_conn_id(&conn_id.to_string());
+                            if let None = user_id {
+                                warn!("Deleted user is missing: {:?}", conn_id);
+                                return;
+                            }
+                            let user_id = user_id.unwrap();
+
+                            this.delete_user(&user_id);
+                            this.rtc.delete_user_from_room(user_id);
                         }
                     } else {
                         warn!("Unsupported message mime: {:?}", msg);
@@ -262,15 +271,9 @@ impl WS {
         user_id
     }
 
-    fn delete_user(&mut self, conn_id: String) {
-        let user_id = self.get_user_id_by_conn_id(&conn_id);
-        if let None = user_id {
-            warn!("Deleted user is missing: {:?}", conn_id);
-            return;
-        }
-        let user_id = user_id.unwrap();
-        self.users.remove(&user_id);
-        info!("User deleted: {:?}", conn_id);
+    fn delete_user(&mut self, user_id: &String) {
+        self.users.remove(user_id);
+        info!("User deleted: {:?}", user_id);
     }
 
     pub fn get_room(&mut self, msg: MessageArgs<GetRoom>) {
@@ -281,36 +284,17 @@ impl WS {
         let user_name = "TODO";
         let is_public = msg.data.isPublic;
 
-        let index_r = self.rtc.add_room(room_id.clone()).unwrap();
-
-        self.rtc.add_user_to_room(index_r, user_id.clone());
-
-        let mut index_a = self
-            .rtc
-            .askeds
-            .iter()
-            .position(|asked| *asked.room_id == room_id);
-        if let None = index_a {
-            self.rtc.askeds.push(RoomList {
-                room_id: room_id.clone(),
-                users: Vec::new(),
-            });
-            index_a = Some(self.rtc.rooms.len() - 1);
-        }
-        let index_a = index_a.unwrap();
-
-        let index = self.rtc.askeds[index_a]
-            .users
-            .iter()
-            .position(|user| *user == user_id);
-        if let Some(_) = index {
-            warn!(
-                "Duplicate askeds index; room_id: {}; user_id: {}",
-                room_id, user_id
-            );
+        let conn_id = self.get_conn_id(&user_id);
+        if let None = conn_id {
+            warn!("Conn id is missing in get_room: {}:{}", &room_id, &user_id);
             return;
         }
-        self.rtc.askeds[index_a].users.push(user_id.clone());
+
+        self.rtc.add_user_to_room(room_id.clone(), user_id.clone());
+
+        let asked = self
+            .rtc
+            .add_user_to_askeds(room_id.clone(), user_id.clone());
 
         self.send_message(MessageArgs::<SetRoom> {
             id: user_id,
@@ -319,7 +303,7 @@ impl WS {
             //  TODO
             data: SetRoom {
                 isOwner: true,
-                asked: self.rtc.askeds[index_a].users.to_vec(),
+                asked,
             },
         })
         .unwrap();

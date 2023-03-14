@@ -1,0 +1,40 @@
+name: Node CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [opened]
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x]
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: application
+        run: |
+          docker-compose -f docker-compose.ci.yml up -d
+          npm run env
+          npm i
+      - name: build
+        env:
+          CI: false
+        run: |
+          npm run build:next
+      - name: test
+        env:
+          CI: true
+          TEST_NEXT: true
+        run: |
+          npm run test
