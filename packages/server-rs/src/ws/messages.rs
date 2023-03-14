@@ -268,5 +268,5 @@ impl FromValue for GetRoom {
 #[allow(non_snake_case)]
 pub struct SetRoom {
     pub isOwner: bool,
-    pub asked: RoomList,
+    pub asked: Vec<String>,
 }

@@ -1,10 +1,10 @@
-use std::sync::MutexGuard;
+use std::sync::{Arc, Mutex, MutexGuard};
 
 use serde::Serialize;
 use uuid::Uuid;
 
 use crate::ws::{
-    messages::{GetRoom, MessageArgs, RoomList},
+    messages::{GetRoom, MessageArgs, MessageType, RoomList, SetRoom},
     WS,
 };
 
@@ -38,7 +38,9 @@ impl RTC {
         }
     }
 
-    pub fn get_room(&mut self, msg: MessageArgs<GetRoom>) {
+    pub fn get_room(&mut self, msg: MessageArgs<GetRoom>, ws: Arc<Mutex<WS>>) {
+        info!("dasdasd: {:?}", ws);
+        let mut ws = ws.lock().unwrap();
         info!("Get room: {:?}", msg);
 
         let room_id = msg.id.clone();
@@ -96,5 +98,17 @@ impl RTC {
             return;
         }
         self.askeds[index_a].users.push(user_id);
+
+        ws.send_message(MessageArgs::<SetRoom> {
+            id: msg.id,
+            connId: msg.connId,
+            r#type: MessageType::SET_ROOM,
+            //  TODO
+            data: SetRoom {
+                isOwner: true,
+                asked: self.askeds[index_a].users.to_vec(),
+            },
+        })
+        .unwrap();
     }
 }

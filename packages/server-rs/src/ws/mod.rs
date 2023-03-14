@@ -181,7 +181,7 @@ impl WS {
         .unwrap();
     }
 
-    fn send_message<T>(&mut self, msg: MessageArgs<T>) -> Result<(), ()>
+    pub fn send_message<T>(&mut self, msg: MessageArgs<T>) -> Result<(), ()>
     where
         T: Serialize + Debug,
     {
