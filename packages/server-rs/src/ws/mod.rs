@@ -1,6 +1,9 @@
-use crate::rtc::RTC;
+use crate::{
+    rtc::{Room, User as RTCUser, RTC},
+    ws::messages::{RoomList, SetRoom},
+};
 
-use self::messages::{Any, FromValue, GetLocale, GetUserId, SetUserId};
+use self::messages::{FromValue, GetLocale, GetRoom, GetUserId, SetUserId};
 pub use super::locales::{get_locale, Client, LocaleValue};
 use std::{
     net::{TcpListener, TcpStream},
@@ -281,5 +284,57 @@ impl WS {
         let index = index.unwrap();
         self.users.remove(index);
         info!("User deleted: {:?}", conn_id);
+    }
+
+    pub fn get_room(&mut self, msg: MessageArgs<GetRoom>) {
+        info!("Get room: {:?}", msg);
+
+        let room_id = msg.id.clone();
+        let user_id = msg.data.userId;
+        let user_name = "TODO";
+        let is_public = msg.data.isPublic;
+
+        let index_r = self.rtc.add_room(room_id.clone()).unwrap();
+
+        self.rtc.add_user_to_room(index_r, user_id.clone());
+
+        let mut index_a = self
+            .rtc
+            .askeds
+            .iter()
+            .position(|asked| *asked.room_id == room_id);
+        if let None = index_a {
+            self.rtc.askeds.push(RoomList {
+                room_id: room_id.clone(),
+                users: Vec::new(),
+            });
+            index_a = Some(self.rtc.rooms.len() - 1);
+        }
+        let index_a = index_a.unwrap();
+
+        let index = self.rtc.askeds[index_a]
+            .users
+            .iter()
+            .position(|user| *user == user_id);
+        if let Some(_) = index {
+            warn!(
+                "Duplicate askeds index; room_id: {}; user_id: {}",
+                room_id, user_id
+            );
+            return;
+        }
+        self.rtc.askeds[index_a].users.push(user_id.clone());
+
+        self.send_message(MessageArgs::<SetRoom> {
+            id: user_id,
+            connId: msg.connId,
+            r#type: MessageType::SET_ROOM,
+            //  TODO
+            data: SetRoom {
+                isOwner: true,
+                asked: self.rtc.askeds[index_a].users.to_vec(),
+            },
+        })
+        .unwrap();
     }
 }

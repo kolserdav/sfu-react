@@ -30,7 +30,6 @@ fn main() {
               conn_id: Uuid,
               socket: Arc<Mutex<WebSocket<TcpStream>>>|
      -> Result<(), ()> {
-        let ws_c = ws.clone();
         let mut ws = ws.lock().unwrap();
         let msg_c = msg.clone();
         let json = ws.parse_message::<Any>(msg);
@@ -54,7 +53,7 @@ fn main() {
             }
             MessageType::GET_ROOM => {
                 let msg = ws.parse_message::<GetRoom>(msg_c).unwrap();
-                ws.rtc.get_room(msg, ws_c);
+                ws.get_room(msg);
             }
             _ => {
                 warn!("Default case of message: {:?}", json);
