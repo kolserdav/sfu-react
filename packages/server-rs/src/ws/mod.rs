@@ -1,13 +1,13 @@
 use crate::{
-    rtc::{Room, User as RTCUser, RTC},
+    rtc::RTC,
     ws::messages::{RoomList, SetRoom},
 };
 
 use self::messages::{FromValue, GetLocale, GetRoom, GetUserId, SetUserId};
 pub use super::locales::{get_locale, Client, LocaleValue};
 use std::{
+    collections::HashMap,
     net::{TcpListener, TcpStream},
-    ops::Deref,
     thread::spawn,
 };
 use tungstenite::{
@@ -34,26 +34,20 @@ pub struct Socket {
     pub ws: Arc<Mutex<WebSocket<TcpStream>>>,
 }
 
-#[derive(Debug, Clone)]
-pub struct User {
-    pub id: String,
-    pub conn_id: String,
-}
-
 #[derive(Debug)]
 
 pub struct WS {
     pub rtc: RTC,
-    pub sockets: Vec<Socket>,
-    pub users: Vec<User>,
+    pub sockets: HashMap<String, Arc<Mutex<WebSocket<TcpStream>>>>,
+    pub users: HashMap<String, String>,
 }
 
 impl WS {
     pub fn new(rtc: RTC) -> Self {
         Self {
             rtc,
-            sockets: Vec::new(),
-            users: Vec::new(),
+            sockets: HashMap::new(),
+            users: HashMap::new(),
         }
     }
 
@@ -194,12 +188,13 @@ impl WS {
             return Err(());
         }
         let conn_id = conn_id.unwrap();
-
-        let socket = self.get_socket(&conn_id);
+        let socket = self.sockets.get(&conn_id);
         if let None = socket {
+            warn!("Socket is missing in send_message: {}", msg);
             return Err(());
         }
         let socket = socket.unwrap();
+
         let mut socket = socket.lock().unwrap();
         debug!("Send message: {:?}", &msg);
         socket
@@ -227,62 +222,54 @@ impl WS {
     }
 
     pub fn get_conn_id(&mut self, id: &String) -> Option<String> {
-        let mut res: Option<String> = None;
-        for user in &mut self.users {
-            if user.id == id.deref() {
-                res = Some(user.clone().conn_id);
-                break;
-            }
-        }
-        res
-    }
-
-    pub fn get_socket(&mut self, conn_id: &String) -> Option<Arc<Mutex<WebSocket<TcpStream>>>> {
-        let mut res: Option<Arc<Mutex<WebSocket<TcpStream>>>> = None;
-        for sock in &mut self.sockets {
-            if sock.conn_id == conn_id.deref() {
-                res = Some(sock.ws.clone());
-                break;
-            }
-        }
-        res
+        let user = self.users.get(id);
+        return Some(user.unwrap().clone());
     }
 
     fn set_socket(&mut self, id: String, conn_id: String, ws: Arc<Mutex<WebSocket<TcpStream>>>) {
-        let socket = self.get_socket(&conn_id);
-        if let Some(v) = socket {
-            warn!("Socket exists: {:?}", v);
+        let user = self.users.get(&id);
+        if let Some(u) = user {
+            warn!("Duplicate WS user: {}", u);
             return;
         }
+        self.users.insert(id, conn_id.clone());
 
-        let user = User {
-            id,
-            conn_id: conn_id.clone(),
-        };
-        info!("Set WS user: {:?}", &user);
-        self.users.push(user);
-        self.sockets.push(Socket { conn_id, ws });
+        let socket = self.sockets.get(&conn_id);
+        if let Some(_) = socket {
+            warn!("Duplicate socket: {}", conn_id);
+            return;
+        }
+        self.sockets.insert(conn_id, ws);
     }
 
     fn delete_socket(&mut self, conn_id: String) {
-        let index = self.sockets.iter().position(|x| *x.conn_id == conn_id);
-        if let None = index {
-            warn!("Deleted socket is missing: {:?}", conn_id);
+        let socket = self.sockets.get(&conn_id);
+        if let None = socket {
+            warn!("Deleted socket is missing: {}", conn_id);
             return;
         }
-        let index = index.unwrap();
-        self.sockets.remove(index);
+        self.sockets.remove(&conn_id);
         info!("Socket deleted: {:?}", conn_id);
     }
 
+    fn get_user_id_by_conn_id(&mut self, conn_id: &String) -> Option<String> {
+        let mut user_id = None;
+        for (key, val) in self.users.iter() {
+            if *val == *conn_id {
+                user_id = Some(key.clone());
+            }
+        }
+        user_id
+    }
+
     fn delete_user(&mut self, conn_id: String) {
-        let index = self.users.iter().position(|x| *x.conn_id == conn_id);
-        if let None = index {
+        let user_id = self.get_user_id_by_conn_id(&conn_id);
+        if let None = user_id {
             warn!("Deleted user is missing: {:?}", conn_id);
             return;
         }
-        let index = index.unwrap();
-        self.users.remove(index);
+        let user_id = user_id.unwrap();
+        self.users.remove(&user_id);
         info!("User deleted: {:?}", conn_id);
     }
 
