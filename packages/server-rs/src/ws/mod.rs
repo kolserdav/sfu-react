@@ -34,11 +34,14 @@ pub struct Socket {
     pub ws: Arc<Mutex<WebSocket<TcpStream>>>,
 }
 
+pub type WSCallbackSelf = Arc<WS>;
+pub type WSCallbackSocket = Arc<WebSocket<TcpStream>>;
+
 #[derive(Debug)]
 
 pub struct WS {
     pub rtc: RTC,
-    pub sockets: HashMap<String, Arc<Mutex<WebSocket<TcpStream>>>>,
+    pub sockets: HashMap<String, WSCallbackSocket>,
     pub users: HashMap<String, String>,
 }
 
@@ -54,12 +57,7 @@ impl WS {
     pub fn listen_ws(
         self,
         addr: &str,
-        cb: fn(
-            ws: Arc<Mutex<WS>>,
-            msg: Message,
-            conn_id: Uuid,
-            ws: Arc<Mutex<WebSocket<TcpStream>>>,
-        ) -> Result<(), ()>,
+        cb: fn(WSCallbackSelf, Message, Uuid, WSCallbackSocket) -> Result<(), ()>,
     ) {
         let server = TcpListener::bind(addr);
         if let Err(e) = server {
@@ -69,7 +67,7 @@ impl WS {
         let server = server.unwrap();
         info!("Server WS listen at: {}", &addr);
 
-        let this: Arc<Mutex<WS>> = Arc::new(Mutex::new(self));
+        let this = Arc::new(self);
 
         for stream in server.incoming() {
             let this = this.clone();
@@ -94,13 +92,12 @@ impl WS {
                 };
 
                 let websocket = accept_hdr(stream.unwrap(), callback).unwrap();
-                let ws = Arc::new(Mutex::new(websocket));
+                let ws = Arc::new(websocket);
                 let websocket = ws.clone();
                 let conn_id = Uuid::new_v4();
                 debug!("New Connection: {:?}, Protocol: {}", conn_id, protocol);
                 loop {
                     let ws = ws.clone();
-                    let mut websocket = websocket.lock().unwrap();
                     let msg = websocket.read_message();
                     if let Err(err) = msg {
                         match err {
@@ -115,9 +112,8 @@ impl WS {
                     std::mem::drop(websocket);
 
                     if msg.is_binary() || msg.is_text() {
-                        cb(this.to_owned(), msg, conn_id, ws).unwrap();
+                        cb(this, msg, conn_id, ws).unwrap();
                     } else if msg.is_close() {
-                        let mut this = this.lock().unwrap();
                         info!(
                             "Closed: {}, Protocol: {}, Sockets: {:?}",
                             conn_id,
@@ -145,12 +141,7 @@ impl WS {
         }
     }
 
-    pub fn get_locale(
-        &mut self,
-        msg: MessageArgs<GetLocale>,
-        conn_id: Uuid,
-        ws: Arc<Mutex<WebSocket<TcpStream>>>,
-    ) {
+    pub fn get_locale(&mut self, msg: MessageArgs<GetLocale>, conn_id: Uuid, ws: WSCallbackSocket) {
         let locale = get_locale(msg.data.locale);
 
         let mess = MessageArgs {
@@ -161,7 +152,6 @@ impl WS {
             },
             r#type: MessageType::SET_LOCALE,
         };
-        let mut ws = ws.lock().unwrap();
         ws.write_message(Message::Text(to_string(&mess).unwrap()))
             .unwrap();
     }
@@ -170,7 +160,7 @@ impl WS {
         &mut self,
         msg: MessageArgs<GetUserId>,
         conn_id: Uuid,
-        ws: Arc<Mutex<WebSocket<TcpStream>>>,
+        ws: WSCallbackSocket,
     ) {
         let conn_id_str = conn_id.to_string();
 
@@ -204,7 +194,6 @@ impl WS {
         }
         let socket = socket.unwrap();
 
-        let mut socket = socket.lock().unwrap();
         debug!("Send message: {:?}", &msg);
         socket
             .write_message(Message::Text(to_string(&msg).unwrap()))
@@ -235,7 +224,7 @@ impl WS {
         return Some(user.unwrap().clone());
     }
 
-    fn set_socket(&mut self, id: String, conn_id: String, ws: Arc<Mutex<WebSocket<TcpStream>>>) {
+    fn set_socket(&mut self, id: String, conn_id: String, ws: WSCallbackSocket) {
         let user = self.users.get(&id);
         if let Some(u) = user {
             warn!("Duplicate WS user: {}", u);
