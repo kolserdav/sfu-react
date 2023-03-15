@@ -23,7 +23,7 @@ fn main() {
 
     let _rtc = RTC::new();
 
-    let ws = WS::new(_rtc);
+    let ws = WS::new(Arc::new(_rtc));
 
     ws.listen_ws("127.0.0.1:3001", handle_mess);
 }

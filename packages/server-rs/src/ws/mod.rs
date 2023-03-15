@@ -24,6 +24,7 @@ use serde::Serialize;
 use serde_json::{to_string, Result as SerdeResult};
 use std::{
     fmt::Debug,
+    mem::drop,
     str::FromStr,
     sync::{Arc, Mutex},
 };
@@ -35,22 +36,22 @@ pub struct Socket {
 }
 
 pub type WSCallbackSelf = Arc<WS>;
-pub type WSCallbackSocket = Arc<WebSocket<TcpStream>>;
+pub type WSCallbackSocket = Arc<Mutex<WebSocket<TcpStream>>>;
 
 #[derive(Debug)]
 
 pub struct WS {
-    pub rtc: RTC,
-    pub sockets: HashMap<String, WSCallbackSocket>,
-    pub users: HashMap<String, String>,
+    pub rtc: Arc<RTC>,
+    pub sockets: Mutex<HashMap<String, WSCallbackSocket>>,
+    pub users: Mutex<HashMap<String, String>>,
 }
 
 impl WS {
-    pub fn new(rtc: RTC) -> Self {
+    pub fn new(rtc: Arc<RTC>) -> Self {
         Self {
             rtc,
-            sockets: HashMap::new(),
-            users: HashMap::new(),
+            sockets: Mutex::new(HashMap::new()),
+            users: Mutex::new(HashMap::new()),
         }
     }
 
@@ -71,7 +72,6 @@ impl WS {
 
         for stream in server.incoming() {
             let this = this.clone();
-
             spawn(move || {
                 let mut protocol = "main".to_string();
                 let callback = |req: &Request, mut response: Response| {
@@ -92,12 +92,14 @@ impl WS {
                 };
 
                 let websocket = accept_hdr(stream.unwrap(), callback).unwrap();
-                let ws = Arc::new(websocket);
+                let ws = Arc::new(Mutex::new(websocket));
                 let websocket = ws.clone();
                 let conn_id = Uuid::new_v4();
                 debug!("New Connection: {:?}, Protocol: {}", conn_id, protocol);
                 loop {
+                    let this = this.clone();
                     let ws = ws.clone();
+                    let mut websocket = websocket.lock().unwrap();
                     let msg = websocket.read_message();
                     if let Err(err) = msg {
                         match err {
@@ -109,17 +111,20 @@ impl WS {
                         return;
                     }
                     let msg = msg.unwrap();
-                    std::mem::drop(websocket);
+                    drop(websocket);
 
                     if msg.is_binary() || msg.is_text() {
                         cb(this, msg, conn_id, ws).unwrap();
                     } else if msg.is_close() {
+                        let sockets = this.sockets.lock().unwrap();
                         info!(
                             "Closed: {}, Protocol: {}, Sockets: {:?}",
                             conn_id,
                             protocol,
-                            this.sockets.len()
+                            sockets.len()
                         );
+                        drop(sockets);
+
                         if protocol == "room" {
                             this.delete_socket(conn_id.to_string());
 
@@ -141,7 +146,7 @@ impl WS {
         }
     }
 
-    pub fn get_locale(&mut self, msg: MessageArgs<GetLocale>, conn_id: Uuid, ws: WSCallbackSocket) {
+    pub fn get_locale(&self, msg: MessageArgs<GetLocale>, conn_id: Uuid, ws: WSCallbackSocket) {
         let locale = get_locale(msg.data.locale);
 
         let mess = MessageArgs {
@@ -152,16 +157,13 @@ impl WS {
             },
             r#type: MessageType::SET_LOCALE,
         };
-        ws.write_message(Message::Text(to_string(&mess).unwrap()))
+        ws.lock()
+            .unwrap()
+            .write_message(Message::Text(to_string(&mess).unwrap()))
             .unwrap();
     }
 
-    pub fn get_user_id(
-        &mut self,
-        msg: MessageArgs<GetUserId>,
-        conn_id: Uuid,
-        ws: WSCallbackSocket,
-    ) {
+    pub fn get_user_id(&self, msg: MessageArgs<GetUserId>, conn_id: Uuid, ws: WSCallbackSocket) {
         let conn_id_str = conn_id.to_string();
 
         self.set_socket(msg.id.clone(), conn_id.to_string(), ws);
@@ -177,7 +179,7 @@ impl WS {
         .unwrap();
     }
 
-    pub fn send_message<T>(&mut self, msg: MessageArgs<T>) -> Result<(), ()>
+    pub fn send_message<T>(&self, msg: MessageArgs<T>) -> Result<(), ()>
     where
         T: Serialize + Debug,
     {
@@ -187,21 +189,26 @@ impl WS {
             return Err(());
         }
         let conn_id = conn_id.unwrap();
-        let socket = self.sockets.get(&conn_id);
+
+        let sockets = self.sockets.lock().unwrap();
+        let socket = sockets.get(&conn_id);
         if let None = socket {
             warn!("Socket is missing in send_message: {}", msg);
             return Err(());
         }
+
         let socket = socket.unwrap();
 
         debug!("Send message: {:?}", &msg);
         socket
+            .lock()
+            .unwrap()
             .write_message(Message::Text(to_string(&msg).unwrap()))
             .unwrap();
         Ok(())
     }
 
-    pub fn parse_message<T>(&mut self, msg: Message) -> SerdeResult<MessageArgs<T>>
+    pub fn parse_message<T>(&self, msg: Message) -> SerdeResult<MessageArgs<T>>
     where
         T: FromValue + Debug,
     {
@@ -219,40 +226,46 @@ impl WS {
         })
     }
 
-    pub fn get_conn_id(&mut self, id: &String) -> Option<String> {
-        let user = self.users.get(id);
+    pub fn get_conn_id(&self, id: &String) -> Option<String> {
+        let users = self.users.lock().unwrap();
+        let user = users.get(id);
         return Some(user.unwrap().clone());
     }
 
-    fn set_socket(&mut self, id: String, conn_id: String, ws: WSCallbackSocket) {
-        let user = self.users.get(&id);
+    fn set_socket(&self, id: String, conn_id: String, ws: WSCallbackSocket) {
+        let mut users = self.users.lock().unwrap();
+        let user = users.get(&id);
         if let Some(u) = user {
             warn!("Duplicate WS user: {}", u);
             return;
         }
-        self.users.insert(id, conn_id.clone());
+        users.insert(id, conn_id.clone());
+        drop(users);
 
-        let socket = self.sockets.get(&conn_id);
+        let mut sockets = self.sockets.lock().unwrap();
+        let socket = sockets.get(&conn_id);
         if let Some(_) = socket {
             warn!("Duplicate socket: {}", conn_id);
             return;
         }
-        self.sockets.insert(conn_id, ws);
+        sockets.insert(conn_id, ws);
     }
 
-    fn delete_socket(&mut self, conn_id: String) {
-        let socket = self.sockets.get(&conn_id);
+    fn delete_socket(&self, conn_id: String) {
+        let mut sockets = self.sockets.lock().unwrap();
+        let socket = sockets.get(&conn_id);
         if let None = socket {
             warn!("Deleted socket is missing: {}", conn_id);
             return;
         }
-        self.sockets.remove(&conn_id);
+        sockets.remove(&conn_id);
         info!("Socket deleted: {:?}", conn_id);
     }
 
-    fn get_user_id_by_conn_id(&mut self, conn_id: &String) -> Option<String> {
+    fn get_user_id_by_conn_id(&self, conn_id: &String) -> Option<String> {
+        let users = self.users.lock().unwrap();
         let mut user_id = None;
-        for (key, val) in self.users.iter() {
+        for (key, val) in users.iter() {
             if *val == *conn_id {
                 user_id = Some(key.clone());
             }
@@ -260,12 +273,13 @@ impl WS {
         user_id
     }
 
-    fn delete_user(&mut self, user_id: &String) {
-        self.users.remove(user_id);
+    fn delete_user(&self, user_id: &String) {
+        let mut users = self.users.lock().unwrap();
+        users.remove(user_id);
         info!("User deleted: {:?}", user_id);
     }
 
-    pub fn get_room(&mut self, msg: MessageArgs<GetRoom>) {
+    pub fn get_room(&self, msg: MessageArgs<GetRoom>) {
         info!("Get room: {:?}", msg);
 
         let room_id = msg.id.clone();
