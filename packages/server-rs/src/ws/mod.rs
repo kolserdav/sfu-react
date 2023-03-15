@@ -29,12 +29,6 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-#[derive(Debug)]
-pub struct Socket {
-    pub conn_id: String,
-    pub ws: Arc<Mutex<WebSocket<TcpStream>>>,
-}
-
 pub type WSCallbackSelf = Arc<WS>;
 pub type WSCallbackSocket = Arc<Mutex<WebSocket<TcpStream>>>;
 
@@ -136,7 +130,8 @@ impl WS {
                             let user_id = user_id.unwrap();
 
                             this.delete_user(&user_id);
-                            this.rtc.delete_user_from_room(user_id);
+                            this.rtc.delete_user_from_room(&user_id);
+                            this.rtc.delete_askeds(&user_id);
                         }
                     } else {
                         warn!("Unsupported message mime: {:?}", msg);

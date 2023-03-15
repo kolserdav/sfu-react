@@ -64,13 +64,13 @@ impl RTC {
         })
     }
 
-    pub fn delete_user_from_room(&self, user_id: String) {
+    fn find_rooms_indexes(&self, user_id: &String) -> (Option<usize>, Option<usize>) {
         let mut i = 0;
         let mut index_r = None;
         let mut index_u = None;
-        let mut rooms = self.rooms.lock().unwrap();
+        let rooms = self.rooms.lock().unwrap();
         for room in rooms.iter() {
-            let index = room.users.iter().position(|u| *u.id == user_id);
+            let index = room.users.iter().position(|u| *u.id == *user_id);
             if let Some(v) = index {
                 index_r = Some(i);
                 index_u = Some(v);
@@ -78,6 +78,28 @@ impl RTC {
             }
             i += 1;
         }
+        (index_r, index_u)
+    }
+
+    fn find_askeds_indexes(&self, user_id: &String) -> (Option<usize>, Option<usize>) {
+        let mut i = 0;
+        let mut index_r = None;
+        let mut index_u = None;
+        let askeds = self.askeds.lock().unwrap();
+        for asked in askeds.iter() {
+            let index = asked.users.iter().position(|u| *u == *user_id);
+            if let Some(v) = index {
+                index_r = Some(i);
+                index_u = Some(v);
+                break;
+            }
+            i += 1;
+        }
+        (index_r, index_u)
+    }
+
+    pub fn delete_user_from_room(&self, user_id: &String) {
+        let (index_r, index_u) = self.find_rooms_indexes(user_id);
         if let None = index_r {
             warn!("Room is missing in delete_user_from_room: {}", &user_id);
             return;
@@ -89,7 +111,25 @@ impl RTC {
         }
         let index_u = index_u.unwrap();
 
+        let mut rooms = self.rooms.lock().unwrap();
         rooms[index_r].users.remove(index_u);
+    }
+
+    pub fn delete_askeds(&self, user_id: &String) {
+        let (index_r, index_u) = self.find_askeds_indexes(user_id);
+        if let None = index_r {
+            warn!("Room is missing in delete_askeds: {}", &user_id);
+            return;
+        }
+        let index_r = index_r.unwrap();
+        if let None = index_u {
+            warn!("User is missing in delete_askeds: {}", &user_id);
+            return;
+        }
+        let index_u = index_u.unwrap();
+
+        let mut askeds = self.askeds.lock().unwrap();
+        askeds[index_r].users.remove(index_u);
     }
 
     fn create_askeds(&self, room_id: String) -> Option<usize> {
