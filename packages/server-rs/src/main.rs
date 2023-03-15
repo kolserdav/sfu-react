@@ -20,7 +20,7 @@ use rtc::RTC;
 mod chat;
 pub mod common;
 
-use crate::ws::messages::{GetChatUnit, GetLocale, GetRoom, GetUserId};
+use crate::ws::messages::{GetChatUnit, GetLocale, GetRoom, GetUserId, Offer};
 
 fn main() {
     env_logger::builder().format_timestamp(None).init();
@@ -67,6 +67,10 @@ fn handle_mess(
         MessageType::GET_CHAT_UNIT => {
             let msg = ws.parse_message::<GetChatUnit>(msg_c).unwrap();
             ws.get_chat_unit(msg, conn_id, socket);
+        }
+        MessageType::OFFER => {
+            let msg = ws.parse_message::<Offer>(msg_c).unwrap();
+            ws.offer(msg);
         }
         _ => {
             warn!("Default case of message: {:?}", json);

@@ -883,7 +883,7 @@ export const useConnection = ({
       }
       rtc.createPeerConnection({
         userId: ws.userId,
-        target: 0,
+        target: '0',
         connId: connectionId,
         roomId,
         onTrack: ({ addedUserId }) => {
@@ -892,7 +892,7 @@ export const useConnection = ({
         iceServers,
         eventName: 'first',
       });
-      rtc.addTracks({ stream, roomId, connId: connectionId, target: 0 }, (e) => {
+      rtc.addTracks({ stream, roomId, connId: connectionId, target: '0' }, (e) => {
         if (!e) {
           addStream({
             target: ws.userId,

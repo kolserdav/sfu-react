@@ -4,7 +4,7 @@ use crate::{
     ws::messages::{RoomList, SetRoom},
 };
 
-use self::messages::{FromValue, GetChatUnit, GetLocale, GetRoom, GetUserId, SetUserId};
+use self::messages::{FromValue, GetChatUnit, GetLocale, GetRoom, GetUserId, Offer, SetUserId};
 pub use super::locales::{get_locale, Client, LocaleValue};
 use std::{
     collections::HashMap,
@@ -326,5 +326,9 @@ impl WS {
         info!("Get chat unit: {}", msg);
         self.chat
             .set_socket(room_id, user_id, ws, conn_id.to_string(), locale);
+    }
+
+    pub fn offer(&self, msg: MessageArgs<Offer>) {
+        self.rtc.offer(msg);
     }
 }

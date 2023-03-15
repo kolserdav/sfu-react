@@ -23,6 +23,10 @@ where
     }
 }
 
+use webrtc::peer_connection::sdp::{
+    sdp_type::RTCSdpType, session_description::RTCSessionDescription,
+};
+
 #[allow(non_camel_case_types)]
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum MessageType {
@@ -278,4 +282,47 @@ impl FromValue for GetRoom {
 pub struct SetRoom {
     pub isOwner: bool,
     pub asked: Vec<String>,
+}
+
+#[derive(Serialize, Debug)]
+#[allow(non_snake_case)]
+pub struct Offer {
+    pub sdp: RTCSessionDescription,
+    pub userId: String,
+    pub target: String,
+    pub mimeType: String,
+    pub roomId: String,
+}
+
+impl FromValue for Offer {
+    fn from(value: &Value) -> Self {
+        Self {
+            sdp: RTCSessionDescription {
+                sdp: value["sdp"]["sdp"].as_str().unwrap().to_string(),
+                sdp_type: RTCSdpType::from(value["sdp"]["type"].as_str().unwrap()),
+                parsed: None,
+            },
+            userId: value["userId"].as_str().unwrap().to_string(),
+            mimeType: value["mimeType"].as_str().unwrap().to_string(),
+            target: value["target"].as_str().unwrap().to_string(),
+            roomId: value["roomId"].as_str().unwrap().to_string(),
+        }
+    }
+}
+
+#[derive(Serialize, Debug)]
+#[allow(non_snake_case)]
+pub struct Candidate {
+    candidate: String,
+    userId: String,
+    target: String,
+    roomId: String,
+}
+
+#[derive(Serialize, Debug)]
+#[allow(non_snake_case)]
+pub struct Answer {
+    sdp: RTCSessionDescription,
+    userId: String,
+    target: String,
 }

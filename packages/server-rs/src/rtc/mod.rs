@@ -4,7 +4,7 @@ use serde::Serialize;
 
 use crate::{
     common::{Room, RoomsMutex},
-    ws::messages::RoomList,
+    ws::messages::{MessageArgs, Offer, RoomList},
 };
 
 #[derive(Serialize, Debug)]
@@ -162,5 +162,9 @@ impl RTC {
         }
         askeds[index_a].users.push(user_id.clone());
         askeds[index_a].users.to_vec()
+    }
+
+    pub fn offer(&self, msg: MessageArgs<Offer>) {
+        error!("Offer: {}", msg);
     }
 }
