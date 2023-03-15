@@ -135,6 +135,8 @@ impl WS {
                             this.delete_user(&user_id);
                             this.rtc.delete_user_from_room(&user_id);
                             this.rtc.delete_askeds(&user_id);
+                        } else if protocol == "chat" {
+                            this.chat.delete_chat_user(&conn_id.to_string());
                         }
                     } else {
                         warn!("Unsupported message mime: {:?}", msg);

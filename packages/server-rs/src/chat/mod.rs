@@ -1,14 +1,13 @@
-use std::{fmt::Debug, net::TcpStream, sync::Mutex};
+use std::{fmt::Debug, sync::Mutex};
 
 use serde::Serialize;
 use serde_json::to_string;
-use tungstenite::{Message, WebSocket};
-use uuid::Uuid;
+use tungstenite::Message;
 
 use crate::{
-    common::Room,
+    common::{Room, RoomsMutex},
     ws::{
-        messages::{GetChatUnit, MessageArgs, MessageType, SetChatUnit},
+        messages::{MessageArgs, MessageType},
         LocaleValue, WSCallbackSocket,
     },
 };
@@ -19,7 +18,7 @@ pub struct User {
     pub id: String,
     pub locale: LocaleValue,
     pub ws: WSCallbackSocket,
-    pub connId: String,
+    pub conn_id: String,
 }
 
 #[derive(Debug)]
@@ -65,7 +64,7 @@ impl Chat {
         rooms[index_r].users.push(User {
             id: user_id.clone(),
             ws,
-            connId: conn_id.clone(),
+            conn_id: conn_id.clone(),
             locale,
         });
         drop(rooms);
@@ -79,7 +78,26 @@ impl Chat {
         .unwrap();
     }
 
-    fn find_rooms_indexes(&self, user_id: &String) -> (Option<usize>, Option<usize>) {
+    pub fn delete_chat_user(&self, conn_id: &String) {
+        let (index_r, index_u, mut rooms) = self.find_rooms_indexes_by_conn_id(conn_id);
+        if let None = index_r {
+            warn!("Room is missing in delete_chat_user: {}", conn_id);
+            return;
+        }
+        let index_r = index_r.unwrap();
+        if let None = index_u {
+            warn!("User is missing in delete_chat_user: {}", conn_id);
+            return;
+        }
+        let index_u = index_u.unwrap();
+
+        rooms[index_r].users.remove(index_u);
+    }
+
+    fn find_rooms_indexes(
+        &self,
+        user_id: &String,
+    ) -> (Option<usize>, Option<usize>, RoomsMutex<User>) {
         let mut i = 0;
         let mut index_r = None;
         let mut index_u = None;
@@ -94,7 +112,28 @@ impl Chat {
             }
             i += 1;
         }
-        (index_r, index_u)
+        (index_r, index_u, rooms)
+    }
+
+    fn find_rooms_indexes_by_conn_id(
+        &self,
+        conn_id: &String,
+    ) -> (Option<usize>, Option<usize>, RoomsMutex<User>) {
+        let mut i = 0;
+        let mut index_r = None;
+        let mut index_u = None;
+
+        let rooms = self.rooms.lock().unwrap();
+        for room in rooms.iter() {
+            let index = room.users.iter().position(|u| *u.conn_id == *conn_id);
+            if let Some(v) = index {
+                index_r = Some(i);
+                index_u = Some(v);
+                break;
+            }
+            i += 1;
+        }
+        (index_r, index_u, rooms)
     }
 
     pub fn send_message<T>(&self, msg: MessageArgs<T>) -> Result<(), ()>
@@ -103,7 +142,7 @@ impl Chat {
     {
         let user_id = msg.id.clone();
 
-        let (index_r, index_u) = self.find_rooms_indexes(&user_id);
+        let (index_r, index_u, rooms) = self.find_rooms_indexes(&user_id);
         if let None = index_r {
             warn!("Room is missing in chat send_message: {}", msg);
             return Err(());
@@ -115,7 +154,6 @@ impl Chat {
         }
         let index_u = index_u.unwrap();
 
-        let rooms = self.rooms.lock().unwrap();
         let mut socket = rooms[index_r].users[index_u].ws.lock().unwrap();
 
         debug!("Send message: {:?}", &msg);

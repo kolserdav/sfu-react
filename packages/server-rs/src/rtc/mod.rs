@@ -1,8 +1,11 @@
-use std::sync::Mutex;
+use std::sync::{Mutex, MutexGuard};
 
 use serde::Serialize;
 
-use crate::{common::Room, ws::messages::RoomList};
+use crate::{
+    common::{Room, RoomsMutex},
+    ws::messages::RoomList,
+};
 
 #[derive(Serialize, Debug)]
 #[allow(non_snake_case)]
@@ -58,7 +61,10 @@ impl RTC {
         })
     }
 
-    fn find_rooms_indexes(&self, user_id: &String) -> (Option<usize>, Option<usize>) {
+    fn find_rooms_indexes(
+        &self,
+        user_id: &String,
+    ) -> (Option<usize>, Option<usize>, RoomsMutex<User>) {
         let mut i = 0;
         let mut index_r = None;
         let mut index_u = None;
@@ -72,10 +78,13 @@ impl RTC {
             }
             i += 1;
         }
-        (index_r, index_u)
+        (index_r, index_u, rooms)
     }
 
-    fn find_askeds_indexes(&self, user_id: &String) -> (Option<usize>, Option<usize>) {
+    fn find_askeds_indexes(
+        &self,
+        user_id: &String,
+    ) -> (Option<usize>, Option<usize>, MutexGuard<Vec<RoomList>>) {
         let mut i = 0;
         let mut index_r = None;
         let mut index_u = None;
@@ -89,11 +98,11 @@ impl RTC {
             }
             i += 1;
         }
-        (index_r, index_u)
+        (index_r, index_u, askeds)
     }
 
     pub fn delete_user_from_room(&self, user_id: &String) {
-        let (index_r, index_u) = self.find_rooms_indexes(user_id);
+        let (index_r, index_u, mut rooms) = self.find_rooms_indexes(user_id);
         if let None = index_r {
             warn!("Room is missing in delete_user_from_room: {}", &user_id);
             return;
@@ -105,12 +114,11 @@ impl RTC {
         }
         let index_u = index_u.unwrap();
 
-        let mut rooms = self.rooms.lock().unwrap();
         rooms[index_r].users.remove(index_u);
     }
 
     pub fn delete_askeds(&self, user_id: &String) {
-        let (index_r, index_u) = self.find_askeds_indexes(user_id);
+        let (index_r, index_u, mut askeds) = self.find_askeds_indexes(user_id);
         if let None = index_r {
             warn!("Room is missing in delete_askeds: {}", &user_id);
             return;
@@ -122,7 +130,6 @@ impl RTC {
         }
         let index_u = index_u.unwrap();
 
-        let mut askeds = self.askeds.lock().unwrap();
         askeds[index_r].users.remove(index_u);
     }
 
