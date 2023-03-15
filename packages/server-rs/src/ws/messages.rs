@@ -2,7 +2,7 @@ use super::{Client, LocaleValue};
 use log::warn;
 
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{to_string, Value};
 use std::{fmt::Display, str::FromStr};
 
 #[allow(non_snake_case)]
@@ -23,9 +23,7 @@ where
     }
 }
 
-use webrtc::peer_connection::sdp::{
-    sdp_type::RTCSdpType, session_description::RTCSessionDescription,
-};
+use webrtc::peer_connection::sdp::sdp_type::RTCSdpType;
 
 #[allow(non_camel_case_types)]
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -285,9 +283,15 @@ pub struct SetRoom {
 }
 
 #[derive(Serialize, Debug)]
+pub struct RTCSessionDescription {
+    pub sdp_type: String,
+    pub sdp: String,
+}
+
+#[derive(Serialize, Debug)]
 #[allow(non_snake_case)]
 pub struct Offer {
-    pub sdp: RTCSessionDescription,
+    pub sdp: String,
     pub userId: String,
     pub target: String,
     pub mimeType: String,
@@ -297,11 +301,11 @@ pub struct Offer {
 impl FromValue for Offer {
     fn from(value: &Value) -> Self {
         Self {
-            sdp: RTCSessionDescription {
+            sdp: to_string(&RTCSessionDescription {
                 sdp: value["sdp"]["sdp"].as_str().unwrap().to_string(),
-                sdp_type: RTCSdpType::from(value["sdp"]["type"].as_str().unwrap()),
-                parsed: None,
-            },
+                sdp_type: value["sdp"]["type"].as_str().unwrap().to_string(),
+            })
+            .unwrap(),
             userId: value["userId"].as_str().unwrap().to_string(),
             mimeType: value["mimeType"].as_str().unwrap().to_string(),
             target: value["target"].as_str().unwrap().to_string(),
