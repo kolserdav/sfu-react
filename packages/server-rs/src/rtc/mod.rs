@@ -1,3 +1,5 @@
+use std::sync::Mutex;
+
 use serde::Serialize;
 
 use crate::ws::messages::RoomList;
@@ -18,33 +20,35 @@ pub struct Room {
 
 #[derive(Debug)]
 pub struct RTC {
-    pub rooms: Vec<Room>,
-    pub askeds: Vec<RoomList>,
+    pub rooms: Mutex<Vec<Room>>,
+    pub askeds: Mutex<Vec<RoomList>>,
 }
 
 impl RTC {
     pub fn new() -> Self {
         Self {
-            rooms: Vec::new(),
-            askeds: Vec::new(),
+            rooms: Mutex::new(Vec::new()),
+            askeds: Mutex::new(Vec::new()),
         }
     }
 
-    pub fn add_room(&mut self, room_id: String) -> Option<usize> {
-        let mut index_r = self.rooms.iter().position(|room| *room.room_id == room_id);
+    pub fn add_room(&self, room_id: String) -> Option<usize> {
+        let mut rooms = self.rooms.lock().unwrap();
+        let mut index_r = rooms.iter().position(|room| *room.room_id == room_id);
         if let None = index_r {
-            self.rooms.push(Room {
+            rooms.push(Room {
                 room_id: room_id.clone(),
                 users: Vec::new(),
             });
-            index_r = Some(self.rooms.len() - 1);
+            index_r = Some(rooms.len() - 1);
         }
         index_r
     }
 
-    pub fn add_user_to_room(&mut self, room_id: String, user_id: String) {
+    pub fn add_user_to_room(&self, room_id: String, user_id: String) {
         let index_r = self.add_room(room_id).unwrap();
-        let index = self.rooms[index_r]
+        let mut rooms = self.rooms.lock().unwrap();
+        let index = rooms[index_r]
             .users
             .iter()
             .position(|user| *user.id == user_id);
@@ -52,7 +56,7 @@ impl RTC {
             warn!("Duplicate user: {}", user_id);
             return;
         }
-        self.rooms[index_r].users.push(User {
+        rooms[index_r].users.push(User {
             id: user_id,
             name: "TODO".to_string(),
             // TODO
@@ -60,12 +64,12 @@ impl RTC {
         })
     }
 
-    pub fn delete_user_from_room(&mut self, user_id: String) {
+    pub fn delete_user_from_room(&self, user_id: String) {
         let mut i = 0;
         let mut index_r = None;
         let mut index_u = None;
-
-        for room in self.rooms.iter() {
+        let mut rooms = self.rooms.lock().unwrap();
+        for room in rooms.iter() {
             let index = room.users.iter().position(|u| *u.id == user_id);
             if let Some(v) = index {
                 index_r = Some(i);
@@ -85,27 +89,26 @@ impl RTC {
         }
         let index_u = index_u.unwrap();
 
-        self.rooms[index_r].users.remove(index_u);
+        rooms[index_r].users.remove(index_u);
     }
 
-    fn create_askeds(&mut self, room_id: String) -> Option<usize> {
-        let mut index_a = self
-            .askeds
-            .iter()
-            .position(|asked| *asked.room_id == room_id);
+    fn create_askeds(&self, room_id: String) -> Option<usize> {
+        let mut askeds = self.askeds.lock().unwrap();
+        let mut index_a = askeds.iter().position(|asked| *asked.room_id == room_id);
         if let None = index_a {
-            self.askeds.push(RoomList {
+            askeds.push(RoomList {
                 room_id: room_id.clone(),
                 users: Vec::new(),
             });
-            index_a = Some(self.rooms.len() - 1);
+            index_a = Some(askeds.len() - 1);
         }
         index_a
     }
 
-    pub fn add_user_to_askeds(&mut self, room_id: String, user_id: String) -> Vec<String> {
+    pub fn add_user_to_askeds(&self, room_id: String, user_id: String) -> Vec<String> {
         let index_a = self.create_askeds(room_id).unwrap();
-        let index = self.askeds[index_a]
+        let mut askeds = self.askeds.lock().unwrap();
+        let index = askeds[index_a]
             .users
             .iter()
             .position(|user| *user == user_id);
@@ -114,9 +117,9 @@ impl RTC {
                 "Duplicate askeds index; room_id: {}; user_id: {}",
                 index_a, user_id
             );
-            return self.askeds[index_a].users.to_vec();
+            return askeds[index_a].users.to_vec();
         }
-        self.askeds[index_a].users.push(user_id.clone());
-        self.askeds[index_a].users.to_vec()
+        askeds[index_a].users.push(user_id.clone());
+        askeds[index_a].users.to_vec()
     }
 }
