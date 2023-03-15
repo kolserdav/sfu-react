@@ -22,7 +22,8 @@ pub mod common;
 
 use crate::ws::messages::{GetChatUnit, GetLocale, GetRoom, GetUserId, Offer};
 
-fn main() {
+#[tokio::main]
+async fn main() {
     env_logger::builder().format_timestamp(None).init();
 
     let rtc = RTC::new();
@@ -34,17 +35,12 @@ fn main() {
     ws.listen_ws("127.0.0.1:3001", handle_mess);
 }
 
-fn handle_mess(
-    ws: WSCallbackSelf,
-    msg: Message,
-    conn_id: Uuid,
-    socket: WSCallbackSocket,
-) -> Result<(), ()> {
+async fn handle_mess(ws: WSCallbackSelf, msg: Message, conn_id: Uuid, socket: WSCallbackSocket) {
     let msg_c = msg.clone();
     let json = ws.parse_message::<Any>(msg);
     if let Err(e) = json {
         error!("Error handle WS: {:?}", e);
-        return Ok(());
+        return;
     }
     let json = json.unwrap();
     let type_mess = &json.r#type;
@@ -70,12 +66,10 @@ fn handle_mess(
         }
         MessageType::OFFER => {
             let msg = ws.parse_message::<Offer>(msg_c).unwrap();
-            ws.offer(msg);
+            ws.offer(msg).await;
         }
         _ => {
             warn!("Default case of message: {:?}", json);
         }
     };
-
-    Ok(())
 }

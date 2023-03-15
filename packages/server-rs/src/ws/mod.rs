@@ -1,16 +1,7 @@
-use crate::{
-    chat::Chat,
-    rtc::RTC,
-    ws::messages::{RoomList, SetRoom},
-};
+use crate::{chat::Chat, rtc::RTC, ws::messages::SetRoom};
 
 use self::messages::{FromValue, GetChatUnit, GetLocale, GetRoom, GetUserId, Offer, SetUserId};
 pub use super::locales::{get_locale, Client, LocaleValue};
-use std::{
-    collections::HashMap,
-    net::{TcpListener, TcpStream},
-    thread::spawn,
-};
 use tungstenite::{
     accept_hdr,
     handshake::server::{Request, Response},
@@ -24,25 +15,29 @@ use messages::{MessageArgs, MessageType, SetLocale};
 use serde::Serialize;
 use serde_json::{to_string, Result as SerdeResult};
 use std::{
+    collections::HashMap,
     fmt::Debug,
+    future::Future,
     mem::drop,
     str::FromStr,
     sync::{Arc, Mutex},
 };
+use tokio::net::{tcp::ReadHalf, TcpListener, TcpStream};
 
-pub type WSCallbackSelf = Arc<WS>;
-pub type WSCallbackSocket = Arc<Mutex<WebSocket<TcpStream>>>;
+use futures_util::{future, StreamExt, TryStreamExt};
+pub type WSCallbackSelf<'a> = Arc<WS<'a>>;
+pub type WSCallbackSocket<'a> = Mutex<ReadHalf<'a>>;
 
 #[derive(Debug)]
 
-pub struct WS {
+pub struct WS<'a> {
     pub rtc: Arc<RTC>,
     pub chat: Arc<Chat>,
-    pub sockets: Mutex<HashMap<String, WSCallbackSocket>>,
+    pub sockets: Mutex<HashMap<String, WSCallbackSocket<'a>>>,
     pub users: Mutex<HashMap<String, String>>,
 }
 
-impl WS {
+impl<'a> WS<'a> {
     pub fn new(rtc: Arc<RTC>, chat: Arc<Chat>) -> Self {
         Self {
             rtc,
@@ -52,12 +47,14 @@ impl WS {
         }
     }
 
-    pub fn listen_ws(
+    pub async fn listen_ws<F>(
         self,
         addr: &str,
-        cb: fn(WSCallbackSelf, Message, Uuid, WSCallbackSocket) -> Result<(), ()>,
-    ) {
-        let server = TcpListener::bind(addr);
+        cb: fn(WSCallbackSelf, Message, Uuid, WSCallbackSocket) -> F,
+    ) where
+        F: Future<Output = ()> + 'static,
+    {
+        let server = TcpListener::bind(addr).await;
         if let Err(e) = server {
             error!("Failed start WS server: {:?}", e);
             return;
@@ -67,9 +64,8 @@ impl WS {
 
         let this = Arc::new(self);
 
-        for stream in server.incoming() {
-            let this = this.clone();
-            spawn(move || {
+        while let Ok((stream, _)) = server.accept().await {
+            tokio::spawn(async move {
                 let mut protocol = "main".to_string();
                 let callback = |req: &Request, mut response: Response| {
                     debug!("Received a new ws handshake");
@@ -88,59 +84,85 @@ impl WS {
                     Ok(response)
                 };
 
-                let websocket = accept_hdr(stream.unwrap(), callback).unwrap();
+                let websocket = tokio_tungstenite::accept_async(stream)
+                    .await
+                    .expect("Error during the websocket handshake occurred");
+                let (write, read) = stream.split();
+
+                let write = Mutex::new(write);
+
                 let ws = Arc::new(Mutex::new(websocket));
                 let websocket = ws.clone();
                 let conn_id = Uuid::new_v4();
                 debug!("New Connection: {:?}, Protocol: {}", conn_id, protocol);
-                loop {
-                    let this = this.clone();
-                    let ws = ws.clone();
-                    let mut websocket = websocket.lock().unwrap();
-                    let msg = websocket.read_message();
-                    if let Err(err) = msg {
-                        match err {
-                            Error::ConnectionClosed => {}
-                            _ => {
-                                error!("Error read message: {:?}", err);
-                            }
-                        }
-                        return;
+
+                let this = this.clone();
+                let ws = ws.clone();
+                let mut websocket = websocket.lock().unwrap();
+
+                let broadcast_incoming = read(path).try_for_each(|msg| {
+                    println!(
+                        "Received a message from {}: {}",
+                        addr,
+                        msg.to_text().unwrap()
+                    );
+                    let peers = peer_map.lock().unwrap();
+
+                    // We want to broadcast the message to everyone except ourselves.
+                    let broadcast_recipients = peers
+                        .iter()
+                        .filter(|(peer_addr, _)| peer_addr != &&addr)
+                        .map(|(_, ws_sink)| ws_sink);
+
+                    for recp in broadcast_recipients {
+                        recp.unbounded_send(msg.clone()).unwrap();
                     }
-                    let msg = msg.unwrap();
-                    drop(websocket);
 
-                    if msg.is_binary() || msg.is_text() {
-                        cb(this, msg, conn_id, ws).unwrap();
-                    } else if msg.is_close() {
-                        let sockets = this.sockets.lock().unwrap();
-                        info!(
-                            "Closed: {}, Protocol: {}, Sockets: {:?}",
-                            conn_id,
-                            protocol,
-                            sockets.len()
-                        );
-                        drop(sockets);
+                    future::ok(())
+                });
 
-                        if protocol == "room" {
-                            this.delete_socket(conn_id.to_string());
-
-                            let user_id = this.get_user_id_by_conn_id(&conn_id.to_string());
-                            if let None = user_id {
-                                warn!("Deleted user is missing: {:?}", conn_id);
-                                return;
-                            }
-                            let user_id = user_id.unwrap();
-
-                            this.delete_user(&user_id);
-                            this.rtc.delete_user_from_room(&user_id);
-                            this.rtc.delete_askeds(&user_id);
-                        } else if protocol == "chat" {
-                            this.chat.delete_chat_user(&conn_id.to_string());
+                if let Err(err) = msg {
+                    match err {
+                        Error::ConnectionClosed => {}
+                        _ => {
+                            error!("Error read message: {:?}", err);
                         }
-                    } else {
-                        warn!("Unsupported message mime: {:?}", msg);
                     }
+                    return;
+                }
+                let msg = msg.unwrap();
+                drop(websocket);
+
+                if msg.is_binary() || msg.is_text() {
+                    cb(this, msg, conn_id, write).await;
+                } else if msg.is_close() {
+                    let sockets = this.sockets.lock().unwrap();
+                    info!(
+                        "Closed: {}, Protocol: {}, Sockets: {:?}",
+                        conn_id,
+                        protocol,
+                        sockets.len()
+                    );
+                    drop(sockets);
+
+                    if protocol == "room" {
+                        this.delete_socket(conn_id.to_string());
+
+                        let user_id = this.get_user_id_by_conn_id(&conn_id.to_string());
+                        if let None = user_id {
+                            warn!("Deleted user is missing: {:?}", conn_id);
+                            return;
+                        }
+                        let user_id = user_id.unwrap();
+
+                        this.delete_user(&user_id);
+                        this.rtc.delete_user_from_room(&user_id);
+                        this.rtc.delete_askeds(&user_id);
+                    } else if protocol == "chat" {
+                        this.chat.delete_chat_user(&conn_id.to_string());
+                    }
+                } else {
+                    warn!("Unsupported message mime: {:?}", msg);
                 }
             });
         }
@@ -157,10 +179,8 @@ impl WS {
             },
             r#type: MessageType::SET_LOCALE,
         };
-        ws.lock()
-            .unwrap()
-            .write_message(Message::Text(to_string(&mess).unwrap()))
-            .unwrap();
+        let write = ws.lock().unwrap();
+        write(Message::Text(to_string(&mess).unwrap())).unwrap();
     }
 
     pub fn get_user_id(&self, msg: MessageArgs<GetUserId>, conn_id: Uuid, ws: WSCallbackSocket) {
@@ -328,7 +348,7 @@ impl WS {
             .set_socket(room_id, user_id, ws, conn_id.to_string(), locale);
     }
 
-    pub fn offer(&self, msg: MessageArgs<Offer>) {
-        self.rtc.offer(msg);
+    pub async fn offer(&self, msg: MessageArgs<Offer>) {
+        self.rtc.offer(msg).await;
     }
 }

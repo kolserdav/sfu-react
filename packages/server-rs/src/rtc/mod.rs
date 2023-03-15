@@ -164,7 +164,7 @@ impl RTC {
         askeds[index_a].users.to_vec()
     }
 
-    pub fn offer(&self, msg: MessageArgs<Offer>) {
+    pub async fn offer(&self, msg: MessageArgs<Offer>) {
         error!("Offer: {}", msg);
     }
 }
