@@ -1,9 +1,10 @@
 use crate::{
+    chat::Chat,
     rtc::RTC,
     ws::messages::{RoomList, SetRoom},
 };
 
-use self::messages::{FromValue, GetLocale, GetRoom, GetUserId, SetUserId};
+use self::messages::{FromValue, GetChatUnit, GetLocale, GetRoom, GetUserId, SetUserId};
 pub use super::locales::{get_locale, Client, LocaleValue};
 use std::{
     collections::HashMap,
@@ -36,14 +37,16 @@ pub type WSCallbackSocket = Arc<Mutex<WebSocket<TcpStream>>>;
 
 pub struct WS {
     pub rtc: Arc<RTC>,
+    pub chat: Arc<Chat>,
     pub sockets: Mutex<HashMap<String, WSCallbackSocket>>,
     pub users: Mutex<HashMap<String, String>>,
 }
 
 impl WS {
-    pub fn new(rtc: Arc<RTC>) -> Self {
+    pub fn new(rtc: Arc<RTC>, chat: Arc<Chat>) -> Self {
         Self {
             rtc,
+            chat,
             sockets: Mutex::new(HashMap::new()),
             users: Mutex::new(HashMap::new()),
         }
@@ -305,5 +308,21 @@ impl WS {
             },
         })
         .unwrap();
+    }
+
+    pub fn get_chat_unit(
+        &self,
+        msg: MessageArgs<GetChatUnit>,
+        conn_id: Uuid,
+        ws: WSCallbackSocket,
+    ) {
+        let room_id = msg.id.clone();
+
+        let locale = msg.data.locale.clone();
+        let user_id = msg.data.userId.clone();
+
+        info!("Get chat unit: {}", msg);
+        self.chat
+            .set_socket(room_id, user_id, ws, conn_id.to_string(), locale);
     }
 }

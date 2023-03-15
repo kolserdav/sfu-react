@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 mod en;
 mod ru;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum LocaleValue {
     #[allow(non_camel_case_types)]
     ru,

@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate log;
 pub mod ws;
+use chat::Chat;
 use std::{
     net::TcpStream,
     sync::{Arc, Mutex},
@@ -11,19 +12,24 @@ use ws::{
     WSCallbackSelf, WSCallbackSocket, WS,
 };
 mod locales;
-pub mod thread_pool;
-use tungstenite::{Message, WebSocket};
+
+use tungstenite::Message;
 mod rtc;
 use rtc::RTC;
 
-use crate::ws::messages::{GetLocale, GetRoom, GetUserId};
+mod chat;
+pub mod common;
+
+use crate::ws::messages::{GetChatUnit, GetLocale, GetRoom, GetUserId};
 
 fn main() {
     env_logger::builder().format_timestamp(None).init();
 
-    let _rtc = RTC::new();
+    let rtc = RTC::new();
 
-    let ws = WS::new(Arc::new(_rtc));
+    let chat = Chat::new();
+
+    let ws = WS::new(Arc::new(rtc), Arc::new(chat));
 
     ws.listen_ws("127.0.0.1:3001", handle_mess);
 }
@@ -57,6 +63,10 @@ fn handle_mess(
         MessageType::GET_ROOM => {
             let msg = ws.parse_message::<GetRoom>(msg_c).unwrap();
             ws.get_room(msg);
+        }
+        MessageType::GET_CHAT_UNIT => {
+            let msg = ws.parse_message::<GetChatUnit>(msg_c).unwrap();
+            ws.get_chat_unit(msg, conn_id, socket);
         }
         _ => {
             warn!("Default case of message: {:?}", json);

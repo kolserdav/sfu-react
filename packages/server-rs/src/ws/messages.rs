@@ -212,6 +212,15 @@ pub struct GetChatUnit {
     pub locale: LocaleValue,
 }
 
+impl FromValue for GetChatUnit {
+    fn from(value: &Value) -> Self {
+        Self {
+            userId: value["userId"].as_str().unwrap().to_string(),
+            locale: LocaleValue::from_str(value["locale"].as_str().unwrap()).unwrap(),
+        }
+    }
+}
+
 pub type SetChatUnit = ();
 
 #[allow(non_snake_case)]

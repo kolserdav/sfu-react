@@ -2,7 +2,7 @@ use std::sync::Mutex;
 
 use serde::Serialize;
 
-use crate::ws::messages::RoomList;
+use crate::{common::Room, ws::messages::RoomList};
 
 #[derive(Serialize, Debug)]
 #[allow(non_snake_case)]
@@ -12,15 +12,9 @@ pub struct User {
     pub isOwner: bool,
 }
 
-#[derive(Serialize, Debug)]
-pub struct Room {
-    pub room_id: String,
-    pub users: Vec<User>,
-}
-
 #[derive(Debug)]
 pub struct RTC {
-    pub rooms: Mutex<Vec<Room>>,
+    pub rooms: Mutex<Vec<Room<User>>>,
     pub askeds: Mutex<Vec<RoomList>>,
 }
 
