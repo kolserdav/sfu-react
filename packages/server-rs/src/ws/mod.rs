@@ -15,24 +15,21 @@ use uuid::Uuid;
 pub mod messages;
 use log::{debug, error, info};
 
+use futures::Future;
 use messages::{MessageArgs, MessageType, SetLocale};
 use serde::Serialize;
 use serde_json::{to_string, Result as SerdeResult};
-use std::{
-    collections::HashMap,
-    fmt::Debug,
-    future::Future,
-    mem::drop,
-    str::FromStr,
-    sync::{Arc, Mutex},
+use std::{collections::HashMap, fmt::Debug, marker::Send, mem::drop, str::FromStr, sync::Arc};
+use tokio::{
+    net::{TcpListener, TcpStream},
+    sync::Mutex,
 };
-use tokio::net::{tcp::ReadHalf, TcpListener, TcpStream};
 
 pub type WSCallbackSelf<'a> = &'a WS;
 pub type WSCallbackSocket = Arc<Mutex<WebSocketStream<TcpStream>>>;
 pub type CallbackListener<F>
 where
-    F: Future<Output = ()> + 'static,
+    F: Future<Output = ()> + Send + 'static,
 = fn(WSCallbackSelf, Message, Uuid, WSCallbackSocket) -> F;
 
 #[derive(Debug)]
@@ -54,9 +51,9 @@ impl WS {
         }
     }
 
-    pub async fn listen_ws<F>(self, addr: &str, cb: CallbackListener<F>)
+    pub async fn listen_ws<F>(&'static self, addr: &str, cb: CallbackListener<F>)
     where
-        F: Future<Output = ()> + 'static,
+        F: Future<Output = ()> + Send + 'static,
     {
         let server = TcpListener::bind(addr).await;
         if let Err(e) = server {
@@ -76,7 +73,7 @@ impl WS {
 
     async fn handle_mess<F>(&self, stream: TcpStream, cb: CallbackListener<F>)
     where
-        F: Future<Output = ()> + 'static,
+        F: Future<Output = ()> + Send + 'static,
     {
         let mut protocol = "main".to_string();
         let callback = |req: &Request, mut response: Response| {
@@ -105,7 +102,7 @@ impl WS {
         let conn_id = Uuid::new_v4();
         debug!("New Connection: {:?}, Protocol: {}", conn_id, protocol);
 
-        let mut websocket = websocket.lock().unwrap();
+        let mut websocket = websocket.lock().await;
 
         while let Some(msg) = websocket.next().await {
             let msg = msg.unwrap();
@@ -113,7 +110,7 @@ impl WS {
             if msg.is_text() || msg.is_binary() {
                 cb(self, msg, conn_id, ws).await;
             } else if msg.is_close() {
-                let sockets = self.sockets.lock().unwrap();
+                let sockets = self.sockets.lock().await;
                 info!(
                     "Closed: {}, Protocol: {}, Sockets: {:?}",
                     conn_id,
@@ -125,7 +122,7 @@ impl WS {
                 if protocol == "room" {
                     self.delete_socket(conn_id.to_string());
 
-                    let user_id = self.get_user_id_by_conn_id(&conn_id.to_string());
+                    let user_id = self.get_user_id_by_conn_id(&conn_id.to_string()).await;
                     if let None = user_id {
                         warn!("Deleted user is missing: {:?}", conn_id);
                         return;
@@ -144,7 +141,12 @@ impl WS {
         }
     }
 
-    pub fn get_locale(&self, msg: MessageArgs<GetLocale>, conn_id: Uuid, ws: WSCallbackSocket) {
+    pub async fn get_locale(
+        &self,
+        msg: MessageArgs<GetLocale>,
+        conn_id: Uuid,
+        ws: WSCallbackSocket,
+    ) {
         let locale = get_locale(msg.data.locale);
 
         let mess = MessageArgs {
@@ -155,11 +157,16 @@ impl WS {
             },
             r#type: MessageType::SET_LOCALE,
         };
-        let mut write = ws.lock().unwrap();
+        let mut write = ws.lock().await;
         write.send(Message::Text(to_string(&mess).unwrap()));
     }
 
-    pub fn get_user_id(&self, msg: MessageArgs<GetUserId>, conn_id: Uuid, ws: WSCallbackSocket) {
+    pub async fn get_user_id(
+        &self,
+        msg: MessageArgs<GetUserId>,
+        conn_id: Uuid,
+        ws: WSCallbackSocket,
+    ) {
         let conn_id_str = conn_id.to_string();
 
         self.set_socket(msg.id.clone(), conn_id.to_string(), ws);
@@ -172,21 +179,21 @@ impl WS {
                 name: msg.data.userName,
             },
         })
-        .unwrap();
+        .await;
     }
 
-    pub fn send_message<T>(&self, msg: MessageArgs<T>) -> Result<(), ()>
+    pub async fn send_message<T>(&self, msg: MessageArgs<T>) -> Result<(), ()>
     where
         T: Serialize + Debug,
     {
-        let conn_id = self.get_conn_id(&msg.id);
+        let conn_id = self.get_conn_id(&msg.id).await;
         if let None = conn_id {
             warn!("Conn id is missing in send_message: {}", msg);
             return Err(());
         }
         let conn_id = conn_id.unwrap();
 
-        let sockets = self.sockets.lock().unwrap();
+        let sockets = self.sockets.lock().await;
         let socket = sockets.get(&conn_id);
         if let None = socket {
             warn!("Socket is missing in send_message: {}", msg);
@@ -198,7 +205,7 @@ impl WS {
         debug!("Send message: {:?}", &msg);
         socket
             .lock()
-            .unwrap()
+            .await
             .send(Message::Text(to_string(&msg).unwrap()));
         Ok(())
     }
@@ -221,14 +228,14 @@ impl WS {
         })
     }
 
-    pub fn get_conn_id(&self, id: &String) -> Option<String> {
-        let users = self.users.lock().unwrap();
+    pub async fn get_conn_id(&self, id: &String) -> Option<String> {
+        let users = self.users.lock().await;
         let user = users.get(id);
         return Some(user.unwrap().clone());
     }
 
-    fn set_socket(&self, id: String, conn_id: String, ws: WSCallbackSocket) {
-        let mut users = self.users.lock().unwrap();
+    async fn set_socket(&self, id: String, conn_id: String, ws: WSCallbackSocket) {
+        let mut users = self.users.lock().await;
         let user = users.get(&id);
         if let Some(u) = user {
             warn!("Duplicate WS user: {}", u);
@@ -237,7 +244,7 @@ impl WS {
         users.insert(id, conn_id.clone());
         drop(users);
 
-        let mut sockets = self.sockets.lock().unwrap();
+        let mut sockets = self.sockets.lock().await;
         let socket = sockets.get(&conn_id);
         if let Some(_) = socket {
             warn!("Duplicate socket: {}", conn_id);
@@ -246,8 +253,8 @@ impl WS {
         sockets.insert(conn_id, ws);
     }
 
-    fn delete_socket(&self, conn_id: String) {
-        let mut sockets = self.sockets.lock().unwrap();
+    async fn delete_socket(&self, conn_id: String) {
+        let mut sockets = self.sockets.lock().await;
         let socket = sockets.get(&conn_id);
         if let None = socket {
             warn!("Deleted socket is missing: {}", conn_id);
@@ -257,8 +264,8 @@ impl WS {
         info!("Socket deleted: {:?}", conn_id);
     }
 
-    fn get_user_id_by_conn_id(&self, conn_id: &String) -> Option<String> {
-        let users = self.users.lock().unwrap();
+    async fn get_user_id_by_conn_id(&self, conn_id: &String) -> Option<String> {
+        let users = self.users.lock().await;
         let mut user_id = None;
         for (key, val) in users.iter() {
             if *val == *conn_id {
@@ -268,13 +275,13 @@ impl WS {
         user_id
     }
 
-    fn delete_user(&self, user_id: &String) {
-        let mut users = self.users.lock().unwrap();
+    async fn delete_user(&self, user_id: &String) {
+        let mut users = self.users.lock().await;
         users.remove(user_id);
         info!("User deleted: {:?}", user_id);
     }
 
-    pub fn get_room(&self, msg: MessageArgs<GetRoom>) {
+    pub async fn get_room(&self, msg: MessageArgs<GetRoom>) {
         info!("Get room: {:?}", msg);
 
         let room_id = msg.id.clone();
@@ -282,7 +289,7 @@ impl WS {
         let user_name = "TODO";
         let is_public = msg.data.isPublic;
 
-        let conn_id = self.get_conn_id(&user_id);
+        let conn_id = self.get_conn_id(&user_id).await;
         if let None = conn_id {
             warn!("Conn id is missing in get_room: {}:{}", &room_id, &user_id);
             return;
@@ -292,7 +299,8 @@ impl WS {
 
         let asked = self
             .rtc
-            .add_user_to_askeds(room_id.clone(), user_id.clone());
+            .add_user_to_askeds(room_id.clone(), user_id.clone())
+            .await;
 
         self.send_message(MessageArgs::<SetRoom> {
             id: user_id,
@@ -304,6 +312,7 @@ impl WS {
                 asked,
             },
         })
+        .await
         .unwrap();
     }
 

@@ -1,4 +1,4 @@
-use std::sync::{Mutex, MutexGuard};
+use tokio::sync::{Mutex, MutexGuard};
 
 use serde::Serialize;
 
@@ -29,8 +29,8 @@ impl RTC {
         }
     }
 
-    pub fn add_room(&self, room_id: String) -> Option<usize> {
-        let mut rooms = self.rooms.lock().unwrap();
+    pub async fn add_room(&self, room_id: String) -> Option<usize> {
+        let mut rooms = self.rooms.lock().await;
         let mut index_r = rooms.iter().position(|room| *room.room_id == room_id);
         if let None = index_r {
             rooms.push(Room {
@@ -42,9 +42,9 @@ impl RTC {
         index_r
     }
 
-    pub fn add_user_to_room(&self, room_id: String, user_id: String) {
-        let index_r = self.add_room(room_id).unwrap();
-        let mut rooms = self.rooms.lock().unwrap();
+    pub async fn add_user_to_room(&self, room_id: String, user_id: String) {
+        let index_r = self.add_room(room_id).await.unwrap();
+        let mut rooms = self.rooms.lock().await;
         let index = rooms[index_r]
             .users
             .iter()
@@ -61,14 +61,14 @@ impl RTC {
         })
     }
 
-    fn find_rooms_indexes(
+    async fn find_rooms_indexes(
         &self,
         user_id: &String,
     ) -> (Option<usize>, Option<usize>, RoomsMutex<User>) {
         let mut i = 0;
         let mut index_r = None;
         let mut index_u = None;
-        let rooms = self.rooms.lock().unwrap();
+        let rooms = self.rooms.lock().await;
         for room in rooms.iter() {
             let index = room.users.iter().position(|u| *u.id == *user_id);
             if let Some(v) = index {
@@ -81,14 +81,14 @@ impl RTC {
         (index_r, index_u, rooms)
     }
 
-    fn find_askeds_indexes(
+    async fn find_askeds_indexes(
         &self,
         user_id: &String,
     ) -> (Option<usize>, Option<usize>, MutexGuard<Vec<RoomList>>) {
         let mut i = 0;
         let mut index_r = None;
         let mut index_u = None;
-        let askeds = self.askeds.lock().unwrap();
+        let askeds = self.askeds.lock().await;
         for asked in askeds.iter() {
             let index = asked.users.iter().position(|u| *u == *user_id);
             if let Some(v) = index {
@@ -101,8 +101,8 @@ impl RTC {
         (index_r, index_u, askeds)
     }
 
-    pub fn delete_user_from_room(&self, user_id: &String) {
-        let (index_r, index_u, mut rooms) = self.find_rooms_indexes(user_id);
+    pub async fn delete_user_from_room(&self, user_id: &String) {
+        let (index_r, index_u, mut rooms) = self.find_rooms_indexes(user_id).await;
         if let None = index_r {
             warn!("Room is missing in delete_user_from_room: {}", &user_id);
             return;
@@ -117,8 +117,8 @@ impl RTC {
         rooms[index_r].users.remove(index_u);
     }
 
-    pub fn delete_askeds(&self, user_id: &String) {
-        let (index_r, index_u, mut askeds) = self.find_askeds_indexes(user_id);
+    pub async fn delete_askeds(&self, user_id: &String) {
+        let (index_r, index_u, mut askeds) = self.find_askeds_indexes(user_id).await;
         if let None = index_r {
             warn!("Room is missing in delete_askeds: {}", &user_id);
             return;
@@ -133,8 +133,8 @@ impl RTC {
         askeds[index_r].users.remove(index_u);
     }
 
-    fn create_askeds(&self, room_id: String) -> Option<usize> {
-        let mut askeds = self.askeds.lock().unwrap();
+    async fn create_askeds(&self, room_id: String) -> Option<usize> {
+        let mut askeds = self.askeds.lock().await;
         let mut index_a = askeds.iter().position(|asked| *asked.room_id == room_id);
         if let None = index_a {
             askeds.push(RoomList {
@@ -146,9 +146,9 @@ impl RTC {
         index_a
     }
 
-    pub fn add_user_to_askeds(&self, room_id: String, user_id: String) -> Vec<String> {
-        let index_a = self.create_askeds(room_id).unwrap();
-        let mut askeds = self.askeds.lock().unwrap();
+    pub async fn add_user_to_askeds(&self, room_id: String, user_id: String) -> Vec<String> {
+        let index_a = self.create_askeds(room_id).await.unwrap();
+        let mut askeds = self.askeds.lock().await;
         let index = askeds[index_a]
             .users
             .iter()

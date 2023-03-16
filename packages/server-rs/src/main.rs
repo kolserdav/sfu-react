@@ -35,7 +35,7 @@ async fn main() {
     ws.listen_ws("127.0.0.1:3001", handle_mess);
 }
 
-async fn handle_mess<'a, F>(
+async fn handle_mess<'a>(
     ws: WSCallbackSelf<'a>,
     msg: Message,
     conn_id: Uuid,
