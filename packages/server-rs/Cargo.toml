@@ -1,16 +1,22 @@
 [package]
-name = "server-rs"
+name = "uyem-server"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "WebRTC SFU server"
+authors = ["Sergey Kolmiller <uyem.ru@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+keywords = []
+categories = []
+repository = ""
+include = ["Cargo.toml", "/src/*.rs", "src/**/*.rs"]
+rust-version = "1.67"
 
 [dependencies]
 env_logger = "0.10.0"
 log = { version = "0.4.17", features = [ "max_level_debug", "release_max_level_warn" ] }
 serde = { version = "1.0.154", features = [ "derive" ] }
 serde_json = { version = "1.0.94", default-features = false, features = ["alloc"] }
-tungstenite = "0.18.0"
 webrtc = "0.7.1"
 tokio = { version = "1.26.0", features = ["full"] }
 tokio-tungstenite = "0.18.0"

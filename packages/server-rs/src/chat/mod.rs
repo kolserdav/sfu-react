@@ -5,7 +5,7 @@ use tokio::sync::Mutex;
 use futures_util::SinkExt;
 use serde::Serialize;
 use serde_json::to_string;
-use tungstenite::Message;
+use tokio_tungstenite::tungstenite::Message;
 
 use crate::{
     common::{Room, RoomsMutex},
