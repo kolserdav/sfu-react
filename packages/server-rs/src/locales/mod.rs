@@ -6,7 +6,7 @@ use std::{
     str::FromStr,
 };
 
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 mod en;
 mod ru;
 

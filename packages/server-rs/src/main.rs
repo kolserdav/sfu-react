@@ -14,9 +14,7 @@ pub mod common;
 
 use once_cell::sync::Lazy;
 
-static _RTC: Lazy<RTC> = Lazy::new(|| RTC::new());
-static CHAT: Lazy<Chat> = Lazy::new(|| Chat::new());
-static _WS: Lazy<WS> = Lazy::new(|| WS::new(Lazy::get(&_RTC).unwrap(), Lazy::get(&CHAT).unwrap()));
+static _WS: Lazy<WS> = Lazy::new(|| WS::new(RTC::new(), Chat::new()));
 
 #[tokio::main]
 async fn main() {

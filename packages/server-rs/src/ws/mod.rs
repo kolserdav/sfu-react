@@ -34,14 +34,14 @@ pub type WSCallbackSocket = Arc<Mutex<WebSocketStream<TcpStream>>>;
 #[derive(Debug)]
 
 pub struct WS {
-    pub rtc: &'static RTC,
-    pub chat: &'static Chat,
+    pub rtc: RTC,
+    pub chat: Chat,
     pub sockets: Mutex<HashMap<String, WSCallbackSocket>>,
     pub users: Mutex<HashMap<String, String>>,
 }
 
 impl WS {
-    pub fn new(rtc: &'static RTC, chat: &'static Chat) -> Self {
+    pub fn new(rtc: RTC, chat: Chat) -> Self {
         Self {
             rtc,
             chat,
@@ -95,9 +95,16 @@ impl WS {
         let conn_id = Uuid::new_v4();
         debug!("New Connection: {:?}, Protocol: {}", conn_id, protocol);
 
-        let mut websocket = websocket.lock().await;
+        loop {
+            let mut websocket = websocket.lock().await;
+            let msg = websocket.next().await;
+            if let None = msg {
+                info!("Message is none: {}", &conn_id);
+                break;
+            }
+            let msg = msg.unwrap();
+            drop(websocket);
 
-        while let Some(msg) = websocket.next().await {
             let msg = msg.unwrap();
             let ws = ws.clone();
             if msg.is_text() || msg.is_binary() {
@@ -149,7 +156,8 @@ impl WS {
         match type_mess {
             MessageType::GET_LOCALE => {
                 let msg = self.parse_message::<GetLocale>(msg_c).unwrap();
-                self.get_locale(msg, conn_id, socket).await;
+                error!("m: {:?}", &socket);
+                self.get_locale_handler(msg, conn_id, socket).await;
             }
             MessageType::GET_USER_ID => {
                 let msg = self.parse_message::<GetUserId>(msg_c).unwrap();
@@ -173,7 +181,7 @@ impl WS {
         };
     }
 
-    pub async fn get_locale(
+    pub async fn get_locale_handler(
         &self,
         msg: MessageArgs<GetLocale>,
         conn_id: Uuid,
