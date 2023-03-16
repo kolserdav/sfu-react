@@ -2,10 +2,14 @@ use crate::{chat::Chat, rtc::RTC, ws::messages::SetRoom};
 
 use self::messages::{FromValue, GetChatUnit, GetLocale, GetRoom, GetUserId, Offer, SetUserId};
 pub use super::locales::{get_locale, Client, LocaleValue};
-use tungstenite::{
-    accept_hdr,
-    handshake::server::{Request, Response},
-    Error, Message, WebSocket,
+use futures_util::{SinkExt, StreamExt};
+use tokio_tungstenite::{
+    accept_hdr_async,
+    tungstenite::{
+        handshake::server::{Request, Response},
+        Message,
+    },
+    WebSocketStream,
 };
 use uuid::Uuid;
 pub mod messages;
@@ -24,20 +28,23 @@ use std::{
 };
 use tokio::net::{tcp::ReadHalf, TcpListener, TcpStream};
 
-use futures_util::{future, StreamExt, TryStreamExt};
-pub type WSCallbackSelf<'a> = Arc<WS<'a>>;
-pub type WSCallbackSocket<'a> = Mutex<ReadHalf<'a>>;
+pub type WSCallbackSelf<'a> = &'a WS;
+pub type WSCallbackSocket = Arc<Mutex<WebSocketStream<TcpStream>>>;
+pub type CallbackListener<F>
+where
+    F: Future<Output = ()> + 'static,
+= fn(WSCallbackSelf, Message, Uuid, WSCallbackSocket) -> F;
 
 #[derive(Debug)]
 
-pub struct WS<'a> {
+pub struct WS {
     pub rtc: Arc<RTC>,
     pub chat: Arc<Chat>,
-    pub sockets: Mutex<HashMap<String, WSCallbackSocket<'a>>>,
+    pub sockets: Mutex<HashMap<String, WSCallbackSocket>>,
     pub users: Mutex<HashMap<String, String>>,
 }
 
-impl<'a> WS<'a> {
+impl WS {
     pub fn new(rtc: Arc<RTC>, chat: Arc<Chat>) -> Self {
         Self {
             rtc,
@@ -47,11 +54,8 @@ impl<'a> WS<'a> {
         }
     }
 
-    pub async fn listen_ws<F>(
-        self,
-        addr: &str,
-        cb: fn(WSCallbackSelf, Message, Uuid, WSCallbackSocket) -> F,
-    ) where
+    pub async fn listen_ws<F>(self, addr: &str, cb: CallbackListener<F>)
+    where
         F: Future<Output = ()> + 'static,
     {
         let server = TcpListener::bind(addr).await;
@@ -65,106 +69,78 @@ impl<'a> WS<'a> {
         let this = Arc::new(self);
 
         while let Ok((stream, _)) = server.accept().await {
-            tokio::spawn(async move {
-                let mut protocol = "main".to_string();
-                let callback = |req: &Request, mut response: Response| {
-                    debug!("Received a new ws handshake");
-                    debug!("The request's path is: {}", req.uri().path());
-                    debug!("The request's headers are:");
-                    for (ref header, _value) in req.headers() {
-                        debug!("* {}: {:?}", header, _value);
-                        if *header == "sec-websocket-protocol" {
-                            protocol = _value.to_str().unwrap().to_string();
-                        }
-                    }
+            let this = this.clone();
+            tokio::spawn(this.handle_mess(stream, cb));
+        }
+    }
 
-                    let headers = response.headers_mut();
-                    headers.append("MyCustomHeader", ":)".parse().unwrap());
-
-                    Ok(response)
-                };
-
-                let websocket = tokio_tungstenite::accept_async(stream)
-                    .await
-                    .expect("Error during the websocket handshake occurred");
-                let (write, read) = stream.split();
-
-                let write = Mutex::new(write);
-
-                let ws = Arc::new(Mutex::new(websocket));
-                let websocket = ws.clone();
-                let conn_id = Uuid::new_v4();
-                debug!("New Connection: {:?}, Protocol: {}", conn_id, protocol);
-
-                let this = this.clone();
-                let ws = ws.clone();
-                let mut websocket = websocket.lock().unwrap();
-
-                let broadcast_incoming = read(path).try_for_each(|msg| {
-                    println!(
-                        "Received a message from {}: {}",
-                        addr,
-                        msg.to_text().unwrap()
-                    );
-                    let peers = peer_map.lock().unwrap();
-
-                    // We want to broadcast the message to everyone except ourselves.
-                    let broadcast_recipients = peers
-                        .iter()
-                        .filter(|(peer_addr, _)| peer_addr != &&addr)
-                        .map(|(_, ws_sink)| ws_sink);
-
-                    for recp in broadcast_recipients {
-                        recp.unbounded_send(msg.clone()).unwrap();
-                    }
-
-                    future::ok(())
-                });
-
-                if let Err(err) = msg {
-                    match err {
-                        Error::ConnectionClosed => {}
-                        _ => {
-                            error!("Error read message: {:?}", err);
-                        }
-                    }
-                    return;
+    async fn handle_mess<F>(&self, stream: TcpStream, cb: CallbackListener<F>)
+    where
+        F: Future<Output = ()> + 'static,
+    {
+        let mut protocol = "main".to_string();
+        let callback = |req: &Request, mut response: Response| {
+            debug!("Received a new ws handshake");
+            debug!("The request's path is: {}", req.uri().path());
+            debug!("The request's headers are:");
+            for (ref header, _value) in req.headers() {
+                debug!("* {}: {:?}", header, _value);
+                if *header == "sec-websocket-protocol" {
+                    protocol = _value.to_str().unwrap().to_string();
                 }
-                let msg = msg.unwrap();
-                drop(websocket);
+            }
 
-                if msg.is_binary() || msg.is_text() {
-                    cb(this, msg, conn_id, write).await;
-                } else if msg.is_close() {
-                    let sockets = this.sockets.lock().unwrap();
-                    info!(
-                        "Closed: {}, Protocol: {}, Sockets: {:?}",
-                        conn_id,
-                        protocol,
-                        sockets.len()
-                    );
-                    drop(sockets);
+            let headers = response.headers_mut();
+            headers.append("MyCustomHeader", ":)".parse().unwrap());
 
-                    if protocol == "room" {
-                        this.delete_socket(conn_id.to_string());
+            Ok(response)
+        };
 
-                        let user_id = this.get_user_id_by_conn_id(&conn_id.to_string());
-                        if let None = user_id {
-                            warn!("Deleted user is missing: {:?}", conn_id);
-                            return;
-                        }
-                        let user_id = user_id.unwrap();
+        let websocket = accept_hdr_async(stream, callback)
+            .await
+            .expect("Error during the websocket handshake occurred");
 
-                        this.delete_user(&user_id);
-                        this.rtc.delete_user_from_room(&user_id);
-                        this.rtc.delete_askeds(&user_id);
-                    } else if protocol == "chat" {
-                        this.chat.delete_chat_user(&conn_id.to_string());
+        let ws = Arc::new(Mutex::new(websocket));
+        let websocket = ws.clone();
+        let conn_id = Uuid::new_v4();
+        debug!("New Connection: {:?}, Protocol: {}", conn_id, protocol);
+
+        let mut websocket = websocket.lock().unwrap();
+
+        while let Some(msg) = websocket.next().await {
+            let msg = msg.unwrap();
+            let ws = ws.clone();
+            if msg.is_text() || msg.is_binary() {
+                cb(self, msg, conn_id, ws).await;
+            } else if msg.is_close() {
+                let sockets = self.sockets.lock().unwrap();
+                info!(
+                    "Closed: {}, Protocol: {}, Sockets: {:?}",
+                    conn_id,
+                    protocol,
+                    sockets.len()
+                );
+                drop(sockets);
+
+                if protocol == "room" {
+                    self.delete_socket(conn_id.to_string());
+
+                    let user_id = self.get_user_id_by_conn_id(&conn_id.to_string());
+                    if let None = user_id {
+                        warn!("Deleted user is missing: {:?}", conn_id);
+                        return;
                     }
-                } else {
-                    warn!("Unsupported message mime: {:?}", msg);
+                    let user_id = user_id.unwrap();
+
+                    self.delete_user(&user_id);
+                    self.rtc.delete_user_from_room(&user_id);
+                    self.rtc.delete_askeds(&user_id);
+                } else if protocol == "chat" {
+                    self.chat.delete_chat_user(&conn_id.to_string());
                 }
-            });
+            } else {
+                warn!("Unsupported message mime: {:?}", msg);
+            }
         }
     }
 
@@ -179,8 +155,8 @@ impl<'a> WS<'a> {
             },
             r#type: MessageType::SET_LOCALE,
         };
-        let write = ws.lock().unwrap();
-        write(Message::Text(to_string(&mess).unwrap())).unwrap();
+        let mut write = ws.lock().unwrap();
+        write.send(Message::Text(to_string(&mess).unwrap()));
     }
 
     pub fn get_user_id(&self, msg: MessageArgs<GetUserId>, conn_id: Uuid, ws: WSCallbackSocket) {
@@ -223,8 +199,7 @@ impl<'a> WS<'a> {
         socket
             .lock()
             .unwrap()
-            .write_message(Message::Text(to_string(&msg).unwrap()))
-            .unwrap();
+            .send(Message::Text(to_string(&msg).unwrap()));
         Ok(())
     }
 

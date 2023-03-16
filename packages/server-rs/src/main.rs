@@ -35,7 +35,12 @@ async fn main() {
     ws.listen_ws("127.0.0.1:3001", handle_mess);
 }
 
-async fn handle_mess(ws: WSCallbackSelf, msg: Message, conn_id: Uuid, socket: WSCallbackSocket) {
+async fn handle_mess<'a, F>(
+    ws: WSCallbackSelf<'a>,
+    msg: Message,
+    conn_id: Uuid,
+    socket: WSCallbackSocket,
+) {
     let msg_c = msg.clone();
     let json = ws.parse_message::<Any>(msg);
     if let Err(e) = json {
