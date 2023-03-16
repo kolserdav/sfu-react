@@ -1,4 +1,8 @@
-use crate::{chat::Chat, rtc::RTC, ws::messages::SetRoom};
+use crate::{
+    chat::Chat,
+    rtc::RTC,
+    ws::messages::{Any, SetRoom},
+};
 
 use self::messages::{FromValue, GetChatUnit, GetLocale, GetRoom, GetUserId, Offer, SetUserId};
 pub use super::locales::{get_locale, Client, LocaleValue};
@@ -51,10 +55,7 @@ impl WS {
         }
     }
 
-    pub async fn listen_ws<F>(&'static self, addr: &str, cb: CallbackListener<F>)
-    where
-        F: Future<Output = ()> + Send + 'static,
-    {
+    pub async fn listen_ws(&'static self, addr: &str) {
         let server = TcpListener::bind(addr).await;
         if let Err(e) = server {
             error!("Failed start WS server: {:?}", e);
@@ -67,14 +68,11 @@ impl WS {
 
         while let Ok((stream, _)) = server.accept().await {
             let this = this.clone();
-            tokio::spawn(this.handle_mess(stream, cb));
+            tokio::spawn(this.handle_mess(stream));
         }
     }
 
-    async fn handle_mess<F>(&self, stream: TcpStream, cb: CallbackListener<F>)
-    where
-        F: Future<Output = ()> + Send + 'static,
-    {
+    async fn handle_mess(&self, stream: TcpStream) {
         let mut protocol = "main".to_string();
         let callback = |req: &Request, mut response: Response| {
             debug!("Received a new ws handshake");
@@ -108,7 +106,7 @@ impl WS {
             let msg = msg.unwrap();
             let ws = ws.clone();
             if msg.is_text() || msg.is_binary() {
-                cb(self, msg, conn_id, ws).await;
+                self.handler(msg, conn_id, ws).await;
             } else if msg.is_close() {
                 let sockets = self.sockets.lock().await;
                 info!(
@@ -141,6 +139,45 @@ impl WS {
         }
     }
 
+    async fn handler<'a>(&self, msg: Message, conn_id: Uuid, socket: WSCallbackSocket) {
+        let msg_c = msg.clone();
+        let json = self.parse_message::<Any>(msg);
+        if let Err(e) = json {
+            error!("Error handle WS: {:?}", e);
+            return;
+        }
+        let json = json.unwrap();
+        let type_mess = &json.r#type;
+
+        debug!("Get message: {}", json);
+
+        match type_mess {
+            MessageType::GET_LOCALE => {
+                let msg = self.parse_message::<GetLocale>(msg_c).unwrap();
+                self.get_locale(msg, conn_id, socket).await;
+            }
+            MessageType::GET_USER_ID => {
+                let msg = self.parse_message::<GetUserId>(msg_c).unwrap();
+                self.get_user_id(msg, conn_id, socket).await;
+            }
+            MessageType::GET_ROOM => {
+                let msg = self.parse_message::<GetRoom>(msg_c).unwrap();
+                self.get_room(msg).await;
+            }
+            MessageType::GET_CHAT_UNIT => {
+                let msg = self.parse_message::<GetChatUnit>(msg_c).unwrap();
+                self.get_chat_unit(msg, conn_id, socket).await;
+            }
+            MessageType::OFFER => {
+                let msg = self.parse_message::<Offer>(msg_c).unwrap();
+                self.offer(msg).await;
+            }
+            _ => {
+                warn!("Default case of message: {:?}", json);
+            }
+        };
+    }
+
     pub async fn get_locale(
         &self,
         msg: MessageArgs<GetLocale>,
@@ -169,7 +206,8 @@ impl WS {
     ) {
         let conn_id_str = conn_id.to_string();
 
-        self.set_socket(msg.id.clone(), conn_id.to_string(), ws);
+        self.set_socket(msg.id.clone(), conn_id.to_string(), ws)
+            .await;
 
         self.send_message(MessageArgs::<SetUserId> {
             id: msg.id,
@@ -295,7 +333,9 @@ impl WS {
             return;
         }
 
-        self.rtc.add_user_to_room(room_id.clone(), user_id.clone());
+        self.rtc
+            .add_user_to_room(room_id.clone(), user_id.clone())
+            .await;
 
         let asked = self
             .rtc
@@ -316,7 +356,7 @@ impl WS {
         .unwrap();
     }
 
-    pub fn get_chat_unit(
+    pub async fn get_chat_unit(
         &self,
         msg: MessageArgs<GetChatUnit>,
         conn_id: Uuid,
@@ -329,7 +369,8 @@ impl WS {
 
         info!("Get chat unit: {}", msg);
         self.chat
-            .set_socket(room_id, user_id, ws, conn_id.to_string(), locale);
+            .set_socket(room_id, user_id, ws, conn_id.to_string(), locale)
+            .await;
     }
 
     pub async fn offer(&self, msg: MessageArgs<Offer>) {

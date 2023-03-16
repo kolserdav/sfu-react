@@ -32,7 +32,7 @@ async fn main() {
 
     let ws = WS::new(Arc::new(rtc), Arc::new(chat));
 
-    ws.listen_ws("127.0.0.1:3001", handle_mess);
+    ws.listen_ws("127.0.0.1:3001").await;
 }
 
 async fn handle_mess<'a>(
