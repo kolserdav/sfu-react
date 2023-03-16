@@ -1551,10 +1551,9 @@ name = "server-rs"
 version = "0.1.0"
 dependencies = [
  "env_logger",
- "futures",
  "futures-util",
- "lazy_static",
  "log",
+ "once_cell",
  "serde",
  "serde_json",
  "tokio",

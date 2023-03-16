@@ -15,8 +15,7 @@ webrtc = "0.7.1"
 tokio = { version = "1.26.0", features = ["full"] }
 tokio-tungstenite = "0.18.0"
 futures-util = "0.3.27"
-futures = "0.3.27"
-lazy_static = "1.4.0"
+once_cell = "1.17.1"
 
 [dependencies.uuid]
 version = "1.3.0"

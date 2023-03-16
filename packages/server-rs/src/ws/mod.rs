@@ -19,11 +19,10 @@ use uuid::Uuid;
 pub mod messages;
 use log::{debug, error, info};
 
-use futures::Future;
 use messages::{MessageArgs, MessageType, SetLocale};
 use serde::Serialize;
 use serde_json::{to_string, Result as SerdeResult};
-use std::{collections::HashMap, fmt::Debug, marker::Send, mem::drop, str::FromStr, sync::Arc};
+use std::{collections::HashMap, fmt::Debug, mem::drop, str::FromStr, sync::Arc};
 use tokio::{
     net::{TcpListener, TcpStream},
     sync::Mutex,
@@ -31,22 +30,18 @@ use tokio::{
 
 pub type WSCallbackSelf<'a> = &'a WS;
 pub type WSCallbackSocket = Arc<Mutex<WebSocketStream<TcpStream>>>;
-pub type CallbackListener<F>
-where
-    F: Future<Output = ()> + Send + 'static,
-= fn(WSCallbackSelf, Message, Uuid, WSCallbackSocket) -> F;
 
 #[derive(Debug)]
 
 pub struct WS {
-    pub rtc: Arc<RTC>,
-    pub chat: Arc<Chat>,
+    pub rtc: &'static RTC,
+    pub chat: &'static Chat,
     pub sockets: Mutex<HashMap<String, WSCallbackSocket>>,
     pub users: Mutex<HashMap<String, String>>,
 }
 
 impl WS {
-    pub fn new(rtc: Arc<RTC>, chat: Arc<Chat>) -> Self {
+    pub fn new(rtc: &'static RTC, chat: &'static Chat) -> Self {
         Self {
             rtc,
             chat,
@@ -118,7 +113,7 @@ impl WS {
                 drop(sockets);
 
                 if protocol == "room" {
-                    self.delete_socket(conn_id.to_string());
+                    self.delete_socket(conn_id.to_string()).await;
 
                     let user_id = self.get_user_id_by_conn_id(&conn_id.to_string()).await;
                     if let None = user_id {
@@ -127,11 +122,11 @@ impl WS {
                     }
                     let user_id = user_id.unwrap();
 
-                    self.delete_user(&user_id);
-                    self.rtc.delete_user_from_room(&user_id);
-                    self.rtc.delete_askeds(&user_id);
+                    self.delete_user(&user_id).await;
+                    self.rtc.delete_user_from_room(&user_id).await;
+                    self.rtc.delete_askeds(&user_id).await;
                 } else if protocol == "chat" {
-                    self.chat.delete_chat_user(&conn_id.to_string());
+                    self.chat.delete_chat_user(&conn_id.to_string()).await;
                 }
             } else {
                 warn!("Unsupported message mime: {:?}", msg);
@@ -195,7 +190,10 @@ impl WS {
             r#type: MessageType::SET_LOCALE,
         };
         let mut write = ws.lock().await;
-        write.send(Message::Text(to_string(&mess).unwrap()));
+        write
+            .send(Message::Text(to_string(&mess).unwrap()))
+            .await
+            .unwrap();
     }
 
     pub async fn get_user_id(
@@ -217,7 +215,8 @@ impl WS {
                 name: msg.data.userName,
             },
         })
-        .await;
+        .await
+        .unwrap();
     }
 
     pub async fn send_message<T>(&self, msg: MessageArgs<T>) -> Result<(), ()>
@@ -244,7 +243,9 @@ impl WS {
         socket
             .lock()
             .await
-            .send(Message::Text(to_string(&msg).unwrap()));
+            .send(Message::Text(to_string(&msg).unwrap()))
+            .await
+            .unwrap();
         Ok(())
     }
 
