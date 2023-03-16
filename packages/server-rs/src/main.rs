@@ -12,6 +12,7 @@ use rtc::RTC;
 mod chat;
 pub mod common;
 
+#[macro_use]
 pub mod prelude;
 
 use once_cell::sync::Lazy;

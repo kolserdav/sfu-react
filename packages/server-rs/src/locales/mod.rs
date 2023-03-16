@@ -10,11 +10,10 @@ use serde::Serialize;
 mod en;
 mod ru;
 
+#[allow(non_camel_case_types)]
 #[derive(Debug, Clone)]
 pub enum LocaleValue {
-    #[allow(non_camel_case_types)]
     ru,
-    #[allow(non_camel_case_types)]
     en,
 }
 

@@ -1,4 +1,7 @@
-use super::{Client, LocaleValue};
+use crate::{
+    locales::{Client, LocaleValue},
+    value_to_string,
+};
 use log::warn;
 
 use serde::{Deserialize, Serialize};
@@ -220,7 +223,7 @@ pub struct GetChatUnit {
 impl FromValue for GetChatUnit {
     fn from(value: &Value) -> Self {
         Self {
-            userId: value["userId"].as_str().unwrap().to_string(),
+            userId: value_to_string!(value["userId"]),
             locale: LocaleValue::from_str(value["locale"].as_str().unwrap()).unwrap(),
         }
     }
@@ -240,7 +243,7 @@ impl FromValue for GetUserId {
     fn from(value: &Value) -> Self {
         Self {
             isRoom: value["isRoom"].as_bool(),
-            userName: value["userName"].as_str().unwrap().to_string(),
+            userName: value_to_string!(value["userName"]),
             locale: LocaleValue::from_str(value["locale"].as_str().unwrap()).unwrap(),
         }
     }
@@ -272,8 +275,8 @@ impl FromValue for GetRoom {
     fn from(value: &Value) -> Self {
         Self {
             isPublic: value["isPublic"].as_bool().unwrap(),
-            mimeType: value["mimeType"].as_str().unwrap().to_string(),
-            userId: value["userId"].as_str().unwrap().to_string(),
+            mimeType: value_to_string!(value["mimeType"]),
+            userId: value_to_string!(value["userId"]),
         }
     }
 }
@@ -306,17 +309,17 @@ impl FromValue for Offer {
         Self {
             sdp: from_str::<RTCSessionDescription>(
                 to_string(&_RTCSessionDescription {
-                    sdp: value["sdp"]["sdp"].as_str().unwrap().to_string(),
-                    r#type: value["sdp"]["type"].as_str().unwrap().to_string(),
+                    sdp: value_to_string!(value["sdp"]["sdp"]),
+                    r#type: value_to_string!(value["sdp"]["type"]),
                 })
                 .unwrap()
                 .as_str(),
             )
             .unwrap(),
-            userId: value["userId"].as_str().unwrap().to_string(),
-            mimeType: value["mimeType"].as_str().unwrap().to_string(),
-            target: value["target"].as_str().unwrap().to_string(),
-            roomId: value["roomId"].as_str().unwrap().to_string(),
+            userId: value_to_string!(value["userId"]),
+            mimeType: value_to_string!(value["mimeType"]),
+            target: value_to_string!(value["target"]),
+            roomId: value_to_string!(value["roomId"]),
         }
     }
 }
@@ -334,10 +337,7 @@ impl FromValue for Candidate {
     fn from(value: &Value) -> Self {
         Self {
             candidate: RTCIceCandidateInit {
-                candidate: value["candidate"]["candidate"]
-                    .as_str()
-                    .unwrap()
-                    .to_string(),
+                candidate: value_to_string!(value["candidate"]["candidate"]),
                 username_fragment: if let Some(v) = value["candidate"]["userNameFragment"].as_str()
                 {
                     Some(v.to_string())
@@ -355,9 +355,9 @@ impl FromValue for Candidate {
                     None
                 },
             },
-            userId: value["userId"].as_str().unwrap().to_string(),
-            target: value["target"].as_str().unwrap().to_string(),
-            roomId: value["roomId"].as_str().unwrap().to_string(),
+            userId: value_to_string!(value["userId"]),
+            target: value_to_string!(value["target"]),
+            roomId: value_to_string!(value["roomId"]),
         }
     }
 }
@@ -375,15 +375,15 @@ impl FromValue for Answer {
         Self {
             sdp: from_str::<RTCSessionDescription>(
                 to_string(&_RTCSessionDescription {
-                    sdp: value["sdp"]["sdp"].as_str().unwrap().to_string(),
-                    r#type: value["sdp"]["type"].as_str().unwrap().to_string(),
+                    sdp: value_to_string!(value["sdp"]["sdp"]),
+                    r#type: value_to_string!(value["sdp"]["type"]),
                 })
                 .unwrap()
                 .as_str(),
             )
             .unwrap(),
-            userId: value["userId"].as_str().unwrap().to_string(),
-            target: value["target"].as_str().unwrap().to_string(),
+            userId: value_to_string!(value["userId"]),
+            target: value_to_string!(value["target"]),
         }
     }
 }

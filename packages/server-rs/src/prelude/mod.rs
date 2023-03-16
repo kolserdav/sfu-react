@@ -28,3 +28,10 @@ where
         data: T::from(&json["data"]),
     })
 }
+
+#[macro_export]
+macro_rules! value_to_string {
+    ($val:expr) => {
+        $val.as_str().unwrap().to_string()
+    };
+}
