@@ -7,7 +7,7 @@ use webrtc::{
     api::{
         interceptor_registry::register_default_interceptors, media_engine::MediaEngine, APIBuilder,
     },
-    ice_transport::{ice_candidate::RTCIceCandidate, ice_server::RTCIceServer},
+    ice_transport::ice_server::RTCIceServer,
     interceptor::registry::Registry,
     peer_connection::{configuration::RTCConfiguration, RTCPeerConnection},
 };
@@ -185,7 +185,22 @@ impl RTC {
     }
 
     pub async fn candidate(&self, msg: MessageArgs<Candidate>) {
-        error!("Candidate: {}", msg);
+        debug!("Handle candidate: {}", msg);
+
+        let peer_id = get_peer_id(msg.data.userId, msg.data.target, msg.connId);
+        let peers = self.peers.lock().await;
+
+        let peer_connection = peers.get(&peer_id);
+        if let None = peer_connection {
+            warn!("Skip add ice candidate");
+            return;
+        }
+        let peer_connection = peer_connection.unwrap();
+
+        peer_connection
+            .add_ice_candidate(msg.data.candidate)
+            .await
+            .expect("Error add ice candidate");
     }
 
     pub async fn offer(&self, msg: MessageArgs<Offer>) {

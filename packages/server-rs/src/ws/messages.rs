@@ -324,10 +324,10 @@ impl FromValue for Offer {
 #[derive(Serialize, Debug)]
 #[allow(non_snake_case)]
 pub struct Candidate {
-    candidate: RTCIceCandidateInit,
-    userId: String,
-    target: String,
-    roomId: String,
+    pub candidate: RTCIceCandidateInit,
+    pub userId: String,
+    pub target: String,
+    pub roomId: String,
 }
 
 impl FromValue for Candidate {
@@ -365,9 +365,9 @@ impl FromValue for Candidate {
 #[derive(Serialize, Debug)]
 #[allow(non_snake_case)]
 pub struct Answer {
-    sdp: RTCSessionDescription,
-    userId: String,
-    target: String,
+    pub sdp: RTCSessionDescription,
+    pub userId: String,
+    pub target: String,
 }
 
 impl FromValue for Answer {
