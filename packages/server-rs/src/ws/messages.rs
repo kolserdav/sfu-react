@@ -2,7 +2,7 @@ use super::{Client, LocaleValue};
 use log::warn;
 
 use serde::{Deserialize, Serialize};
-use serde_json::{to_string, Value};
+use serde_json::{from_str, to_string, Value};
 use std::{fmt::Display, str::FromStr};
 
 #[allow(non_snake_case)]
@@ -23,7 +23,13 @@ where
     }
 }
 
-use webrtc::peer_connection::sdp::sdp_type::RTCSdpType;
+use webrtc::{
+    ice_transport::{
+        ice_candidate::RTCIceCandidate, ice_candidate_type::RTCIceCandidateType,
+        ice_protocol::RTCIceProtocol,
+    },
+    peer_connection::sdp::session_description::RTCSessionDescription,
+};
 
 #[allow(non_camel_case_types)]
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -283,15 +289,15 @@ pub struct SetRoom {
 }
 
 #[derive(Serialize, Debug)]
-pub struct RTCSessionDescription {
-    pub sdp_type: String,
+pub struct _RTCSessionDescription {
+    pub r#type: String,
     pub sdp: String,
 }
 
 #[derive(Serialize, Debug)]
 #[allow(non_snake_case)]
 pub struct Offer {
-    pub sdp: String,
+    pub sdp: RTCSessionDescription,
     pub userId: String,
     pub target: String,
     pub mimeType: String,
@@ -301,10 +307,14 @@ pub struct Offer {
 impl FromValue for Offer {
     fn from(value: &Value) -> Self {
         Self {
-            sdp: to_string(&RTCSessionDescription {
-                sdp: value["sdp"]["sdp"].as_str().unwrap().to_string(),
-                sdp_type: value["sdp"]["type"].as_str().unwrap().to_string(),
-            })
+            sdp: from_str::<RTCSessionDescription>(
+                to_string(&_RTCSessionDescription {
+                    sdp: value["sdp"]["sdp"].as_str().unwrap().to_string(),
+                    r#type: value["sdp"]["type"].as_str().unwrap().to_string(),
+                })
+                .unwrap()
+                .as_str(),
+            )
             .unwrap(),
             userId: value["userId"].as_str().unwrap().to_string(),
             mimeType: value["mimeType"].as_str().unwrap().to_string(),
@@ -317,10 +327,134 @@ impl FromValue for Offer {
 #[derive(Serialize, Debug)]
 #[allow(non_snake_case)]
 pub struct Candidate {
-    candidate: String,
+    candidate: RTCIceCandidate,
     userId: String,
     target: String,
     roomId: String,
+}
+
+#[derive(Serialize, Debug)]
+pub struct _RTCIceCandidate {
+    pub stats_id: String,         // + usernameFragment
+    pub foundation: String,       // +
+    pub priority: u32,            // +
+    pub address: String,          // +
+    pub protocol: RTCIceProtocol, // +
+    pub port: u16,                // +
+    pub typ: RTCIceCandidateType, // + type
+    pub component: u16,
+    pub related_address: String, // +  ip
+    pub related_port: u16,
+    pub tcp_type: String,
+    /*
+    address: "192.168.0.3" // +
+    candidate: "candidate:0 1 UDP 2122252543 192.168.0.3 58063 typ host"
+    component: "rtp"
+    foundation: "0" // +
+    ip: "192.168.0.3" // + related_address
+    port: 58063 // +
+    priority: 2122252543 // +
+    protocol: "udp" // +
+    sdpMLineIndex: 0
+    sdpMid: "0"
+    toJSON: function toJSON()
+    type: "host" // + typ
+    usernameFragment: "b276b198" // + stats_id
+    */
+}
+
+impl FromValue for Candidate {
+    fn from(value: &Value) -> Self {
+        let def_cand = RTCIceCandidate::default();
+
+        let mut stats_id = def_cand.stats_id;
+        if let Some(_) = value["candidate"]["usernameFragment"].as_str() {
+            stats_id = value["candidate"]["usernameFragment"]
+                .as_str()
+                .unwrap()
+                .to_string();
+        }
+
+        let mut foundation = def_cand.foundation;
+        if let Some(_) = value["candidate"]["foundation"].as_str() {
+            foundation = value["candidate"]["foundation"]
+                .as_str()
+                .unwrap()
+                .to_string();
+        }
+
+        let mut address = def_cand.address;
+        if let Some(_) = value["candidate"]["address"].as_str() {
+            address = value["candidate"]["address"].as_str().unwrap().to_string();
+        }
+
+        let mut protocol = def_cand.protocol;
+        if let Some(_) = value["candidate"]["protocol"].as_str() {
+            protocol = RTCIceProtocol::from(value["candidate"]["protocol"].as_str().unwrap());
+        }
+
+        let mut port = def_cand.port;
+        if let Some(_) = value["candidate"]["port"].as_str() {
+            port = value["candidate"]["port"].as_u64().unwrap() as u16;
+        }
+
+        let mut priority = def_cand.priority;
+        if let Some(_) = value["candidate"]["priority"].as_str() {
+            priority = value["candidate"]["priority"].as_u64().unwrap() as u32;
+        }
+
+        let mut related_address = def_cand.related_address;
+        if let Some(_) = value["candidate"]["ip"].as_str() {
+            related_address = value["candidate"]["ip"].as_str().unwrap().to_string();
+        }
+
+        let mut component = def_cand.component;
+        if let Some(_) = value["candidate"]["component"].as_str() {
+            component = 2;
+            if value["candidate"]["component"].as_str().unwrap() == "rtp" {
+                component = 1;
+            }
+        }
+
+        let mut related_port = def_cand.related_port;
+        if let Some(_) = value["candidate"]["port"].as_str() {
+            related_port = value["candidate"]["port"].as_u64().unwrap() as u16;
+        }
+
+        let mut tcp_type = def_cand.tcp_type;
+        if let Some(_) = value["candidate"]["tcpType"].as_str() {
+            tcp_type = value["candidate"]["tcpType"].as_str().unwrap().to_string()
+        }
+
+        let mut typ = def_cand.typ;
+        if let Some(_) = value["candidate"]["tcpType"].as_str() {
+            typ = RTCIceCandidateType::from(value["candidate"]["type"].as_str().unwrap())
+        }
+
+        Self {
+            candidate: from_str::<RTCIceCandidate>(
+                to_string(&_RTCIceCandidate {
+                    stats_id,
+                    foundation,
+                    address,
+                    protocol,
+                    port,
+                    priority,
+                    related_address,
+                    component,
+                    related_port,
+                    tcp_type,
+                    typ,
+                })
+                .unwrap()
+                .as_str(),
+            )
+            .unwrap(),
+            userId: value["userId"].as_str().unwrap().to_string(),
+            target: value["target"].as_str().unwrap().to_string(),
+            roomId: value["roomId"].as_str().unwrap().to_string(),
+        }
+    }
 }
 
 #[derive(Serialize, Debug)]
@@ -329,4 +463,22 @@ pub struct Answer {
     sdp: RTCSessionDescription,
     userId: String,
     target: String,
+}
+
+impl FromValue for Answer {
+    fn from(value: &Value) -> Self {
+        Self {
+            sdp: from_str::<RTCSessionDescription>(
+                to_string(&_RTCSessionDescription {
+                    sdp: value["sdp"]["sdp"].as_str().unwrap().to_string(),
+                    r#type: value["sdp"]["type"].as_str().unwrap().to_string(),
+                })
+                .unwrap()
+                .as_str(),
+            )
+            .unwrap(),
+            userId: value["userId"].as_str().unwrap().to_string(),
+            target: value["target"].as_str().unwrap().to_string(),
+        }
+    }
 }

@@ -1,10 +1,13 @@
 use crate::{
     chat::Chat,
+    prelude::parse_message,
     rtc::RTC,
     ws::messages::{Any, SetRoom},
 };
 
-use self::messages::{FromValue, GetChatUnit, GetLocale, GetRoom, GetUserId, Offer, SetUserId};
+use self::messages::{
+    Candidate, FromValue, GetChatUnit, GetLocale, GetRoom, GetUserId, Offer, SetUserId,
+};
 pub use super::locales::{get_locale, Client, LocaleValue};
 use futures_util::{SinkExt, StreamExt};
 use tokio_tungstenite::{
@@ -21,8 +24,8 @@ use log::{debug, error, info};
 
 use messages::{MessageArgs, MessageType, SetLocale};
 use serde::Serialize;
-use serde_json::{to_string, Result as SerdeResult};
-use std::{collections::HashMap, fmt::Debug, mem::drop, str::FromStr, sync::Arc};
+use serde_json::to_string;
+use std::{collections::HashMap, fmt::Debug, mem::drop, sync::Arc};
 use tokio::{
     net::{TcpListener, TcpStream},
     sync::Mutex,
@@ -48,6 +51,49 @@ impl WS {
             sockets: Mutex::new(HashMap::new()),
             users: Mutex::new(HashMap::new()),
         }
+    }
+
+    async fn handler<'a>(&self, msg: Message, conn_id: Uuid, socket: WSCallbackSocket) {
+        let msg_c = msg.clone();
+        let json = parse_message::<Any>(msg);
+        if let Err(e) = json {
+            error!("Error handle WS: {:?}", e);
+            return;
+        }
+        let json = json.unwrap();
+        let type_mess = &json.r#type;
+
+        debug!("Get message: {}", json);
+
+        match type_mess {
+            MessageType::GET_LOCALE => {
+                let msg = parse_message::<GetLocale>(msg_c).unwrap();
+                self.get_locale_handler(msg, conn_id, socket).await;
+            }
+            MessageType::GET_USER_ID => {
+                let msg = parse_message::<GetUserId>(msg_c).unwrap();
+                self.get_user_id(msg, conn_id, socket).await;
+            }
+            MessageType::GET_ROOM => {
+                let msg = parse_message::<GetRoom>(msg_c).unwrap();
+                self.get_room(msg).await;
+            }
+            MessageType::GET_CHAT_UNIT => {
+                let msg = parse_message::<GetChatUnit>(msg_c).unwrap();
+                self.get_chat_unit(msg, conn_id, socket).await;
+            }
+            MessageType::OFFER => {
+                let msg = parse_message::<Offer>(msg_c).unwrap();
+                self.offer_handler(msg).await;
+            }
+            MessageType::CANDIDATE => {
+                let msg = parse_message::<Candidate>(msg_c).unwrap();
+                self.candidate_handler(msg).await;
+            }
+            _ => {
+                warn!("Default case of message: {:?}", json);
+            }
+        };
     }
 
     pub async fn listen_ws(&'static self, addr: &str) {
@@ -104,7 +150,7 @@ impl WS {
             }
             let msg = msg.unwrap();
             drop(websocket);
-
+            warn!("Parse message: {:?}", &msg);
             let msg = msg.unwrap();
             let ws = ws.clone();
             if msg.is_text() || msg.is_binary() {
@@ -139,46 +185,6 @@ impl WS {
                 warn!("Unsupported message mime: {:?}", msg);
             }
         }
-    }
-
-    async fn handler<'a>(&self, msg: Message, conn_id: Uuid, socket: WSCallbackSocket) {
-        let msg_c = msg.clone();
-        let json = self.parse_message::<Any>(msg);
-        if let Err(e) = json {
-            error!("Error handle WS: {:?}", e);
-            return;
-        }
-        let json = json.unwrap();
-        let type_mess = &json.r#type;
-
-        debug!("Get message: {}", json);
-
-        match type_mess {
-            MessageType::GET_LOCALE => {
-                let msg = self.parse_message::<GetLocale>(msg_c).unwrap();
-                error!("m: {:?}", &socket);
-                self.get_locale_handler(msg, conn_id, socket).await;
-            }
-            MessageType::GET_USER_ID => {
-                let msg = self.parse_message::<GetUserId>(msg_c).unwrap();
-                self.get_user_id(msg, conn_id, socket).await;
-            }
-            MessageType::GET_ROOM => {
-                let msg = self.parse_message::<GetRoom>(msg_c).unwrap();
-                self.get_room(msg).await;
-            }
-            MessageType::GET_CHAT_UNIT => {
-                let msg = self.parse_message::<GetChatUnit>(msg_c).unwrap();
-                self.get_chat_unit(msg, conn_id, socket).await;
-            }
-            MessageType::OFFER => {
-                let msg = self.parse_message::<Offer>(msg_c).unwrap();
-                self.offer(msg).await;
-            }
-            _ => {
-                warn!("Default case of message: {:?}", json);
-            }
-        };
     }
 
     pub async fn get_locale_handler(
@@ -255,24 +261,6 @@ impl WS {
             .await
             .unwrap();
         Ok(())
-    }
-
-    pub fn parse_message<T>(&self, msg: Message) -> SerdeResult<MessageArgs<T>>
-    where
-        T: FromValue + Debug,
-    {
-        let msg_str = msg.to_string();
-        let json: serde_json::Value = serde_json::from_str(msg_str.as_str()).map_err(|err| {
-            error!("Failed parse JSON: {:?}", err);
-            err
-        })?;
-        debug!("Parse message: {}", json);
-        Ok(MessageArgs {
-            id: json["id"].to_string().replace("\"", ""),
-            connId: json["connId"].to_string().replace("\"", ""),
-            r#type: MessageType::from_str(json["type"].as_str().unwrap()).unwrap(),
-            data: T::from(&json["data"]),
-        })
     }
 
     pub async fn get_conn_id(&self, id: &String) -> Option<String> {
@@ -382,7 +370,11 @@ impl WS {
             .await;
     }
 
-    pub async fn offer(&self, msg: MessageArgs<Offer>) {
+    pub async fn offer_handler(&self, msg: MessageArgs<Offer>) {
         self.rtc.offer(msg).await;
+    }
+
+    pub async fn candidate_handler(&self, msg: MessageArgs<Candidate>) {
+        self.rtc.candidate(msg).await;
     }
 }

@@ -1,10 +1,21 @@
+use std::{collections::HashMap, sync::Arc};
+
 use tokio::sync::{Mutex, MutexGuard};
 
 use serde::Serialize;
+use webrtc::{
+    api::{
+        interceptor_registry::register_default_interceptors, media_engine::MediaEngine, APIBuilder,
+    },
+    ice_transport::{ice_candidate::RTCIceCandidate, ice_server::RTCIceServer},
+    interceptor::registry::Registry,
+    peer_connection::{configuration::RTCConfiguration, RTCPeerConnection},
+};
 
 use crate::{
     common::{Room, RoomsMutex},
-    ws::messages::{MessageArgs, Offer, RoomList},
+    prelude::get_peer_id,
+    ws::messages::{Candidate, MessageArgs, Offer, RoomList},
 };
 
 #[derive(Serialize, Debug)]
@@ -16,7 +27,9 @@ pub struct User {
 }
 
 #[derive(Debug)]
+
 pub struct RTC {
+    pub peers: Mutex<HashMap<String, Arc<RTCPeerConnection>>>,
     pub rooms: Mutex<Vec<Room<User>>>,
     pub askeds: Mutex<Vec<RoomList>>,
 }
@@ -24,6 +37,7 @@ pub struct RTC {
 impl RTC {
     pub fn new() -> Self {
         Self {
+            peers: Mutex::new(HashMap::new()),
             rooms: Mutex::new(Vec::new()),
             askeds: Mutex::new(Vec::new()),
         }
@@ -164,7 +178,47 @@ impl RTC {
         askeds[index_a].users.to_vec()
     }
 
+    async fn set_peer_connection(&self, peer_id: String, peer_connection: Arc<RTCPeerConnection>) {
+        let mut peers = self.peers.lock().await;
+
+        peers.insert(peer_id, peer_connection);
+    }
+
+    pub async fn candidate(&self, msg: MessageArgs<Candidate>) {
+        error!("Candidate: {}", msg);
+    }
+
     pub async fn offer(&self, msg: MessageArgs<Offer>) {
-        error!("Offer: {}", msg);
+        debug!("Handle offer: {}", msg);
+
+        let config = RTCConfiguration {
+            ice_servers: vec![RTCIceServer {
+                urls: vec!["stun:stun.l.google.com:19302".to_owned()],
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+
+        let mut m = MediaEngine::default();
+        m.register_default_codecs().expect("Failed register codec");
+
+        let mut registry = Registry::new();
+
+        registry = register_default_interceptors(registry, &mut m)
+            .expect("Failed register default intercepors");
+
+        let api = APIBuilder::new()
+            .with_media_engine(m)
+            .with_interceptor_registry(registry)
+            .build();
+
+        let peer_connection = Arc::new(
+            api.new_peer_connection(config)
+                .await
+                .expect("Failed create peer connection"),
+        );
+        let peer_id = get_peer_id(msg.data.userId, msg.data.target, msg.connId);
+
+        self.set_peer_connection(peer_id, peer_connection).await;
     }
 }

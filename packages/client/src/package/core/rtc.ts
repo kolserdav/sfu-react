@@ -235,6 +235,7 @@ class RTC
           ics: peerConnection?.iceConnectionState,
           ss: peerConnection?.signalingState,
         });
+        console.log(event.candidate);
         core.ws.sendMessage({
           type: MessageType.CANDIDATE,
           id: roomId,
@@ -327,18 +328,6 @@ class RTC
             const { localDescription } = core.peerConnections[peerId]!;
             if (localDescription) {
               log('info', '---> Sending offer to remote peer', { roomId, userId, target });
-              console.log({
-                id: roomId,
-                type: MessageType.OFFER,
-                data: {
-                  sdp: localDescription,
-                  userId,
-                  target,
-                  mimeType: getCodec(),
-                  roomId,
-                },
-                connId,
-              });
               core.ws.sendMessage({
                 id: roomId,
                 type: MessageType.OFFER,

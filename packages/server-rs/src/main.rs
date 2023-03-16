@@ -12,6 +12,8 @@ use rtc::RTC;
 mod chat;
 pub mod common;
 
+pub mod prelude;
+
 use once_cell::sync::Lazy;
 
 static _WS: Lazy<WS> = Lazy::new(|| WS::new(RTC::new(), Chat::new()));
