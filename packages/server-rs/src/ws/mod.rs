@@ -9,7 +9,7 @@ use self::messages::{
     Candidate, FromValue, GetChatUnit, GetLocale, GetRoom, GetUserId, Offer, SetUserId,
 };
 pub use super::locales::{get_locale, Client, LocaleValue};
-use futures_util::{SinkExt, StreamExt};
+use futures_util::{FutureExt, SinkExt, StreamExt};
 use tokio_tungstenite::{
     accept_hdr_async,
     tungstenite::{
@@ -53,7 +53,7 @@ impl WS {
         }
     }
 
-    async fn handler<'a>(&self, msg: Message, conn_id: Uuid, socket: WSCallbackSocket) {
+    async fn handler<'a>(&'static self, msg: Message, conn_id: Uuid, socket: WSCallbackSocket) {
         let msg_c = msg.clone();
         let json = parse_message::<Any>(msg);
         if let Err(e) = json {
@@ -113,7 +113,7 @@ impl WS {
         }
     }
 
-    async fn handle_mess(&self, stream: TcpStream) {
+    async fn handle_mess(&'static self, stream: TcpStream) {
         let mut protocol = "main".to_string();
         let callback = |req: &Request, mut response: Response| {
             debug!("Received a new ws handshake");
@@ -150,7 +150,7 @@ impl WS {
             }
             let msg = msg.unwrap();
             drop(websocket);
-            warn!("Parse message: {:?}", &msg);
+
             let msg = msg.unwrap();
             let ws = ws.clone();
             if msg.is_text() || msg.is_binary() {
@@ -321,8 +321,8 @@ impl WS {
 
         let room_id = msg.id.clone();
         let user_id = msg.data.userId;
-        let user_name = "TODO";
-        let is_public = msg.data.isPublic;
+        // let user_name = "TODO";
+        // let is_public = msg.data.isPublic;
 
         let conn_id = self.get_conn_id(&user_id).await;
         if let None = conn_id {
@@ -370,8 +370,12 @@ impl WS {
             .await;
     }
 
-    pub async fn offer_handler(&self, msg: MessageArgs<Offer>) {
-        self.rtc.offer(msg).await;
+    pub async fn offer_handler(&'static self, msg: MessageArgs<Offer>) {
+        self.rtc
+            .offer(msg, move |msg| {
+                let res = self.send_message(msg);
+            })
+            .await;
     }
 
     pub async fn candidate_handler(&self, msg: MessageArgs<Candidate>) {

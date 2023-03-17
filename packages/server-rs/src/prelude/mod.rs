@@ -20,7 +20,7 @@ where
         error!("Failed parse JSON: {:?}", err);
         err
     })?;
-    info!("Parse message: {}", json);
+    debug!("Parse message: {}", json);
     Ok(MessageArgs {
         id: json["id"].to_string().replace("\"", ""),
         connId: json["connId"].to_string().replace("\"", ""),
@@ -32,6 +32,6 @@ where
 #[macro_export]
 macro_rules! value_to_string {
     ($val:expr) => {
-        $val.as_str().unwrap().to_string()
+        $val.as_str().expect("Failed stringify value").to_string()
     };
 }
