@@ -1,15 +1,13 @@
+use self::messages::{Candidate, GetChatUnit, GetLocale, GetRoom, GetUserId, Offer, SetUserId};
+pub use super::locales::{get_locale, Client, LocaleValue};
 use crate::{
     chat::Chat,
     prelude::parse_message,
     rtc::RTC,
     ws::messages::{Any, SetRoom},
 };
-
-use self::messages::{
-    Candidate, FromValue, GetChatUnit, GetLocale, GetRoom, GetUserId, Offer, SetUserId,
-};
-pub use super::locales::{get_locale, Client, LocaleValue};
-use futures_util::{FutureExt, SinkExt, StreamExt, TryFutureExt};
+use futures::executor::block_on;
+use futures_util::{SinkExt, StreamExt};
 use tokio_tungstenite::{
     accept_hdr_async,
     tungstenite::{
@@ -266,7 +264,10 @@ impl WS {
     pub async fn get_conn_id(&self, id: &String) -> Option<String> {
         let users = self.users.lock().await;
         let user = users.get(id);
-        return Some(user.unwrap().clone());
+        if let Some(v) = user {
+            return Some(v.clone());
+        }
+        None
     }
 
     async fn set_socket(&self, id: String, conn_id: String, ws: WSCallbackSocket) {
@@ -373,13 +374,7 @@ impl WS {
     pub async fn offer_handler(&'static self, msg: MessageArgs<Offer>) {
         self.rtc
             .offer(msg, move |msg| {
-                warn!("Need send message: {msg}");
-                async {
-                    self.send_message(msg)
-                        .await
-                        .expect("Error send candidate message");
-                }
-                .boxed();
+                block_on(self.send_message(msg)).unwrap();
             })
             .await;
     }
