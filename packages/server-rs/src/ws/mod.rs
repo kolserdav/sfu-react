@@ -9,7 +9,7 @@ use self::messages::{
     Candidate, FromValue, GetChatUnit, GetLocale, GetRoom, GetUserId, Offer, SetUserId,
 };
 pub use super::locales::{get_locale, Client, LocaleValue};
-use futures_util::{FutureExt, SinkExt, StreamExt};
+use futures_util::{FutureExt, SinkExt, StreamExt, TryFutureExt};
 use tokio_tungstenite::{
     accept_hdr_async,
     tungstenite::{
@@ -253,7 +253,7 @@ impl WS {
 
         let socket = socket.unwrap();
 
-        debug!("Send message: {:?}", &msg);
+        info!("Send message: {:?}", &msg);
         socket
             .lock()
             .await
@@ -373,7 +373,13 @@ impl WS {
     pub async fn offer_handler(&'static self, msg: MessageArgs<Offer>) {
         self.rtc
             .offer(msg, move |msg| {
-                let res = self.send_message(msg);
+                warn!("Need send message: {msg}");
+                async {
+                    self.send_message(msg)
+                        .await
+                        .expect("Error send candidate message");
+                }
+                .boxed();
             })
             .await;
     }
