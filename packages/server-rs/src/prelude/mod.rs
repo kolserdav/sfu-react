@@ -2,8 +2,10 @@ pub mod constants;
 use std::{fmt::Debug, str::FromStr};
 
 use constants::*;
+use once_cell::sync::Lazy;
 use serde_json::Result as SerdeResult;
 use tokio_tungstenite::tungstenite::Message;
+use url::Url;
 
 use crate::ws::messages::{FromValue, MessageArgs, MessageType};
 
@@ -27,6 +29,15 @@ where
         r#type: MessageType::from_str(json["type"].as_str().unwrap()).unwrap(),
         data: T::from(&json["data"]),
     })
+}
+
+pub fn get_ws_address() -> String {
+    format!("{}:{}", Lazy::force(&HOST), Lazy::force(&PORT)).replace("\"", "")
+}
+
+pub fn get_ws_url() -> Url {
+    Url::parse(&format!("ws://{}:{}", Lazy::force(&HOST), Lazy::force(&PORT)).replace("\"", ""))
+        .unwrap()
 }
 
 #[macro_export]

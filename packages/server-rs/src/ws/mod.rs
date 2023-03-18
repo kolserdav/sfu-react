@@ -2,7 +2,7 @@ use self::messages::{Candidate, GetChatUnit, GetLocale, GetRoom, GetUserId, Offe
 pub use super::locales::{get_locale, Client, LocaleValue};
 use crate::{
     chat::Chat,
-    prelude::parse_message,
+    prelude::{get_ws_url, parse_message},
     rtc::RTC,
     ws::messages::{Any, SetRoom},
 };
@@ -11,11 +11,13 @@ use futures_util::{SinkExt, StreamExt};
 use tokio_tungstenite::{
     accept_hdr_async,
     tungstenite::{
+        connect,
         handshake::server::{Request, Response},
         Message,
     },
     WebSocketStream,
 };
+use url::Url;
 use uuid::Uuid;
 pub mod messages;
 use log::{debug, error, info};
@@ -39,6 +41,7 @@ pub struct WS {
     pub chat: Chat,
     pub sockets: Mutex<HashMap<String, WSCallbackSocket>>,
     pub users: Mutex<HashMap<String, String>>,
+    pub rooms: Mutex<HashMap<String, String>>,
 }
 
 impl WS {
@@ -48,6 +51,7 @@ impl WS {
             chat,
             sockets: Mutex::new(HashMap::new()),
             users: Mutex::new(HashMap::new()),
+            rooms: Mutex::new(HashMap::new()),
         }
     }
 
@@ -216,8 +220,18 @@ impl WS {
     ) {
         let conn_id_str = conn_id.to_string();
 
-        self.set_socket(msg.id.clone(), conn_id.to_string(), ws)
+        let is_room_o = msg.data.isRoom;
+        let is_room;
+        if let None = is_room_o {
+            is_room = false;
+        } else {
+            is_room = is_room_o.unwrap();
+        }
+
+        self.set_user(msg.id.clone(), conn_id.to_string(), is_room)
             .await;
+
+        self.set_socket(conn_id.to_string(), ws).await;
 
         self.send_message(MessageArgs::<SetUserId> {
             id: msg.id,
@@ -264,13 +278,34 @@ impl WS {
     pub async fn get_conn_id(&self, id: &String) -> Option<String> {
         let users = self.users.lock().await;
         let user = users.get(id);
-        if let Some(v) = user {
-            return Some(v.clone());
+        if let None = user {
+            drop(users);
+
+            let rooms = self.rooms.lock().await;
+            let room = rooms.get(id);
+            if let Some(v) = room {
+                return Some(v.clone());
+            }
+
+            return None;
         }
-        None
+
+        let user = user.unwrap();
+        Some(user.clone())
     }
 
-    async fn set_socket(&self, id: String, conn_id: String, ws: WSCallbackSocket) {
+    async fn set_user(&self, id: String, conn_id: String, is_room: bool) {
+        if is_room {
+            let mut rooms = self.rooms.lock().await;
+            let user = rooms.get(&id);
+            if let Some(u) = user {
+                warn!("Duplicate WS room: {}", u);
+                return;
+            }
+            rooms.insert(id, conn_id.clone());
+            return;
+        }
+
         let mut users = self.users.lock().await;
         let user = users.get(&id);
         if let Some(u) = user {
@@ -278,8 +313,9 @@ impl WS {
             return;
         }
         users.insert(id, conn_id.clone());
-        drop(users);
+    }
 
+    async fn set_socket(&self, conn_id: String, ws: WSCallbackSocket) {
         let mut sockets = self.sockets.lock().await;
         let socket = sockets.get(&conn_id);
         if let Some(_) = socket {
@@ -352,6 +388,21 @@ impl WS {
         })
         .await
         .unwrap();
+
+        self.handle_room(
+            get_ws_url(),
+            MessageArgs {
+                id: room_id.clone(),
+                connId: String::from(""),
+                r#type: MessageType::GET_USER_ID,
+                data: GetUserId {
+                    isRoom: Some(true),
+                    locale: LocaleValue::en,
+                    userName: String::from("room"),
+                },
+            },
+        )
+        .await;
     }
 
     pub async fn get_chat_unit(
@@ -381,5 +432,17 @@ impl WS {
 
     pub async fn candidate_handler(&self, msg: MessageArgs<Candidate>) {
         self.rtc.candidate(msg).await;
+    }
+
+    pub async fn handle_room(&self, _url: Url, mess: MessageArgs<GetUserId>) {
+        let (mut socket, _) = connect(_url).expect("Can't connect");
+        socket
+            .write_message(Message::Text(to_string(&mess).unwrap()))
+            .unwrap();
+        loop {
+            let msg = socket.read_message().expect("Error reading room message");
+            let msg = parse_message::<Any>(msg).unwrap();
+            error!("Received: {}", msg);
+        }
     }
 }

@@ -3,6 +3,7 @@ extern crate log;
 pub mod ws;
 use chat::Chat;
 
+use prelude::{constants::dotenv_init, get_ws_address};
 use ws::WS;
 mod locales;
 
@@ -23,5 +24,7 @@ static _WS: Lazy<WS> = Lazy::new(|| WS::new(RTC::new(), Chat::new()));
 async fn main() {
     env_logger::builder().format_timestamp(None).init();
 
-    _WS.listen_ws("127.0.0.1:3001").await;
+    dotenv_init().expect(".env file not found");
+
+    _WS.listen_ws(&get_ws_address()).await;
 }

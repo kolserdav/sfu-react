@@ -11,7 +11,7 @@ mod en;
 mod ru;
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub enum LocaleValue {
     ru,
     en,

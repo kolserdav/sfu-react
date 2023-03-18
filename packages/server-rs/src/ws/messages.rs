@@ -232,7 +232,7 @@ impl FromValue for GetChatUnit {
 pub type SetChatUnit = ();
 
 #[allow(non_snake_case)]
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct GetUserId {
     pub isRoom: Option<bool>,
     pub userName: String,
