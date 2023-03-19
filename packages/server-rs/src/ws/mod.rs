@@ -25,7 +25,7 @@ use log::{debug, error, info};
 use messages::{MessageArgs, MessageType, SetLocale};
 use serde::Serialize;
 use serde_json::to_string;
-use std::{collections::HashMap, fmt::Debug, mem::drop, sync::Arc};
+use std::{collections::HashMap, fmt::Debug, mem::drop, sync::Arc, thread::spawn};
 use tokio::{
     net::{TcpListener, TcpStream},
     sync::Mutex,
@@ -435,14 +435,17 @@ impl WS {
     }
 
     pub async fn handle_room(&self, _url: Url, mess: MessageArgs<GetUserId>) {
-        let (mut socket, _) = connect(_url).expect("Can't connect");
-        socket
-            .write_message(Message::Text(to_string(&mess).unwrap()))
-            .unwrap();
-        loop {
-            let msg = socket.read_message().expect("Error reading room message");
-            let msg = parse_message::<Any>(msg).unwrap();
-            error!("Received: {}", msg);
-        }
+        spawn(move || {
+            let (mut socket, _) = connect(_url).expect("Can't connect");
+            socket
+                .write_message(Message::Text(to_string(&mess).unwrap()))
+                .unwrap();
+            loop {
+                // TODO clean
+                let msg = socket.read_message().expect("Error reading room message");
+                let msg = parse_message::<Any>(msg).unwrap();
+                error!("Received: {}", msg);
+            }
+        });
     }
 }

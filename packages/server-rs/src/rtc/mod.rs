@@ -319,14 +319,14 @@ impl RTC {
                             error!("Missing remote description in on_ice_candidate");
                         }
                         cb(MessageArgs {
-                            id: msg.data.target.clone(),
+                            id: msg.data.userId.clone(),
                             connId: msg.connId.clone(),
                             r#type: MessageType::CANDIDATE,
                             data: Candidate {
                                 candidate: c.to_json().unwrap(),
                                 roomId: msg.data.roomId.clone(),
-                                userId: msg.id.clone(),
-                                target: msg.data.userId.clone(),
+                                userId: msg.data.userId.clone(),
+                                target: msg.data.target.clone(),
                             },
                         })
                     } else {
