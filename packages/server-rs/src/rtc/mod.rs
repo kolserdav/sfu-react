@@ -134,7 +134,7 @@ impl RTC {
             return;
         }
         let index_u = index_u.unwrap();
-
+        info!("User deleted: {}", &user_id);
         rooms[index_r].users.remove(index_u);
     }
 
@@ -341,6 +341,11 @@ impl RTC {
             })
         }));
 
+        peer_connection.on_track(Box::new(move |track, _, _| {
+            error!("track {:?}", track);
+            Box::pin(async {})
+        }));
+
         let rem_desc = peer_connection.set_remote_description(sdp).await;
         if let Err(e) = rem_desc {
             error!("Error set remote description: {}", e);
@@ -361,6 +366,7 @@ impl RTC {
             error!("Failed set local description: {e:?}, {}", msg_c);
             return None;
         }
+
         Some(answer)
     }
 }

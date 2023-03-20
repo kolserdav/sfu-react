@@ -36,8 +36,10 @@ pub fn get_ws_address() -> String {
 }
 
 pub fn get_ws_url() -> Url {
-    Url::parse(&format!("ws://{}:{}", Lazy::force(&HOST), Lazy::force(&PORT)).replace("\"", ""))
-        .unwrap()
+    Url::parse(
+        &format!("ws://{}:{}/room", Lazy::force(&HOST), Lazy::force(&PORT)).replace("\"", ""),
+    )
+    .unwrap()
 }
 
 #[macro_export]

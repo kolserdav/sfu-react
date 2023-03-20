@@ -15,6 +15,7 @@ use tokio_tungstenite::{
     tungstenite::{
         connect,
         handshake::server::{Request, Response},
+        protocol::WebSocketConfig,
         Message,
     },
     WebSocketStream,
@@ -88,11 +89,12 @@ impl WS {
             }
             MessageType::OFFER => {
                 let msg = parse_message::<Offer>(msg_c).unwrap();
-                self.offer_handler(msg).await;
+                self.send_message(msg).await.unwrap();
             }
             MessageType::CANDIDATE => {
                 let msg = parse_message::<Candidate>(msg_c).unwrap();
-                self.candidate_handler(msg).await;
+                error!("{}, {:?}", &msg, &self.users);
+                self.send_message(msg).await.unwrap();
             }
             _ => {
                 warn!("Default case of message: {:?}", json);
@@ -119,9 +121,11 @@ impl WS {
 
     async fn handle_mess(&'static self, stream: TcpStream) {
         let mut protocol = "main".to_string();
+        let mut path = "".to_string();
         let callback = |req: &Request, mut response: Response| {
             debug!("Received a new ws handshake");
-            debug!("The request's path is: {}", req.uri().path());
+            path = req.uri().path().to_string();
+            debug!("The request's path is: {}", &path);
             debug!("The request's headers are:");
             for (ref header, _value) in req.headers() {
                 debug!("* {}: {:?}", header, _value);
@@ -149,6 +153,7 @@ impl WS {
             let mut websocket = websocket.lock().await;
             let msg = websocket.next().await;
             if let None = msg {
+                drop(websocket);
                 info!("Message is none: {}", &conn_id);
                 break;
             }
@@ -160,14 +165,7 @@ impl WS {
             if msg.is_text() || msg.is_binary() {
                 self.handler(msg, conn_id, ws).await;
             } else if msg.is_close() {
-                let sockets = self.sockets.lock().await;
-                info!(
-                    "Closed: {}, Protocol: {}, Sockets: {:?}",
-                    conn_id,
-                    protocol,
-                    sockets.len()
-                );
-                drop(sockets);
+                info!("Closed: {}, Protocol: {}", conn_id, protocol,);
 
                 if protocol == "room" {
                     self.delete_socket(conn_id.to_string()).await;
@@ -267,13 +265,17 @@ impl WS {
 
         let socket = socket.unwrap();
 
-        info!("Send message: {:?}", &msg);
+        info!("Trying lock socket: {:?}, {}", &msg, &conn_id);
+
+        let mut socket = socket.lock().await;
+
         socket
-            .lock()
+            .send(Message::Text(
+                to_string(&msg).expect("Failed stringify message"),
+            ))
             .await
-            .send(Message::Text(to_string(&msg).unwrap()))
-            .await
-            .unwrap();
+            .expect("Failed send message");
+        info!("Send message: {}", &conn_id);
         Ok(())
     }
 
@@ -297,6 +299,7 @@ impl WS {
     }
 
     async fn set_user(&self, id: String, conn_id: String, is_room: bool) {
+        info!("Set user: {}, {}, {}", &id, &conn_id, &is_room);
         if is_room {
             let mut rooms = self.rooms.lock().await;
             let user = rooms.get(&id);
@@ -350,6 +353,7 @@ impl WS {
     }
 
     async fn delete_user(&self, user_id: &String) {
+        info!("Try delete user: {:?}", user_id);
         let mut users = self.users.lock().await;
         users.remove(user_id);
         info!("User deleted: {:?}", user_id);
@@ -378,19 +382,6 @@ impl WS {
             .add_user_to_askeds(room_id.clone(), user_id.clone())
             .await;
 
-        self.send_message(MessageArgs::<SetRoom> {
-            id: user_id,
-            connId: msg.connId,
-            r#type: MessageType::SET_ROOM,
-            //  TODO
-            data: SetRoom {
-                isOwner: true,
-                asked,
-            },
-        })
-        .await
-        .unwrap();
-
         self.handle_room(
             get_ws_url(),
             MessageArgs {
@@ -405,6 +396,19 @@ impl WS {
             },
         )
         .await;
+
+        self.send_message(MessageArgs::<SetRoom> {
+            id: user_id,
+            connId: msg.connId,
+            r#type: MessageType::SET_ROOM,
+            //  TODO
+            data: SetRoom {
+                isOwner: true,
+                asked,
+            },
+        })
+        .await
+        .unwrap();
     }
 
     pub async fn get_chat_unit(
@@ -424,6 +428,7 @@ impl WS {
             .await;
     }
 
+    #[deprecated]
     pub async fn offer_handler(&'static self, msg: MessageArgs<Offer>) {
         let msg_c = msg.clone();
         let sdp = self
@@ -436,6 +441,7 @@ impl WS {
             warn!("Skip send answer message: {}", &msg_c);
             return;
         }
+
         let msg = msg_c;
         let sdp = sdp.unwrap();
         self.send_message(MessageArgs {
@@ -452,6 +458,7 @@ impl WS {
         .unwrap();
     }
 
+    #[deprecated]
     pub async fn candidate_handler(&self, msg: MessageArgs<Candidate>) {
         self.rtc.candidate(msg).await;
     }
@@ -466,7 +473,9 @@ impl WS {
 
             loop {
                 // TODO clean
+                error!("1");
                 let msg = socket.read_message().expect("Error reading room message");
+                error!("2");
                 let msg = parse_message::<Any>(msg).unwrap();
                 error!("Received: {}", msg);
             }
