@@ -1,4 +1,6 @@
-use self::messages::{Candidate, GetChatUnit, GetLocale, GetRoom, GetUserId, Offer, SetUserId};
+use self::messages::{
+    Answer, Candidate, GetChatUnit, GetLocale, GetRoom, GetUserId, Offer, SetUserId,
+};
 pub use super::locales::{get_locale, Client, LocaleValue};
 use crate::{
     chat::Chat,
@@ -423,11 +425,31 @@ impl WS {
     }
 
     pub async fn offer_handler(&'static self, msg: MessageArgs<Offer>) {
-        self.rtc
+        let msg_c = msg.clone();
+        let sdp = self
+            .rtc
             .offer(msg, move |msg| {
                 block_on(self.send_message(msg)).unwrap();
             })
             .await;
+        if let None = sdp {
+            warn!("Skip send answer message: {}", &msg_c);
+            return;
+        }
+        let msg = msg_c;
+        let sdp = sdp.unwrap();
+        self.send_message(MessageArgs {
+            id: msg.data.userId.clone(),
+            connId: msg.connId,
+            r#type: MessageType::ANSWER,
+            data: Answer {
+                sdp,
+                userId: msg.id,
+                target: msg.data.target,
+            },
+        })
+        .await
+        .unwrap();
     }
 
     pub async fn candidate_handler(&self, msg: MessageArgs<Candidate>) {
@@ -437,9 +459,11 @@ impl WS {
     pub async fn handle_room(&self, _url: Url, mess: MessageArgs<GetUserId>) {
         spawn(move || {
             let (mut socket, _) = connect(_url).expect("Can't connect");
+
             socket
                 .write_message(Message::Text(to_string(&mess).unwrap()))
                 .unwrap();
+
             loop {
                 // TODO clean
                 let msg = socket.read_message().expect("Error reading room message");

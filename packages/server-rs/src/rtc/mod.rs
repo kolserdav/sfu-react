@@ -11,7 +11,7 @@ use webrtc::{
     interceptor::registry::Registry,
     peer_connection::{
         configuration::RTCConfiguration, peer_connection_state::RTCPeerConnectionState,
-        RTCPeerConnection,
+        sdp::session_description::RTCSessionDescription, RTCPeerConnection,
     },
 };
 
@@ -210,7 +210,7 @@ impl RTC {
             .expect("Error add ice candidate");
     }
 
-    pub async fn offer<F>(&self, msg: MessageArgs<Offer>, cb: F)
+    pub async fn offer<F>(&self, msg: MessageArgs<Offer>, cb: F) -> Option<RTCSessionDescription>
     where
         F: FnMut(MessageArgs<Candidate>) + Sync + Send + Copy + 'static,
     {
@@ -218,7 +218,7 @@ impl RTC {
 
         let config = RTCConfiguration {
             ice_servers: vec![RTCIceServer {
-                urls: vec!["stun:stun.l.google.com:19302".to_owned()],
+                urls: vec!["stun:127.0.0.1:3478".to_owned()],
                 ..Default::default()
             }],
             ..Default::default()
@@ -252,7 +252,7 @@ impl RTC {
             .await;
         self.set_candidates(peer_id, Arc::new(Vec::new())).await;
 
-        self.handle_ice_candidates(msg, cb).await;
+        self.handle_ice_candidates(msg, cb).await
     }
 
     async fn set_candidates(&self, peer_id: String, cands: Candidates) {
@@ -261,7 +261,11 @@ impl RTC {
         candidates.insert(peer_id, cands);
     }
 
-    async fn handle_ice_candidates<F>(&self, msg: MessageArgs<Offer>, cb: F)
+    async fn handle_ice_candidates<F>(
+        &self,
+        msg: MessageArgs<Offer>,
+        cb: F,
+    ) -> Option<RTCSessionDescription>
     where
         F: FnMut(MessageArgs<Candidate>) + Sync + Send + Copy + 'static,
     {
@@ -276,7 +280,7 @@ impl RTC {
         let peer_connection = peers.get(&peer_id);
         if let None = peer_connection {
             warn!("Skip handle ice candidate");
-            return;
+            return None;
         }
         let peer_connection = peer_connection.unwrap();
 
@@ -294,7 +298,7 @@ impl RTC {
         let candidates = candidates.get(&peer_id);
         if let None = candidates {
             warn!("Connection candidates is missing: {peer_id}");
-            return;
+            return None;
         }
         let candidates = candidates.unwrap();
 
@@ -302,6 +306,7 @@ impl RTC {
         let pending_candidates2 = Arc::clone(candidates);
 
         let sdp = msg.data.sdp.clone();
+        let msg_c = msg.clone();
         let msg = Arc::new(msg);
 
         peer_connection.on_ice_candidate(Box::new(move |c: Option<RTCIceCandidate>| {
@@ -339,18 +344,23 @@ impl RTC {
         let rem_desc = peer_connection.set_remote_description(sdp).await;
         if let Err(e) = rem_desc {
             error!("Error set remote description: {}", e);
-            return;
+            return None;
         }
 
         let answer = peer_connection.create_answer(None).await;
         if let Err(e) = answer {
             error!("Error create answer: {}", e);
-            return;
+            return None;
         }
         let answer = answer.unwrap();
 
         let mut gather_complete = peer_connection.gathering_complete_promise().await;
 
-        peer_connection.set_local_description(answer).await;
+        let local_desc = peer_connection.set_local_description(answer.clone()).await;
+        if let Err(e) = local_desc {
+            error!("Failed set local description: {e:?}, {}", msg_c);
+            return None;
+        }
+        Some(answer)
     }
 }

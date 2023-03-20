@@ -11,7 +11,7 @@
 import 'webrtc-adapter';
 import { RTCInterface, MessageType, Locale } from '../types/interfaces';
 import { IS_DEV } from '../utils/constants';
-import { getCodec, log } from '../utils/lib';
+import { getCodec, isDev, log } from '../utils/lib';
 import WS from './ws';
 
 class RTC
@@ -235,7 +235,6 @@ class RTC
           ics: peerConnection?.iceConnectionState,
           ss: peerConnection?.signalingState,
         });
-        console.log(event.candidate);
         core.ws.sendMessage({
           type: MessageType.CANDIDATE,
           id: roomId,
@@ -449,11 +448,14 @@ class RTC
     const {
       id,
       connId,
-      data: { candidate, target, userId },
+      data: { candidate, target, userId, roomId },
     } = msg;
-    const peerId = this.getPeerId(id, target, connId);
+    const peerId = this.getPeerId(roomId, target, connId);
     if (!this.peerConnections[peerId]) {
-      log('warn', 'Handle candidate without peer connection', { peerId });
+      log('warn', 'Handle candidate without peer connection', {
+        peerId,
+        peers: IS_DEV ? this.getPeerKeys() : undefined,
+      });
       return;
     }
     const cand = new RTCIceCandidate(candidate);

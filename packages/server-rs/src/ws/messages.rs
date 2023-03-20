@@ -176,7 +176,7 @@ impl FromStr for MessageType {
     }
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub struct RoomList {
     pub room_id: String,
     pub users: Vec<String>,
@@ -186,7 +186,7 @@ pub trait FromValue {
     fn from(value: &Value) -> Self;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct GetLocale {
     pub locale: LocaleValue,
 }
@@ -199,13 +199,13 @@ impl FromValue for GetLocale {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct SetLocale {
     pub locale: Client<'static>,
 }
 
 #[allow(non_snake_case)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct GetSettingsUnit {
     pub userId: String,
     pub locale: LocaleValue,
@@ -214,7 +214,7 @@ pub struct GetSettingsUnit {
 pub type SetSettingsUnit = ();
 
 #[allow(non_snake_case)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct GetChatUnit {
     pub userId: String,
     pub locale: LocaleValue,
@@ -232,7 +232,7 @@ impl FromValue for GetChatUnit {
 pub type SetChatUnit = ();
 
 #[allow(non_snake_case)]
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub struct GetUserId {
     pub isRoom: Option<bool>,
     pub userName: String,
@@ -249,7 +249,7 @@ impl FromValue for GetUserId {
     }
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 #[allow(non_snake_case)]
 pub struct SetUserId {
     pub name: String,
@@ -263,7 +263,7 @@ impl FromValue for Any {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[allow(non_snake_case)]
 pub struct GetRoom {
     pub userId: String,
@@ -281,20 +281,20 @@ impl FromValue for GetRoom {
     }
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 #[allow(non_snake_case)]
 pub struct SetRoom {
     pub isOwner: bool,
     pub asked: Vec<String>,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub struct _RTCSessionDescription {
     pub r#type: String,
     pub sdp: String,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 #[allow(non_snake_case)]
 pub struct Offer {
     pub sdp: RTCSessionDescription,
@@ -324,7 +324,7 @@ impl FromValue for Offer {
     }
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 #[allow(non_snake_case)]
 pub struct Candidate {
     pub candidate: RTCIceCandidateInit,
@@ -362,7 +362,7 @@ impl FromValue for Candidate {
     }
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 #[allow(non_snake_case)]
 pub struct Answer {
     pub sdp: RTCSessionDescription,
