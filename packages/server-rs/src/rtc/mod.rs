@@ -141,8 +141,21 @@ impl RTC {
             return;
         }
         let index_u = index_u.unwrap();
-        info!("User deleted: {}", &user_id);
+        info!("RTC user deleted: {}", &user_id);
+
+        self.close_peer_connection(user_id).await;
+
         rooms[index_r].users.remove(index_u);
+    }
+
+    pub async fn close_peer_connection(&self, user_id: &String) {
+        let peers = self.peers.lock().await;
+        for (peer_id, peer_connection) in peers.iter() {
+            let peer = peer_id.split(DELIMITER).collect::<Vec<&str>>();
+            if user_id == peer[0] || user_id == peer[1] {
+                peer_connection.close().await.unwrap();
+            }
+        }
     }
 
     pub async fn delete_askeds(&self, user_id: &String) {
@@ -339,6 +352,7 @@ impl RTC {
                         if desc.is_none() {
                             error!("Missing remote description in on_ice_candidate");
                         }
+
                         cb_cand(MessageArgs {
                             id: msg.data.userId.clone(),
                             connId: msg.connId.clone(),
@@ -370,7 +384,7 @@ impl RTC {
 
             let mut streams = block_on(this.streams.lock());
 
-            info!("Save track: {:?}", &track);
+            debug!("Save track: {:?}", &track);
             streams.insert(peer_id, track.clone());
 
             let is_room = msg.data.target.clone() == "0";
@@ -400,9 +414,9 @@ impl RTC {
                                     isOwner: true,
                                     // FIXME
                                     asked: askeds[index_r].users.to_vec(),
-                                    muteds: askeds[index_r].users.to_vec(),
-                                    banneds: askeds[index_r].users.to_vec(),
-                                    adminMuteds: askeds[index_r].users.to_vec(),
+                                    muteds: vec![],
+                                    banneds: vec![],
+                                    adminMuteds: vec![],
                                 },
                             });
                         }

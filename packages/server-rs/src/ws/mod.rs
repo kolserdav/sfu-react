@@ -162,18 +162,18 @@ impl WS {
             if msg.is_text() || msg.is_binary() {
                 self.handler(msg, conn_id, ws).await;
             } else if msg.is_close() {
-                info!("Closed: {}, Protocol: {}", conn_id, protocol,);
+                info!("Closed: {}, Protocol: {}", conn_id, protocol);
 
                 if protocol == "room" {
-                    self.delete_socket(conn_id.to_string()).await;
-
                     let user_id = self.get_user_id_by_conn_id(&conn_id.to_string()).await;
                     if let None = user_id {
-                        warn!("Deleted user is missing: {:?}", conn_id);
+                        warn!("Deleted user is missing: {:?}: {}", conn_id, &protocol);
+
                         return;
                     }
                     let user_id = user_id.unwrap();
 
+                    self.delete_socket(conn_id.to_string()).await;
                     self.delete_user(&user_id).await;
                     self.rtc.delete_user_from_room(&user_id).await;
                     self.rtc.delete_askeds(&user_id).await;
@@ -262,7 +262,7 @@ impl WS {
 
         let socket = socket.unwrap();
 
-        info!("Trying lock socket: {:?}, {}", &msg, &conn_id);
+        debug!("Send message: {:?}, {}", &msg, &conn_id);
 
         let mut socket = socket.lock().await;
 
@@ -272,7 +272,6 @@ impl WS {
             ))
             .await
             .expect("Failed send message");
-        info!("Send message: {}:{}", &msg.r#type, &conn_id);
         Ok(())
     }
 

@@ -83,6 +83,7 @@ impl Chat {
     }
 
     pub async fn delete_chat_user(&self, conn_id: &String) {
+        info!("Try delete chat user: {}", conn_id);
         let (index_r, index_u, mut rooms) = self.find_rooms_indexes_by_conn_id(conn_id).await;
         if let None = index_r {
             warn!("Room is missing in delete_chat_user: {}", conn_id);
@@ -96,6 +97,8 @@ impl Chat {
         let index_u = index_u.unwrap();
 
         rooms[index_r].users.remove(index_u);
+
+        info!("Chat user deleted: {}", conn_id);
     }
 
     async fn find_rooms_indexes(
