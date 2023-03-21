@@ -4,7 +4,7 @@ use self::messages::{
 pub use super::locales::{get_locale, Client, LocaleValue};
 use crate::{
     chat::Chat,
-    prelude::{get_ws_url, parse_message},
+    prelude::parse_message,
     rtc::RTC,
     ws::messages::{Any, SetRoom},
 };
@@ -13,14 +13,12 @@ use futures_util::{SinkExt, StreamExt};
 use tokio_tungstenite::{
     accept_hdr_async,
     tungstenite::{
-        connect,
         handshake::server::{Request, Response},
-        protocol::WebSocketConfig,
         Message,
     },
     WebSocketStream,
 };
-use url::Url;
+
 use uuid::Uuid;
 pub mod messages;
 use log::{debug, error, info};
@@ -28,7 +26,7 @@ use log::{debug, error, info};
 use messages::{MessageArgs, MessageType, SetLocale};
 use serde::Serialize;
 use serde_json::to_string;
-use std::{collections::HashMap, fmt::Debug, mem::drop, sync::Arc, thread::spawn};
+use std::{collections::HashMap, fmt::Debug, mem::drop, sync::Arc};
 use tokio::{
     net::{TcpListener, TcpStream},
     sync::Mutex,
@@ -89,12 +87,11 @@ impl WS {
             }
             MessageType::OFFER => {
                 let msg = parse_message::<Offer>(msg_c).unwrap();
-                self.send_message(msg).await.unwrap();
+                self.offer_handler(msg).await;
             }
             MessageType::CANDIDATE => {
                 let msg = parse_message::<Candidate>(msg_c).unwrap();
-                error!("{}, {:?}", &msg, &self.users);
-                self.send_message(msg).await.unwrap();
+                self.candidate_handler(msg).await;
             }
             _ => {
                 warn!("Default case of message: {:?}", json);
@@ -381,22 +378,6 @@ impl WS {
             .rtc
             .add_user_to_askeds(room_id.clone(), user_id.clone())
             .await;
-
-        self.handle_room(
-            get_ws_url(),
-            MessageArgs {
-                id: room_id.clone(),
-                connId: String::from(""),
-                r#type: MessageType::GET_USER_ID,
-                data: GetUserId {
-                    isRoom: Some(true),
-                    locale: LocaleValue::en,
-                    userName: String::from("room"),
-                },
-            },
-        )
-        .await;
-
         self.send_message(MessageArgs::<SetRoom> {
             id: user_id,
             connId: msg.connId,
@@ -428,7 +409,6 @@ impl WS {
             .await;
     }
 
-    #[deprecated]
     pub async fn offer_handler(&'static self, msg: MessageArgs<Offer>) {
         let msg_c = msg.clone();
         let sdp = self
@@ -458,27 +438,7 @@ impl WS {
         .unwrap();
     }
 
-    #[deprecated]
     pub async fn candidate_handler(&self, msg: MessageArgs<Candidate>) {
         self.rtc.candidate(msg).await;
-    }
-
-    pub async fn handle_room(&self, _url: Url, mess: MessageArgs<GetUserId>) {
-        spawn(move || {
-            let (mut socket, _) = connect(_url).expect("Can't connect");
-
-            socket
-                .write_message(Message::Text(to_string(&mess).unwrap()))
-                .unwrap();
-
-            loop {
-                // TODO clean
-                error!("1");
-                let msg = socket.read_message().expect("Error reading room message");
-                error!("2");
-                let msg = parse_message::<Any>(msg).unwrap();
-                error!("Received: {}", msg);
-            }
-        });
     }
 }
