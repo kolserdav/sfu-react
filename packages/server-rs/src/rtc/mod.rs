@@ -1,5 +1,6 @@
 use std::{collections::HashMap, rc::Rc, sync::Arc};
 
+use futures::executor::block_on;
 use tokio::sync::{Mutex, MutexGuard};
 
 use serde::Serialize;
@@ -13,12 +14,16 @@ use webrtc::{
         configuration::RTCConfiguration, peer_connection_state::RTCPeerConnectionState,
         sdp::session_description::RTCSessionDescription, RTCPeerConnection,
     },
+    rtp_transceiver::rtp_codec::RTPCodecType,
+    track::track_remote::TrackRemote,
 };
 
 use crate::{
     common::{Room, RoomsMutex},
-    prelude::get_peer_id,
-    ws::messages::{Candidate, MessageArgs, MessageType, Offer, RoomList},
+    prelude::{constants::DELIMITER, get_peer_id, get_peer_id_with_kind},
+    ws::messages::{
+        Candidate, EventName, MessageArgs, MessageType, Offer, RoomList, SetChangeUnit,
+    },
 };
 
 #[derive(Serialize, Debug)]
@@ -38,6 +43,7 @@ pub struct RTC {
     pub candidates: Mutex<HashMap<String, Candidates>>,
     pub rooms: Mutex<Vec<Room<User>>>,
     pub askeds: Mutex<Vec<RoomList>>,
+    pub streams: Mutex<HashMap<String, Arc<TrackRemote>>>,
 }
 
 impl RTC {
@@ -47,6 +53,7 @@ impl RTC {
             peers: Mutex::new(HashMap::new()),
             rooms: Mutex::new(Vec::new()),
             askeds: Mutex::new(Vec::new()),
+            streams: Mutex::new(HashMap::new()),
         }
     }
 
@@ -210,9 +217,15 @@ impl RTC {
             .expect("Error add ice candidate");
     }
 
-    pub async fn offer<F>(&self, msg: MessageArgs<Offer>, cb: F) -> Option<RTCSessionDescription>
+    pub async fn offer<C, T>(
+        &'static self,
+        msg: MessageArgs<Offer>,
+        cb_cand: C,
+        cb_track: T,
+    ) -> Option<RTCSessionDescription>
     where
-        F: FnMut(MessageArgs<Candidate>) + Sync + Send + Copy + 'static,
+        C: FnMut(MessageArgs<Candidate>) + Sync + Send + Copy + 'static,
+        T: FnMut(MessageArgs<SetChangeUnit>) + Sync + Send + Copy + 'static,
     {
         debug!("Handle offer: {}", msg);
 
@@ -252,7 +265,7 @@ impl RTC {
             .await;
         self.set_candidates(peer_id, Arc::new(Vec::new())).await;
 
-        self.handle_ice_candidates(msg, cb).await
+        self.handle_ice_candidates(msg, cb_cand, cb_track).await
     }
 
     async fn set_candidates(&self, peer_id: String, cands: Candidates) {
@@ -261,13 +274,15 @@ impl RTC {
         candidates.insert(peer_id, cands);
     }
 
-    async fn handle_ice_candidates<F>(
-        &self,
+    async fn handle_ice_candidates<C, T>(
+        &'static self,
         msg: MessageArgs<Offer>,
-        cb: F,
+        cb_cand: C,
+        cb_track: T,
     ) -> Option<RTCSessionDescription>
     where
-        F: FnMut(MessageArgs<Candidate>) + Sync + Send + Copy + 'static,
+        C: FnMut(MessageArgs<Candidate>) + Sync + Send + Copy + 'static,
+        T: FnMut(MessageArgs<SetChangeUnit>) + Sync + Send + Copy + 'static,
     {
         let peer_id = get_peer_id(
             msg.data.userId.clone(),
@@ -308,6 +323,7 @@ impl RTC {
         let sdp = msg.data.sdp.clone();
         let msg_c = msg.clone();
         let msg = Arc::new(msg);
+        let msg_t = msg.clone();
 
         peer_connection.on_ice_candidate(Box::new(move |c: Option<RTCIceCandidate>| {
             info!("on_ice_candidate {:?}", c);
@@ -315,7 +331,7 @@ impl RTC {
             let pc2 = pc.clone();
             let pending_candidates3 = Arc::clone(&pending_candidates2);
             let msg = msg.clone();
-            let mut cb = cb.clone();
+            let mut cb_cand = cb_cand.clone();
             Box::pin(async move {
                 if let Some(c) = c {
                     if let Some(pc) = pc2.upgrade() {
@@ -323,7 +339,7 @@ impl RTC {
                         if desc.is_none() {
                             error!("Missing remote description in on_ice_candidate");
                         }
-                        cb(MessageArgs {
+                        cb_cand(MessageArgs {
                             id: msg.data.userId.clone(),
                             connId: msg.connId.clone(),
                             r#type: MessageType::CANDIDATE,
@@ -341,8 +357,61 @@ impl RTC {
             })
         }));
 
+        let this = Arc::new(self);
+
         peer_connection.on_track(Box::new(move |track, _, _| {
-            error!("track {:?}", track);
+            let msg = msg_t.clone();
+            let peer_id = get_peer_id(
+                msg.data.userId.clone(),
+                msg.data.target.clone(),
+                msg.connId.clone(),
+            );
+            let peer_id = get_peer_id_with_kind(peer_id, track.kind());
+
+            let mut streams = block_on(this.streams.lock());
+
+            info!("Save track: {:?}", &track);
+            streams.insert(peer_id, track.clone());
+
+            let is_room = msg.data.target.clone() == "0";
+
+            if is_room && track.kind() == RTPCodecType::Video {
+                let rooms = block_on(this.rooms.lock());
+                let (index_r, _, askeds) = block_on(this.find_askeds_indexes(&msg.data.userId));
+                if let None = index_r {
+                    warn!("Index of room is missing in on_track: {}", &msg.data.userId);
+                    return Box::pin(async {});
+                }
+                let index_r = index_r.unwrap();
+
+                for room in rooms.iter() {
+                    let mut cb_track = cb_track.clone();
+                    if room.room_id == msg.data.roomId {
+                        for user in room.users.iter() {
+                            cb_track(MessageArgs::<SetChangeUnit> {
+                                id: user.id.clone(),
+                                connId: msg.connId.clone(),
+                                r#type: MessageType::SET_CHANGE_UNIT,
+                                data: SetChangeUnit {
+                                    target: msg.data.userId.clone(),
+                                    name: "TODO".to_string(),
+                                    eventName: EventName::Add.to_string(),
+                                    roomLength: room.users.len(),
+                                    isOwner: true,
+                                    // FIXME
+                                    asked: askeds[index_r].users.to_vec(),
+                                    muteds: askeds[index_r].users.to_vec(),
+                                    banneds: askeds[index_r].users.to_vec(),
+                                    adminMuteds: askeds[index_r].users.to_vec(),
+                                },
+                            });
+                        }
+
+                        break;
+                    }
+                }
+            }
+
             Box::pin(async {})
         }));
 

@@ -11,7 +11,7 @@
 import 'webrtc-adapter';
 import { RTCInterface, MessageType, Locale } from '../types/interfaces';
 import { IS_DEV } from '../utils/constants';
-import { getCodec, isDev, log } from '../utils/lib';
+import { getCodec, log } from '../utils/lib';
 import WS from './ws';
 
 class RTC
@@ -235,6 +235,7 @@ class RTC
           ics: peerConnection?.iceConnectionState,
           ss: peerConnection?.signalingState,
         });
+
         core.ws.sendMessage({
           type: MessageType.CANDIDATE,
           id: roomId,

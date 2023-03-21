@@ -300,7 +300,7 @@ export namespace DataTypes {
     export type GetMuteForAll = {
       value: boolean;
     };
-    export type SetChangeRoomUnit = {
+    export type SetChangeUnit = {
       target: number | string;
       name: string;
       eventName: 'delete' | 'add' | 'added';
@@ -560,7 +560,7 @@ export namespace DataTypes {
     : T extends MessageType.SET_ROOM_GUESTS
     ? DataTypes.MessageTypes.SetRoomGuests
     : T extends MessageType.SET_CHANGE_UNIT
-    ? DataTypes.MessageTypes.SetChangeRoomUnit
+    ? DataTypes.MessageTypes.SetChangeUnit
     : T extends MessageType.SET_MUTE
     ? DataTypes.MessageTypes.SetMute
     : T extends MessageType.SET_CHAT_UNIT

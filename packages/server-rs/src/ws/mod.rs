@@ -272,7 +272,7 @@ impl WS {
             ))
             .await
             .expect("Failed send message");
-        info!("Send message: {}", &conn_id);
+        info!("Send message: {}:{}", &msg.r#type, &conn_id);
         Ok(())
     }
 
@@ -413,9 +413,15 @@ impl WS {
         let msg_c = msg.clone();
         let sdp = self
             .rtc
-            .offer(msg, move |msg| {
-                block_on(self.send_message(msg)).unwrap();
-            })
+            .offer(
+                msg,
+                move |msg| {
+                    block_on(self.send_message(msg)).unwrap();
+                },
+                |msg| {
+                    block_on(self.send_message(msg)).unwrap();
+                },
+            )
             .await;
         if let None = sdp {
             warn!("Skip send answer message: {}", &msg_c);

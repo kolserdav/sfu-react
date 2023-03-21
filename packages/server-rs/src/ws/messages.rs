@@ -100,6 +100,12 @@ pub enum MessageType {
     SET_VIDEO_UPDATE,
 }
 
+impl Display for MessageType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 impl FromStr for MessageType {
     type Err = ();
     fn from_str(input: &str) -> Result<MessageType, ()> {
@@ -338,7 +344,7 @@ impl FromValue for Candidate {
         Self {
             candidate: RTCIceCandidateInit {
                 candidate: value_to_string!(value["candidate"]["candidate"]),
-                username_fragment: if let Some(v) = value["candidate"]["userNameFragment"].as_str()
+                username_fragment: if let Some(v) = value["candidate"]["usernameFragment"].as_str()
                 {
                     Some(v.to_string())
                 } else {
@@ -349,7 +355,7 @@ impl FromValue for Candidate {
                 } else {
                     None
                 },
-                sdp_mline_index: if let Some(v) = value["candidate"]["sdpMlineIndex"].as_u64() {
+                sdp_mline_index: if let Some(v) = value["candidate"]["sdpMLineIndex"].as_u64() {
                     Some(v as u16)
                 } else {
                     None
@@ -386,4 +392,36 @@ impl FromValue for Answer {
             target: value_to_string!(value["target"]),
         }
     }
+}
+
+#[derive(Serialize, Debug, Clone)]
+pub enum EventName {
+    Delete,
+    Add,
+    Added,
+}
+
+impl EventName {
+    pub fn to_string(self) -> String {
+        match self {
+            EventName::Add => "add",
+            EventName::Added => "added",
+            EventName::Delete => "delete",
+        }
+        .to_string()
+    }
+}
+
+#[derive(Serialize, Debug, Clone)]
+#[allow(non_snake_case)]
+pub struct SetChangeUnit {
+    pub target: String,
+    pub name: String,
+    pub eventName: String,
+    pub roomLength: usize,
+    pub isOwner: bool,
+    pub muteds: Vec<String>,
+    pub banneds: Vec<String>,
+    pub asked: Vec<String>,
+    pub adminMuteds: Vec<String>,
 }

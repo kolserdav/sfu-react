@@ -6,6 +6,7 @@ use once_cell::sync::Lazy;
 use serde_json::Result as SerdeResult;
 use tokio_tungstenite::tungstenite::Message;
 use url::Url;
+use webrtc::rtp_transceiver::rtp_codec::RTPCodecType;
 
 use crate::ws::messages::{FromValue, MessageArgs, MessageType};
 
@@ -47,4 +48,8 @@ macro_rules! value_to_string {
     ($val:expr) => {
         $val.as_str().expect("Failed stringify value").to_string()
     };
+}
+
+pub fn get_peer_id_with_kind(peer_id: String, kind: RTPCodecType) -> String {
+    format!("{}{}{}", peer_id, DELIMITER, kind)
 }
