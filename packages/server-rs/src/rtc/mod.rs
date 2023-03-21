@@ -1,4 +1,4 @@
-use std::{collections::HashMap, rc::Rc, sync::Arc};
+use std::{collections::HashMap, sync::Arc};
 
 use futures::executor::block_on;
 use tokio::sync::{Mutex, MutexGuard};
@@ -442,7 +442,7 @@ impl RTC {
         }
         let answer = answer.unwrap();
 
-        let mut gather_complete = peer_connection.gathering_complete_promise().await;
+        // let mut gather_complete = peer_connection.gathering_complete_promise().await;
 
         let local_desc = peer_connection.set_local_description(answer.clone()).await;
         if let Err(e) = local_desc {
