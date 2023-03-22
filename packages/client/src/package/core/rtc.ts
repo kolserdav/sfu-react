@@ -205,6 +205,7 @@ class RTC
     };
     this.peerConnections[peerId]!.onconnectionstatechange = (e) => {
       const { currentTarget }: { currentTarget: RTCPeerConnection } = e as any;
+      log('info', `Peer connection ${peerId} state change to`, currentTarget.connectionState);
       switch (currentTarget.connectionState) {
         case 'closed':
         case 'disconnected':
@@ -460,7 +461,7 @@ class RTC
       return;
     }
     const cand = new RTCIceCandidate(candidate);
-    log('info', 'Trying to add ice candidate', { peerId });
+    log('info', 'Trying to add ice candidate', { peerId, cand });
     this.peerConnections[peerId]!.addIceCandidate(cand)
       .then(() => {
         log('log', '!! Adding received ICE candidate:', { id, target, userId });

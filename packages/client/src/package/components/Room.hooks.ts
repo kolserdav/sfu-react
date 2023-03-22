@@ -738,6 +738,7 @@ export const useConnection = ({
           },
         })
       );
+      console.log(eventName);
       switch (eventName) {
         case 'add':
         case 'added':

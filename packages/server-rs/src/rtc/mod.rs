@@ -71,7 +71,7 @@ impl RTC {
     }
 
     pub async fn add_user_to_room(&self, room_id: String, user_id: String) {
-        let index_r = self.add_room(room_id).await.unwrap();
+        let index_r = self.add_room(room_id.clone()).await.unwrap();
         let mut rooms = self.rooms.lock().await;
         let index = rooms[index_r]
             .users
@@ -81,6 +81,7 @@ impl RTC {
             warn!("Duplicate user: {}", user_id);
             return;
         }
+        info!("Add user: {} to room: {}", &user_id, &room_id);
         rooms[index_r].users.push(User {
             id: user_id,
             name: "TODO".to_string(),
@@ -141,7 +142,7 @@ impl RTC {
             return;
         }
         let index_u = index_u.unwrap();
-        info!("RTC user deleted: {}", &user_id);
+        debug!("RTC user deleted: {}", &user_id);
 
         self.close_peer_connection(user_id).await;
 
@@ -153,6 +154,7 @@ impl RTC {
         for (peer_id, peer_connection) in peers.iter() {
             let peer = peer_id.split(DELIMITER).collect::<Vec<&str>>();
             if user_id == peer[0] || user_id == peer[1] {
+                debug!("Close peer connection: {}", &peer_id);
                 peer_connection.close().await.unwrap();
             }
         }
@@ -312,10 +314,13 @@ impl RTC {
         }
         let peer_connection = peer_connection.unwrap();
 
+        let peer_id_c = peer_id.clone();
         peer_connection.on_peer_connection_state_change(Box::new(
             move |s: RTCPeerConnectionState| {
                 if s == RTCPeerConnectionState::Failed {
                     error!("Peer Connection has gone to failed exiting");
+                } else {
+                    info!("Peer connection {} state changed to: {}", &peer_id_c, &s);
                 }
 
                 Box::pin(async {})
@@ -328,10 +333,10 @@ impl RTC {
             warn!("Connection candidates is missing: {peer_id}");
             return None;
         }
-        let candidates = candidates.unwrap();
+        // let candidates = candidates.unwrap();
 
         let pc = Arc::downgrade(&peer_connection);
-        let pending_candidates2 = Arc::clone(candidates);
+        // let pending_candidates2 = Arc::clone(candidates);
 
         let sdp = msg.data.sdp.clone();
         let msg_c = msg.clone();
@@ -339,14 +344,13 @@ impl RTC {
         let msg_t = msg.clone();
 
         peer_connection.on_ice_candidate(Box::new(move |c: Option<RTCIceCandidate>| {
-            info!("on_ice_candidate {:?}", c);
-
             let pc2 = pc.clone();
-            let pending_candidates3 = Arc::clone(&pending_candidates2);
+            // let pending_candidates3 = Arc::clone(&pending_candidates2);
             let msg = msg.clone();
             let mut cb_cand = cb_cand.clone();
             Box::pin(async move {
-                if let Some(c) = c {
+                if let Some(candidate) = c {
+                    info!("on_ice_candidate {:?}", candidate);
                     if let Some(pc) = pc2.upgrade() {
                         let desc = pc.remote_description().await;
                         if desc.is_none() {
@@ -358,7 +362,7 @@ impl RTC {
                             connId: msg.connId.clone(),
                             r#type: MessageType::CANDIDATE,
                             data: Candidate {
-                                candidate: c.to_json().unwrap(),
+                                candidate: candidate.to_json().unwrap(),
                                 roomId: msg.data.roomId.clone(),
                                 userId: msg.data.userId.clone(),
                                 target: msg.data.target.clone(),
@@ -402,6 +406,12 @@ impl RTC {
                     let mut cb_track = cb_track.clone();
                     if room.room_id == msg.data.roomId {
                         for user in room.users.iter() {
+                            error!(
+                                "send: {}, msg: {}, rooms: {:?}",
+                                user.id.clone(),
+                                &msg,
+                                rooms,
+                            );
                             cb_track(MessageArgs::<SetChangeUnit> {
                                 id: user.id.clone(),
                                 connId: msg.connId.clone(),
@@ -424,7 +434,10 @@ impl RTC {
                         break;
                     }
                 }
+                drop(rooms);
             }
+
+            drop(streams);
 
             Box::pin(async {})
         }));

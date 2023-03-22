@@ -42,7 +42,6 @@ pub struct WS {
     pub chat: Chat,
     pub sockets: Mutex<HashMap<String, WSCallbackSocket>>,
     pub users: Mutex<HashMap<String, String>>,
-    pub rooms: Mutex<HashMap<String, String>>,
 }
 
 impl WS {
@@ -52,7 +51,6 @@ impl WS {
             chat,
             sockets: Mutex::new(HashMap::new()),
             users: Mutex::new(HashMap::new()),
-            rooms: Mutex::new(HashMap::new()),
         }
     }
 
@@ -149,20 +147,19 @@ impl WS {
         loop {
             let mut websocket = websocket.lock().await;
             let msg = websocket.next().await;
+            drop(websocket);
             if let None = msg {
-                drop(websocket);
-                info!("Message is none: {}", &conn_id);
+                debug!("Message is none: {}", &conn_id);
                 break;
             }
             let msg = msg.unwrap();
-            drop(websocket);
 
             let msg = msg.unwrap();
             let ws = ws.clone();
             if msg.is_text() || msg.is_binary() {
                 self.handler(msg, conn_id, ws).await;
             } else if msg.is_close() {
-                info!("Closed: {}, Protocol: {}", conn_id, protocol);
+                debug!("Closed: {}, Protocol: {}", conn_id, protocol);
 
                 if protocol == "room" {
                     let user_id = self.get_user_id_by_conn_id(&conn_id.to_string()).await;
@@ -253,6 +250,7 @@ impl WS {
         }
         let conn_id = conn_id.unwrap();
 
+        info!("Try get sockets: {}", &conn_id);
         let sockets = self.sockets.lock().await;
         let socket = sockets.get(&conn_id);
         if let None = socket {
@@ -261,10 +259,10 @@ impl WS {
         }
 
         let socket = socket.unwrap();
-
-        debug!("Send message: {:?}, {}", &msg, &conn_id);
-
+        info!("Try get socket: {}", &conn_id);
         let mut socket = socket.lock().await;
+
+        info!("Send message: {:?}, {}", &msg, &conn_id);
 
         socket
             .send(Message::Text(
@@ -279,14 +277,6 @@ impl WS {
         let users = self.users.lock().await;
         let user = users.get(id);
         if let None = user {
-            drop(users);
-
-            let rooms = self.rooms.lock().await;
-            let room = rooms.get(id);
-            if let Some(v) = room {
-                return Some(v.clone());
-            }
-
             return None;
         }
 
@@ -295,24 +285,15 @@ impl WS {
     }
 
     async fn set_user(&self, id: String, conn_id: String, is_room: bool) {
-        info!("Set user: {}, {}, {}", &id, &conn_id, &is_room);
-        if is_room {
-            let mut rooms = self.rooms.lock().await;
-            let user = rooms.get(&id);
-            if let Some(u) = user {
-                warn!("Duplicate WS room: {}", u);
-                return;
-            }
-            rooms.insert(id, conn_id.clone());
-            return;
-        }
-
         let mut users = self.users.lock().await;
         let user = users.get(&id);
         if let Some(u) = user {
             warn!("Duplicate WS user: {}", u);
-            return;
+            self.delete_socket(conn_id.clone()).await;
+            users.remove(&id);
         }
+
+        info!("Set user: {}, {}, {}", &id, &conn_id, &is_room);
         users.insert(id, conn_id.clone());
     }
 
@@ -321,8 +302,9 @@ impl WS {
         let socket = sockets.get(&conn_id);
         if let Some(_) = socket {
             warn!("Duplicate socket: {}", conn_id);
-            return;
         }
+
+        info!("Set socket: {}", &conn_id);
         sockets.insert(conn_id, ws);
     }
 
@@ -333,12 +315,14 @@ impl WS {
             warn!("Deleted socket is missing: {}", conn_id);
             return;
         }
+
         sockets.remove(&conn_id);
-        info!("Socket deleted: {:?}", conn_id);
+        debug!("Socket deleted: {:?}", conn_id);
     }
 
     async fn get_user_id_by_conn_id(&self, conn_id: &String) -> Option<String> {
         let users = self.users.lock().await;
+
         let mut user_id = None;
         for (key, val) in users.iter() {
             if *val == *conn_id {
@@ -349,10 +333,10 @@ impl WS {
     }
 
     async fn delete_user(&self, user_id: &String) {
-        info!("Try delete user: {:?}", user_id);
+        debug!("Try delete user: {:?}", user_id);
         let mut users = self.users.lock().await;
         users.remove(user_id);
-        info!("User deleted: {:?}", user_id);
+        debug!("User deleted: {:?}", user_id);
     }
 
     pub async fn get_room(&self, msg: MessageArgs<GetRoom>) {
