@@ -145,6 +145,7 @@ impl WS {
         debug!("New Connection: {:?}, Protocol: {}", conn_id, protocol);
 
         loop {
+            // FIXME blocking TcpStream!
             let mut websocket = websocket.lock().await;
             let msg = websocket.next().await;
             drop(websocket);
