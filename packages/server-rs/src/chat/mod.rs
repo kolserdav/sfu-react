@@ -9,6 +9,7 @@ use tokio_tungstenite::tungstenite::Message;
 
 use crate::{
     common::{Room, RoomsMutex},
+    prelude::get_websocket,
     ws::{
         messages::{MessageArgs, MessageType},
         LocaleValue, WSCallbackSocket,
@@ -20,7 +21,6 @@ use crate::{
 pub struct User {
     pub id: String,
     pub locale: LocaleValue,
-    pub ws: WSCallbackSocket,
     pub conn_id: String,
 }
 
@@ -40,7 +40,6 @@ impl Chat {
         &self,
         room_id: String,
         user_id: String,
-        ws: WSCallbackSocket,
         conn_id: String,
         locale: LocaleValue,
     ) {
@@ -66,7 +65,6 @@ impl Chat {
 
         rooms[index_r].users.push(User {
             id: user_id.clone(),
-            ws,
             conn_id: conn_id.clone(),
             locale,
         });
@@ -161,11 +159,9 @@ impl Chat {
         }
         let index_u = index_u.unwrap();
 
-        let mut socket = rooms[index_r].users[index_u].ws.lock().await;
-
+        let ws = get_websocket(&rooms[index_r].users[index_u].conn_id).unwrap();
         debug!("Send message: {:?}", &msg);
-        socket
-            .send(Message::Text(to_string(&msg).unwrap()))
+        ws.send(Message::Text(to_string(&msg).unwrap()))
             .await
             .unwrap();
         Ok(())

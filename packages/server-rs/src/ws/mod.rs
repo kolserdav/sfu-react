@@ -4,7 +4,7 @@ use self::messages::{
 pub use super::locales::{get_locale, Client, LocaleValue};
 use crate::{
     chat::Chat,
-    prelude::parse_message,
+    prelude::{get_websocket, parse_message, set_websocket},
     rtc::RTC,
     ws::messages::{Any, SetRoom},
 };
@@ -26,14 +26,14 @@ use log::{debug, error, info};
 use messages::{MessageArgs, MessageType, SetLocale};
 use serde::Serialize;
 use serde_json::to_string;
-use std::{collections::HashMap, fmt::Debug, mem::drop, sync::Arc};
+use std::{collections::HashMap, fmt::Debug, sync::Arc};
 use tokio::{
     net::{TcpListener, TcpStream},
     sync::Mutex,
 };
 
 pub type WSCallbackSelf<'a> = &'a WS;
-pub type WSCallbackSocket = Arc<Mutex<WebSocketStream<TcpStream>>>;
+pub type WSCallbackSocket = WebSocketStream<TcpStream>;
 
 #[derive(Debug)]
 
@@ -54,7 +54,7 @@ impl WS {
         }
     }
 
-    async fn message_handler(&'static self, msg: Message, conn_id: Uuid, socket: WSCallbackSocket) {
+    async fn message_handler(&'static self, msg: Message, conn_id: String) {
         let msg_c = msg.clone();
         let json = parse_message::<Any>(msg);
         if let Err(e) = json {
@@ -69,11 +69,11 @@ impl WS {
         match type_mess {
             MessageType::GET_LOCALE => {
                 let msg = parse_message::<GetLocale>(msg_c).unwrap();
-                self.get_locale_handler(msg, conn_id, socket).await;
+                self.get_locale_handler(msg, conn_id.clone()).await;
             }
             MessageType::GET_USER_ID => {
                 let msg = parse_message::<GetUserId>(msg_c).unwrap();
-                self.get_user_id(msg, conn_id, socket).await;
+                self.get_user_id(msg, conn_id).await;
             }
             MessageType::GET_ROOM => {
                 let msg = parse_message::<GetRoom>(msg_c).unwrap();
@@ -81,7 +81,7 @@ impl WS {
             }
             MessageType::GET_CHAT_UNIT => {
                 let msg = parse_message::<GetChatUnit>(msg_c).unwrap();
-                self.get_chat_unit(msg, conn_id, socket).await;
+                self.get_chat_unit(msg, conn_id).await;
             }
             MessageType::OFFER => {
                 let msg = parse_message::<Offer>(msg_c).unwrap();
@@ -139,16 +139,18 @@ impl WS {
             .await
             .expect("Error during the websocket handshake occurred");
 
-        let ws = Arc::new(Mutex::new(websocket));
-        let websocket = ws.clone();
         let conn_id = Uuid::new_v4();
+        let conn_id_str = conn_id.to_string();
+
+        set_websocket(conn_id_str.clone(), websocket);
+
         debug!("New Connection: {:?}, Protocol: {}", conn_id, protocol);
+        let websocket = get_websocket(&conn_id_str);
+        let websocket = websocket.unwrap();
 
         loop {
-            // FIXME blocking TcpStream!
-            let mut websocket = websocket.lock().await;
             let msg = websocket.next().await;
-            drop(websocket);
+
             if let None = msg {
                 debug!("Message is none: {}", &conn_id);
                 break;
@@ -156,9 +158,9 @@ impl WS {
             let msg = msg.unwrap();
 
             let msg = msg.unwrap();
-            let ws = ws.clone();
+
             if msg.is_text() || msg.is_binary() {
-                self.message_handler(msg, conn_id, ws).await;
+                self.message_handler(msg, conn_id_str.clone()).await;
             } else if msg.is_close() {
                 debug!("Closed: {}, Protocol: {}", conn_id, protocol);
 
@@ -184,35 +186,25 @@ impl WS {
         }
     }
 
-    pub async fn get_locale_handler(
-        &self,
-        msg: MessageArgs<GetLocale>,
-        conn_id: Uuid,
-        ws: WSCallbackSocket,
-    ) {
+    pub async fn get_locale_handler(&self, msg: MessageArgs<GetLocale>, conn_id: String) {
         let locale = get_locale(msg.data.locale);
 
         let mess = MessageArgs {
-            connId: conn_id.to_string(),
+            connId: conn_id.clone(),
             id: msg.id,
             data: SetLocale {
                 locale: locale.Client,
             },
             r#type: MessageType::SET_LOCALE,
         };
-        let mut write = ws.lock().await;
-        write
-            .send(Message::Text(to_string(&mess).unwrap()))
+
+        let ws = get_websocket(&conn_id).unwrap();
+        ws.send(Message::Text(to_string(&mess).unwrap()))
             .await
             .unwrap();
     }
 
-    pub async fn get_user_id(
-        &self,
-        msg: MessageArgs<GetUserId>,
-        conn_id: Uuid,
-        ws: WSCallbackSocket,
-    ) {
+    pub async fn get_user_id(&self, msg: MessageArgs<GetUserId>, conn_id: String) {
         let conn_id_str = conn_id.to_string();
 
         let is_room_o = msg.data.isRoom;
@@ -223,10 +215,7 @@ impl WS {
             is_room = is_room_o.unwrap();
         }
 
-        self.set_user(msg.id.clone(), conn_id.to_string(), is_room)
-            .await;
-
-        self.set_socket(conn_id.to_string(), ws).await;
+        self.set_user(msg.id.clone(), conn_id, is_room).await;
 
         self.send_message(MessageArgs::<SetUserId> {
             id: msg.id,
@@ -251,26 +240,14 @@ impl WS {
         }
         let conn_id = conn_id.unwrap();
 
-        info!("Try get sockets: {}", &conn_id);
-        let sockets = self.sockets.lock().await;
-        let socket = sockets.get(&conn_id);
-        if let None = socket {
-            warn!("Socket is missing in send_message: {}", msg);
-            return Err(());
-        }
-
-        let socket = socket.unwrap();
-        info!("Try get socket: {}", &conn_id);
-        let mut socket = socket.lock().await;
-
         info!("Send message: {:?}, {}", &msg, &conn_id);
 
-        socket
-            .send(Message::Text(
-                to_string(&msg).expect("Failed stringify message"),
-            ))
-            .await
-            .expect("Failed send message");
+        let ws = get_websocket(&conn_id).unwrap();
+        ws.send(Message::Text(
+            to_string(&msg).expect("Failed stringify message"),
+        ))
+        .await
+        .expect("Failed send message");
         Ok(())
     }
 
@@ -376,12 +353,7 @@ impl WS {
         .unwrap();
     }
 
-    pub async fn get_chat_unit(
-        &self,
-        msg: MessageArgs<GetChatUnit>,
-        conn_id: Uuid,
-        ws: WSCallbackSocket,
-    ) {
+    pub async fn get_chat_unit(&self, msg: MessageArgs<GetChatUnit>, conn_id: String) {
         let room_id = msg.id.clone();
 
         let locale = msg.data.locale.clone();
@@ -389,7 +361,7 @@ impl WS {
 
         info!("Get chat unit: {}", msg);
         self.chat
-            .set_socket(room_id, user_id, ws, conn_id.to_string(), locale)
+            .set_socket(room_id, user_id, conn_id.to_string(), locale)
             .await;
     }
 

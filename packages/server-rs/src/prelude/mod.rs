@@ -1,14 +1,18 @@
 pub mod constants;
-use std::{fmt::Debug, str::FromStr};
+use std::{collections::HashMap, fmt::Debug, str::FromStr};
 
 use constants::*;
 use once_cell::sync::Lazy;
 use serde_json::Result as SerdeResult;
-use tokio_tungstenite::tungstenite::Message;
+use tokio::net::TcpStream;
+use tokio_tungstenite::{tungstenite::Message, WebSocketStream};
 use url::Url;
 use webrtc::rtp_transceiver::rtp_codec::RTPCodecType;
 
-use crate::ws::messages::{FromValue, MessageArgs, MessageType};
+use crate::ws::{
+    messages::{FromValue, MessageArgs, MessageType},
+    WSCallbackSocket,
+};
 
 pub fn get_peer_id(user_id: String, target: String, conn_id: String) -> String {
     format!("{}{}{}{}{}", user_id, DELIMITER, target, DELIMITER, conn_id)
@@ -52,4 +56,23 @@ macro_rules! value_to_string {
 
 pub fn get_peer_id_with_kind(peer_id: String, kind: RTPCodecType) -> String {
     format!("{}{}{}", peer_id, DELIMITER, kind)
+}
+
+static mut SOCKETS: Lazy<HashMap<String, WSCallbackSocket>> = Lazy::new(|| HashMap::new());
+
+pub fn set_websocket(conn_id: String, websocket: WSCallbackSocket) {
+    unsafe {
+        SOCKETS.insert(conn_id, websocket);
+    }
+}
+
+pub fn get_websocket(conn_id: &String) -> Option<&mut WebSocketStream<TcpStream>> {
+    let mut websocket = None;
+    unsafe {
+        websocket = SOCKETS.get_mut(conn_id);
+    }
+    if let None = websocket {
+        warn!("WebSocket not found: {}", conn_id);
+    }
+    websocket
 }
