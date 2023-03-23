@@ -26,10 +26,11 @@ use log::{debug, error, info};
 use messages::{MessageArgs, MessageType, SetLocale};
 use serde::Serialize;
 use serde_json::to_string;
-use std::{collections::HashMap, fmt::Debug, mem::drop, sync::Arc};
+use std::{collections::HashMap, fmt::Debug, mem::drop, sync::Arc, thread::sleep, time::Duration};
 use tokio::{
     net::{TcpListener, TcpStream},
     sync::Mutex,
+    time::timeout,
 };
 
 pub type WSCallbackSelf<'a> = &'a WS;
@@ -147,8 +148,14 @@ impl WS {
         loop {
             // FIXME blocking TcpStream!
             let mut websocket = websocket.lock().await;
-            let msg = websocket.next().await;
+
+            let msg = timeout(Duration::from_millis(10), websocket.next()).await;
             drop(websocket);
+            if let Err(_) = msg {
+                sleep(Duration::from_millis(10));
+                continue;
+            }
+            let msg = msg.unwrap();
             if let None = msg {
                 debug!("Message is none: {}", &conn_id);
                 break;
