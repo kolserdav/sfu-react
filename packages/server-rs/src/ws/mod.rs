@@ -4,9 +4,9 @@ use self::messages::{
 pub use super::locales::{get_locale, Client, LocaleValue};
 use crate::{
     chat::Chat,
-    prelude::parse_message,
+    prelude::{constants::BLOCK_DURATION_MS, parse_message},
     rtc::RTC,
-    ws::messages::{Any, SetRoom},
+    ws::messages::{Any, SetChangeUnit, SetRoom},
 };
 use futures::executor::block_on;
 use futures_util::{SinkExt, StreamExt};
@@ -25,7 +25,7 @@ use log::{debug, error, info};
 
 use messages::{MessageArgs, MessageType, SetLocale};
 use serde::Serialize;
-use serde_json::to_string;
+use serde_json::{from_str, to_string};
 use std::{collections::HashMap, fmt::Debug, mem::drop, sync::Arc, thread::sleep, time::Duration};
 use tokio::{
     net::{TcpListener, TcpStream},
@@ -92,6 +92,18 @@ impl WS {
                 let msg = parse_message::<Candidate>(msg_c).unwrap();
                 self.candidate_handler(msg).await;
             }
+            MessageType::GET_VIDEO_SETTINGS => {
+                warn!("get video settings not impl");
+            }
+            MessageType::SET_CHANGE_UNIT => {
+                let json = from_str::<MessageArgs<SetChangeUnit>>(msg_c.to_string().as_str())
+                    .map_err(|err| {
+                        error!("Failed parse JSON: {:?}", err);
+                        err
+                    })
+                    .unwrap();
+                self.send_message(json).await.unwrap();
+            }
             _ => {
                 warn!("Default case of message: {:?}", json);
             }
@@ -146,13 +158,12 @@ impl WS {
         debug!("New Connection: {:?}, Protocol: {}", conn_id, protocol);
 
         loop {
-            // FIXME blocking TcpStream!
             let mut websocket = websocket.lock().await;
 
-            let msg = timeout(Duration::from_millis(10), websocket.next()).await;
+            let msg = timeout(Duration::from_millis(BLOCK_DURATION_MS), websocket.next()).await;
             drop(websocket);
             if let Err(_) = msg {
-                sleep(Duration::from_millis(10));
+                sleep(Duration::from_millis(BLOCK_DURATION_MS));
                 continue;
             }
             let msg = msg.unwrap();
@@ -258,7 +269,6 @@ impl WS {
         }
         let conn_id = conn_id.unwrap();
 
-        info!("Try get sockets: {}", &conn_id);
         let sockets = self.sockets.lock().await;
         let socket = sockets.get(&conn_id);
         if let None = socket {
@@ -267,10 +277,10 @@ impl WS {
         }
 
         let socket = socket.unwrap();
-        info!("Try get socket: {}", &conn_id);
+
         let mut socket = socket.lock().await;
 
-        info!("Send message: {:?}, {}", &msg, &conn_id);
+        debug!("Send message: {:?}, {}", &msg, &conn_id);
 
         socket
             .send(Message::Text(

@@ -20,3 +20,5 @@ pub fn dotenv_init() -> DotenvResult<()> {
 }
 
 pub const DELIMITER: char = '_';
+
+pub const BLOCK_DURATION_MS: u64 = 10;

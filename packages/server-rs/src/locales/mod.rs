@@ -6,12 +6,12 @@ use std::{
     str::FromStr,
 };
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 mod en;
 mod ru;
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum LocaleValue {
     ru,
     en,

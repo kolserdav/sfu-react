@@ -226,10 +226,10 @@ impl RTC {
         }
         let peer_connection = peer_connection.unwrap();
 
-        peer_connection
-            .add_ice_candidate(msg.data.candidate)
-            .await
-            .expect("Error add ice candidate");
+        let add_ice_res = peer_connection.add_ice_candidate(msg.data.candidate).await;
+        if let Err(e) = add_ice_res {
+            error!("Failed add ice {} candidate: {:?}", &peer_id, e);
+        }
     }
 
     pub async fn offer<C, T>(
@@ -386,14 +386,17 @@ impl RTC {
             );
             let peer_id = get_peer_id_with_kind(peer_id, track.kind());
 
-            let mut streams = block_on(this.streams.lock());
-
-            debug!("Save track: {:?}", &track);
-            streams.insert(peer_id, track.clone());
-
             let is_room = msg.data.target.clone() == "0";
 
             if is_room && track.kind() == RTPCodecType::Video {
+                {
+                    let mut streams = block_on(this.streams.lock());
+
+                    info!("Save track: {} to peer: {}", &track.kind(), &peer_id);
+                    streams.insert(peer_id, track.clone());
+                    drop(streams);
+                }
+
                 let rooms = block_on(this.rooms.lock());
                 let (index_r, _, askeds) = block_on(this.find_askeds_indexes(&msg.data.userId));
                 if let None = index_r {
@@ -406,12 +409,6 @@ impl RTC {
                     let mut cb_track = cb_track.clone();
                     if room.room_id == msg.data.roomId {
                         for user in room.users.iter() {
-                            error!(
-                                "send: {}, msg: {}, rooms: {:?}",
-                                user.id.clone(),
-                                &msg,
-                                rooms,
-                            );
                             cb_track(MessageArgs::<SetChangeUnit> {
                                 id: user.id.clone(),
                                 connId: msg.connId.clone(),
@@ -436,8 +433,6 @@ impl RTC {
                 }
                 drop(rooms);
             }
-
-            drop(streams);
 
             Box::pin(async {})
         }));
