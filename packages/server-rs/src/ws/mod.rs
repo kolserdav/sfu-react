@@ -54,7 +54,7 @@ impl WS {
         }
     }
 
-    async fn handler<'a>(&'static self, msg: Message, conn_id: Uuid, socket: WSCallbackSocket) {
+    async fn message_handler(&'static self, msg: Message, conn_id: Uuid, socket: WSCallbackSocket) {
         let msg_c = msg.clone();
         let json = parse_message::<Any>(msg);
         if let Err(e) = json {
@@ -110,11 +110,11 @@ impl WS {
 
         while let Ok((stream, _)) = server.accept().await {
             let this = this.clone();
-            tokio::spawn(this.handle_mess(stream));
+            tokio::spawn(this.connection(stream));
         }
     }
 
-    async fn handle_mess(&'static self, stream: TcpStream) {
+    async fn connection(&'static self, stream: TcpStream) {
         let mut protocol = "main".to_string();
         let mut path = "".to_string();
         let callback = |req: &Request, mut response: Response| {
@@ -158,7 +158,7 @@ impl WS {
             let msg = msg.unwrap();
             let ws = ws.clone();
             if msg.is_text() || msg.is_binary() {
-                self.handler(msg, conn_id, ws).await;
+                self.message_handler(msg, conn_id, ws).await;
             } else if msg.is_close() {
                 debug!("Closed: {}, Protocol: {}", conn_id, protocol);
 
