@@ -12,7 +12,8 @@ use webrtc::{
     interceptor::registry::Registry,
     peer_connection::{
         configuration::RTCConfiguration, peer_connection_state::RTCPeerConnectionState,
-        sdp::session_description::RTCSessionDescription, RTCPeerConnection,
+        sdp::session_description::RTCSessionDescription, signaling_state::RTCSignalingState,
+        RTCPeerConnection,
     },
     rtp_transceiver::rtp_codec::RTPCodecType,
     track::track_remote::TrackRemote,
@@ -41,6 +42,7 @@ type Candidates = Arc<Vec<RTCIceCandidate>>;
 pub struct RTC {
     pub peers: Mutex<HashMap<String, Arc<RTCPeerConnection>>>,
     pub candidates: Mutex<HashMap<String, Candidates>>,
+    pub users: Mutex<HashMap<String, String>>,
     pub rooms: Mutex<Vec<Room<User>>>,
     pub askeds: Mutex<Vec<RoomList>>,
     pub streams: Mutex<HashMap<String, Arc<TrackRemote>>>,
@@ -53,6 +55,7 @@ impl RTC {
             peers: Mutex::new(HashMap::new()),
             rooms: Mutex::new(Vec::new()),
             askeds: Mutex::new(Vec::new()),
+            users: Mutex::new(HashMap::new()),
             streams: Mutex::new(HashMap::new()),
         }
     }
@@ -68,6 +71,35 @@ impl RTC {
             index_r = Some(rooms.len() - 1);
         }
         index_r
+    }
+
+    async fn set_user(&self, user_id: String, conn_id: String) {
+        let mut users = self.users.lock().await;
+        let user = users.get(&user_id);
+        if let Some(_) = user {
+            warn!("Duplicate user in RTC: {}", &user_id);
+            users.remove(&user_id);
+        }
+        users.insert(user_id, conn_id);
+    }
+
+    async fn get_conn_id(&self, user_id: &String) -> Option<String> {
+        let users = self.users.lock().await;
+        let res = users.get(user_id);
+        if let None = res {
+            return None;
+        }
+        Some(res.unwrap().clone())
+    }
+
+    async fn delete_user(&self, user_id: &String) {
+        let mut users = self.users.lock().await;
+        let user = users.get(user_id);
+        if let None = user {
+            warn!("Deleted user is missing in RTC.delete_user: {}", &user_id);
+            return;
+        }
+        users.remove(user_id);
     }
 
     pub async fn add_user_to_room(&self, room_id: String, user_id: String) {
@@ -143,6 +175,8 @@ impl RTC {
         }
         let index_u = index_u.unwrap();
         debug!("RTC user deleted: {}", &user_id);
+
+        self.delete_user(&user_id).await;
 
         self.close_peer_connection(user_id).await;
 
@@ -276,6 +310,9 @@ impl RTC {
             msg.connId.clone(),
         );
 
+        self.set_user(msg.data.userId.clone(), msg.connId.clone())
+            .await;
+
         self.set_peer_connection(peer_id.clone(), peer_connection)
             .await;
         self.set_candidates(peer_id, Arc::new(Vec::new())).await;
@@ -326,6 +363,50 @@ impl RTC {
                 Box::pin(async {})
             },
         ));
+
+        let peer_id_c = peer_id.clone();
+        let target_c = msg.data.target.clone();
+        let this = Arc::new(self);
+        peer_connection.on_signaling_state_change(Box::new(move |s| {
+            let mut this = this.clone();
+            if RTCSignalingState::HaveRemoteOffer == s {
+                let peers = block_on(self.peers.lock());
+
+                let peer_connection = peers.get(&peer_id_c);
+                if let None = peer_connection {
+                    warn!("Skip send track: {}", &peer_id_c);
+                    return Box::pin(async {});
+                }
+                let peer_connection = peer_connection.unwrap();
+
+                let stream_conn_id = block_on(this.get_conn_id(&target_c));
+                if let None = stream_conn_id {
+                    warn!(
+                        "Conn id is missing on have_remote_offer: {}, {}",
+                        &peer_id_c, &target_c
+                    );
+                    return Box::pin(async {});
+                }
+                let stream_conn_id = stream_conn_id.unwrap();
+
+                let peer_id = get_peer_id(target_c.clone(), String::from("0"), stream_conn_id);
+                let peer_id_video = get_peer_id_with_kind(peer_id.clone(), RTPCodecType::Video);
+                let peer_id_audio = get_peer_id_with_kind(peer_id.clone(), RTPCodecType::Audio);
+
+                let streams = block_on(this.streams.lock());
+
+                let stream_a = streams.get(&peer_id_audio);
+                if let Some(s) = stream_a {
+                    peer_connection.add_track(s);
+                }
+
+                let stream_v = streams.get(&peer_id_video);
+                if let Some(s) = stream_v {
+                    peer_connection.add_track(s);
+                }
+            }
+            Box::pin(async {})
+        }));
 
         let candidates = self.candidates.lock().await;
         let candidates = candidates.get(&peer_id);
@@ -384,7 +465,6 @@ impl RTC {
                 msg.data.target.clone(),
                 msg.connId.clone(),
             );
-            let peer_id = get_peer_id_with_kind(peer_id, track.kind());
 
             let is_room = msg.data.target.clone() == "0";
 
@@ -392,6 +472,7 @@ impl RTC {
                 {
                     let mut streams = block_on(this.streams.lock());
 
+                    let peer_id = get_peer_id_with_kind(peer_id, track.kind());
                     info!("Save track: {} to peer: {}", &track.kind(), &peer_id);
                     streams.insert(peer_id, track.clone());
                     drop(streams);
