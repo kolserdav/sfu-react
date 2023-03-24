@@ -16,7 +16,6 @@ use webrtc::{
         RTCPeerConnection,
     },
     rtp_transceiver::rtp_codec::RTPCodecType,
-    track::track_remote::TrackRemote,
 };
 
 use crate::{
