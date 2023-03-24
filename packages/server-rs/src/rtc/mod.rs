@@ -397,12 +397,12 @@ impl RTC {
 
                 let stream_a = streams.get(&peer_id_audio);
                 if let Some(s) = stream_a {
-                    peer_connection.add_track(s);
+                    peer_connection.add_track(s.to_owned());
                 }
 
                 let stream_v = streams.get(&peer_id_video);
                 if let Some(s) = stream_v {
-                    peer_connection.add_track(s);
+                    peer_connection.add_track(s.to_owned());
                 }
             }
             Box::pin(async {})
