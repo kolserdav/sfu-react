@@ -27,6 +27,9 @@ use crate::{
     },
 };
 
+pub mod track;
+use track::Track;
+
 #[derive(Serialize, Debug)]
 #[allow(non_snake_case)]
 pub struct User {
@@ -45,7 +48,7 @@ pub struct RTC {
     pub users: Mutex<HashMap<String, String>>,
     pub rooms: Mutex<Vec<Room<User>>>,
     pub askeds: Mutex<Vec<RoomList>>,
-    pub streams: Mutex<HashMap<String, Arc<TrackRemote>>>,
+    pub streams: Mutex<HashMap<String, Arc<Track>>>,
 }
 
 impl RTC {
@@ -368,7 +371,7 @@ impl RTC {
         let target_c = msg.data.target.clone();
         let this = Arc::new(self);
         peer_connection.on_signaling_state_change(Box::new(move |s| {
-            let mut this = this.clone();
+            let this = this.clone();
             if RTCSignalingState::HaveRemoteOffer == s {
                 let peers = block_on(self.peers.lock());
 
@@ -397,12 +400,12 @@ impl RTC {
 
                 let stream_a = streams.get(&peer_id_audio);
                 if let Some(s) = stream_a {
-                    peer_connection.add_track(s);
+                    peer_connection.add_track(s.to_owned());
                 }
 
                 let stream_v = streams.get(&peer_id_video);
                 if let Some(s) = stream_v {
-                    peer_connection.add_track(s);
+                    peer_connection.add_track(s.to_owned());
                 }
             }
             Box::pin(async {})
@@ -474,7 +477,7 @@ impl RTC {
 
                     let peer_id = get_peer_id_with_kind(peer_id, track.kind());
                     info!("Save track: {} to peer: {}", &track.kind(), &peer_id);
-                    streams.insert(peer_id, track.clone());
+                    streams.insert(peer_id, Arc::new(Track(track.clone())));
                     drop(streams);
                 }
 
