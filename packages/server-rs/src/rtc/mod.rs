@@ -16,7 +16,6 @@ use webrtc::{
         RTCPeerConnection,
     },
     rtp_transceiver::rtp_codec::RTPCodecType,
-    track::track_remote::TrackRemote,
 };
 
 use crate::{
@@ -26,6 +25,9 @@ use crate::{
         Candidate, EventName, MessageArgs, MessageType, Offer, RoomList, SetChangeUnit,
     },
 };
+
+pub mod track;
+use track::Track;
 
 #[derive(Serialize, Debug)]
 #[allow(non_snake_case)]
@@ -45,7 +47,7 @@ pub struct RTC {
     pub users: Mutex<HashMap<String, String>>,
     pub rooms: Mutex<Vec<Room<User>>>,
     pub askeds: Mutex<Vec<RoomList>>,
-    pub streams: Mutex<HashMap<String, Arc<TrackRemote>>>,
+    pub streams: Mutex<HashMap<String, Arc<Track>>>,
 }
 
 impl RTC {
@@ -368,8 +370,8 @@ impl RTC {
         let target_c = msg.data.target.clone();
         let this = Arc::new(self);
         peer_connection.on_signaling_state_change(Box::new(move |s| {
-            let mut this = this.clone();
-            if RTCSignalingState::HaveRemoteOffer == s {
+            let this = this.clone();
+            if RTCSignalingState::HaveRemoteOffer == s && target_c != "0" {
                 let peers = block_on(self.peers.lock());
 
                 let peer_connection = peers.get(&peer_id_c);
@@ -397,12 +399,13 @@ impl RTC {
 
                 let stream_a = streams.get(&peer_id_audio);
                 if let Some(s) = stream_a {
-                    peer_connection.add_track(s.to_owned());
+                    block_on(peer_connection.add_track(s.to_owned())).unwrap();
+
                 }
 
                 let stream_v = streams.get(&peer_id_video);
                 if let Some(s) = stream_v {
-                    peer_connection.add_track(s.to_owned());
+                    block_on(peer_connection.add_track(s.to_owned())).unwrap();
                 }
             }
             Box::pin(async {})
@@ -474,7 +477,14 @@ impl RTC {
 
                     let peer_id = get_peer_id_with_kind(peer_id, track.kind());
                     info!("Save track: {} to peer: {}", &track.kind(), &peer_id);
-                    streams.insert(peer_id, track.clone());
+                    streams.insert(
+                        peer_id,
+                        Arc::new(Track {
+                            id: track.id().clone().to_string(),
+                            stream_id: track.stream_id().clone().to_string(),
+                            track_remote: track,
+                        }),
+                    );
                     drop(streams);
                 }
 
