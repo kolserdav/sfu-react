@@ -400,6 +400,7 @@ impl RTC {
                 let stream_a = streams.get(&peer_id_audio);
                 if let Some(s) = stream_a {
                     block_on(peer_connection.add_track(s.to_owned())).unwrap();
+
                 }
 
                 let stream_v = streams.get(&peer_id_video);
