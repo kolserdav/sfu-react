@@ -371,7 +371,7 @@ impl RTC {
         let this = Arc::new(self);
         peer_connection.on_signaling_state_change(Box::new(move |s| {
             let this = this.clone();
-            if RTCSignalingState::HaveRemoteOffer == s {
+            if RTCSignalingState::HaveRemoteOffer == s && target_c != "0" {
                 let peers = block_on(self.peers.lock());
 
                 let peer_connection = peers.get(&peer_id_c);
@@ -399,12 +399,12 @@ impl RTC {
 
                 let stream_a = streams.get(&peer_id_audio);
                 if let Some(s) = stream_a {
-                    peer_connection.add_track(s.to_owned());
+                    block_on(peer_connection.add_track(s.to_owned())).unwrap();
                 }
 
                 let stream_v = streams.get(&peer_id_video);
                 if let Some(s) = stream_v {
-                    peer_connection.add_track(s.to_owned());
+                    block_on(peer_connection.add_track(s.to_owned())).unwrap();
                 }
             }
             Box::pin(async {})
@@ -476,7 +476,14 @@ impl RTC {
 
                     let peer_id = get_peer_id_with_kind(peer_id, track.kind());
                     info!("Save track: {} to peer: {}", &track.kind(), &peer_id);
-                    streams.insert(peer_id, Arc::new(Track(track.clone())));
+                    streams.insert(
+                        peer_id,
+                        Arc::new(Track {
+                            id: track.id().clone().to_string(),
+                            stream_id: track.stream_id().clone().to_string(),
+                            track_remote: track,
+                        }),
+                    );
                     drop(streams);
                 }
 

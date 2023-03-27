@@ -11,7 +11,11 @@ use webrtc::{
 };
 
 #[derive(Debug)]
-pub struct Track(pub Arc<TrackRemote>);
+pub struct Track {
+    pub id: String,
+    pub stream_id: String,
+    pub track_remote: Arc<TrackRemote>,
+}
 
 impl TrackLocal for Track {
     fn bind<'life0, 'life1, 'async_trait>(
@@ -23,7 +27,7 @@ impl TrackLocal for Track {
         'life1: 'async_trait,
         Self: 'async_trait,
     {
-        Pin::from(Box::new(future::ok(self.0.codec())))
+        Pin::from(Box::new(future::ok(self.track_remote.codec())))
     }
 
     fn unbind<'life0, 'life1, 'async_trait>(
@@ -39,18 +43,18 @@ impl TrackLocal for Track {
     }
 
     fn kind(&self) -> RTPCodecType {
-        self.0.kind()
+        self.track_remote.kind()
     }
 
     fn as_any(&self) -> &dyn Any {
-        &self.0
+        &self.track_remote
     }
 
     fn id(&self) -> &str {
-        self.0.id().as_str()
+        &self.id.as_str()
     }
 
     fn stream_id(&self) -> &str {
-        self.0.stream_id().as_str()
+        self.stream_id.as_str()
     }
 }
