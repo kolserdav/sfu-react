@@ -312,8 +312,10 @@ impl RTC {
             msg.connId.clone(),
         );
 
-        self.set_user(msg.data.userId.clone(), msg.connId.clone())
-            .await;
+        if msg.data.target == "0" {
+            self.set_user(msg.data.userId.clone(), msg.connId.clone())
+                .await;
+        }
 
         self.set_peer_connection(peer_id.clone(), peer_connection)
             .await;
@@ -372,8 +374,8 @@ impl RTC {
         peer_connection.on_signaling_state_change(Box::new(move |s| {
             let this = this.clone();
             if RTCSignalingState::HaveRemoteOffer == s && target_c != "0" {
+                // FIXME peers is locked!
                 let peers = block_on(self.peers.lock());
-
                 let peer_connection = peers.get(&peer_id_c);
                 if let None = peer_connection {
                     warn!("Skip send track: {}", &peer_id_c);
@@ -399,13 +401,24 @@ impl RTC {
 
                 let stream_a = streams.get(&peer_id_audio);
                 if let Some(s) = stream_a {
+                    info!(
+                        "Send audio track: {} to peer connection: {}",
+                        &peer_id_audio, &peer_id_c
+                    );
                     block_on(peer_connection.add_track(s.to_owned())).unwrap();
-
+                } else {
+                    warn!("Audio track is missing: {}", &peer_id_audio);
                 }
 
                 let stream_v = streams.get(&peer_id_video);
                 if let Some(s) = stream_v {
+                    info!(
+                        "Send video track: {} to peer connection: {}",
+                        &peer_id_video, &peer_id_c
+                    );
                     block_on(peer_connection.add_track(s.to_owned())).unwrap();
+                } else {
+                    warn!("Video track is missing: {}", &peer_id_video);
                 }
             }
             Box::pin(async {})
