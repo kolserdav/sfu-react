@@ -354,6 +354,10 @@ impl RTC {
 
         peer_connection.on_signaling_state_change(Box::new(move |s| {
             let this = this.clone();
+            info!(
+                "Signaling state {} changed to {}, {:?}",
+                &peer_id_c, &s, self.peers
+            );
             if RTCSignalingState::HaveRemoteOffer == s && target != "0" {
                 // FIXME peers is locked!
                 let peers = block_on(self.peers.lock());
@@ -449,41 +453,26 @@ impl RTC {
         }
         let peer_connection = peer_connection.unwrap();
 
-        // let candidates = candidates.unwrap();
-
-        let pc = Arc::downgrade(&peer_connection);
-        // let pending_candidates2 = Arc::clone(candidates);
-
         let msg = Arc::new(msg);
 
         peer_connection.on_ice_candidate(Box::new(move |c: Option<RTCIceCandidate>| {
-            let pc2 = pc.clone();
-            // let pending_candidates3 = Arc::clone(&pending_candidates2);
             let msg = msg.clone();
             let mut cb_cand = cb.clone();
             Box::pin(async move {
                 if let Some(candidate) = c {
                     info!("on_ice_candidate {:?}", candidate);
-                    if let Some(pc) = pc2.upgrade() {
-                        let desc = pc.remote_description().await;
-                        if desc.is_none() {
-                            error!("Missing remote description in on_ice_candidate");
-                        }
 
-                        cb_cand(MessageArgs {
-                            id: msg.data.userId.clone(),
-                            connId: msg.connId.clone(),
-                            r#type: MessageType::CANDIDATE,
-                            data: Candidate {
-                                candidate: candidate.to_json().unwrap(),
-                                roomId: msg.data.roomId.clone(),
-                                userId: msg.data.userId.clone(),
-                                target: msg.data.target.clone(),
-                            },
-                        })
-                    } else {
-                        warn!("Peer connection is missing in on_ice_candidate");
-                    }
+                    cb_cand(MessageArgs {
+                        id: msg.data.userId.clone(),
+                        connId: msg.connId.clone(),
+                        r#type: MessageType::CANDIDATE,
+                        data: Candidate {
+                            candidate: candidate.to_json().unwrap(),
+                            roomId: msg.data.roomId.clone(),
+                            userId: msg.data.userId.clone(),
+                            target: msg.data.target.clone(),
+                        },
+                    })
                 }
             })
         }));
