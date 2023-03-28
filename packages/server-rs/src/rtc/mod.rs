@@ -11,7 +11,7 @@ use webrtc::{
     ice_transport::{ice_candidate::RTCIceCandidate, ice_server::RTCIceServer},
     interceptor::registry::Registry,
     peer_connection::{
-        configuration::RTCConfiguration, peer_connection_state::RTCPeerConnectionState,
+        self, configuration::RTCConfiguration, peer_connection_state::RTCPeerConnectionState,
         sdp::session_description::RTCSessionDescription, signaling_state::RTCSignalingState,
         RTCPeerConnection,
     },
@@ -330,50 +330,31 @@ impl RTC {
         candidates.insert(peer_id, cands);
     }
 
-    async fn handle_ice_candidates<C, T>(
-        &'static self,
-        msg: MessageArgs<Offer>,
-        cb_cand: C,
-        cb_track: T,
-    ) -> Option<RTCSessionDescription>
-    where
-        C: FnMut(MessageArgs<Candidate>) + Sync + Send + Copy + 'static,
-        T: FnMut(MessageArgs<SetChangeUnit>) + Sync + Send + Copy + 'static,
-    {
-        let peer_id = get_peer_id(
-            msg.data.userId.clone(),
-            msg.data.target.clone(),
-            msg.connId.clone(),
-        );
-
+    async fn get_peer_connection(&self, peer_id: &String) -> Option<Arc<RTCPeerConnection>> {
         let peers = self.peers.lock().await;
 
-        let peer_connection = peers.get(&peer_id);
+        let peer_connection = peers.get(peer_id);
         if let None = peer_connection {
-            warn!("Skip handle ice candidate");
+            warn!("Peer connection is missing: {}", &peer_id);
             return None;
         }
         let peer_connection = peer_connection.unwrap();
+        Some(peer_connection.to_owned())
+    }
 
+    async fn sigaling_state_change_handler(&'static self, peer_id: String, target: String) {
         let peer_id_c = peer_id.clone();
-        peer_connection.on_peer_connection_state_change(Box::new(
-            move |s: RTCPeerConnectionState| {
-                if s == RTCPeerConnectionState::Failed {
-                    error!("Peer Connection has gone to failed exiting");
-                } else {
-                    info!("Peer connection {} state changed to: {}", &peer_id_c, &s);
-                }
-
-                Box::pin(async {})
-            },
-        ));
-
-        let peer_id_c = peer_id.clone();
-        let target_c = msg.data.target.clone();
         let this = Arc::new(self);
+        let peer_connection = self.get_peer_connection(&peer_id).await;
+        if let None = peer_connection {
+            warn!("Skip set signaling state change handler: {}", &peer_id);
+            return;
+        }
+        let peer_connection = peer_connection.unwrap();
+
         peer_connection.on_signaling_state_change(Box::new(move |s| {
             let this = this.clone();
-            if RTCSignalingState::HaveRemoteOffer == s && target_c != "0" {
+            if RTCSignalingState::HaveRemoteOffer == s && target != "0" {
                 // FIXME peers is locked!
                 let peers = block_on(self.peers.lock());
                 let peer_connection = peers.get(&peer_id_c);
@@ -383,17 +364,17 @@ impl RTC {
                 }
                 let peer_connection = peer_connection.unwrap();
 
-                let stream_conn_id = block_on(this.get_conn_id(&target_c));
+                let stream_conn_id = block_on(this.get_conn_id(&target));
                 if let None = stream_conn_id {
                     warn!(
                         "Conn id is missing on have_remote_offer: {}, {}",
-                        &peer_id_c, &target_c
+                        &peer_id_c, &target
                     );
                     return Box::pin(async {});
                 }
                 let stream_conn_id = stream_conn_id.unwrap();
 
-                let peer_id = get_peer_id(target_c.clone(), String::from("0"), stream_conn_id);
+                let peer_id = get_peer_id(target.clone(), String::from("0"), stream_conn_id);
                 let peer_id_video = get_peer_id_with_kind(peer_id.clone(), RTPCodecType::Video);
                 let peer_id_audio = get_peer_id_with_kind(peer_id.clone(), RTPCodecType::Audio);
 
@@ -423,28 +404,63 @@ impl RTC {
             }
             Box::pin(async {})
         }));
+    }
 
+    async fn on_peer_connection_state_change_handler(&self, peer_id: String) {
+        let peer_id_c = peer_id.clone();
+        let peer_connection = self.get_peer_connection(&peer_id).await;
+        if let None = peer_connection {
+            warn!(
+                "Skip set peer_connection_state_change_handler: {}",
+                &peer_id
+            );
+            return;
+        }
+        let peer_connection = peer_connection.unwrap();
+
+        peer_connection.on_peer_connection_state_change(Box::new(
+            move |s: RTCPeerConnectionState| {
+                if s == RTCPeerConnectionState::Failed {
+                    error!("Peer Connection has gone to failed exiting");
+                } else {
+                    info!("Peer connection {} state changed to: {}", &peer_id_c, &s);
+                }
+
+                Box::pin(async {})
+            },
+        ));
+    }
+
+    async fn on_ice_candidate_handler<C>(&self, peer_id: String, msg: MessageArgs<Offer>, cb: C)
+    where
+        C: FnMut(MessageArgs<Candidate>) + Sync + Send + Copy + 'static,
+    {
         let candidates = self.candidates.lock().await;
         let candidates = candidates.get(&peer_id);
         if let None = candidates {
             warn!("Connection candidates is missing: {peer_id}");
-            return None;
+            return;
         }
+
+        let peer_connection = self.get_peer_connection(&peer_id).await;
+        if let None = peer_connection {
+            warn!("Skip set on_ice_candidate_handler: {}", &peer_id);
+            return;
+        }
+        let peer_connection = peer_connection.unwrap();
+
         // let candidates = candidates.unwrap();
 
         let pc = Arc::downgrade(&peer_connection);
         // let pending_candidates2 = Arc::clone(candidates);
 
-        let sdp = msg.data.sdp.clone();
-        let msg_c = msg.clone();
         let msg = Arc::new(msg);
-        let msg_t = msg.clone();
 
         peer_connection.on_ice_candidate(Box::new(move |c: Option<RTCIceCandidate>| {
             let pc2 = pc.clone();
             // let pending_candidates3 = Arc::clone(&pending_candidates2);
             let msg = msg.clone();
-            let mut cb_cand = cb_cand.clone();
+            let mut cb_cand = cb.clone();
             Box::pin(async move {
                 if let Some(candidate) = c {
                     info!("on_ice_candidate {:?}", candidate);
@@ -471,8 +487,21 @@ impl RTC {
                 }
             })
         }));
+    }
+
+    async fn on_track_handler<C>(&'static self, peer_id: String, msg: MessageArgs<Offer>, cb: C)
+    where
+        C: FnMut(MessageArgs<SetChangeUnit>) + Sync + Send + Copy + 'static,
+    {
+        let peer_connection = self.get_peer_connection(&peer_id).await;
+        if let None = peer_connection {
+            warn!("Skip set on_track_handler: {}", &peer_id);
+            return;
+        }
+        let peer_connection = peer_connection.unwrap();
 
         let this = Arc::new(self);
+        let msg_t = msg.clone();
 
         peer_connection.on_track(Box::new(move |track, _, _| {
             let msg = msg_t.clone();
@@ -510,7 +539,7 @@ impl RTC {
                 let index_r = index_r.unwrap();
 
                 for room in rooms.iter() {
-                    let mut cb_track = cb_track.clone();
+                    let mut cb_track = cb.clone();
                     if room.room_id == msg.data.roomId {
                         for user in room.users.iter() {
                             cb_track(MessageArgs::<SetChangeUnit> {
@@ -540,6 +569,46 @@ impl RTC {
 
             Box::pin(async {})
         }));
+    }
+
+    async fn handle_ice_candidates<C, T>(
+        &'static self,
+        msg: MessageArgs<Offer>,
+        cb_cand: C,
+        cb_track: T,
+    ) -> Option<RTCSessionDescription>
+    where
+        C: FnMut(MessageArgs<Candidate>) + Sync + Send + Copy + 'static,
+        T: FnMut(MessageArgs<SetChangeUnit>) + Sync + Send + Copy + 'static,
+    {
+        let peer_id = get_peer_id(
+            msg.data.userId.clone(),
+            msg.data.target.clone(),
+            msg.connId.clone(),
+        );
+
+        self.on_peer_connection_state_change_handler(peer_id.clone())
+            .await;
+
+        self.sigaling_state_change_handler(peer_id.clone(), msg.data.target.clone())
+            .await;
+
+        self.on_ice_candidate_handler(peer_id.clone(), msg.clone(), cb_cand)
+            .await;
+
+        self.on_track_handler(peer_id.clone(), msg.clone(), cb_track)
+            .await;
+
+        let sdp = msg.data.sdp.clone();
+        let msg_c = msg.clone();
+
+        let peers = self.peers.lock().await;
+        let peer_connection = peers.get(&peer_id);
+        if let None = peer_connection {
+            warn!("Skip handle ice candidate");
+            return None;
+        }
+        let peer_connection = peer_connection.unwrap();
 
         let rem_desc = peer_connection.set_remote_description(sdp).await;
         if let Err(e) = rem_desc {
