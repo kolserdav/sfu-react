@@ -12,6 +12,12 @@ repository = ""
 include = ["Cargo.toml", "/src/*.rs", "src/**/*.rs"]
 rust-version = "1.67"
 
+[[bin]]
+name = "server"
+
+[lib]
+name = "uyem_server"
+
 [dependencies]
 env_logger = "0.10.0"
 log = { version = "0.4.17", features = [ "max_level_debug", "release_max_level_warn" ] }

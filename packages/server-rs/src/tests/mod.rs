@@ -3,16 +3,22 @@
 use crate::{
     locales::LocaleValue,
     prelude::{constants::dotenv_init, get_ws_url, parse_message},
+    server,
     ws::messages::{Any, GetRoom, GetUserId, MessageArgs, MessageType, SetRoom, SetUserId},
 };
 use serde_json::to_string;
+use tokio::spawn;
 use tokio_tungstenite::tungstenite::{connect, Message};
 
-#[test]
-fn test() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+async fn test() {
     dotenv_init().expect(".env file not found");
-
+    spawn(run_server());
     client("1", "1");
+}
+
+async fn run_server() {
+    server().await;
 }
 
 fn client(room_id: &str, user_id: &str) {
@@ -49,6 +55,7 @@ fn client(room_id: &str, user_id: &str) {
             }
             MessageType::SET_ROOM => {
                 let json = parse_message::<SetRoom>(msg_c).unwrap();
+                println!("{}", json);
                 break;
             }
             _ => {
