@@ -238,7 +238,8 @@ impl FromValue for GetChatUnit {
 pub type SetChatUnit = ();
 
 #[allow(non_snake_case)]
-#[derive(Serialize, Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
+#[cfg_attr(test, derive(Serialize))]
 pub struct GetUserId {
     pub isRoom: Option<bool>,
     pub userName: String,
@@ -255,10 +256,19 @@ impl FromValue for GetUserId {
     }
 }
 
-#[derive(Serialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[allow(non_snake_case)]
 pub struct SetUserId {
     pub name: String,
+}
+
+#[cfg(test)]
+impl FromValue for SetUserId {
+    fn from(value: &Value) -> Self {
+        Self {
+            name: value_to_string!(value["name"]),
+        }
+    }
 }
 
 pub type Any = ();
@@ -270,6 +280,7 @@ impl FromValue for Any {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+#[cfg_attr(test, derive(Serialize))]
 #[allow(non_snake_case)]
 pub struct GetRoom {
     pub userId: String,
@@ -292,6 +303,21 @@ impl FromValue for GetRoom {
 pub struct SetRoom {
     pub isOwner: bool,
     pub asked: Vec<String>,
+}
+
+#[cfg(test)]
+impl FromValue for SetRoom {
+    fn from(value: &Value) -> Self {
+        Self {
+            isOwner: value["isOwner"].as_bool().unwrap(),
+            asked: value["asked"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|v| value_to_string!(v))
+                .collect(),
+        }
+    }
 }
 
 #[derive(Serialize, Debug, Clone)]

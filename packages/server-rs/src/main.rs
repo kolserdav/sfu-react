@@ -3,6 +3,8 @@ extern crate log;
 pub mod ws;
 use chat::Chat;
 
+mod tests;
+
 use prelude::{constants::dotenv_init, get_ws_address};
 use ws::WS;
 mod locales;

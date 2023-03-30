@@ -13,10 +13,30 @@ pub static HOST: Lazy<String> = Lazy::new(|| std::env::var("HOST").expect("HOST 
 
 pub fn dotenv_init() -> DotenvResult<()> {
     let path = PathBuf::from(file!());
+
+    #[cfg(not(test))]
     let dir = path.parent().unwrap().parent().unwrap().parent().unwrap();
+
+    #[cfg(test)]
+    let dir = path
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap();
+
     let path_raw = format!("{:?}/{:?}/.env", current_dir().unwrap(), dir).replace("\"", "");
-    let dotenf_f = OsStr::new(&path_raw);
-    from_path(dotenf_f)
+    let dotenv_f = OsStr::new(&path_raw);
+
+    #[cfg(not(test))]
+    println!("Dotenv file: {:?}", &dotenv_f);
+
+    from_path(dotenv_f)
 }
 
 pub const DELIMITER: char = '_';

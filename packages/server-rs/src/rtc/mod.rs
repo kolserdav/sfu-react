@@ -11,7 +11,7 @@ use webrtc::{
     ice_transport::{ice_candidate::RTCIceCandidate, ice_server::RTCIceServer},
     interceptor::registry::Registry,
     peer_connection::{
-        self, configuration::RTCConfiguration, peer_connection_state::RTCPeerConnectionState,
+        configuration::RTCConfiguration, peer_connection_state::RTCPeerConnectionState,
         sdp::session_description::RTCSessionDescription, signaling_state::RTCSignalingState,
         RTCPeerConnection,
     },
