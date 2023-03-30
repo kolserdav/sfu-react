@@ -161,6 +161,7 @@ impl WS {
             let mut websocket = websocket.lock().await;
 
             let msg = timeout(Duration::from_millis(BLOCK_DURATION_MS), websocket.next()).await;
+
             drop(websocket);
             if let Err(_) = msg {
                 sleep(Duration::from_millis(BLOCK_DURATION_MS));
@@ -171,9 +172,17 @@ impl WS {
                 debug!("Message is none: {}", &conn_id);
                 break;
             }
-            let msg = msg.unwrap();
 
             let msg = msg.unwrap();
+
+            let msg = msg;
+
+            if let Err(e) = msg {
+                error!("Error read message: {:?}", e);
+                return;
+            }
+            let msg = msg.unwrap();
+
             let ws = ws.clone();
             if msg.is_text() || msg.is_binary() {
                 self.message_handler(msg, conn_id, ws).await;

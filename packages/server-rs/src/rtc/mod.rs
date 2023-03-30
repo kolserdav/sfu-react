@@ -405,6 +405,8 @@ impl RTC {
                 } else {
                     warn!("Video track is missing: {}", &peer_id_video);
                 }
+
+                drop(peers);
             }
             Box::pin(async {})
         }));
