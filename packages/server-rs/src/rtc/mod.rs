@@ -362,6 +362,7 @@ impl RTC {
                 // FIXME peers is locked!
                 let peers = block_on(self.peers.lock());
                 let peer_connection = peers.get(&peer_id_c);
+                error!("Locked: {}", &peer_id);
                 if let None = peer_connection {
                     warn!("Skip send track: {}", &peer_id_c);
                     return Box::pin(async {});
@@ -504,23 +505,25 @@ impl RTC {
 
             let is_room = msg.data.target.clone() == "0";
 
-            if is_room && track.kind() == RTPCodecType::Video {
-                {
-                    let mut streams = block_on(this.streams.lock());
+            let kind = track.kind();
 
-                    let peer_id = get_peer_id_with_kind(peer_id, track.kind());
-                    info!("Save track: {} to peer: {}", &track.kind(), &peer_id);
-                    streams.insert(
-                        peer_id,
-                        Arc::new(Track {
-                            id: track.id().clone().to_string(),
-                            stream_id: track.stream_id().clone().to_string(),
-                            track_remote: track,
-                        }),
-                    );
-                    drop(streams);
-                }
+            if is_room {
+                let mut streams = block_on(this.streams.lock());
 
+                let peer_id = get_peer_id_with_kind(peer_id, kind.clone());
+                info!("Save track: {} to peer: {}", &track.kind(), &peer_id);
+                streams.insert(
+                    peer_id,
+                    Arc::new(Track {
+                        id: track.id().clone().to_string(),
+                        stream_id: track.stream_id().clone().to_string(),
+                        track_remote: track,
+                    }),
+                );
+                drop(streams);
+            }
+
+            if is_room && kind == RTPCodecType::Video {
                 let rooms = block_on(this.rooms.lock());
                 let (index_r, _, askeds) = block_on(this.find_askeds_indexes(&msg.data.userId));
                 if let None = index_r {
@@ -594,6 +597,7 @@ impl RTC {
         let msg_c = msg.clone();
 
         let peers = self.peers.lock().await;
+
         let peer_connection = peers.get(&peer_id);
         if let None = peer_connection {
             warn!("Skip handle ice candidate");
