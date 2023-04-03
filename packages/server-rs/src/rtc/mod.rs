@@ -187,6 +187,7 @@ impl RTC {
 
     pub async fn close_peer_connection(&self, user_id: &String) {
         let peers = self.peers.lock().await;
+
         for (peer_id, peer_connection) in peers.iter() {
             let peer = peer_id.split(DELIMITER).collect::<Vec<&str>>();
             if user_id == peer[0] || user_id == peer[1] {
@@ -245,6 +246,7 @@ impl RTC {
 
     async fn set_peer_connection(&self, peer_id: String, peer_connection: Arc<RTCPeerConnection>) {
         let mut peers = self.peers.lock().await;
+
         // TODO check
         peers.insert(peer_id, peer_connection);
     }
@@ -253,6 +255,7 @@ impl RTC {
         debug!("Handle candidate: {}", msg);
 
         let peer_id = get_peer_id(msg.data.userId, msg.data.target, msg.connId);
+
         let peers = self.peers.lock().await;
 
         let peer_connection = peers.get(&peer_id);
@@ -565,34 +568,11 @@ impl RTC {
         }));
     }
 
-    async fn handle_ice_candidates<C, T>(
-        &'static self,
+    async fn create_answer(
+        &self,
         msg: MessageArgs<Offer>,
-        cb_cand: C,
-        cb_track: T,
-    ) -> Option<RTCSessionDescription>
-    where
-        C: FnMut(MessageArgs<Candidate>) + Sync + Send + Copy + 'static,
-        T: FnMut(MessageArgs<SetChangeUnit>) + Sync + Send + Copy + 'static,
-    {
-        let peer_id = get_peer_id(
-            msg.data.userId.clone(),
-            msg.data.target.clone(),
-            msg.connId.clone(),
-        );
-
-        self.on_peer_connection_state_change_handler(peer_id.clone())
-            .await;
-
-        self.sigaling_state_change_handler(peer_id.clone(), msg.data.target.clone())
-            .await;
-
-        self.on_ice_candidate_handler(peer_id.clone(), msg.clone(), cb_cand)
-            .await;
-
-        self.on_track_handler(peer_id.clone(), msg.clone(), cb_track)
-            .await;
-
+        peer_id: String,
+    ) -> Option<RTCSessionDescription> {
         let sdp = msg.data.sdp.clone();
         let msg_c = msg.clone();
 
@@ -627,5 +607,36 @@ impl RTC {
         }
 
         Some(answer)
+    }
+
+    async fn handle_ice_candidates<C, T>(
+        &'static self,
+        msg: MessageArgs<Offer>,
+        cb_cand: C,
+        cb_track: T,
+    ) -> Option<RTCSessionDescription>
+    where
+        C: FnMut(MessageArgs<Candidate>) + Sync + Send + Copy + 'static,
+        T: FnMut(MessageArgs<SetChangeUnit>) + Sync + Send + Copy + 'static,
+    {
+        let peer_id = get_peer_id(
+            msg.data.userId.clone(),
+            msg.data.target.clone(),
+            msg.connId.clone(),
+        );
+
+        self.on_peer_connection_state_change_handler(peer_id.clone())
+            .await;
+
+        self.sigaling_state_change_handler(peer_id.clone(), msg.data.target.clone())
+            .await;
+
+        self.on_ice_candidate_handler(peer_id.clone(), msg.clone(), cb_cand)
+            .await;
+
+        self.on_track_handler(peer_id.clone(), msg.clone(), cb_track)
+            .await;
+
+        self.create_answer(msg, peer_id).await
     }
 }
