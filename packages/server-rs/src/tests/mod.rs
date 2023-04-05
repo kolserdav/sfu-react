@@ -22,8 +22,8 @@ use webrtc::{
     ice_transport::{ice_candidate::RTCIceCandidate, ice_server::RTCIceServer},
     interceptor::registry::Registry,
     peer_connection::{
-        configuration::RTCConfiguration, sdp::session_description::RTCSessionDescription,
-        RTCPeerConnection,
+        configuration::RTCConfiguration, offer_answer_options::RTCOfferOptions,
+        sdp::session_description::RTCSessionDescription, RTCPeerConnection,
     },
 };
 
@@ -76,7 +76,7 @@ async fn client(room_id: &str, user_id: &str) {
 
                 let config = RTCConfiguration {
                     ice_servers: vec![RTCIceServer {
-                        urls: vec!["stun:stun.l.google.com:19302".to_owned()],
+                        urls: vec![],
                         ..Default::default()
                     }],
                     ..Default::default()
@@ -122,7 +122,7 @@ async fn client(room_id: &str, user_id: &str) {
                     })
                 }));
 
-                let sdp = peer_connection.local_description().await.unwrap();
+                let sdp = peer_connection.create_offer(None).await.unwrap();
 
                 socket
                     .write_message(Message::Text(
