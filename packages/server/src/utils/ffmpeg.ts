@@ -1,3 +1,13 @@
+/******************************************************************************************
+ * Repository: https://github.com/kolserdav/werift-sfu-react.git
+ * File name: ffmpeg.ts
+ * Author: Sergey Kolmiller
+ * Email: <kolserdav@uyem.ru>
+ * License: MIT
+ * License text: See in LICENSE file
+ * Copyright: kolserdav, All rights reserved (c)
+ * Create Date: Wed Aug 02 2023 23:56:49 GMT+0700 (Krasnoyarsk Standard Time)
+ ******************************************************************************************/
 import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';

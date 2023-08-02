@@ -2,11 +2,11 @@
  * Repository: https://github.com/kolserdav/werift-sfu-react.git
  * File name: streams.ts
  * Author: Sergey Kolmiller
- * Email: <uyem.ru@gmail.com>
+ * Email: <kolserdav@uyem.ru>
  * License: MIT
  * License text: See in LICENSE file
  * Copyright: kolserdav, All rights reserved (c)
- * Create Date: Wed Aug 24 2022 14:14:09 GMT+0700 (Krasnoyarsk Standard Time)
+ * Create Date: Wed Aug 02 2023 23:56:49 GMT+0700 (Krasnoyarsk Standard Time)
  ******************************************************************************************/
 import { createSlice, configureStore, Draft, CaseReducer, PayloadAction } from '@reduxjs/toolkit';
 import { Stream } from '../types';

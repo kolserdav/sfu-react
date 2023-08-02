@@ -1,3 +1,13 @@
+/******************************************************************************************
+ * Repository: https://github.com/kolserdav/werift-sfu-react.git
+ * File name: VideoControls.tsx
+ * Author: Sergey Kolmiller
+ * Email: <kolserdav@uyem.ru>
+ * License: MIT
+ * License text: See in LICENSE file
+ * Copyright: kolserdav, All rights reserved (c)
+ * Create Date: Wed Aug 02 2023 23:56:49 GMT+0700 (Krasnoyarsk Standard Time)
+ ******************************************************************************************/
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { forwardRef, useEffect, useState } from 'react';

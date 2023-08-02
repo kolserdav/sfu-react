@@ -17,13 +17,13 @@
   ],
   "author": {
     "name": "Sergey Kolmiller",
-    "email": "uyem.ru@gmail.com"
+    "email": "kolserdav@uyem.ru"
   },
   "maintainers": [
-    "Sergey Kolmiller <uyem.ru@gmail.com>"
+    "Sergey Kolmiller <kolserdav@uyem.ru>"
   ],
   "contributors": [
-    "Sergey Kolmiller <uyem.ru@gmail.com>"
+    "Sergey Kolmiller <kolserdav@uyem.ru>"
   ],
   "bugs": "https://github.com/kolserdav/werift-sfu-react/issues",
   "license": "MIT",
@@ -165,7 +165,7 @@
       "build"
     ],
     "name": "Sergey Kolmiller",
-    "email": "uyem.ru@gmail.com",
+    "email": "kolserdav@uyem.ru",
     "license": "MIT",
     "licenseText": "See in LICENSE file",
     "copyright": "kolserdav, All rights reserved (c)",
